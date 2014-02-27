@@ -32,7 +32,7 @@ class BufferExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         showUnlisted = False if len(args) == 0 else args[0]
         if showUnlisted:
-            return [b.name for b in vim.buffers if b.name != None]
+            return [b.name for b in vim.buffers if b.name is not None]
         if int(vim.eval("v:version")) > 703:
             return [b.name for b in vim.buffers if b.options["buflisted"]]
         else:

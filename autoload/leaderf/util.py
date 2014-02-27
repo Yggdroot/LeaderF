@@ -13,12 +13,15 @@ if sys.version_info >= (3,0):
 else:
     def uniCoding(str):
         try:
-            return str.decode(locale.getdefaultlocale()[1]).encode(vim.eval("&encoding"))
+            if locale.getdefaultlocale()[1] is None:
+                return str
+            else:
+                return str.decode(locale.getdefaultlocale()[1]).encode(vim.eval("&encoding"))
         except UnicodeDecodeError:
             return str
 
 def escQuote(str):
-    return "" if str == None else re.sub("'","''",str)
+    return "" if str is None else re.sub("'","''",str)
 
 def escSpecial(str):
     return re.sub('(%|#|")', r"\\\1", str)

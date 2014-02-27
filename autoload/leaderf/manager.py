@@ -77,7 +77,7 @@ class Manager(object):
         self._helpLength = 0
 
     def _getExplorer(self):
-        if self._explorer == None:
+        if self._explorer is None:
             self._explorer = self._getExplClass()()
         return self._explorer
 
@@ -97,10 +97,9 @@ class Manager(object):
     def _bufwinnr(self, name):
         nr = 1
         for w in vim.windows:
-            if os.path.abspath(w.buffer.name) == os.path.abspath(name):
+            if w.buffer.name is not None and os.path.abspath(w.buffer.name) == os.path.abspath(name):
                 return nr
             nr += 1
-
         return 0
 
     def _gotoBuffer(self):
@@ -366,7 +365,7 @@ class Manager(object):
         if self._winPos != 0 and len(vim.windows) > 1:
             vim.command("hide")
         else:
-            if self._origBuf == None or vim.eval("bufexists('%s')" % escQuote(self._origBuf)) == '0':
+            if self._origBuf is None or vim.eval("bufexists('%s')" % escQuote(self._origBuf)) == '0':
                 vim.command("bd")
             else:
                 vim.command("hide edit %s" % escSpecial(self._origBuf))
@@ -377,9 +376,9 @@ class Manager(object):
 
     def refresh(self, content = None):
         rContent = self._getExplorer().getFreshContent()
-        if rContent == None:
+        if rContent is None:
             return
-        if content == None:
+        if content is None:
             vim.command("setlocal modifiable")
             setBuffer(vim.current.buffer, rContent)
             self._content = rContent
@@ -422,7 +421,7 @@ class Manager(object):
     def startExplAction(self, content = None):
         vim.command("setlocal modifiable")
         self._hideHelp()
-        if content == None:
+        if content is None:
             content = self._content
         else:
             setBuffer(vim.current.buffer, content)
