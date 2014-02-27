@@ -44,7 +44,7 @@ class Mru(object):
             f.writelines(lines)
 
 #*****************************************************
-# mru is a sigleton
+# mru is a singleton
 #*****************************************************
 mru = Mru()
 

@@ -76,7 +76,6 @@ class BufExplManager(Manager):
         help.append('" D : delete buffer under cursor')
         help.append('" i : switch to input mode')
         help.append('" q : quit')
-        help.append('" <F5> : refresh the cache')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------')
         return help
@@ -101,7 +100,7 @@ class BufExplManager(Manager):
 
 
 #*****************************************************
-# bufExplManager is a sigleton
+# bufExplManager is a singleton
 #*****************************************************
 bufExplManager = BufExplManager()
 

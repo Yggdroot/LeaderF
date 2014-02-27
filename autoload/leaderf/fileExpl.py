@@ -206,7 +206,7 @@ class FileExplManager(Manager):
         return help
 
 #*****************************************************
-# fileExplManager is a sigleton
+# fileExplManager is a singleton
 #*****************************************************
 fileExplManager = FileExplManager()
 

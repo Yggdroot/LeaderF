@@ -26,11 +26,11 @@ class Manager(object):
         self._getExplClass()
 
     #*****************************************************
-    # abstract methods, in fact all the functions can be overrided
+    # abstract methods, in fact all the functions can be overridden
     #*****************************************************
     def _getExplClass(self):
         '''
-        this function MUST be overrided
+        this function MUST be overridden
         return the name of Explorer class
         '''
         raise NotImplementedError("Can't instantiate abstract class Manager with abstract methods _getExplClass")
@@ -40,14 +40,14 @@ class Manager(object):
 
     def _cmdExtension(self, cmd):
         '''
-        this function can be overrided to add new cmd
+        this function can be overridden to add new cmd
         if return true, exit the input loop
         '''
         pass
 
     def _getDigest(self, line):
         '''
-        this function can be overrided
+        this function can be overridden
         specify what part to match regex for a line in the match window
         '''
         return line
@@ -143,6 +143,7 @@ class Manager(object):
         vim.command("setlocal statusline+=\ %#Lf_hl_stlMode#%-9(%{g:Lf_statusline_mode}%#Lf_hl_none#]%)")
         vim.command("setlocal statusline+=\ \ %<%#Lf_hl_stlCurDir#%{g:Lf_statusline_curDir}%#Lf_hl_none#")
         vim.command("setlocal statusline+=%=%lL/%-5L")
+        vim.command("redraw!")
    
     def _toUp(self):
         vim.command("norm! k")
@@ -244,7 +245,7 @@ class Manager(object):
  
     def _getWeight(self, str, t):
         '''
-        this function can be overrided to get the weight of the line,
+        this function can be overridden to get the weight of the line,
         so that it can be applied in the sort algorithm
         '''
         pre = str.lower().index(t[0].lower())
@@ -290,19 +291,17 @@ class Manager(object):
 
     def _sortResult(self, num):
         '''
-        this function can be overrided to customize the sort algorithm
+        this function can be overridden to customize the sort algorithm
         '''
         cb = vim.current.buffer
         if len(cb) == 1 and cb[0] == '' or num == 0:
             return
         if self._cli.isFuzzy:
-            if self._cli.isFileNameOnly and self._cli.isMixed:
-                pass
             if self._cli.isFileNameOnly:
                 if self._cli.isMixed:
                     pass
                 else:
-                    pairs = [(i, self._getWeight(os.path.basename(cb[i]), self._cli.cmdline)) for i in range(len(cb))]
+                    pairs = [(i, self._getWeight(os.path.basename(self._getDigest(cb[i])), self._cli.cmdline)) for i in range(len(cb))]
                     pairs = heapq.nlargest(num, pairs, key = lambda x: x[1])
                     lines = [cb[i[0]] for i in pairs]
                     append(cb, lines, 0)

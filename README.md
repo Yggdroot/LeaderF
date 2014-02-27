@@ -46,7 +46,7 @@ Once LeaderF is launched:
  - `<C-U>` : clear the prompt. 
  - `<C-J>`, `<Down>`, `<C-K>`, `<Up>` : navigate the result list.
  - `<2-LeftMouse>` or `<CR>` : open the file under cursor or selected(when multiple files are selected).
- - `<C-X>` : open in horizontally split window.
+ - `<C-X>` : open in horizontal split window.
  - `<C-]>` : open in vertical split window.
  - `<C-T>` : open in new tabpage.
  - `<F5>`  : refresh the cache.

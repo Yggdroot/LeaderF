@@ -106,7 +106,7 @@ class MruExplManager(Manager):
 
 
 #*****************************************************
-# bufExplManager is a sigleton
+# bufExplManager is a singleton
 #*****************************************************
 mruExplManager = MruExplManager()
 
