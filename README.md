@@ -12,6 +12,10 @@ This plugin is mainly used for searching files, buffers, mrus in large project.
 Screenshots
 -----------
 
+![enter image description here][1]
+
+![enter image description here][2]
+
 Requirements
 ------------
 
@@ -22,7 +26,7 @@ Installation
 ------------
 
 To install this plugin just put the plugin files in your `~/.vim` (Linux) or `~/vimfiles` (Windows).<br>
-For [Vundle][1] user, just add `Bundle 'Yggdroot/LeaderF'` to your `.vimrc`.
+For [Vundle][3] user, just add `Bundle 'Yggdroot/LeaderF'` to your `.vimrc`.
 
 Usage
 ----- 
@@ -55,7 +59,7 @@ Once LeaderF is launched:
 Related works
 -------------
 
- - [ctrlp][2] is a great plugin. Some ideas of my plugin come from it. 
+ - [ctrlp][4] is a great plugin. Some ideas of my plugin come from it. 
 
 Advantages over ctrlp
 ---------------------
@@ -68,5 +72,8 @@ License
 
 This plugin is released under the Vim License.
 
-  [1]: https://github.com/gmarik/Vundle.vim
-  [2]: https://github.com/kien/ctrlp.vim
+
+  [1]: http://imageshack.com/a/img802/1026/iei.gif
+  [2]: http://imageshack.com/a/img809/2369/mnu.gif
+  [3]: https://github.com/gmarik/Vundle.vim
+  [4]: https://github.com/kien/ctrlp.vim
