@@ -1,13 +1,217 @@
-************************************************************************
-*     '{{'                          '{{                  '{{''''{      *
-*      {{        ....   ....      .. {{    ....  ... ..   {{  .        *
-*      {{      .{...{{ '' .{{   .'  '{{  .{...{{  {{' ''  {{''{        *
-*      {{      {{      .{' {{   {.   {{  {{       {{      {{           *
-*     .{{....{  '{...' '{..'{'  '{..'{{.  '{...' .{{.    .{{.          *
-*                                                                      *
-************************************************************************
+*leaderf.txt*   Quickly locate files, buffers, mrus, ... in large project.
+*leaderf* *LeaderF*
+==============================================================================
+@        'II'                          'II                  'II''''I         @
+@         II        ....   ....      .. II    ....  ... ..   II  .           @
+@         II      .I...II '' .II   .'  'II  .I...II  II' ''  II''I           @
+@         II      II      .I' II   I.   II  II       II      II              @
+@        .II....I  'I...' 'I..'I.  'I..'II.  'I...' .II.    .II.             @
+==============================================================================
+
+CONTENTS                                        *leaderf-contents*
+Introduction                                    |leaderf-introduction|
+Requirements                                    |leaderf-requirements|
+Options                                         |leaderf-options|
+Usage                                           |leaderf-usage|
+FAQ                                             |leaderf-faq|
+Changelog                                       |leaderf-changelog|
+Credits                                         |leaderf-credits|
+==============================================================================
+INTRODUCTION                                    *leaderf-introduction*
+
+This plugin is mainly used for locating files, buffers, mrus in large project.
+
+- Written in Python.
+- Support for fuzzy and regex searching.
+- Manage buffers and mrus.
+- Open multiple files at once.
+- Extensible.
+==============================================================================
+REQUIREMENTS                                    *leaderf-requirements*
+
+- vim7.0 or higher.
+- vim compiled with Python support, you can check by using echo has('python')
+  or echo has('python3') to see if the result is 1.
+==============================================================================
+OPTIONS                                         *leaderf-options*
+
+g:leaderf_loaded                                *g:loaded_leaderf*
+    Whether leaderf plugin has been loaded.
+    Default value is 0.
+
+g:Lf_PythonVersion                              *g:Lf_PythonVersion*
+    Set this to 2 or 3 to specify the version of Python this plugin use.
+    If both python2 and python3 are supported, the default value is 3,
+    otherwise the default value is the supported version.
+
+g:Lf_ShortcutF                                  *g:Lf_ShortcutF*
+    Use this option to set the mapping of searching files command.
+    e.g. let g:Lf_ShortcutF = '<C-P>'
+    Default value is '<leader>f'.
+
+g:Lf_ShortcutB                                  *g:Lf_ShortcutB*
+    Use this option to set the mapping of searching buffers command.
+    Default value is '<leader>b'.
+
+g:Lf_WindowPosition                             *g:Lf_WindowPosition*
+    Setting this option can change the position of the match window.
+    The value can be 0, 1, 2, ...
+    0 - the match window take up the full screen
+    1 - the match window is at the bottom of the screen.
+    2 - the match window is at the top of the screen.
+    other - the match window is in the vertical split window.
+    Default value is 1.
+
+g:Lf_ShowRelativePath                           *g:Lf_ShowRelativePath*
+    Whether to show the relative path in the match window.
+    0 - no
+    1 - yes
+    Default value is 1.
+
+g:Lf_DefaultMode                                *g:Lf_DefaultMode*
+    Specify the default mode when LeaderF is launched.
+    There are 3 modes, and the corresponding value are:
+    0 - fuzzy mode, match file name only when searching
+    1 - fuzzy mode, match full path when searching
+    2 - regex mode
+    Default value is 0
+
+g:Lf_CursorBlink                                *g:Lf_CursorBlink*
+    Set this option to 1 to let the cursor in the prompt blink, if you don't
+    want the cursor to blink, set the value to 0.
+    Due to some unknown bug of vim, the default value for terminal vim is
+    always 0.
+
+g:Lf_CacheDiretory                              *g:Lf_CacheDiretory*
+    Set this option to change the location of the cache directory.
+    e.g. >
+    let g:Lf_CacheDiretory = '/root'
+<
+    Default value is $HOME.
+
+g:Lf_NeedCacheTime                              *g:Lf_NeedCacheTime*
+    This option set a threshold, if the time of indexing files is greater than
+    the threshold, cache the files list.
+    Default value is 1.5 seconds.
+
+g:Lf_NumberOfCache                              *g:Lf_NumberOfCache*
+    This option specify the number of cache.
+    Default value is 5.
+
+g:Lf_UseMemoryCache                             *g:Lf_UseMemoryCache*
+    Whether to use the memory to cache the indexing result.
+    0 - no
+    1 - yes
+    Default value is 1.
+
+g:Lf_IndexTimeLimit                             *g:Lf_IndexTimeLimit*
+    Specify the maximum time of indexing the files that you can tolerate to
+    wait.
+    Default value is 120 seconds.
+
+g:Lf_FollowLinks                                *g:Lf_FollowLinks*
+    Whether to visit directories pointed to by symlinks when indexing.
+    0 - no
+    1 - yes
+    Default value is 0.
+
+g:Lf_WildIgnore                                 *g:Lf_WildIgnore*
+    Specify the files and directories you want to exclude while indexing.
+    Default value is: >
+    let g:Lf_WildIgnore = {
+            \ 'dir': ['.svn','.git'],
+            \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']
+            \}
+<
+    Here uses the Unix shell-style wildcards, which are not the same as
+    regular expressions. The special characters used in shell-style wildcards
+    are: >
+    Pattern  |          Meaning
+    -------------------------------------------
+    *        | matches everything
+    ?        | matches any single character
+    [seq]    | matches any character in seq
+    [!seq]   | matches any character not in seq
+    -------------------------------------------
+<
+g:Lf_SearchStep                                 *g:Lf_SearchStep*
+    Used in searching algorithm.
+    Default value is 5000.
+    
+g:Lf_DelimiterChar                              *g:Lf_DelimiterChar*
+    Default value is '/'.
+
+g:Lf_NumberOfSort                               *g:Lf_NumberOfSort*
+    It's a integer, can have the following values:
+    -1 - sort all file in the result
+    0  - do not sort the result
+    1  - sort files in the result as many as the height of match window
+    other - sort files in the result as many as the value
+    Default value is 1.
+
+g:Lf_MruFileExclude                             *g:Lf_MruFileExclude*
+    Files you don't want LeaderF to record.
+    See |g:Lf_WildIgnore| for the usage of pattern.
+    e.g. >
+    let g:Lf_MruFileExclude = ['*.so']
+<
+    Default value is [].
+
+g:Lf_MruMaxFiles                                *g:Lf_MruMaxFiles*
+    Specify the number of most recently used files you want LeaderF to record.
+    Default value is 100.
+
+g:Lf_CommandMap                                 *g:Lf_CommandMap*
+    Use this option to customize the mappings inside LeaderF's
+    prompt(|leaderf-prompt|). 
+    for example, if you want to change the default command <C-F> to <C-D>: >
+    let g:Lf_CommandMap = {'<C-F>': ['<C-D>']}
+<
+==============================================================================
+USAGE                                           *leaderf-usage*
+
+:Leaderf [directory] or ,f                      *Leaderf*
+    Launch LeaderF to search files.
+
+:LeaderfBuffer or ,b                            *LeaderfBuffer*
+    Launch LeaderF to search buffers.
+
+:LeaderfBufferAll                               *LeaderfBufferAll*
+    Same as LeaderfBuffer, except that the unlisted buffers are shown.
+
+:LeaderfMru                                     *LeaderfMru*
+    Launch LeaderF to search Mru.
+
+Once LeaderF is launched:                       *prompt* *leaderf-prompt*
+    <C-C> : quit from LeaderF.
+    <C-R> : switch between fuzzy search mode and regex mode.
+    <C-F> : switch between full path search mode and name only search mode.
+    <ESC> : switch to normal mode.
+    <C-V>, <S-Insert> : paste from clipboard.
+    <C-U> : clear the prompt.
+    <C-J>, <Down>, <C-K>, <Up> : navigate the result list.
+    <2-LeftMouse> or <CR> : open the file under cursor or selected(when
+                            multiple files are selected).
+    <C-X> : open in horizontal split window.
+    <C-]> : open in vertical split window.
+    <C-T> : open in new tabpage.
+    <F5>  : refresh the cache.
+    <C-LeftMouse> or <C-Z> : select multiple files.
+    <BS>  : delete the preceding character in the prompt.
+    <Del> : delete the current character in the prompt.
+    <Home>: move the cursor to the begin of the prompt.
+    <End> : move the cursor to the end of the prompt.
+    <Left>: move the cursor one character to the left.
+    <Right> : move the cursor one character to the right.
+==============================================================================
+FAQ                                             *leaderf-faq*
 
 
+==============================================================================
+CHANGELOG                                       *leaderf-changelog*
 
- vim:tw=78:ft=help:
+==============================================================================
+CREDITS                                         *leaderf-credits*
 
+==============================================================================
+vim:tw=78:ts=4:ft=help:norl

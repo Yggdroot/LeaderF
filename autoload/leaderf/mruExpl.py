@@ -81,8 +81,8 @@ class MruExplManager(Manager):
     def _createHelp(self):
         help = []
         help.append('" <CR>/<double-click>/o : open file under cursor')
-        help.append('" x : open file under cursor in a splited buffer')
-        help.append('" v : open file under cursor in a vertical splited buffer')
+        help.append('" x : open file under cursor in a horizontally split window')
+        help.append('" v : open file under cursor in a vertically split window')
         help.append('" t : open file under cursor in a new tabpage')
         help.append('" d : remove from mru list')
         help.append('" i : switch to input mode')

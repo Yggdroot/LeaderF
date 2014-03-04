@@ -241,6 +241,7 @@ class Manager(object):
                 self._sortResult(vim.current.window.height)
             else:
                 self._sortResult(num)
+            vim.current.window.cursor = (self._helpLength + 1, 0)
  
     def _getWeight(self, str, t):
         '''
@@ -307,7 +308,6 @@ class Manager(object):
                     pairs.sort(key = lambda x: x[0], reverse = True)
                     for i in pairs:
                         del cb[i[0] + len(pairs)]
-                    vim.current.window.cursor = (self._helpLength + 1, 0)
             else:
                 pass
 

@@ -1,7 +1,7 @@
 LeaderF
 =======
 
-This plugin is mainly used for searching files, buffers, mrus in large project.
+This plugin is mainly used for locating files, buffers, mrus in large project.
 
  - Written in Python.
  - Support for fuzzy and regex searching.
