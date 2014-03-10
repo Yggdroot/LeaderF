@@ -25,7 +25,7 @@ def showRelativePath(func):
             return [line[cwdLen:] for line in func(*args, **kwargs)]
         else:
             return func(*args, **kwargs)
-    return deco 
+    return deco
 
 
 #*****************************************************
@@ -49,7 +49,7 @@ class FileExplorer(Explorer):
     def _getFiles(self, dir):
         startTime = time.time()
         wildignore = vim.eval("g:Lf_WildIgnore")
-        fileList = [] 
+        fileList = []
         for dirPath,dirs,files in os.walk(dir, followlinks = False if vim.eval("g:Lf_FollowLinks") == '0' else True):
             dirs[:] = [i for i in dirs if True not in (fnmatch.fnmatch(i,j) for j in wildignore['dir'])]
             for name in files:
@@ -74,7 +74,7 @@ class FileExplorer(Explorer):
                     target = i
 
             if target != -1:
-                lines[target] = re.sub('^\S*', '%.3f' % time.time(), lines[target]) 
+                lines[target] = re.sub('^\S*', '%.3f' % time.time(), lines[target])
                 f.seek(0)
                 f.truncate(0)
                 f.writelines(lines)
@@ -137,7 +137,7 @@ class FileExplorer(Explorer):
                     target = i
 
             if target != -1:
-                lines[target] = re.sub('^\S*', '%.3f' % time.time(), lines[target]) 
+                lines[target] = re.sub('^\S*', '%.3f' % time.time(), lines[target])
                 f.seek(0)
                 f.truncate(0)
                 f.writelines(lines)
@@ -156,7 +156,7 @@ class FileExplorer(Explorer):
         return self._content
 
     def acceptSelection(self, *args, **kwargs):
-        if len(args) == 0: 
+        if len(args) == 0:
             return
         file = args[0]
         vim.command("hide edit %s" % escSpecial(file))

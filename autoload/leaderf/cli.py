@@ -26,7 +26,7 @@ def ctrlCursor(func):
                     vim.command("set t_ve&")
                 except:
                     pass
-    return deco 
+    return deco
 
 
 #*****************************************************
@@ -49,13 +49,13 @@ class LfCli(object):
         mode = int(vim.eval("g:Lf_DefaultMode"))
         if mode == 0:       # nameOnly mode
             self._isFuzzy = True
-            self._fullPath = False 
+            self._fullPath = False
         elif mode == 1:     # fullPath mode
             self._isFuzzy = True
             self._fullPath = True
         else:               # regex mode
             self._isFuzzy = False
-            self._fullPath = False 
+            self._fullPath = False
 
     def _insert(self, ch):
         self._cmdline.insert(self._cursorPos, ch)
@@ -82,6 +82,7 @@ class LfCli(object):
 
     def clear(self):
         self._cmdline[:] = []
+        self._regex = None
         self._cursorPos = 0
 
     def _toLeft(self):
@@ -118,7 +119,7 @@ class LfCli(object):
                 vim.command("echohl Constant | redraw | echon '>F> ' | echohl NONE")
         else:
             vim.command("echohl Constant | redraw | echon 'R>> ' | echohl NONE")
-    
+
         vim.command("echohl Normal | echon '%s' | echohl NONE" % escQuote(''.join(self._cmdline[:self._cursorPos])))
         if self._cursorPos < len(self._cmdline):
             vim.command("echohl Lf_hl_cursor | echon '%s' | echohl NONE" % escQuote(''.join(self._cmdline[self._cursorPos])))

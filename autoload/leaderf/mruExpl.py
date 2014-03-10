@@ -22,7 +22,7 @@ def showRelativePath(func):
                 return func(*args, **kwargs)
         else:
             return func(*args, **kwargs)
-    return deco 
+    return deco
 
 
 #*****************************************************
@@ -40,7 +40,7 @@ class MruExplorer(Explorer):
             return lines
 
     def acceptSelection(self, *args, **kwargs):
-        if len(args) == 0: 
+        if len(args) == 0:
             return
         file = args[0]
         vim.command("hide edit %s" % escSpecial(file))

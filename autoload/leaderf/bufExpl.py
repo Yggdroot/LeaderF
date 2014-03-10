@@ -21,7 +21,7 @@ def showRelativePath(func):
                 return func(*args, **kwargs)
         else:
             return func(*args, **kwargs)
-    return deco 
+    return deco
 
 
 #*****************************************************
@@ -39,7 +39,7 @@ class BufferExplorer(Explorer):
             return [b.name for b in vim.buffers if vim.eval("buflisted('%s')" % escQuote(b.name)) == '1']
 
     def acceptSelection(self, *args, **kwargs):
-        if len(args) == 0: 
+        if len(args) == 0:
             return
         file = args[0]
         vim.command("hide edit %s" % escSpecial(file))

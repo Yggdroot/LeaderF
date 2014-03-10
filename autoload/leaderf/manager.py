@@ -15,6 +15,7 @@ class Manager(object):
     def __init__(self):
         self._bufName = vim.eval("expand('$VIMRUNTIME/[LeaderF]')")
         self._winPos = int(vim.eval("g:Lf_WindowPosition"))
+        self._autochdir = 0
         self._cli = LfCli()
         self._explorer = None
         self._index = 0
@@ -103,6 +104,12 @@ class Manager(object):
         return 0
 
     def _gotoBuffer(self):
+        if int(vim.eval("&autochdir")) == 1:
+            self._autochdir = 1
+            vim.command("set noautochdir")
+        else:
+            self._autochdir = 0
+
         self._origBuf = vim.current.buffer.name
         nr = self._bufwinnr(self._bufName)
         if nr == 0:
@@ -143,7 +150,7 @@ class Manager(object):
         vim.command("setlocal statusline+=\ \ %<%#Lf_hl_stlCurDir#%{g:Lf_statusline_curDir}%#Lf_hl_none#")
         vim.command("setlocal statusline+=%=%lL/%-5L")
         vim.command("redraw!")
-   
+
     def _toUp(self):
         vim.command("norm! k")
 
@@ -232,7 +239,7 @@ class Manager(object):
                 break
 
         if self._getExplorer().supportsSort():
-            num = int(vim.eval("g:Lf_NumberOfSort")) 
+            num = int(vim.eval("g:Lf_NumberOfSort"))
             if num == -1:
                 self._sortResult(len(cb))
             elif num == 0:
@@ -242,7 +249,7 @@ class Manager(object):
             else:
                 self._sortResult(num)
             vim.current.window.cursor = (self._helpLength + 1, 0)
- 
+
     def _getWeight(self, str, t):
         '''
         this function can be overridden to get the weight of the line,
@@ -322,7 +329,7 @@ class Manager(object):
                     vim.command("vsplit")
                 elif mode == 't':
                     vim.command("tabedit | tabm")
-                self._getExplorer().acceptSelection(file) 
+                self._getExplorer().acceptSelection(file)
         except vim.error:
             pass
 
@@ -360,6 +367,8 @@ class Manager(object):
             self._accept(file, mode)
 
     def quit(self):
+        if self._autochdir == 1:
+            vim.command("set autochdir")
         self._cli.clear()
         self._selections.clear()
         if self._winPos != 0 and len(vim.windows) > 1:
@@ -484,3 +493,4 @@ class Manager(object):
                     break
         if quit: #due to a bug, I have to write this ugly code
             self.quit()
+
