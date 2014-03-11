@@ -132,10 +132,10 @@ class LfCli(object):
             if self._isFuzzy:
                 if os.name == 'nt':
                     # treat '/' and '\' the same
-                    func = lambda c: r'[\\/].*?' if c == '\\' or c == '/' else '\^' if c == '^' else c if c.isalnum() else '['+c+']'
+                    func = lambda c: r'[\\/].*?' if c == '\\' or c == '/' else re.escape(c)
                     nonSlash = r'[^\\/]*?'
                 else:
-                    func = lambda c: '/.*?' if c == '/' else '\\'+c if (c == '\\' or c == '^') else c if c.isalnum() else '['+c+']'
+                    func = lambda c: '/.*?' if c == '/' else re.escape(c)
                     nonSlash = r'[^/]*?'
                 delimiter = vim.eval("g:Lf_DelimiterChar")
                 if self.isFileNameOnly and delimiter in self._cmdline:
