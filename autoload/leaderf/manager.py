@@ -111,6 +111,7 @@ class Manager(object):
             self._autochdir = 0
 
         self._origBuf = vim.current.buffer.name
+        self._origWinNr = int(vim.eval("winnr()"))
         nr = self._bufwinnr(self._bufName)
         if nr == 0:
             self._createBufWindow()
@@ -373,8 +374,7 @@ class Manager(object):
         self._selections.clear()
         if self._winPos != 0 and len(vim.windows) > 1:
             vim.command("hide")
-            nr = self._bufwinnr(self._origBuf)
-            vim.command("exec '%d wincmd w'" % nr)
+            vim.command("exec '%d wincmd w'" % self._origWinNr)
         else:
             if self._origBuf is None or vim.eval("bufexists('%s')" % escQuote(self._origBuf)) == '0':
                 vim.command("bd")
