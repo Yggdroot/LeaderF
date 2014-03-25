@@ -373,6 +373,8 @@ class Manager(object):
         self._selections.clear()
         if self._winPos != 0 and len(vim.windows) > 1:
             vim.command("hide")
+            nr = self._bufwinnr(self._origBuf)
+            vim.command("exec '%d wincmd w'" % nr)
         else:
             if self._origBuf is None or vim.eval("bufexists('%s')" % escQuote(self._origBuf)) == '0':
                 vim.command("bd")
