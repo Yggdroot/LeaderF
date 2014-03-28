@@ -369,7 +369,9 @@ class Manager(object):
 
     def quit(self):
         if self._autochdir == 1:
-            vim.command("set autochdir")
+            cwd = os.getcwd()
+            vim.command("set autochdir")    # I think vim has a bug here
+            os.chdir(cwd)
         self._cli.clear()
         self._selections.clear()
         if self._winPos != 0 and len(vim.windows) > 1:
