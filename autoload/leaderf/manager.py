@@ -368,10 +368,6 @@ class Manager(object):
             self._accept(file, mode)
 
     def quit(self):
-        if self._autochdir == 1:
-            cwd = os.getcwd()
-            vim.command("set autochdir")    # I think vim has a bug here
-            os.chdir(cwd)
         self._cli.clear()
         self._selections.clear()
         if self._winPos != 0 and len(vim.windows) > 1:
@@ -386,6 +382,10 @@ class Manager(object):
             vim.command("call getchar(0) | redraw | echo")
         else:
             vim.command("call getchar(0)")
+        if self._autochdir == 1:
+            cwd = os.getcwd()
+            vim.command("set autochdir")    # I think vim has a bug here
+            os.chdir(cwd)
 
     def refresh(self, content = None):
         rContent = self._getExplorer().getFreshContent()
@@ -424,10 +424,12 @@ class Manager(object):
 
     def startExplorer(self, *args, **kwargs):
         self._cli.setFullPathFeature(self._getExplorer().supportsFullPath())
-        self._gotoBuffer()
         vim.command("let g:Lf_statusline_function = '%s'" % self._getExplorer().getStlFunction())
         vim.command("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
         content = self._getExplorer().getContent(*args, **kwargs)
+        if content is None:
+            return
+        self._gotoBuffer()
         vim.command("let g:Lf_statusline_curDir = '%s'" % self._getExplorer().getStlCurDir())
         self.startExplAction(content)
 

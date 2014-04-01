@@ -148,8 +148,13 @@ class FileExplorer(Explorer):
                         cacheFile.write(line + '\n')
 
     def getContent(self, *args, **kwargs):
-        dir = os.getcwd() if len(args) == 0 else args[0]
-        dir = os.path.abspath(dir)
+        if len(args) > 0:
+            if os.path.exists(args[0]):
+                os.chdir(args[0])
+            else:
+                vim.command("echohl ErrorMsg | redraw | echon 'Unknown directory `%s`' | echohl NONE" % args[0])
+                return None
+        dir = os.getcwd()
         if vim.eval("g:Lf_UseMemoryCache") == 0 or dir != self._curDir:
             self._curDir = dir
             self._content = self._getFileList(dir)
