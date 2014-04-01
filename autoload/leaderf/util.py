@@ -24,7 +24,7 @@ def escQuote(str):
     return "" if str is None else re.sub("'","''",str)
 
 def escSpecial(str):
-    return re.sub('(%|#|")', r"\\\1", str)
+    return re.sub('([%#" ])', r"\\\1", str)
 
 def lfOpen(file, mode = 'r', buffering = -1, encoding = None, errors = None, newline = None, closefd = True):
     if sys.version_info >= (3,0):
