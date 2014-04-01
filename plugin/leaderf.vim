@@ -46,7 +46,8 @@ function! <SID>InitDict(var, dict)
             for i in value
                 call filter(tmp, '!empty(filter(tmp[v:key], "v:val !=? i"))')
             endfor
-            let tmp[toupper(key)] = map(value, 'toupper(v:val)')
+            let tmp[substitute(key, '\<\a', '\=toupper(submatch(0))', 'g')] =
+                  \ map(value, 'substitute(v:val, "\\<\\a", "\\=toupper(submatch(0))", "g")')
         endfor
         exec 'let '.a:var.'='.string(tmp)
     endif
