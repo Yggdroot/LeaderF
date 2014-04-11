@@ -62,11 +62,13 @@ function! leaderf#LfPy(cmd)
     if v:version > 703
         exec g:Lf_py . a:cmd
     else
+        let old_gcr = &gcr
+        let old_t_ve = &t_ve
         try
             exec g:Lf_py . a:cmd
         catch /^Vim:Interrupt$/	" catch interrupts (CTRL-C)
-            set gcr&
-            set t_ve&
+            let &gcr = old_gcr
+            let &t_ve = old_t_ve
             let obj = substitute(a:cmd,'\..*', '', '')
             exec g:Lf_py . obj .".quit()"
             call getchar(0)

@@ -11,6 +11,8 @@ from leaderf.util import *
 def ctrlCursor(func):
     @wraps(func)
     def deco(*args, **kwargs):
+        vim.command("let g:lf_old_gcr = &gcr")
+        vim.command("let g:lf_old_t_ve = &t_ve")
         vim.command("set gcr=a:invisible")
         vim.command("set t_ve=")
         try:
@@ -18,12 +20,12 @@ def ctrlCursor(func):
                 yield i
         finally:
             try:
-                vim.command("set gcr&")
-                vim.command("set t_ve&")
+                vim.command("let &gcr = g:lf_old_gcr")
+                vim.command("let &t_ve = g:lf_old_t_ve")
             except: #due to vim's bug, I have to do like this
                 try:
-                    vim.command("set gcr&")
-                    vim.command("set t_ve&")
+                    vim.command("let &gcr = g:lf_old_gcr")
+                    vim.command("let &t_ve = g:lf_old_t_ve")
                 except:
                     pass
     return deco
