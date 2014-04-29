@@ -443,55 +443,55 @@ class Manager(object):
             self._index = 0
         quit = False
         for cmd in self._cli.input():
-            if cmd == '<Update>':
+            if equal(cmd, '<Update>'):
                 self._search(content, self._cli.regex)
-            elif cmd == '<Shorten>':
+            elif equal(cmd, '<Shorten>'):
                 self._index = 0
                 self._search(content, self._cli.regex)
-            elif cmd == '<Mode>':
+            elif equal(cmd, '<Mode>'):
                 self._setStlMode()
                 self._index = 0
                 self._search(content, self._cli.regex)
-            elif cmd == '<Up>':
+            elif equal(cmd, '<Up>'):
                 self._toUp()
-            elif cmd == '<Down>':
+            elif equal(cmd, '<Down>'):
                 self._toDown()
-            elif cmd == '<LeftMouse>':
+            elif equal(cmd, '<LeftMouse>'):
                 self._exitLoop = False
                 self._leftClick()
                 if self._exitLoop:
                     break
-            elif cmd == '<2-LeftMouse>':
+            elif equal(cmd, '<2-LeftMouse>'):
                 self._leftClick()
                 self.accept()
                 break
-            elif cmd == '<CR>':
+            elif equal(cmd, '<CR>'):
                 self.accept()
                 break
-            elif cmd == '<C-X>':
+            elif equal(cmd, '<C-X>'):
                 self.accept('h')
                 break
-            elif cmd == '<C-]>':
+            elif equal(cmd, '<C-]>'):
                 self.accept('v')
                 break
-            elif cmd == '<C-T>':
+            elif equal(cmd, '<C-T>'):
                 self.accept('t')
                 break
-            elif cmd == '<Quit>':
+            elif equal(cmd, '<Quit>'):
                 quit = True
                 break
-            elif cmd == '<Esc>':
+            elif equal(cmd, '<Esc>'):
                 self._clearSelections()
                 self._cli.hideCursor()
                 vim.command("setlocal nomodifiable")
                 self._content = content
                 self._createHelpHint()
-            elif cmd == '<F5>':
+            elif equal(cmd, '<F5>'):
                 self.refresh(content)
-            elif cmd == '<C-LeftMouse>':
+            elif equal(cmd, '<C-LeftMouse>'):
                 if self._getExplorer().supportsMulti():
                     self.addSelections()
-            elif cmd == '<S-LeftMouse>':
+            elif equal(cmd, '<S-LeftMouse>'):
                 if self._getExplorer().supportsMulti():
                     pass
             else:

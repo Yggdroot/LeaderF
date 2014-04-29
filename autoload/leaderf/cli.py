@@ -287,46 +287,46 @@ class LfCli(object):
                                 break
                         if cmd != '':
                             break
-                    if cmd == '<CR>':
+                    if equal(cmd, '<CR>'):
                         yield '<CR>'
-                    elif cmd == '<2-LeftMouse>':
+                    elif equal(cmd, '<2-LeftMouse>'):
                         yield '<2-LeftMouse>'
-                    elif cmd == '<Esc>':
+                    elif equal(cmd, '<Esc>'):
                         yield '<Esc>'
                         break
-                    elif cmd == '<C-F>':
+                    elif equal(cmd, '<C-F>'):
                         if self._supportFullPath:
                             self._isFuzzy = True
                             self._fullPath = not self._fullPath
                             self._buildRegex()
                             yield '<Mode>'
-                    elif cmd == '<C-R>':
+                    elif equal(cmd, '<C-R>'):
                         self._isFuzzy = not self._isFuzzy
                         self._buildRegex()
                         yield '<Mode>'
-                    elif cmd == '<BS>':
+                    elif equal(cmd, '<BS>'):
                         self._backspace()
                         self._buildRegex()
                         yield '<Shorten>'
-                    elif cmd == '<C-U>':
+                    elif equal(cmd, '<C-U>'):
                         self._clearLeft()
                         self._buildRegex()
                         yield '<Shorten>'
-                    elif cmd == '<Del>':
+                    elif equal(cmd, '<Del>'):
                         self._delete()
                         self._buildRegex()
                         yield '<Shorten>'
-                    elif cmd == '<C-V>':
+                    elif equal(cmd, '<C-V>'):
                         self._paste()
                         self._buildRegex()
                         yield '<Update>'
-                    elif cmd == '<Home>':
+                    elif equal(cmd, '<Home>'):
                         self._toBegin()
-                    elif cmd == '<End>':
+                    elif equal(cmd, '<End>'):
                         self._toEnd()
-                    elif cmd == '<Left>':
+                    elif equal(cmd, '<Left>'):
                         self._toLeft()
-                    elif cmd == '<Right>':
+                    elif equal(cmd, '<Right>'):
                         self._toRight()
                     else:
                         yield cmd

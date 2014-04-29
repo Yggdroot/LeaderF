@@ -72,4 +72,8 @@ def swapLine(m, n):
     else:
         cb[m], cb[n] = cb[n], cb[m]
 
-
+def equal(str1, str2, ignorecase = True):
+    if ignorecase:
+        return str1.upper() == str2.upper()
+    else:
+        return str1 == str2

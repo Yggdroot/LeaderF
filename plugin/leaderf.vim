@@ -43,6 +43,7 @@ function! <SID>InitDict(var, dict)
     else
         let tmp = a:dict
         for [key, value] in items(eval(a:var))
+            call filter(tmp, 'v:key !=? key')
             for i in value
                 call filter(tmp, '!empty(filter(tmp[v:key], "v:val !=? i"))')
             endfor
