@@ -42,7 +42,7 @@ Usage
 
 Once LeaderF is launched:
 
- - `<C-C>` : quit from LeaderF.
+ - `<C-C>`, `<C-Q>` : quit from LeaderF.
  - `<C-R>` : switch between fuzzy search mode and regex mode.
  - `<C-F>` : switch between full path search mode and name only search mode.
  - `<ESC>` : switch to normal mode.

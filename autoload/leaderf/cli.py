@@ -328,6 +328,8 @@ class LfCli(object):
                         self._toLeft()
                     elif equal(cmd, '<Right>'):
                         self._toRight()
+                    elif equal(cmd, '<C-Q>'):
+                        yield '<Quit>'
                     else:
                         yield cmd
         except KeyboardInterrupt: #<C-C>
