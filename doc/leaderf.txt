@@ -164,8 +164,9 @@ g:Lf_MruMaxFiles                                *g:Lf_MruMaxFiles*
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
     prompt(|leaderf-prompt|). 
-    for example, if you want to change the default command <C-F> to <C-D>: >
-    let g:Lf_CommandMap = {'<C-F>': ['<C-D>']}
+    for example, if you want to change the default command <C-F> to <C-D> and
+    change the default command <C-Q> to <Esc>: >
+    let g:Lf_CommandMap = {'<C-F>': ['<C-D>'], '<C-Q>': ['<Esc>']}
 <
 ==============================================================================
 USAGE                                           *leaderf-usage*
