@@ -163,6 +163,7 @@ class Manager(object):
         if nr == int(vim.eval("v:mouse_win")):
             vim.command("exec v:mouse_lnum")
             vim.command("exec 'norm!'.v:mouse_col.'|'")
+            self.clearSelections()
         else:
             self.quit()
             self._exitLoop = True
@@ -206,7 +207,7 @@ class Manager(object):
         return False
 
     def _search(self, content, regex):
-        self._clearSelections()
+        self.clearSelections()
         self._cli.highlightMatches()
         cb = vim.current.buffer
         if not regex:
@@ -334,7 +335,7 @@ class Manager(object):
         except vim.error:
             pass
 
-    def _clearSelections(self):
+    def clearSelections(self):
         for i in self._selections.values():
             vim.command("call matchdelete(%d)" % i)
         self._selections.clear()
@@ -349,6 +350,7 @@ class Manager(object):
         for i in range(self._helpLength):
             del vim.current.buffer[0]
         self._createHelpHint()
+        self.clearSelections()
         vim.command("setlocal nomodifiable")
 
     def accept(self, mode = ''):
@@ -369,7 +371,7 @@ class Manager(object):
 
     def quit(self):
         self._cli.clear()
-        self._selections.clear()
+        self.clearSelections()
         if self._winPos != 0 and len(vim.windows) > 1:
             vim.command("hide")
             vim.command("exec '%d wincmd w'" % self._origWinNr)
@@ -414,6 +416,10 @@ class Manager(object):
             vim.command("exec v:mouse_lnum")
             vim.command("exec 'norm!'.v:mouse_col.'|'")
         lineNr = vim.current.window.cursor[0]
+        if lineNr <= self._helpLength:
+            vim.command("norm! j")
+            return
+        
         if lineNr in self._selections:
             vim.command("call matchdelete(%d)" % self._selections[lineNr])
             del self._selections[lineNr]
@@ -421,6 +427,28 @@ class Manager(object):
             id = int(vim.eval("matchadd('Lf_hl_selection', '\%%%dl.')" % lineNr))
             self._selections[lineNr] = id
         vim.command('call feedkeys("\<C-@>")')  #vim has bug, so add this line
+
+    def selectMulti(self):
+        origLine = vim.current.window.cursor[0]
+        nr = self._bufwinnr(self._bufName)
+        if int(vim.eval("v:mouse_win")) != 0 and nr != int(vim.eval("v:mouse_win")):
+            return
+        elif nr == int(vim.eval("v:mouse_win")):
+            vim.command("exec v:mouse_lnum")
+            vim.command("exec 'norm!'.v:mouse_col.'|'")
+        self.clearSelections()
+        curLine = vim.current.window.cursor[0]
+        for i in range(min(origLine, curLine), max(origLine, curLine)+1):
+            if i > self._helpLength and i not in self._selections:
+                id = int(vim.eval("matchadd('Lf_hl_selection', '\%%%dl.')" % (i)))
+                self._selections[i] = id
+        vim.command('call feedkeys("\<C-@>")')  #vim has bug, so add this line
+
+    def selectAll(self):
+        for i in range(len(vim.current.buffer)):
+            if i >= self._helpLength and i+1 not in self._selections:
+                id = int(vim.eval("matchadd('Lf_hl_selection', '\%%%dl.')" % (i+1)))
+                self._selections[i+1] = id
 
     def startExplorer(self, *args, **kwargs):
         self._cli.setFullPathFeature(self._getExplorer().supportsFullPath())
@@ -481,7 +509,7 @@ class Manager(object):
                 quit = True
                 break
             elif equal(cmd, '<Esc>'):
-                self._clearSelections()
+                self.clearSelections()
                 self._cli.hideCursor()
                 vim.command("setlocal nomodifiable")
                 self._content = content
@@ -493,7 +521,12 @@ class Manager(object):
                     self.addSelections()
             elif equal(cmd, '<S-LeftMouse>'):
                 if self._getExplorer().supportsMulti():
-                    pass
+                    self.selectMulti()
+            elif equal(cmd, '<C-A>'):
+                if self._getExplorer().supportsMulti():
+                    self.selectAll()
+            elif equal(cmd, '<C-L>'):
+                self.clearSelections()
             else:
                 if self._cmdExtension(cmd):
                     break

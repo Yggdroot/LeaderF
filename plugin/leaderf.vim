@@ -103,13 +103,13 @@ let s:Lf_CommandMap = {
             \ '<C-P>':         ['<C-P>'],
             \ '<C-Q>':         ['<C-Q>'],
             \ '<C-R>':         ['<C-R>'],
-            \ '<C-S>':         ['<C-S>'],
             \ '<C-T>':         ['<C-T>'],
             \ '<C-U>':         ['<C-U>'],
             \ '<C-V>':         ['<C-V>', '<S-Insert>'],
             \ '<C-W>':         ['<C-W>'],
             \ '<C-X>':         ['<C-X>'],
             \ '<C-Y>':         ['<C-Y>'],
+            \ '<C-Z>':         ['<C-Z>'],
             \ '<C-]>':         ['<C-]>'],
             \ '<F1>':          ['<F1>'],
             \ '<F2>':          ['<F2>'],
@@ -140,7 +140,7 @@ let s:Lf_CommandMap = {
             \ '<RightMouse>':  ['<RightMouse>'],
             \ '<MiddleMouse>': ['<MiddleMouse>'],
             \ '<2-LeftMouse>': ['<2-LeftMouse>'],
-            \ '<C-LeftMouse>': ['<C-LeftMouse>', '<C-Z>'],
+            \ '<C-LeftMouse>': ['<C-LeftMouse>', '<C-S>'],
             \ '<S-LeftMouse>': ['<S-LeftMouse>']
             \}
 call <SID>InitDict('g:Lf_CommandMap', s:Lf_CommandMap)

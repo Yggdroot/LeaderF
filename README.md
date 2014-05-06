@@ -54,7 +54,10 @@ Once LeaderF is launched:
  - `<C-]>` : open in vertical split window.
  - `<C-T>` : open in new tabpage.
  - `<F5>`  : refresh the cache.
- - `<C-LeftMouse>` or `<C-Z>` : select multiple files.
+ - `<C-LeftMouse>` or `<C-S>` : select multiple files.
+ - `<S-LeftMouse>` : select consecutive multiple files.
+ - `<C-A>` : select all files.
+ - `<C-L>` : clear all selections.
 
 Input formats:
 
