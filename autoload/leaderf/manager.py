@@ -330,7 +330,14 @@ class Manager(object):
                 elif mode == 'v':
                     vim.command("vsplit")
                 elif mode == 't':
-                    vim.command("tabedit | tabm")
+                    vim.command("tabedit")
+                    tabPos = int(vim.eval("g:Lf_TabpagePosition"))
+                    if tabPos == 0:
+                        vim.command("tabm 0")
+                    elif tabPos == 1:
+                        vim.command("tabm -1")
+                    elif tabPos == 3:
+                        vim.command("tabm")
                 self._getExplorer().acceptSelection(file)
         except vim.error:
             pass
@@ -360,12 +367,12 @@ class Manager(object):
         if len(self._selections) > 0:
             files = []
             for i in self._selections.keys():
-                files.append(vim.current.buffer[i-1])
+                files.append(os.path.abspath(vim.current.buffer[i-1]))
             self.quit()
             for file in files:
                 self._accept(file, mode)
         else:
-            file = vim.current.line
+            file = os.path.abspath(vim.current.line)
             self.quit()
             self._accept(file, mode)
 
@@ -426,7 +433,9 @@ class Manager(object):
         else:
             id = int(vim.eval("matchadd('Lf_hl_selection', '\%%%dl.')" % lineNr))
             self._selections[lineNr] = id
-        vim.command('call feedkeys("\<C-@>")')  #vim has bug, so add this line
+
+        if int(vim.eval("v:mouse_win")) != 0:
+            vim.command('call feedkeys("\<C-@>")')  #vim has bug, so add this line
 
     def selectMulti(self):
         origLine = vim.current.window.cursor[0]

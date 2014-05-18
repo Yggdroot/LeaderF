@@ -73,6 +73,7 @@ endfunction
 call <SID>InitVar('g:Lf_ShortcutF', '<Leader>f')
 call <SID>InitVar('g:Lf_ShortcutB', '<Leader>b')
 call <SID>InitVar('g:Lf_WindowPosition', 1)
+call <SID>InitVar('g:Lf_TabpagePosition', 2)
 call <SID>InitVar('g:Lf_SplitPath', 0)
 call <SID>InitVar('g:Lf_ShowRelativePath', 1)
 call <SID>InitVar('g:Lf_DefaultMode', 0)

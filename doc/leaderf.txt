@@ -62,6 +62,15 @@ g:Lf_WindowPosition                             *g:Lf_WindowPosition*
     other - the match window is in the vertical split window.
     Default value is 1.
 
+g:Lf_TabpagePosition                            *g:Lf_TabpagePosition*
+    Specify where to put the newly opened tab page.
+    The value can be 0, 1, 2, ...
+    0 - make the newly opened tab page the first one.
+    1 - put the newly opened tab page before the current one.
+    2 - put the newly opened tab page after the current one.
+    3 - make the newly opened tab page the last one.
+    Default value is 2.
+
 g:Lf_ShowRelativePath                           *g:Lf_ShowRelativePath*
     Whether to show the relative path in the match window.
     0 - no
@@ -70,7 +79,7 @@ g:Lf_ShowRelativePath                           *g:Lf_ShowRelativePath*
 
 g:Lf_DefaultMode                                *g:Lf_DefaultMode*
     Specify the default mode when LeaderF is launched.
-    There are 3 modes, and the corresponding value are:
+    There are 3 modes, and the corresponding values are:
     0 - fuzzy mode, match file name only when searching
     1 - fuzzy mode, match full path when searching
     2 - regex mode
@@ -184,7 +193,7 @@ USAGE                                           *leaderf-usage*
     Launch LeaderF to search Mru.
 
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
-    <C-C> : quit from LeaderF.
+    <C-C>, <C-Q> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.
     <C-F> : switch between full path search mode and name only search mode.
     <ESC> : switch to normal mode.
