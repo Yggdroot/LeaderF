@@ -147,6 +147,11 @@ g:Lf_SearchStep                                 *g:Lf_SearchStep*
     Used in searching algorithm.
     Default value is 5000.
     
+g:Lf_MaxLines                                   *g:Lf_NumberOfSort*
+    Specify the maximum number of files to display in the match window.
+    If value is 0, all the files will display in the match window.
+    Default value is 5000.
+
 g:Lf_DelimiterChar                              *g:Lf_DelimiterChar*
     Default value is '/'.
 

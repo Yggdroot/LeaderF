@@ -15,6 +15,7 @@ class Manager(object):
     def __init__(self):
         self._bufName = vim.eval("expand('$VIMRUNTIME/[LeaderF]')")
         self._winPos = int(vim.eval("g:Lf_WindowPosition"))
+        self._maxLines = int(vim.eval("g:Lf_MaxLines"))
         self._autochdir = 0
         self._cli = LfCli()
         self._explorer = None
@@ -85,6 +86,7 @@ class Manager(object):
     def _initStlVar(self):
         vim.command("let g:Lf_statusline_function = '-'")
         vim.command("let g:Lf_statusline_curDir = '-'")
+        vim.command("let g:Lf_statusline_total = '0'")
 
     def _setStlMode(self):
         if self._cli.isFuzzy:
@@ -149,7 +151,7 @@ class Manager(object):
         vim.command("setlocal statusline=LeaderF:\ [%#Lf_hl_stlFunction#%{g:Lf_statusline_function}%#Lf_hl_none#,")
         vim.command("setlocal statusline+=\ %#Lf_hl_stlMode#%-9(%{g:Lf_statusline_mode}%#Lf_hl_none#]%)")
         vim.command("setlocal statusline+=\ \ %<%#Lf_hl_stlCurDir#%{g:Lf_statusline_curDir}%#Lf_hl_none#")
-        vim.command("setlocal statusline+=%=%lL/%-5L")
+        vim.command("setlocal statusline+=%=%lL/%-5L\ \ Total:%{g:Lf_statusline_total}\ ")
         vim.command("redraw!")
 
     def _toUp(self):
@@ -211,7 +213,10 @@ class Manager(object):
         self._cli.highlightMatches()
         cb = vim.current.buffer
         if not regex:
-            setBuffer(cb, content)
+            if self._maxLines > 0:
+                setBuffer(cb, content[:self._maxLines])
+            else:
+                setBuffer(cb, content)
             return
 
         if not self._cli.isFuzzy:
@@ -468,6 +473,7 @@ class Manager(object):
             return
         self._gotoBuffer()
         vim.command("let g:Lf_statusline_curDir = '%s'" % self._getExplorer().getStlCurDir())
+        vim.command("let g:Lf_statusline_total = '%d'" % len(content))
         self.startExplAction(content)
 
     def startExplAction(self, content = None):
@@ -476,7 +482,10 @@ class Manager(object):
         if content is None:
             content = self._content
         else:
-            setBuffer(vim.current.buffer, content)
+            if self._maxLines > 0:
+                setBuffer(vim.current.buffer, content[:self._maxLines])
+            else:
+                setBuffer(vim.current.buffer, content)
             self._index = 0
         quit = False
         for cmd in self._cli.input():
