@@ -488,7 +488,8 @@ class Manager(object):
             elif equal(cmd, '<Mode>'):
                 self._setStlMode()
                 self._index = 0
-                self._search(content, self._cli.regex)
+                if self._cli.regex:
+                    self._search(content, self._cli.regex)
             elif equal(cmd, '<Up>'):
                 self._toUp()
             elif equal(cmd, '<Down>'):
