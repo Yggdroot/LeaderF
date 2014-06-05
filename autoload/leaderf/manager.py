@@ -374,8 +374,14 @@ class Manager(object):
             for i in self._selections.keys():
                 files.append(os.path.abspath(vim.current.buffer[i-1]))
             self.quit()
-            for file in files:
-                self._accept(file, mode)
+            if mode == '':
+                vim.command("argdelete *")
+                for file in files:
+                    vim.command("argadd %s" % escSpecial(file))
+                self._accept(files[0], mode)
+            else:
+                for file in files:
+                    self._accept(file, mode)
         else:
             file = os.path.abspath(vim.current.line)
             self.quit()
