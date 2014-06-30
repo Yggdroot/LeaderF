@@ -25,9 +25,19 @@ if !exists("g:Lf_PythonVersion")
     endif
 else
     if g:Lf_PythonVersion == 2
-        let g:Lf_py = "py "
+        if has("python")
+            let g:Lf_py = "py "
+        else
+            echo 'LeaderF Error: has("python") == 0'
+            finish
+        endif
     else
-        let g:Lf_py = "py3 "
+        if has("python3")
+            let g:Lf_py = "py3 "
+        else
+            echo 'LeaderF Error: has("python3") == 0'
+            finish
+        endif
     endif
 endif
 
