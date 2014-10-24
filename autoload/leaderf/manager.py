@@ -344,7 +344,7 @@ class Manager(object):
                     elif tabPos == 3:
                         vim.command("tabm")
                 self._getExplorer().acceptSelection(file)
-        except vim.error:
+        except (KeyboardInterrupt, vim.error):
             pass
 
     def clearSelections(self):
