@@ -157,6 +157,12 @@ class LfCli(object):
         else:
             self._regex = ''
 
+    def _join(self, cmdline):
+        cmd = ['%s\[^%s]\{-}' % (c, c) for c in cmdline[0:-1]]
+        cmd.append(cmdline[-1])
+        regex = ''.join(cmd)
+        return regex
+
     def highlightMatches(self):
         vim.command("silent! syn clear Lf_hl_match")
         if not self._cmdline:
@@ -171,7 +177,7 @@ class LfCli(object):
             if self.isFileNameOnly:
                 if self.isMixed:
                     idx = self._cmdline.index(vim.eval("g:Lf_DelimiterChar"))
-                    regex = ('\c\V' + '\.\{-}'.join(cmdline[:idx]), '\c\V' + nonSlash.join(cmdline[idx+1:]))
+                    regex = ('\c\V' + self._join(cmdline[:idx]), '\c\V' + nonSlash.join(cmdline[idx+1:]))
                     if regex[0] == '\c\V' and regex[1] == '\c\V':
                         pass
                     elif regex[0] == '\c\V':
@@ -182,7 +188,7 @@ class LfCli(object):
                         vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_nonHelp, Lf_hl_filename contained" % regex[1])
                         vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_filename contained" % regex[0])
                 else:
-                    regex = '\c\V' + '\.\{-}'.join(cmdline)
+                    regex = '\c\V' + self._join(cmdline)
                     vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_filename contained" % regex)
             else:
                 regex = '\c\V' + nonSlash.join(cmdline)
