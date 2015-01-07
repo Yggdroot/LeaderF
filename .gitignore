@@ -1,4 +1,6 @@
 *.py[cod]
+*.sw?
+doc/tags
 
 # C extensions
 *.so
