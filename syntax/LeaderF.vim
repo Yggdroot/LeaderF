@@ -3,8 +3,8 @@
 " Description: LeaderF syntax settings
 " Author:      Yggdroot <archofortune@gmail.com>
 " Website:     https://github.com/Yggdroot
-" Note:        
-" License:     This script is released under the Vim License.            
+" Note:
+" License:     This script is released under the Vim License.
 " ============================================================================
 
 scriptencoding utf-8
@@ -31,6 +31,6 @@ if has("syntax")
     highlight def link Lf_hl_stlFunction    Statusline
     highlight def link Lf_hl_stlMode        Statusline
     highlight def link Lf_hl_stlCurDir      Statusline
-endif         
+endif
 
 let b:current_syntax = "LeaderF"

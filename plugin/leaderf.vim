@@ -1,10 +1,10 @@
 " ============================================================================
 " File:        leaderf.vim
-" Description: 
+" Description:
 " Author:      Yggdroot <archofortune@gmail.com>
 " Website:     https://github.com/Yggdroot
-" Note:        
-" License:     This script is released under the Vim License.            
+" Note:
+" License:     This script is released under the Vim License.
 " ============================================================================
 if exists('g:leaderf_loaded') || v:version < 700 || &compatible
     finish
@@ -63,7 +63,7 @@ function! <SID>InitDict(var, dict)
     endif
 endfunction
 
-function! g:LfNoErrMsgMatch(expr, pat) 
+function! g:LfNoErrMsgMatch(expr, pat)
     try
         return match(a:expr, a:pat)
     catch /^Vim\%((\a\+)\)\=:E/
@@ -71,7 +71,7 @@ function! g:LfNoErrMsgMatch(expr, pat)
     return -2
 endfunction
 
-function! g:LfNoErrMsgCmd(cmd) 
+function! g:LfNoErrMsgCmd(cmd)
     try
         exec a:cmd
         return 1
@@ -106,6 +106,7 @@ call <SID>InitVar('g:Lf_WildIgnore',{
             \})
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
+            \ '<C-C>':         ['<C-C>'],
             \ '<C-D>':         ['<C-D>'],
             \ '<C-F>':         ['<C-F>'],
             \ '<C-G>':         ['<C-G>'],

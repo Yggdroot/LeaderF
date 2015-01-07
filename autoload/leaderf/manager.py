@@ -375,7 +375,10 @@ class Manager(object):
                 files.append(os.path.abspath(vim.current.buffer[i-1]))
             self.quit()
             if mode == '':
-                vim.command("argdelete *")
+                try:
+                    vim.command("argdelete *")
+                except: # E480
+                    pass
                 for file in files:
                     vim.command("argadd %s" % escSpecial(file))
                 self._accept(files[0], mode)
@@ -437,7 +440,7 @@ class Manager(object):
         if lineNr <= self._helpLength:
             vim.command("norm! j")
             return
-        
+
         if lineNr in self._selections:
             vim.command("call matchdelete(%d)" % self._selections[lineNr])
             del self._selections[lineNr]

@@ -334,7 +334,7 @@ class LfCli(object):
                         self._toLeft()
                     elif equal(cmd, '<Right>'):
                         self._toRight()
-                    elif equal(cmd, '<C-Q>'):
+                    elif equal(cmd, '<C-C>'):
                         yield '<Quit>'
                     else:
                         yield cmd

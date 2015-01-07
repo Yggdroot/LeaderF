@@ -146,7 +146,7 @@ g:Lf_WildIgnore                                 *g:Lf_WildIgnore*
 g:Lf_SearchStep                                 *g:Lf_SearchStep*
     Used in searching algorithm.
     Default value is 5000.
-    
+
 g:Lf_MaxLines                                   *g:Lf_MaxLines*
     Specify the maximum number of files to display in the match window.
     If value is 0, all the files will display in the match window.
@@ -177,7 +177,7 @@ g:Lf_MruMaxFiles                                *g:Lf_MruMaxFiles*
 
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
-    prompt(|leaderf-prompt|). 
+    prompt(|leaderf-prompt|).
     for example, if you want to change the default command <C-F> to <C-D> and
     change the default command <C-Q> to <Esc>: >
     let g:Lf_CommandMap = {'<C-F>': ['<C-D>'], '<C-Q>': ['<Esc>']}

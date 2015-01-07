@@ -1,10 +1,10 @@
 " ============================================================================
 " File:        leaderf.vim
-" Description: 
+" Description:
 " Author:      Yggdroot <archofortune@gmail.com>
 " Website:     https://github.com/Yggdroot
-" Note:        
-" License:     This script is released under the Vim License.            
+" Note:
+" License:     This script is released under the Vim License.
 " ============================================================================
 
 exec g:Lf_py "import vim, sys"
@@ -67,7 +67,7 @@ function! g:LfMruExplMaps()
     nnoremap <buffer> <silent> l             :exec g:Lf_py "mruExplManager.clearSelections()"<CR>
 endfunction
 
-function! leaderf#LfPy(cmd) 
+function! leaderf#LfPy(cmd)
     if v:version > 703
         exec g:Lf_py . a:cmd
     else
@@ -88,7 +88,7 @@ function! leaderf#LfPy(cmd)
     endif
 endfunction
 
-function! leaderf#startFileExpl(...) 
+function! leaderf#startFileExpl(...)
     if a:0 == 0
         call leaderf#LfPy("fileExplManager.startExplorer()")
     else
@@ -97,7 +97,7 @@ function! leaderf#startFileExpl(...)
     endif
 endfunction
 
-function! leaderf#startBufExpl(...) 
+function! leaderf#startBufExpl(...)
     if a:0 == 0
         call leaderf#LfPy("bufExplManager.startExplorer()")
     else
@@ -106,7 +106,7 @@ function! leaderf#startBufExpl(...)
     endif
 endfunction
 
-function! leaderf#startMruExpl(...) 
+function! leaderf#startMruExpl(...)
     call leaderf#LfPy("mruExplManager.startExplorer()")
 endfunction
 

@@ -29,7 +29,7 @@ To install this plugin just put the plugin files in your `~/.vim` (Linux) or `~/
 For [Vundle][3] user, just add `Bundle 'Yggdroot/LeaderF'` to your `.vimrc`.
 
 Usage
------ 
+-----
 
  - `:Leaderf` or `:Leaderf [directory]` or `,f`<br>
  Launch LeaderF to search files.
@@ -42,12 +42,12 @@ Usage
 
 Once LeaderF is launched:
 
- - `<C-C>`, `<C-Q>` : quit from LeaderF.
+ - `<C-C>` : quit from LeaderF.
  - `<C-R>` : switch between fuzzy search mode and regex mode.
  - `<C-F>` : switch between full path search mode and name only search mode.
  - `<ESC>` : switch to normal mode.
  - `<C-V>` : paste from clipboard.
- - `<C-U>` : clear the prompt. 
+ - `<C-U>` : clear the prompt.
  - `<C-J>`, `<Down>`, `<C-K>`, `<Up>` : navigate the result list.
  - `<2-LeftMouse>` or `<CR>` : open the file under cursor or selected(when multiple files are selected).
  - `<C-X>` : open in horizontal split window.
@@ -68,7 +68,7 @@ Input formats:
  If you input string as `'abc/def/gh'`, then `'abc'` will match the file name and `'def/gh'` will match the directory name as in **FullPath** mode.
 
  - In **FullPath** mode (*fuzzy*)
- 
+
  `'ab'` is interpreted as vim's regexp `'a[^/]\{-}b'`.<br>
  `'/'` is interpreted as vim's regexp `'[/].\{-}'`.<br>
  `'ab/c'` is interpreted as vim's regexp `'a[^/]\{-}b[^/]\{-}[/].\{-}[^/]\{-}c'`.<br>
@@ -82,13 +82,13 @@ Input formats:
 Related works
 -------------
 
- - [ctrlp][4] is a great plugin. Some ideas of my plugin come from it. 
+ - [ctrlp][4] is a great plugin. Some ideas of my plugin come from it.
 
 Advantages over ctrlp
 ---------------------
 
 The only advantage over ctrlp is performance. If you are smart enough, perhaps you can find more.
- 
+
 
 License
 -------
