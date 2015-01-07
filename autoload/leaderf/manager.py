@@ -343,7 +343,7 @@ class Manager(object):
                         vim.command("tabm -1")
                     elif tabPos == 3:
                         vim.command("tabm")
-                self._getExplorer().acceptSelection(file)
+                self._getExplorer().acceptSelection(uniCoding(file))
         except (KeyboardInterrupt, vim.error):
             pass
 
