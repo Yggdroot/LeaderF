@@ -386,7 +386,7 @@ class Manager(object):
                 for file in files:
                     self._accept(file, mode)
         else:
-            file = os.path.abspath(vim.current.line)
+            file = '' if vim.current.line == '' else os.path.abspath(vim.current.line)
             self.quit()
             self._accept(file, mode)
 
