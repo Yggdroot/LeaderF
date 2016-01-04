@@ -64,11 +64,10 @@ class FileExplorer(Explorer):
         dir = dir if dir.endswith(os.sep) else dir + os.sep
         with lfOpen(self._cacheIndex, 'r+', errors = 'ignore') as f:
             lines = f.readlines()
-            lineCount = len(lines)
             pathLen = 0
             target = -1
-            for i in range(lineCount):
-                path = lines[i].split(None, 2)[2].strip()
+            for i, line in enumerate(lines):
+                path = line.split(None, 2)[2].strip()
                 if dir.startswith(path) and len(path) > pathLen:
                     pathLen = len(path)
                     target = i
@@ -92,25 +91,25 @@ class FileExplorer(Explorer):
                 deltaSec = time.time() - startTime
                 if deltaSec > float(vim.eval("g:Lf_NeedCacheTime")):
                     cacheFileName = ''
-                    if lineCount < int(vim.eval("g:Lf_NumberOfCache")):
+                    if len(lines) < int(vim.eval("g:Lf_NumberOfCache")):
                         f.seek(0, 2)
                         ts = time.time()
                         line = '%.3f cache_%.3f %s\n' % (ts, ts, dir)
                         f.write(line)
                         cacheFileName = 'cache_%.3f' % ts
                     else:
-                        for i in range(lineCount):
-                            path = lines[i].split(None, 2)[2].strip()
+                        for i, line in enumerate(lines):
+                            path = line.split(None, 2)[2].strip()
                             if path.startswith(dir):
-                                cacheFileName = lines[i].split(None, 2)[1].strip()
-                                lines[i] = '%.3f %s %s\n' % (time.time(), cacheFileName, dir)
+                                cacheFileName = line.split(None, 2)[1].strip()
+                                line = '%.3f %s %s\n' % (time.time(), cacheFileName, dir)
                                 break
                         if cacheFileName == '':
                             timestamp = lines[0].split(None, 2)[0]
                             oldest = 0
-                            for i in range(lineCount):
-                                if lines[i].split(None, 2)[0] < timestamp:
-                                    timestamp = lines[i].split(None, 2)[0]
+                            for i, line in enumerate(lines):
+                                if line.split(None, 2)[0] < timestamp:
+                                    timestamp = line.split(None, 2)[0]
                                     oldest = i
                             cacheFileName = lines[oldest].split(None, 2)[1].strip()
                             lines[oldest] = '%.3f %s %s\n' % (time.time(), cacheFileName, dir)
@@ -127,11 +126,10 @@ class FileExplorer(Explorer):
         dir = dir if dir.endswith(os.sep) else dir + os.sep
         with lfOpen(self._cacheIndex, 'r+', errors = 'ignore') as f:
             lines = f.readlines()
-            lineCount = len(lines)
             pathLen = 0
             target = -1
-            for i in range(lineCount):
-                path = lines[i].split(None, 2)[2].strip()
+            for i, line in enumerate(lines):
+                path = line.split(None, 2)[2].strip()
                 if dir.startswith(path) and len(path) > pathLen:
                     pathLen = len(path)
                     target = i

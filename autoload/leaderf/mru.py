@@ -32,8 +32,10 @@ class Mru(object):
             return
         with lfOpen(self._cacheFile, 'r+', errors = 'ignore') as f:
             lines = f.readlines()
-            for i in range(len(lines)):
-                if bufName == lines[i].rstrip():
+            for i, line in enumerate(lines):
+                if bufName == line.rstrip():
+                    if i == 0:
+                        return
                     del lines[i]
                     break
             lines.insert(0, bufName + '\n')

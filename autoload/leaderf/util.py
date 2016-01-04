@@ -8,9 +8,17 @@ import os
 import locale
 
 if sys.version_info >= (3,0):
+
     def uniCoding(str):
         return str
-else:
+
+    def lfOpen(file, mode = 'r', buffering = -1, encoding = None, errors = None, newline = None, closefd = True):
+        return open(file, mode, buffering, encoding, errors, newline, closefd)
+
+else: # python 2.x
+
+    range = xrange
+
     def uniCoding(str):
         try:
             if locale.getdefaultlocale()[1] is None:
@@ -20,17 +28,17 @@ else:
         except UnicodeDecodeError:
             return str
 
+    def lfOpen(file, mode = 'r', buffering = -1, encoding = None, errors = None, newline = None, closefd = True):
+        return open(file, mode, buffering)
+
+
+#-----------------------------------------------------------------------------
+
 def escQuote(str):
     return "" if str is None else re.sub("'","''",str)
 
 def escSpecial(str):
     return re.sub('([%#" ])', r"\\\1", str)
-
-def lfOpen(file, mode = 'r', buffering = -1, encoding = None, errors = None, newline = None, closefd = True):
-    if sys.version_info >= (3,0):
-        return open(file, mode, buffering, encoding, errors, newline, closefd)
-    else:
-        return open(file, mode, buffering)
 
 def hasBug():
     return int(vim.eval("v:version")) < 704 and sys.version_info >= (3,0)
@@ -38,15 +46,15 @@ def hasBug():
 #append() has bug in vim7.3
 def appendBuffer(buffer, content, nr):
     if hasBug():
-        for i in range(len(content)):
-            vim.command("call setline(%d, '%s')" % (nr+i+1, escQuote(content[i]).rstrip()))
+        for i, line in enumerate(content):
+            vim.command("call setline(%d, '%s')" % (nr+i+1, escQuote(line).rstrip()))
     else:
         buffer[nr:] = content
 
 def append(buffer, content, nr):
     if int(vim.eval("v:version")) < 704:
-        for i in range(len(content)):
-            vim.command("call append(%d, '%s')" % (nr+i, escQuote(content[i]).rstrip()))
+        for i, line in enumerate(content):
+            vim.command("call append(%d, '%s')" % (nr+i, escQuote(line).rstrip()))
     else:
         buffer.append(content, nr)
 

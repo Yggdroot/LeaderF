@@ -1,5 +1,5 @@
 " ============================================================================
-" File:        LeaderF.vim
+" File:        leaderf.vim
 " Description: LeaderF syntax settings
 " Author:      Yggdroot <archofortune@gmail.com>
 " Website:     https://github.com/Yggdroot
@@ -33,4 +33,4 @@ if has("syntax")
     highlight def link Lf_hl_stlCurDir      Statusline
 endif
 
-let b:current_syntax = "LeaderF"
+let b:current_syntax = "leaderf"

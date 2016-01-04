@@ -6,10 +6,11 @@
 " Note:
 " License:     This script is released under the Vim License.
 " ============================================================================
+
 if exists('g:leaderf_loaded') || v:version < 700 || &compatible
     finish
 else
-      let g:leaderf_loaded = 1
+    let g:leaderf_loaded = 1
 endif
 
 if !exists("g:Lf_PythonVersion")

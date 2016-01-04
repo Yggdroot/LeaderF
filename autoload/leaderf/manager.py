@@ -74,6 +74,7 @@ class Manager(object):
         vim.command("setlocal nomodifiable")
 
     def _hideHelp(self):
+        # should be 'del vim.current.buffer[:self._helpLength]', but there is bug in vim7.3
         for i in range(self._helpLength):
             del vim.current.buffer[0]
         self._helpLength = 0
@@ -145,7 +146,7 @@ class Manager(object):
         vim.command("setlocal nofoldenable")
         vim.command("setlocal foldcolumn=1")
         vim.command("setlocal cursorline")
-        vim.command("setlocal filetype=LeaderF")
+        vim.command("setlocal filetype=leaderf")
 
     def _setStatusline(self):
         vim.command("setlocal statusline=LeaderF:\ [%#Lf_hl_stlFunction#%{g:Lf_statusline_function}%#Lf_hl_none#,")
