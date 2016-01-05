@@ -35,7 +35,7 @@ else: # python 2.x
 #-----------------------------------------------------------------------------
 
 def escQuote(str):
-    return "" if str is None else re.sub("'","''",str)
+    return "" if str is None else str.replace("'","''")
 
 def escSpecial(str):
     return re.sub('([%#" ])', r"\\\1", str)

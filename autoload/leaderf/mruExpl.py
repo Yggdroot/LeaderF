@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import vim
-import re
 import os
 import os.path
 from functools import wraps

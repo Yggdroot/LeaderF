@@ -194,26 +194,30 @@ class LfCli(object):
                 regex = '\c\V' + nonSlash.join(cmdline)
                 vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_nonHelp, Lf_hl_filename contained" % regex)
         else:
-            if self.regex:
-                regex = (self.regex + '\\') if len(re.search(r'\\*$', self.regex).group(0)) % 2 == 1 else self.regex
-                regex = re.sub("'", r"\'", regex)
+            if self._regex:
+                # e.g. if self._regex is 'aa\', change it to 'aa\\'; else keep it as it is
+                # syn match Lf_hl_match 'aa\'  will raise an error without this line.
+                regex = (self._regex + '\\') if len(re.search(r'\\*$', self._regex).group(0)) % 2 == 1 else self._regex
+                regex = regex.replace("'", r"\'") # also for syn match, because we use ' to surround the syn-pattern
+                # e.g. syn match Lf_hl_match '[' will raise an error, change unmatched '[' to '\['
                 if '[' in regex:
                     tmpRe = [i for i in regex]
                     i = 0
-                    while i < len(regex):
+                    lenRegex = len(regex)
+                    while i < lenRegex:
                         if tmpRe[i] == '\\':
                             i += 2
                         elif tmpRe[i] == '[':
                             j = i + 1
-                            while j < len(regex):
-                                if tmpRe[j] == ']':
+                            while j < lenRegex:
+                                if tmpRe[j] == ']' and tmpRe[j-1] != '[':
                                     i = j + 1
                                     break
                                 elif tmpRe[j] == '\\':
                                     j += 2
                                 else:
                                     j += 1
-                            if j >= len(regex):
+                            else:
                                 tmpRe[i] = r'\['
                                 i += 1
                         else:
