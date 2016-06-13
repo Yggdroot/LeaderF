@@ -93,7 +93,7 @@ The only advantage over ctrlp is performance. If you are smart enough, perhaps y
 License
 -------
 
-This plugin is released under the Vim License.
+This plugin is released under the Apache License, Version 2.0 (the "License").
 
 
   [1]: http://imageshack.com/a/img802/1026/iei.gif
