@@ -12,9 +12,9 @@ This plugin is mainly used for locating files, buffers, mrus in large project.
 Screenshots
 -----------
 
-![enter image description here][1]
+![NameOnly Mode][1]
 
-![enter image description here][2]
+![FullPath Mode][2]
 
 Requirements
 ------------
@@ -96,7 +96,7 @@ License
 This plugin is released under the Apache License, Version 2.0 (the "License").
 
 
-  [1]: http://imageshack.com/a/img802/1026/iei.gif
-  [2]: http://imageshack.com/a/img809/2369/mnu.gif
+  [1]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_1.gif
+  [2]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_2.gif
   [3]: https://github.com/gmarik/Vundle.vim
   [4]: https://github.com/kien/ctrlp.vim
