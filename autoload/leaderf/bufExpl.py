@@ -5,23 +5,9 @@ import vim
 import re
 import os
 import os.path
-from functools import wraps
-from leaderf.util import *
+from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
-
-
-def showRelativePath(func):
-    @wraps(func)
-    def deco(*args, **kwargs):
-        if vim.eval("g:Lf_ShowRelativePath") == '1':
-            try:
-                return [os.path.relpath(line) for line in func(*args, **kwargs)]
-            except ValueError:
-                return func(*args, **kwargs)
-        else:
-            return func(*args, **kwargs)
-    return deco
 
 
 #*****************************************************
@@ -30,13 +16,14 @@ def showRelativePath(func):
 class BufferExplorer(Explorer):
     @showRelativePath
     def getContent(self, *args, **kwargs):
-        showUnlisted = False if len(args) == 0 else args[0]
-        if showUnlisted:
+        show_unlisted = False if len(args) == 0 else args[0]
+        if show_unlisted:
             return [b.name for b in vim.buffers if b.name is not None]
         if int(vim.eval("v:version")) > 703:
             return [b.name for b in vim.buffers if b.options["buflisted"]]
         else:
-            return [b.name for b in vim.buffers if vim.eval("buflisted('%s')" % escQuote(b.name)) == '1']
+            return [b.name for b in vim.buffers if vim.eval("buflisted('%s')"
+                    % escQuote(b.name)) == '1']
 
     def acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -48,13 +35,11 @@ class BufferExplorer(Explorer):
         return 'Buffer'
 
     def getStlCurDir(self):
-        return escQuote(uniCoding(os.getcwd()))
+        return escQuote(lfEncoding(os.getcwd()))
 
-    def supportsFullPath(self):
+    def supportsNameOnly(self):
         return True
 
-    def supportsSort(self):
-        return True
 
 #*****************************************************
 # BufExplManager
@@ -77,22 +62,24 @@ class BufExplManager(Manager):
         help.append('" i : switch to input mode')
         help.append('" s : select multiple files')
         help.append('" a : select all files')
-        help.append('" l : clear all selections')
+        help.append('" c : clear all selections')
         help.append('" q : quit')
         help.append('" <F1> : toggle this help')
-        help.append('" ---------------------------------------------------')
+        help.append('" ---------------------------------------------------------')
         return help
 
-    def deleteBuffer(self, wipe = 0):
-        if vim.current.window.cursor[0] <= self._helpLength:
+    def deleteBuffer(self, wipe=0):
+        if vim.current.window.cursor[0] <= self._help_length:
             return
         vim.command("setlocal modifiable")
         try:
             line = vim.current.line
             if wipe == 0:
-                vim.command("confirm bd %s" % re.sub(' ', '\\ ', os.path.abspath(line)))
+                vim.command("confirm bd %s" % re.sub(' ', '\\ ',
+                            os.path.abspath(line)))
             else:
-                vim.command("confirm bw %s" % re.sub(' ', '\\ ', os.path.abspath(line)))
+                vim.command("confirm bw %s" % re.sub(' ', '\\ ',
+                            os.path.abspath(line)))
             if len(self._content) > 0:
                 self._content.remove(line)
             del vim.current.line

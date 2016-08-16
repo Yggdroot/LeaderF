@@ -5,7 +5,7 @@ import vim
 import re
 from datetime import datetime
 from functools import wraps
-from leaderf.util import *
+from leaderf.utils import *
 
 
 def ctrlCursor(func):
@@ -22,7 +22,7 @@ def ctrlCursor(func):
             try:
                 vim.command("let &gcr = g:lf_old_gcr")
                 vim.command("let &t_ve = g:lf_old_t_ve")
-            except: #due to vim's bug, I have to do like this
+            except: # there is a bug here, fixed by Patch 7.4.084.
                 try:
                     vim.command("let &gcr = g:lf_old_gcr")
                     vim.command("let &t_ve = g:lf_old_t_ve")
@@ -37,127 +37,125 @@ def ctrlCursor(func):
 class LfCli(object):
     def __init__(self):
         self._cmdline = []
-        self._regex = None
-        self._cursorPos = 0
-        self._startTime = datetime.now()
+        self._pattern = ''
+        self._cursor_pos = 0
+        self._start_time = datetime.now()
         self._idle = False
         self._blinkon = True
-        self._cmdMap = vim.eval("g:Lf_CommandMap")
-        self._isMixed = False
-        self._supportFullPath = False
+        self._cmd_map = vim.eval("g:Lf_CommandMap")
+        self._refine = False
+        self._delimiter = vim.eval("g:Lf_DelimiterChar")
+        self._supports_nameonly = False
         self._setDefaultMode()
 
     def _setDefaultMode(self):
         mode = int(vim.eval("g:Lf_DefaultMode"))
         if mode == 0:       # nameOnly mode
-            self._isFuzzy = True
-            self._fullPath = False
+            self._is_fuzzy = True
+            self._is_full_path = False
         elif mode == 1:     # fullPath mode
-            self._isFuzzy = True
-            self._fullPath = True
+            self._is_fuzzy = True
+            self._is_full_path = True
         else:               # regex mode
-            self._isFuzzy = False
-            self._fullPath = False
+            self._is_fuzzy = False
+            self._is_full_path = True
 
     def _insert(self, ch):
-        self._cmdline.insert(self._cursorPos, ch)
-        self._cursorPos += 1
+        self._cmdline.insert(self._cursor_pos, ch)
+        self._cursor_pos += 1
 
     def _paste(self):
         for ch in vim.eval("@*"):
             self._insert(ch)
 
     def _backspace(self):
-        if self._cursorPos > 0:
-            self._cmdline.pop(self._cursorPos-1)
-            self._cursorPos -= 1
+        if self._cursor_pos > 0:
+            self._cmdline.pop(self._cursor_pos-1)
+            self._cursor_pos -= 1
 
     def _delete(self):
-        if self._cursorPos < len(self._cmdline):
-            self._cmdline.pop(self._cursorPos)
+        if self._cursor_pos < len(self._cmdline):
+            self._cmdline.pop(self._cursor_pos)
         else:
             self._backspace()
 
     def _clearLeft(self):
-        self._cmdline[0:self._cursorPos] = []
-        self._cursorPos = 0
+        self._cmdline[0:self._cursor_pos] = []
+        self._cursor_pos = 0
 
     def clear(self):
         self._cmdline[:] = []
-        self._regex = None
-        self._cursorPos = 0
+        self._cursor_pos = 0
 
     def _toLeft(self):
-        if self._cursorPos > 0:
-            self._cursorPos -= 1
+        if self._cursor_pos > 0:
+            self._cursor_pos -= 1
 
     def _toRight(self):
-        if self._cursorPos < len(self._cmdline):
-            self._cursorPos += 1
+        if self._cursor_pos < len(self._cmdline):
+            self._cursor_pos += 1
 
     def _toBegin(self):
-        self._cursorPos = 0
+        self._cursor_pos = 0
 
     def _toEnd(self):
-        self._cursorPos = len(self._cmdline)
+        self._cursor_pos = len(self._cmdline)
 
     def _buildPrompt(self):
-        deltaTime = datetime.now() - self._startTime
-        deltaMs = deltaTime.microseconds + (deltaTime.seconds + deltaTime.days * 24 * 3600) * 10**6
-        if self._idle and deltaMs < 500000: #500ms
+        delta_time = datetime.now() - self._start_time
+        delta_ms = delta_time.microseconds + (delta_time.seconds +
+                   delta_time.days * 24 * 3600) * 10**6
+        if self._idle and delta_ms < 500000: # 500ms
             return
         else:
             if self._blinkon:
                 vim.command("hi! default link Lf_hl_cursor Cursor")
             else:
                 vim.command("hi! default link Lf_hl_cursor NONE")
-            self._startTime = datetime.now()
+            self._start_time = datetime.now()
             self._blinkon = not self._blinkon
 
-        if self._isFuzzy:
-            if self.isFileNameOnly:
-                vim.command("echohl Constant | redraw | echon '>>> ' | echohl NONE")
+        if self._is_fuzzy:
+            if self._is_full_path:
+                vim.command("echohl Constant | redraw | echon '>F> ' |"
+                            "echohl NONE")
             else:
-                vim.command("echohl Constant | redraw | echon '>F> ' | echohl NONE")
+                vim.command("echohl Constant | redraw | echon '>>> ' |"
+                            "echohl NONE")
         else:
-            vim.command("echohl Constant | redraw | echon 'R>> ' | echohl NONE")
+            vim.command("echohl Constant | redraw | echon 'R>> ' |"
+                        "echohl NONE")
 
-        vim.command("echohl Normal | echon '%s' | echohl NONE" % escQuote(''.join(self._cmdline[:self._cursorPos])))
-        if self._cursorPos < len(self._cmdline):
-            vim.command("echohl Lf_hl_cursor | echon '%s' | echohl NONE" % escQuote(''.join(self._cmdline[self._cursorPos])))
-            vim.command("echohl Normal | echon '%s' | echohl NONE" % escQuote(''.join(self._cmdline[self._cursorPos+1:])))
+        vim.command("echohl Normal | echon '%s' | echohl NONE" %
+                    escQuote(''.join(self._cmdline[:self._cursor_pos])))
+        if self._cursor_pos < len(self._cmdline):
+            vim.command("echohl Lf_hl_cursor | echon '%s' | echohl NONE" %
+                        escQuote(''.join(self._cmdline[self._cursor_pos])))
+            vim.command("echohl Normal | echon '%s' | echohl NONE" %
+                        escQuote(''.join(self._cmdline[self._cursor_pos+1:])))
         else:
             vim.command("echohl Lf_hl_cursor | echon ' ' | echohl NONE")
 
-    def _buildRegex(self):
-        if self._cmdline:
-            if self._isFuzzy:
-                if os.name == 'nt':
-                    # treat '/' and '\' the same
-                    func = lambda c: r'[\\/].*?' if c == '\\' or c == '/' else re.escape(c)
-                    nonSlash = r'[^\\/]*?'
-                else:
-                    func = lambda c: '/.*?' if c == '/' else re.escape(c)
-                    nonSlash = r'[^/]*?'
-                delimiter = vim.eval("g:Lf_DelimiterChar")
-                if self.isFileNameOnly and delimiter in self._cmdline:
-                    self._isMixed = True
-                    idx = self._cmdline.index(delimiter)
-                    self._regex = ('.*?'.join(map(func, self._cmdline[:idx])), nonSlash.join(map(func, self._cmdline[idx+1:])))
-                    if self._regex == ('', ''):
-                        self._regex == ()
-                elif self.isFileNameOnly:
-                    self._isMixed = False
-                    self._regex = '.*?'.join(map(func, self._cmdline))
-                else:
-                    self._isMixed = False
-                    self._regex = nonSlash.join(map(func, self._cmdline))
+    def _buildPattern(self):
+        if self._is_fuzzy:
+            # supports refinement only in nameOnly mode
+            if (self._supports_nameonly and not self._is_full_path and
+                    self._delimiter in self._cmdline):
+                self._refine = True
+                idx = self._cmdline.index(self._delimiter)
+                self._pattern = (''.join(self._cmdline[:idx]),
+                                 ''.join(self._cmdline[idx+1:]))
+                if self._pattern == ('', ''):
+                    self._pattern = None
             else:
-                self._regex = ''.join(self._cmdline)
+                self._refine = False
+                self._pattern = ''.join(self._cmdline)
         else:
-            self._regex = ''
+            self._pattern = ''.join(self._cmdline)
 
     def _join(self, cmdline):
+        if not cmdline:
+            return ''
         cmd = ['%s\[^%s]\{-}' % (c, c) for c in cmdline[0:-1]]
         cmd.append(cmdline[-1])
         regex = ''.join(cmd)
@@ -165,41 +163,53 @@ class LfCli(object):
 
     def highlightMatches(self):
         vim.command("silent! syn clear Lf_hl_match")
+        vim.command("silent! syn clear Lf_hl_match_1")
         if not self._cmdline:
             return
-        if self._isFuzzy:
-            if os.name == 'nt':
-                cmdline = [r'\[\/]\.\{-}' if c == '\\' or c == '/' else c for c in self._cmdline] #\/ for syn match
-                nonSlash = '\[^\\/]\{-}'
+        if self._is_fuzzy:
+            cmdline = [r'\/' if c == '/' else r'\\' if c == '\\' else c
+                       for c in self._cmdline] # \/ for syn match
+            if self._is_full_path:
+                regex = '\c\V' + self._join(cmdline)
+                vim.command("syn match Lf_hl_match display /%s/ containedin="
+                            "Lf_hl_nonHelp, Lf_hl_dirname, Lf_hl_filename contained" % regex)
             else:
-                cmdline = [r'\/\.\{-}' if c == '/' else ('\\' + c) if c == '\\' else c for c in self._cmdline] #\/ for syn match
-                nonSlash = '\[^/]\{-}'
-            if self.isFileNameOnly:
-                if self.isMixed:
-                    idx = self._cmdline.index(vim.eval("g:Lf_DelimiterChar"))
-                    regex = ('\c\V' + self._join(cmdline[:idx]), '\c\V' + nonSlash.join(cmdline[idx+1:]))
+                if self._refine:
+                    idx = self._cmdline.index(self._delimiter)
+                    regex = ('\c\V' + self._join(cmdline[:idx]),
+                             '\c\V' + self._join(cmdline[idx+1:]))
                     if regex[0] == '\c\V' and regex[1] == '\c\V':
                         pass
                     elif regex[0] == '\c\V':
-                        vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_nonHelp, Lf_hl_filename contained" % regex[1])
+                        vim.command("syn match Lf_hl_match display /%s/ "
+                                    "containedin=Lf_hl_dirname, Lf_hl_filename "
+                                    "contained" % regex[1])
                     elif regex[1] == '\c\V':
-                        vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_filename contained" % regex[0])
+                        vim.command("syn match Lf_hl_match display /%s/ "
+                                    "containedin=Lf_hl_filename contained" %
+                                    regex[0])
                     else:
-                        vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_nonHelp, Lf_hl_filename contained" % regex[1])
-                        vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_filename contained" % regex[0])
+                        vim.command("syn match Lf_hl_match display /%s/ "
+                                    "containedin=Lf_hl_filename contained" %
+                                    regex[0])
+                        vim.command("syn match Lf_hl_match_1 display "
+                                    "/%s\(\.\*\[\/]\)\@=/ containedin="
+                                    "Lf_hl_dirname contained" % regex[1])
                 else:
                     regex = '\c\V' + self._join(cmdline)
-                    vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_filename contained" % regex)
-            else:
-                regex = '\c\V' + nonSlash.join(cmdline)
-                vim.command("syn match Lf_hl_match /%s/ containedin=Lf_hl_nonHelp, Lf_hl_filename contained" % regex)
+                    vim.command("syn match Lf_hl_match display /%s/ "
+                                "containedin=Lf_hl_filename contained" % regex)
         else:
-            if self._regex:
-                # e.g. if self._regex is 'aa\', change it to 'aa\\'; else keep it as it is
-                # syn match Lf_hl_match 'aa\'  will raise an error without this line.
-                regex = (self._regex + '\\') if len(re.search(r'\\*$', self._regex).group(0)) % 2 == 1 else self._regex
-                regex = regex.replace("'", r"\'") # also for syn match, because we use ' to surround the syn-pattern
-                # e.g. syn match Lf_hl_match '[' will raise an error, change unmatched '[' to '\['
+            if self._pattern:
+                # e.g. if self._pattern is 'aa\', change it to 'aa\\';
+                # else keep it as it is
+                # syn match Lf_hl_match 'aa\' will raise an error without this line.
+                regex = (self._pattern + '\\') if len(re.search(r'\\*$',
+                        self._pattern).group(0)) % 2 == 1 else self._pattern
+                # also for syn match, because we use ' to surround the syn-pattern
+                regex = regex.replace("'", r"\'")
+                # e.g. syn match Lf_hl_match '[' will raise an error,
+                # change unmatched '[' to '\['
                 if '[' in regex:
                     tmpRe = [i for i in regex]
                     i = 0
@@ -229,10 +239,13 @@ class LfCli(object):
 
                 try:
                     if int(vim.eval("v:version")) > 703:
-                        vim.command("syn match Lf_hl_match '%s' containedin=Lf_hl_nonHelp, Lf_hl_filename contained" % regex)
+                        vim.command("syn match Lf_hl_match '%s' containedin="
+                                    "Lf_hl_dirname, Lf_hl_filename contained" %
+                                    regex)
                     else:
                         regex = re.sub(r'\\', r'\\\\', regex)
-                        vim.eval("""g:LfNoErrMsgCmd("syn match Lf_hl_match '%s' containedin=Lf_hl_nonHelp, Lf_hl_filename contained")""" % regex)
+                        vim.eval("""g:LfNoErrMsgCmd("syn match Lf_hl_match '%s' """
+                                 """containedin=Lf_hl_dirname, Lf_hl_filename contained")""" % regex)
                 except vim.error:
                     pass
 
@@ -240,32 +253,41 @@ class LfCli(object):
         self._blinkon = False
         self._buildPrompt()
 
-    def setFullPathFeature(self, state):
-        self._supportFullPath = state
+    def setNameOnlyFeature(self, state):
+        self._supports_nameonly = state
 
     @property
-    def regex(self):
-        return self._regex
+    def isPrefix(self): #assume that there are no \%23l, \%23c, \%23v, \%...
+        pos = self._cursor_pos
+        regex = self.pattern
+        if pos > 1:
+            if regex[pos - 2] != '\\' and (regex[pos - 1].isalnum() or
+                    regex[pos - 1] in r'`$%*(-_+[\;:,. /?'):
+                if regex[pos - 2] == '_':
+                    if pos > 2 and regex[pos - 3] == '\\': #\_x
+                        return False
+                    else:
+                        return True
+                if regex.endswith(r'\zs') or regex.endswith(r'\ze'):
+                    return False
+                return True
+        return False
 
     @property
-    def cmdline(self):
-        return self._cmdline
+    def pattern(self):
+        return self._pattern
 
     @property
-    def cursorPos(self):
-        return self._cursorPos
+    def isFullPath(self):
+        return self._is_full_path
 
     @property
-    def isFileNameOnly(self):
-        return not self._fullPath
-
-    @property
-    def isMixed(self):
-        return self._isMixed
+    def isRefinement(self):
+        return self._refine
 
     @property
     def isFuzzy(self):
-        return self._isFuzzy
+        return self._is_fuzzy
 
     @ctrlCursor
     def input(self):
@@ -275,10 +297,19 @@ class LfCli(object):
                 self._buildPrompt()
                 self._idle = False
 
-                vim.command("let nr = getchar(%s)" % vim.eval("g:Lf_CursorBlink == 1 ? 0 : ''"))
+                vim.command("let nr = getchar(%s)"
+                            % vim.eval("g:Lf_CursorBlink == 1 ? 0 : ''"))
                 vim.command("sleep 1m")
+                vim.command("let str = strtrans(nr)")
                 vim.command("let ch = !type(nr) ? nr2char(nr) : nr")
-                if vim.eval("!type(nr) && nr == 0") == '1':
+                # https://groups.google.com/forum/#!topic/vim_dev/gg-l-kaCz_M
+                # '<80><fc>^B' is <Shift>, '<80><fc>^D' is <Ctrl>,
+                # '<80><fc>^H' is <Alt>, '<80><fc>^L' is <Ctrl + Alt>
+                if vim.eval("!type(nr) && nr == 0") == '1' or vim.eval(
+                        "str == '<80><fc>^B' || str == '<80><fc>^D' || "
+                        "str == '<80><fc>^H' || str == '<80><fc>^L' || "
+                        "str == '<80><fc>$' || str == '<80><fc>\"' || "
+                        "str == '<80><fc>('") == '1':
                     self._idle = True
                     continue
                 else:
@@ -286,11 +317,11 @@ class LfCli(object):
 
                 if vim.eval("!type(nr) && nr >= 0x20") == '1':
                     self._insert(vim.eval("ch"))
-                    self._buildRegex()
+                    self._buildPattern()
                     yield '<Update>'
                 else:
                     cmd = ''
-                    for (key, value) in self._cmdMap.items():
+                    for (key, value) in self._cmd_map.items():
                         for i in value:
                             if vim.eval('ch ==# "\%s"' % i) == '1':
                                 cmd = key
@@ -303,32 +334,31 @@ class LfCli(object):
                         yield '<2-LeftMouse>'
                     elif equal(cmd, '<Esc>'):
                         yield '<Esc>'
-                        break
                     elif equal(cmd, '<C-F>'):
-                        if self._supportFullPath:
-                            self._isFuzzy = True
-                            self._fullPath = not self._fullPath
-                            self._buildRegex()
+                        if self._supports_nameonly:
+                            self._is_fuzzy = True
+                            self._is_full_path = not self._is_full_path
+                            self._buildPattern()
                             yield '<Mode>'
                     elif equal(cmd, '<C-R>'):
-                        self._isFuzzy = not self._isFuzzy
-                        self._buildRegex()
+                        self._is_fuzzy = not self._is_fuzzy
+                        self._buildPattern()
                         yield '<Mode>'
                     elif equal(cmd, '<BS>'):
                         self._backspace()
-                        self._buildRegex()
+                        self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<C-U>'):
                         self._clearLeft()
-                        self._buildRegex()
+                        self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<Del>'):
                         self._delete()
-                        self._buildRegex()
+                        self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<C-V>'):
                         self._paste()
-                        self._buildRegex()
+                        self._buildPattern()
                         yield '<Update>'
                     elif equal(cmd, '<Home>'):
                         self._toBegin()
@@ -342,7 +372,7 @@ class LfCli(object):
                         yield '<Quit>'
                     else:
                         yield cmd
-        except KeyboardInterrupt: #<C-C>
+        except KeyboardInterrupt: # <C-C>
             if int(vim.eval("v:version")) > 703:
                 yield '<Quit>'
             else:

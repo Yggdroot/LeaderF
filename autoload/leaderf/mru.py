@@ -5,7 +5,7 @@ import vim
 import os
 import os.path
 import fnmatch
-from leaderf.util import *
+from leaderf.utils import *
 
 
 #*****************************************************
@@ -13,32 +13,34 @@ from leaderf.util import *
 #*****************************************************
 class Mru(object):
     def __init__(self):
-        self._cacheDir = os.path.join(vim.eval("g:Lf_CacheDiretory"), '.LfCache', 'mru')
-        self._cacheFile = os.path.join(self._cacheDir, 'mruCache')
+        self._cache_dir = os.path.join(vim.eval("g:Lf_CacheDiretory"),
+                                       '.LfCache', 'mru')
+        self._cache_file = os.path.join(self._cache_dir, 'mruCache')
         self._initCache()
 
     def _initCache(self):
-        if not os.path.exists(self._cacheDir):
-            os.makedirs(self._cacheDir)
-        if not os.path.exists(self._cacheFile):
-            with lfOpen(self._cacheFile, 'w', errors = 'ignore'):
+        if not os.path.exists(self._cache_dir):
+            os.makedirs(self._cache_dir)
+        if not os.path.exists(self._cache_file):
+            with lfOpen(self._cache_file, 'w', errors = 'ignore'):
                 pass
 
     def getCacheFileName(self):
-        return self._cacheFile
+        return self._cache_file
 
-    def saveToCache(self, bufName):
-        if True in (fnmatch.fnmatch(bufName,i) for i in vim.eval("g:Lf_MruFileExclude")):
+    def saveToCache(self, buf_name):
+        if True in (fnmatch.fnmatch(buf_name, i)
+                    for i in vim.eval("g:Lf_MruFileExclude")):
             return
-        with lfOpen(self._cacheFile, 'r+', errors = 'ignore') as f:
+        with lfOpen(self._cache_file, 'r+', errors = 'ignore') as f:
             lines = f.readlines()
             for i, line in enumerate(lines):
-                if bufName == line.rstrip():
+                if buf_name == line.rstrip():
                     if i == 0:
                         return
                     del lines[i]
                     break
-            lines.insert(0, bufName + '\n')
+            lines.insert(0, buf_name + '\n')
             if len(lines) > int(vim.eval("g:Lf_MruMaxFiles")):
                 del lines[-1]
             f.seek(0)

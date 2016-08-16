@@ -143,25 +143,8 @@ g:Lf_WildIgnore                                 *g:Lf_WildIgnore*
     [!seq]   | matches any character not in seq
     -------------------------------------------
 <
-g:Lf_SearchStep                                 *g:Lf_SearchStep*
-    Used in searching algorithm.
-    Default value is 5000.
-
-g:Lf_MaxLines                                   *g:Lf_MaxLines*
-    Specify the maximum number of files to display in the match window.
-    If value is 0, all the files will display in the match window.
-    Default value is 5000.
-
 g:Lf_DelimiterChar                              *g:Lf_DelimiterChar*
-    Default value is '/'.
-
-g:Lf_NumberOfSort                               *g:Lf_NumberOfSort*
-    It's a integer, can have the following values:
-    -1 - sort all file in the result
-    0  - do not sort the result
-    1  - sort files in the result as many as the height of match window
-    other - sort files in the result as many as the value
-    Default value is 1.
+    Default value is ';'.
 
 g:Lf_MruFileExclude                             *g:Lf_MruFileExclude*
     Files you don't want LeaderF to record.
@@ -198,7 +181,7 @@ USAGE                                           *leaderf-usage*
     Launch LeaderF to search Mru.
 
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
-    <C-C>, <C-Q> : quit from LeaderF.
+    <C-C> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.
     <C-F> : switch between full path search mode and name only search mode.
     <ESC> : switch to normal mode.

@@ -24,12 +24,12 @@ function! g:LfFileExplMaps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "fileExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "fileExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "fileExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> i             :exec g:Lf_py "fileExplManager.startExplAction()"<CR>
+    nnoremap <buffer> <silent> i             :exec g:Lf_py "fileExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "fileExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> <F5>          :exec g:Lf_py "fileExplManager.refresh()"<CR>
     nnoremap <buffer> <silent> s             :exec g:Lf_py "fileExplManager.addSelections()"<CR>
     nnoremap <buffer> <silent> a             :exec g:Lf_py "fileExplManager.selectAll()"<CR>
-    nnoremap <buffer> <silent> l             :exec g:Lf_py "fileExplManager.clearSelections()"<CR>
+    nnoremap <buffer> <silent> c             :exec g:Lf_py "fileExplManager.clearSelections()"<CR>
 endfunction
 
 function! g:LfBufExplMaps()
@@ -41,13 +41,13 @@ function! g:LfBufExplMaps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "bufExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "bufExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "bufExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> i             :exec g:Lf_py "bufExplManager.startExplAction()"<CR>
+    nnoremap <buffer> <silent> i             :exec g:Lf_py "bufExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "bufExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "bufExplManager.deleteBuffer(1)"<CR>
     nnoremap <buffer> <silent> D             :exec g:Lf_py "bufExplManager.deleteBuffer()"<CR>
     nnoremap <buffer> <silent> s             :exec g:Lf_py "bufExplManager.addSelections()"<CR>
-    nnoremap <buffer> <silent> a            :exec g:Lf_py "bufExplManager.selectAll()"<CR>
-    nnoremap <buffer> <silent> l             :exec g:Lf_py "bufExplManager.clearSelections()"<CR>
+    nnoremap <buffer> <silent> a             :exec g:Lf_py "bufExplManager.selectAll()"<CR>
+    nnoremap <buffer> <silent> c             :exec g:Lf_py "bufExplManager.clearSelections()"<CR>
 endfunction
 
 function! g:LfMruExplMaps()
@@ -59,12 +59,12 @@ function! g:LfMruExplMaps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "mruExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "mruExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "mruExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> i             :exec g:Lf_py "mruExplManager.startExplAction()"<CR>
+    nnoremap <buffer> <silent> i             :exec g:Lf_py "mruExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "mruExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "mruExplManager.deleteMru()"<CR>
     nnoremap <buffer> <silent> s             :exec g:Lf_py "mruExplManager.addSelections()"<CR>
     nnoremap <buffer> <silent> a             :exec g:Lf_py "mruExplManager.selectAll()"<CR>
-    nnoremap <buffer> <silent> l             :exec g:Lf_py "mruExplManager.clearSelections()"<CR>
+    nnoremap <buffer> <silent> c             :exec g:Lf_py "mruExplManager.clearSelections()"<CR>
 endfunction
 
 function! leaderf#LfPy(cmd)

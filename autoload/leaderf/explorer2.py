@@ -31,10 +31,6 @@ class Explorer(object):
     def supportsMulti(self):
         return False
 
-    def supportsFullPath(self):
+    def supportsNameOnly(self):
         return False
-
-    def supportsSort(self):
-        return False
-
 

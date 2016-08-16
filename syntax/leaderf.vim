@@ -15,19 +15,22 @@ endif
 
 if has("syntax")
     syn clear
-    syn match Lf_hl_help        '^".*'
-    syn match Lf_hl_helpCmd     '^"\s*\zs.\{-}\ze\s*:' containedin=Lf_hl_help contained
-    syn match Lf_hl_nonHelp     '^[^"].*'
+    syn match Lf_hl_help     display '^".*'
+    syn match Lf_hl_helpCmd  display '^"\s*\zs.\{-}\ze\s*:' containedin=Lf_hl_help contained
+    syn match Lf_hl_nonHelp  display '^[^"].*$'
     if has("win32") || has("win64")
-        syn match Lf_hl_filename '[^\/]*$' containedin=Lf_hl_nonHelp contained
+        syn match Lf_hl_filename display '[^\/]*$' containedin=Lf_hl_nonHelp contained
+        syn match Lf_hl_dirname  display '^.*[\/]' containedin=Lf_hl_nonHelp contained
     else
-        syn match Lf_hl_filename '[^/]*$'  containedin=Lf_hl_nonHelp contained
+        syn match Lf_hl_filename display '[^/]*$' containedin=Lf_hl_nonHelp contained
+        syn match Lf_hl_dirname  display '^.*/'   containedin=Lf_hl_nonHelp contained
     endif
 
     highlight def link Lf_hl_selection      Todo
     highlight def link Lf_hl_help           comment
     highlight def link Lf_hl_helpCmd        Identifier
     highlight def link Lf_hl_match          String
+    highlight def link Lf_hl_match_1        Statement
     highlight def link Lf_hl_stlFunction    Statusline
     highlight def link Lf_hl_stlMode        Statusline
     highlight def link Lf_hl_stlCurDir      Statusline

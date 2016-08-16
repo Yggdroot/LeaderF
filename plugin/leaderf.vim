@@ -21,7 +21,7 @@ if !exists("g:Lf_PythonVersion")
         let g:Lf_PythonVersion = 2
         let g:Lf_py = "py "
     else
-        echo "Error: LeaderF requires vim compiled with +python or +python3"
+        echoe "Error: LeaderF requires vim compiled with +python or +python3"
         finish
     endif
 else
@@ -29,26 +29,26 @@ else
         if has("python")
             let g:Lf_py = "py "
         else
-            echo 'LeaderF Error: has("python") == 0'
+            echoe 'LeaderF Error: has("python") == 0'
             finish
         endif
     else
         if has("python3")
             let g:Lf_py = "py3 "
         else
-            echo 'LeaderF Error: has("python3") == 0'
+            echoe 'LeaderF Error: has("python3") == 0'
             finish
         endif
     endif
 endif
 
-function! <SID>InitVar(var, value)
+function! s:InitVar(var, value)
     if !exists(a:var)
         exec 'let '.a:var.'='.string(a:value)
     endif
 endfunction
 
-function! <SID>InitDict(var, dict)
+function! s:InitDict(var, dict)
     if !exists(a:var)
         exec 'let '.a:var.'='.string(a:dict)
     else
@@ -81,27 +81,24 @@ function! g:LfNoErrMsgCmd(cmd)
     endtry
 endfunction
 
-call <SID>InitVar('g:Lf_ShortcutF', '<Leader>f')
-call <SID>InitVar('g:Lf_ShortcutB', '<Leader>b')
-call <SID>InitVar('g:Lf_WindowPosition', 1)
-call <SID>InitVar('g:Lf_TabpagePosition', 2)
-call <SID>InitVar('g:Lf_SplitPath', 0)
-call <SID>InitVar('g:Lf_ShowRelativePath', 1)
-call <SID>InitVar('g:Lf_DefaultMode', 0)
-call <SID>InitVar('g:Lf_CursorBlink', 1)
-call <SID>InitVar('g:Lf_CacheDiretory', $HOME)
-call <SID>InitVar('g:Lf_NeedCacheTime', 1.5)
-call <SID>InitVar('g:Lf_NumberOfCache', 5)
-call <SID>InitVar('g:Lf_UseMemoryCache', 1)
-call <SID>InitVar('g:Lf_IndexTimeLimit', 120)
-call <SID>InitVar('g:Lf_FollowLinks', 0)
-call <SID>InitVar('g:Lf_SearchStep', 5000)
-call <SID>InitVar('g:Lf_MaxLines', 5000)
-call <SID>InitVar('g:Lf_DelimiterChar', '/')
-call <SID>InitVar('g:Lf_NumberOfSort', 1)
-call <SID>InitVar('g:Lf_MruFileExclude', [])
-call <SID>InitVar('g:Lf_MruMaxFiles', 100)
-call <SID>InitVar('g:Lf_WildIgnore',{
+call s:InitVar('g:Lf_ShortcutF', '<Leader>f')
+call s:InitVar('g:Lf_ShortcutB', '<Leader>b')
+call s:InitVar('g:Lf_WindowPosition', 1)
+call s:InitVar('g:Lf_TabpagePosition', 2)
+call s:InitVar('g:Lf_SplitPath', 0)
+call s:InitVar('g:Lf_ShowRelativePath', 1)
+call s:InitVar('g:Lf_DefaultMode', 0)
+call s:InitVar('g:Lf_CursorBlink', 1)
+call s:InitVar('g:Lf_CacheDiretory', $HOME)
+call s:InitVar('g:Lf_NeedCacheTime', 1.5)
+call s:InitVar('g:Lf_NumberOfCache', 5)
+call s:InitVar('g:Lf_UseMemoryCache', 1)
+call s:InitVar('g:Lf_IndexTimeLimit', 120)
+call s:InitVar('g:Lf_FollowLinks', 0)
+call s:InitVar('g:Lf_DelimiterChar', ';')
+call s:InitVar('g:Lf_MruFileExclude', [])
+call s:InitVar('g:Lf_MruMaxFiles', 100)
+call s:InitVar('g:Lf_WildIgnore',{
             \ 'dir': ['.svn','.git'],
             \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']
             \})
@@ -157,7 +154,7 @@ let s:Lf_CommandMap = {
             \ '<C-LeftMouse>': ['<C-LeftMouse>', '<C-S>'],
             \ '<S-LeftMouse>': ['<S-LeftMouse>']
             \}
-call <SID>InitDict('g:Lf_CommandMap', s:Lf_CommandMap)
+call s:InitDict('g:Lf_CommandMap', s:Lf_CommandMap)
 
 
 if !has("gui_running")

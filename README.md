@@ -64,16 +64,12 @@ Input formats:
  - In **NameOnly** mode (*fuzzy*)
 
  `'abc'` is interpreted as vim's regexp `'a.\{-}b.\{-}c'`.<br>
- If the first character you input is `'/'`, then the searching will be the same as in **FullPath** mode.<br>
- If you input string as `'abc/def/gh'`, then `'abc'` will match the file name and `'def/gh'` will match the directory name as in **FullPath** mode.
+ If the first character you input is `';'`, then the searching will be the same as in **FullPath** mode.<br>
+ If you input string as `'abc;def'`, then `'abc'` will match the file name and `'def'` will match the directory name.
 
  - In **FullPath** mode (*fuzzy*)
 
- `'ab'` is interpreted as vim's regexp `'a[^/]\{-}b'`.<br>
- `'/'` is interpreted as vim's regexp `'[/].\{-}'`.<br>
- `'ab/c'` is interpreted as vim's regexp `'a[^/]\{-}b[^/]\{-}[/].\{-}[^/]\{-}c'`.<br>
- If you want to search `'/example/full/path/mode/filename.txt'`, you must input like this: `'ex/fu/pa/mo/file'` (**NOTE** that `'/'` is essential in the input), and `'exfupamofile'` won't match.<br>
- The purpose for this restriction is to decrease the number of matches.
+ Same as in **NameOnly** mode except that the pattern will match the full path but not the file name only.
 
  - In **Regexp** mode
 

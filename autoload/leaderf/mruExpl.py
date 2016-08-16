@@ -4,24 +4,10 @@
 import vim
 import os
 import os.path
-from functools import wraps
-from leaderf.util import *
+from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
 from leaderf.mru import *
-
-
-def showRelativePath(func):
-    @wraps(func)
-    def deco(*args, **kwargs):
-        if vim.eval("g:Lf_ShowRelativePath") == '1':
-            try:
-                return [os.path.relpath(line) for line in func(*args, **kwargs)]
-            except ValueError:
-                return func(*args, **kwargs)
-        else:
-            return func(*args, **kwargs)
-    return deco
 
 
 #*****************************************************
@@ -48,15 +34,12 @@ class MruExplorer(Explorer):
         return 'Mru'
 
     def getStlCurDir(self):
-        return escQuote(uniCoding(os.getcwd()))
+        return escQuote(lfEncoding(os.getcwd()))
 
     def supportsMulti(self):
         return True
 
-    def supportsFullPath(self):
-        return True
-
-    def supportsSort(self):
+    def supportsNameOnly(self):
         return True
 
     def delFromCache(self, name):
@@ -87,15 +70,15 @@ class MruExplManager(Manager):
         help.append('" i : switch to input mode')
         help.append('" s : select multiple files')
         help.append('" a : select all files')
-        help.append('" l : clear all selections')
+        help.append('" c : clear all selections')
         help.append('" q : quit')
         help.append('" <F1> : toggle this help')
-        help.append('" ---------------------------------------------------')
+        help.append('" ---------------------------------------------------------')
         return help
 
 
     def deleteMru(self):
-        if vim.current.window.cursor[0] <= self._helpLength:
+        if vim.current.window.cursor[0] <= self._help_length:
             return
         vim.command("setlocal modifiable")
         line = vim.current.line

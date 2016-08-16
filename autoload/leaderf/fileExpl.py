@@ -7,25 +7,9 @@ import os
 import os.path
 import fnmatch
 import time
-from functools import wraps
-from leaderf.util import *
+from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
-
-
-def showRelativePath(func):
-    @wraps(func)
-    def deco(*args, **kwargs):
-        if vim.eval("g:Lf_ShowRelativePath") == '1':
-            # os.path.relpath() is too slow!
-            dir = os.getcwd() if len(args) == 1 else args[1]
-            cwdLen = len(uniCoding(dir))
-            if not dir.endswith(os.sep):
-                cwdLen += 1
-            return [line[cwdLen:] for line in func(*args, **kwargs)]
-        else:
-            return func(*args, **kwargs)
-    return deco
 
 
 #*****************************************************
@@ -33,105 +17,118 @@ def showRelativePath(func):
 #*****************************************************
 class FileExplorer(Explorer):
     def __init__(self):
-        self._curDir = ''
+        self._cur_dir = ''
         self._content = []
-        self._cacheDir = os.path.join(vim.eval("g:Lf_CacheDiretory"), '.LfCache', 'file')
-        self._cacheIndex = os.path.join(self._cacheDir, 'cacheIndex')
+        self._cache_dir = os.path.join(vim.eval("g:Lf_CacheDiretory"),
+                                       '.LfCache', 'file')
+        self._cache_index = os.path.join(self._cache_dir, 'cacheIndex')
         self._initCache()
 
     def _initCache(self):
-        if not os.path.exists(self._cacheDir):
-            os.makedirs(self._cacheDir)
-        if not os.path.exists(self._cacheIndex):
-            with lfOpen(self._cacheIndex, 'w', errors = 'ignore'):
+        if not os.path.exists(self._cache_dir):
+            os.makedirs(self._cache_dir)
+        if not os.path.exists(self._cache_index):
+            with lfOpen(self._cache_index, 'w', errors = 'ignore'):
                 pass
 
     def _getFiles(self, dir):
-        startTime = time.time()
+        start_time = time.time()
         wildignore = vim.eval("g:Lf_WildIgnore")
-        fileList = []
-        for dirPath,dirs,files in os.walk(dir, followlinks = False if vim.eval("g:Lf_FollowLinks") == '0' else True):
-            dirs[:] = [i for i in dirs if True not in (fnmatch.fnmatch(i,j) for j in wildignore['dir'])]
+        file_list = []
+        for dir_path,dirs,files in os.walk(dir, followlinks = False
+                if vim.eval("g:Lf_FollowLinks") == '0' else True):
+            dirs[:] = [i for i in dirs if True not in (fnmatch.fnmatch(i,j)
+                       for j in wildignore['dir'])]
             for name in files:
-                if True not in (fnmatch.fnmatch(name,j) for j in wildignore['file']):
-                    fileList.append(uniCoding(os.path.join(dirPath,name)))
-                if time.time() - startTime > float(vim.eval("g:Lf_IndexTimeLimit")):
-                    return fileList
-        return fileList
+                if True not in (fnmatch.fnmatch(name, j)
+                                for j in wildignore['file']):
+                    file_list.append(lfEncoding(os.path.join(dir_path,name)))
+                if time.time() - start_time > float(
+                        vim.eval("g:Lf_IndexTimeLimit")):
+                    return file_list
+        return file_list
 
     @showRelativePath
     def _getFileList(self, dir):
         dir = dir if dir.endswith(os.sep) else dir + os.sep
-        with lfOpen(self._cacheIndex, 'r+', errors = 'ignore') as f:
+        with lfOpen(self._cache_index, 'r+', errors = 'ignore') as f:
             lines = f.readlines()
-            pathLen = 0
+            path_length = 0
             target = -1
             for i, line in enumerate(lines):
                 path = line.split(None, 2)[2].strip()
-                if dir.startswith(path) and len(path) > pathLen:
-                    pathLen = len(path)
+                if dir.startswith(path) and len(path) > path_length:
+                    path_length = len(path)
                     target = i
 
             if target != -1:
-                lines[target] = re.sub('^\S*', '%.3f' % time.time(), lines[target])
+                lines[target] = re.sub('^\S*',
+                                       '%.3f' % time.time(),
+                                       lines[target])
                 f.seek(0)
                 f.truncate(0)
                 f.writelines(lines)
-                with lfOpen(os.path.join(self._cacheDir, lines[target].split(None, 2)[1]), 'r', errors = 'ignore') as cacheFile:
+                with lfOpen(os.path.join(self._cache_dir,
+                                         lines[target].split(None, 2)[1]),
+                            'r', errors = 'ignore') as cache_file:
                     if lines[target].split(None, 2)[2].strip() == dir:
-                        return cacheFile.readlines()
+                        return cache_file.readlines()
                     else:
-                        fileList = [line for line in cacheFile.readlines() if line.startswith(dir)]
-                        if fileList == []:
-                            fileList = self._getFiles(dir)
-                        return fileList
+                        file_list = [line for line in cache_file.readlines()
+                                     if line.startswith(dir)]
+                        if file_list == []:
+                            file_list = self._getFiles(dir)
+                        return file_list
             else:
-                startTime = time.time()
-                fileList = self._getFiles(dir)
-                deltaSec = time.time() - startTime
-                if deltaSec > float(vim.eval("g:Lf_NeedCacheTime")):
-                    cacheFileName = ''
+                start_time = time.time()
+                file_list = self._getFiles(dir)
+                delta_seconds = time.time() - start_time
+                if delta_seconds > float(vim.eval("g:Lf_NeedCacheTime")):
+                    cache_file_name = ''
                     if len(lines) < int(vim.eval("g:Lf_NumberOfCache")):
                         f.seek(0, 2)
                         ts = time.time()
                         line = '%.3f cache_%.3f %s\n' % (ts, ts, dir)
                         f.write(line)
-                        cacheFileName = 'cache_%.3f' % ts
+                        cache_file_name = 'cache_%.3f' % ts
                     else:
                         for i, line in enumerate(lines):
                             path = line.split(None, 2)[2].strip()
                             if path.startswith(dir):
-                                cacheFileName = line.split(None, 2)[1].strip()
-                                line = '%.3f %s %s\n' % (time.time(), cacheFileName, dir)
+                                cache_file_name = line.split(None, 2)[1].strip()
+                                line = '%.3f %s %s\n' % (time.time(),
+                                        cache_file_name, dir)
                                 break
-                        if cacheFileName == '':
+                        if cache_file_name == '':
                             timestamp = lines[0].split(None, 2)[0]
                             oldest = 0
                             for i, line in enumerate(lines):
                                 if line.split(None, 2)[0] < timestamp:
                                     timestamp = line.split(None, 2)[0]
                                     oldest = i
-                            cacheFileName = lines[oldest].split(None, 2)[1].strip()
-                            lines[oldest] = '%.3f %s %s\n' % (time.time(), cacheFileName, dir)
+                            cache_file_name = lines[oldest].split(None, 2)[1].strip()
+                            lines[oldest] = '%.3f %s %s\n' % (time.time(),
+                                            cache_file_name, dir)
                         f.seek(0)
                         f.truncate(0)
                         f.writelines(lines)
-                    with lfOpen(os.path.join(self._cacheDir, cacheFileName), 'w', errors = 'ignore') as cacheFile:
-                        for line in fileList:
-                            cacheFile.write(line + '\n')
-                return fileList
+                    with lfOpen(os.path.join(self._cache_dir, cache_file_name),
+                                'w', errors = 'ignore') as cache_file:
+                        for line in file_list:
+                            cache_file.write(line + '\n')
+                return file_list
 
     def _refresh(self):
-        dir = os.path.abspath(self._curDir)
+        dir = os.path.abspath(self._cur_dir)
         dir = dir if dir.endswith(os.sep) else dir + os.sep
-        with lfOpen(self._cacheIndex, 'r+', errors = 'ignore') as f:
+        with lfOpen(self._cache_index, 'r+', errors = 'ignore') as f:
             lines = f.readlines()
-            pathLen = 0
+            path_length = 0
             target = -1
             for i, line in enumerate(lines):
                 path = line.split(None, 2)[2].strip()
-                if dir.startswith(path) and len(path) > pathLen:
-                    pathLen = len(path)
+                if dir.startswith(path) and len(path) > path_length:
+                    path_length = len(path)
                     target = i
 
             if target != -1:
@@ -139,22 +136,24 @@ class FileExplorer(Explorer):
                 f.seek(0)
                 f.truncate(0)
                 f.writelines(lines)
-                cacheFileName = lines[target].split(None, 2)[1]
-                fileList = self._getFiles(dir)
-                with lfOpen(os.path.join(self._cacheDir, cacheFileName), 'w', errors = 'ignore') as cacheFile:
-                    for line in fileList:
-                        cacheFile.write(line + '\n')
+                cache_file_name = lines[target].split(None, 2)[1]
+                file_list = self._getFiles(dir)
+                with lfOpen(os.path.join(self._cache_dir, cache_file_name),
+                            'w', errors = 'ignore') as cache_file:
+                    for line in file_list:
+                        cache_file.write(line + '\n')
 
     def getContent(self, *args, **kwargs):
         if len(args) > 0:
-            if os.path.exists(args[0]):
-                os.chdir(args[0])
+            if os.path.exists(lfDecoding(args[0])):
+                vim.command("silent cd %s" % args[0])
             else:
-                vim.command("echohl ErrorMsg | redraw | echon 'Unknown directory `%s`' | echohl NONE" % args[0])
+                vim.command("echohl ErrorMsg | redraw | echon "
+                            "'Unknown directory `%s`' | echohl NONE" % args[0])
                 return None
         dir = os.getcwd()
-        if vim.eval("g:Lf_UseMemoryCache") == 0 or dir != self._curDir:
-            self._curDir = dir
+        if vim.eval("g:Lf_UseMemoryCache") == 0 or dir != self._cur_dir:
+            self._cur_dir = dir
             self._content = self._getFileList(dir)
         return self._content
 
@@ -166,22 +165,19 @@ class FileExplorer(Explorer):
 
     def getFreshContent(self, *args, **kwargs):
         self._refresh()
-        self._content = self._getFileList(self._curDir)
+        self._content = self._getFileList(self._cur_dir)
         return self._content
 
     def getStlFunction(self):
         return 'File'
 
     def getStlCurDir(self):
-        return escQuote(uniCoding(os.path.abspath(self._curDir)))
+        return escQuote(lfEncoding(os.path.abspath(self._cur_dir)))
 
     def supportsMulti(self):
         return True
 
-    def supportsFullPath(self):
-        return True
-
-    def supportsSort(self):
+    def supportsNameOnly(self):
         return True
 
 
@@ -204,11 +200,11 @@ class FileExplManager(Manager):
         help.append('" i : switch to input mode')
         help.append('" s : select multiple files')
         help.append('" a : select all files')
-        help.append('" l : clear all selections')
+        help.append('" c : clear all selections')
         help.append('" q : quit')
         help.append('" <F5> : refresh the cache')
         help.append('" <F1> : toggle this help')
-        help.append('" ---------------------------------------------------')
+        help.append('" ---------------------------------------------------------')
         return help
 
 #*****************************************************
