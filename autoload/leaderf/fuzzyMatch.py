@@ -85,7 +85,7 @@ class FuzzyMatch(object):
                                                   pattern_mask,
                                                   k+n,
                                                   val)
-                        score = prefix_score + res[1][0]
+                        score = prefix_score + res[1][0] if res[1][0] else 0
                         end_pos = res[1][1]
                     else:
                         score = 0
