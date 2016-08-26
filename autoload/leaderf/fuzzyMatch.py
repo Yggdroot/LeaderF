@@ -306,5 +306,5 @@ class FuzzyMatch(object):
                                                 self._pattern_mask,
                                                 0,
                                                 val)
-        return score + (1 >> beg) + 1.0/(end - beg) + 1.0/(beg + end) + 1.0/len(text)
+        return score + (1 >> beg) + 0.4/(end - beg) + 1.0/(beg + end) + 1.0/len(text)
 
