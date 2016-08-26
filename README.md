@@ -20,7 +20,7 @@ Requirements
 ------------
 
  - vim7.0 or higher.
- - vim compiled with Python support, you can check by using `echo has('python')` or `echo has('python3')` to see if the result is `1`.
+ - vim compiled with Python support, you can check by using `echo has('python')` or `echo has('python3')` to see if the result is `1`; Make sure that your python2 version is Python **2.7** or higher and python3 version is Python **3.1** or higher.
 
 Installation
 ------------
