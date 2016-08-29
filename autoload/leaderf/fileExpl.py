@@ -7,9 +7,24 @@ import os
 import os.path
 import fnmatch
 import time
+from functools import wraps
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
+
+def showRelativePath(func):
+    @wraps(func)
+    def deco(*args, **kwargs):
+        if vim.eval("g:Lf_ShowRelativePath") == '1':
+            # os.path.relpath() is too slow!
+            dir = os.getcwd() if len(args) == 1 else args[1]
+            cwd_length = len(lfEncoding(dir))
+            if not dir.endswith(os.sep):
+                cwd_length += 1
+            return [line[cwd_length:] for line in func(*args, **kwargs)]
+        else:
+            return func(*args, **kwargs)
+    return deco
 
 
 #*****************************************************

@@ -55,12 +55,10 @@ def showRelativePath(func):
     @wraps(func)
     def deco(*args, **kwargs):
         if vim.eval("g:Lf_ShowRelativePath") == '1':
-            # os.path.relpath() is too slow!
-            dir = os.getcwd() if len(args) == 1 else args[1]
-            cwd_length = len(lfEncoding(dir))
-            if not dir.endswith(os.sep):
-                cwd_length += 1
-            return [line[cwd_length:] for line in func(*args, **kwargs)]
+            try:
+                return [os.path.relpath(line) for line in func(*args, **kwargs)]
+            except ValueError:
+                return func(*args, **kwargs)
         else:
             return func(*args, **kwargs)
     return deco
