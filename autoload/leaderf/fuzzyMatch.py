@@ -51,7 +51,7 @@ class FuzzyMatch(object):
         #     special = 2
         else:
             special = 0
-        d = -2      # -0b10
+        d = -2      # -0b10 or ~1
         i += 1
         text_len = len(text)
         pattern_len = len(pattern)
@@ -60,7 +60,8 @@ class FuzzyMatch(object):
             c = text[i]
             if c in pattern_mask:
                 d = d << 1 | pattern_mask[c] >> k
-            elif text[i-1].isupper() and c.lower() in pattern_mask:
+            elif (text[i-1].isupper() and c.lower() in pattern_mask and
+                    (i+1 == text_len or text[i+1].isupper())):
                 d = d << 1 | pattern_mask[c.lower()] >> k
             else:
                 d = ~0
@@ -113,7 +114,7 @@ class FuzzyMatch(object):
                     #     special = 2
                     else:
                         special = 0
-                    d = -2          # -0b10
+                    d = -2      # -0b10 or ~1
                     i += 1
             else:
                 i += 1
