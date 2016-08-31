@@ -32,11 +32,10 @@ class FuzzyMatch(object):
         x = text_mask[pattern[0]] >> j
         # e.g., text = 'a~bc~d~~ab~~d~', pattern = 'abcd'
         if x == 0:
-            return (0, (0, 0))
-        # e.g., text = '~ab~~_abd~b~d', pattern = 'abbd'
-        # should add condition "and val[k][1] > j + 1"
-        if k in val and val[k][1] > j + 1:
-            return (0, val[k])
+            return (0, 0, 0)
+        # e.g., text = '~ab~~_ab~c~~~d', pattern = 'abcd'
+        if k in val and val[k][1] >= j:
+            return val[k]
         max_prefix_score = max_score = beg = end = 0
         i = ((x & -x) - 1).bit_length()
         if i == 0 or text[i-1] in '_- ':
@@ -71,8 +70,8 @@ class FuzzyMatch(object):
                 if n == pattern_len:
                     score = n*n + special
                     if special == 2:
-                        val[k] = (score, j+i)
-                        return (i-n, val[k])
+                        val[k] = (score, j+i-n, j+i)
+                        return val[k]
                     else:
                         end_pos = j + i
                 else:
@@ -86,13 +85,13 @@ class FuzzyMatch(object):
                                                   pattern_mask,
                                                   k+n,
                                                   val)
-                        score = prefix_score + res[1][0] if res[1][0] else 0
-                        end_pos = res[1][1]
+                        score = prefix_score + res[0] if res[0] else 0
+                        end_pos = res[2]
                     else:
                         score = 0
                 if score > max_score:
                     max_score = score
-                    beg = i-n
+                    beg = j + i - n
                     end = end_pos
             # e.g., text = 'a~c~~~~ab~c', pattern = 'abc',
             # to find the index of the second 'a'
@@ -124,10 +123,10 @@ class FuzzyMatch(object):
                 score = pattern_len*pattern_len + special
                 if score > max_score:
                     max_score = score
-                    beg = i - pattern_len
+                    beg = j + i - pattern_len
                     end = j + i
-        val[k] = (max_score, end)
-        return (beg, val[k])
+        val[k] = (max_score, beg, end)
+        return val[k]
 
     @staticmethod
     def evaluateOneChar(text, pattern):
@@ -300,7 +299,7 @@ class FuzzyMatch(object):
         if j < pattern_len:
             return 0
         val = {}
-        beg, (score, end) = FuzzyMatch.evaluate(text,
+        (score, beg, end) = FuzzyMatch.evaluate(text,
                                                 self._pattern,
                                                 text_mask,
                                                 0,
