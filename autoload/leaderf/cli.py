@@ -83,6 +83,14 @@ class LfCli(object):
         self._cmdline[0:self._cursor_pos] = []
         self._cursor_pos = 0
 
+    def _clearWord(self):
+        for i in range(self._cursor_pos):
+            if self._cmdline[self._cursor_pos - i - 1] == ' ':
+                self._cmdline = self._cmdline[0:self._cursor_pos - i - 1]
+                self._cursor_pos = self._cursor_pos - i - 1
+                return
+        self._clearLeft()
+
     def clear(self):
         self._cmdline[:] = []
         self._cursor_pos = 0
@@ -350,6 +358,10 @@ class LfCli(object):
                         yield '<Shorten>'
                     elif equal(cmd, '<C-U>'):
                         self._clearLeft()
+                        self._buildPattern()
+                        yield '<Shorten>'
+                    elif equal(cmd, '<C-W>'):
+                        self._clearWord()
                         self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<Del>'):
