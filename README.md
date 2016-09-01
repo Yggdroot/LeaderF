@@ -47,7 +47,7 @@ Once LeaderF is launched:
  - `<C-F>` : switch between full path search mode and name only search mode.
  - `<ESC>` : switch to normal mode.
  - `<C-V>` : paste from clipboard.
- - `<C-U>` : clear the prompt.
+ - `<C-U>` or `<C-w>` : clear the prompt.
  - `<C-J>`, `<Down>`, `<C-K>`, `<Up>` : navigate the result list.
  - `<2-LeftMouse>` or `<CR>` : open the file under cursor or selected(when multiple files are selected).
  - `<C-X>` : open in horizontal split window.
