@@ -348,7 +348,7 @@ class LfCli(object):
                         self._backspace()
                         self._buildPattern()
                         yield '<Shorten>'
-                    elif equal(cmd, '<C-U>'):
+                    elif equal(cmd, '<C-U>') or equal(cmd, '<C-W>'):
                         self._clearLeft()
                         self._buildPattern()
                         yield '<Shorten>'
