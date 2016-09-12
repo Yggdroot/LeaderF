@@ -64,7 +64,7 @@ class FuzzyMatch(object):
                 d = d << 1 | pattern_mask[c.lower()] >> k
             else:
                 d = ~0
-            if d > last:
+            if d >= last:
                 n = (~last).bit_length()
                 # e.g., text = '~~abcd~~~~', pattern = 'abcd'
                 if n == pattern_len:
