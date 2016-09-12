@@ -31,6 +31,8 @@ else: # python 2.x
             else:
                 return str.decode(locale.getdefaultlocale()[1]).encode(
                         vim.eval("&encoding"))
+        except ValueError:
+            return str
         except UnicodeDecodeError:
             return str
 

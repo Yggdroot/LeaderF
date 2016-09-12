@@ -98,6 +98,7 @@ call s:InitVar('g:Lf_FollowLinks', 0)
 call s:InitVar('g:Lf_DelimiterChar', ';')
 call s:InitVar('g:Lf_MruFileExclude', [])
 call s:InitVar('g:Lf_MruMaxFiles', 100)
+call s:InitVar('g:Lf_MruInCurDirOnly', 0)
 call s:InitVar('g:Lf_WildIgnore',{
             \ 'dir': ['.svn','.git'],
             \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']

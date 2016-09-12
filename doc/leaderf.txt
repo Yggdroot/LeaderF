@@ -124,6 +124,12 @@ g:Lf_FollowLinks                                *g:Lf_FollowLinks*
     1 - yes
     Default value is 0.
 
+g:Lf_MruInCurDirOnly                             *g:Lf_MruInCurDirOnly*
+    Whether only show mru files under the current working dir.
+    0 - no
+    1 - yes
+    Default value is 0.
+
 g:Lf_WildIgnore                                 *g:Lf_WildIgnore*
     Specify the files and directories you want to exclude while indexing.
     Default value is: >
