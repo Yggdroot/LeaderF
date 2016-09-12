@@ -18,7 +18,13 @@ class MruExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         with lfOpen(mru.getCacheFileName(), 'r+', errors = 'ignore') as f:
             lines = f.readlines()
-            lines[:] = [name for name in lines if os.path.exists(name.rstrip())]
+            if '1' == vim.eval("g:Lf_MruInCurDirOnly"):
+                cwd = os.getcwd()
+#filter out the file 
+                lines[:] = [name for name in lines if name.startswith(cwd) and os.path.exists(name.rstrip())]
+            else:
+                vim.command("echom 'not in mru'")
+                lines[:] = [name for name in lines if os.path.exists(name.rstrip())]
             f.seek(0)
             f.truncate(0)
             f.writelines(lines)
