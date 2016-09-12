@@ -50,7 +50,7 @@ class FileExplorer(Explorer):
         start_time = time.time()
         wildignore = vim.eval("g:Lf_WildIgnore")
         file_list = []
-        for dir_path,dirs,files in os.walk(dir, followlinks = False
+        for dir_path, dirs, files in os.walk(dir, followlinks = False
                 if vim.eval("g:Lf_FollowLinks") == '0' else True):
             dirs[:] = [i for i in dirs if True not in (fnmatch.fnmatch(i,j)
                        for j in wildignore['dir'])]

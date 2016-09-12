@@ -158,6 +158,10 @@ g:Lf_MruMaxFiles                                *g:Lf_MruMaxFiles*
     Specify the number of most recently used files you want LeaderF to record.
     Default value is 100.
 
+g:Lf_HighlightIndividual                        *g:Lf_HighlightIndividual*
+    Whether to highlight individual character of the input in the result.
+    Default value is 1.
+
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
     prompt(|leaderf-prompt|).

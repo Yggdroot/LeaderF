@@ -163,10 +163,14 @@ class LfCli(object):
 
     def highlightMatches(self):
         vim.command("silent! syn clear Lf_hl_match")
-        vim.command("silent! syn clear Lf_hl_match_1")
+        vim.command("silent! syn clear Lf_hl_match_refine")
         if not self._cmdline:
             return
         if self._is_fuzzy:
+            # matchaddpos() is introduced by Patch 7.4.330
+            if (vim.eval("exists('*matchaddpos')") == '1' and
+                    vim.eval("g:Lf_HighlightIndividual") == '1'):
+                return
             cmdline = [r'\/' if c == '/' else r'\\' if c == '\\' else c
                        for c in self._cmdline] # \/ for syn match
             if self._is_full_path:
@@ -192,7 +196,7 @@ class LfCli(object):
                         vim.command("syn match Lf_hl_match display /%s/ "
                                     "containedin=Lf_hl_filename contained" %
                                     regex[0])
-                        vim.command("syn match Lf_hl_match_1 display "
+                        vim.command("syn match Lf_hl_match_refine display "
                                     "/%s\(\.\*\[\/]\)\@=/ containedin="
                                     "Lf_hl_dirname contained" % regex[1])
                 else:

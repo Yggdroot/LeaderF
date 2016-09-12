@@ -30,7 +30,7 @@ if has("syntax")
     highlight def link Lf_hl_help           comment
     highlight def link Lf_hl_helpCmd        Identifier
     highlight def link Lf_hl_match          String
-    highlight def link Lf_hl_match_1        Statement
+    highlight def link Lf_hl_match_refine   Statement
     highlight def link Lf_hl_stlFunction    Statusline
     highlight def link Lf_hl_stlMode        Statusline
     highlight def link Lf_hl_stlCurDir      Statusline

@@ -25,6 +25,9 @@ class Manager(object):
         self._help_length = 0
         self._show_help = False
         self._selections = {}
+        self._highlight_pos = []
+        self._highlight_refine_pos = []
+        self._highlight_ids = []
         self._initStlVar()
         self._setStlMode()
         self._getExplClass()
@@ -134,6 +137,11 @@ class Manager(object):
         self._setAttributes()
         self._setStatusline()
         self._defineMaps()
+        self._cli.clear()
+        self.clearSelections()
+        self._clearHighlights()
+        self._highlight_pos = []
+        self._highlight_refine_pos = []
 
     def _createBufWindow(self):
         if self._win_pos == 0:
@@ -192,6 +200,7 @@ class Manager(object):
         cb = vim.current.buffer
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
             setBuffer(cb, content)
+            self._clearHighlights()
             return
 
         if self._cli.isFuzzy:
@@ -238,8 +247,7 @@ class Manager(object):
         if is_full_path:
             pairs = ((get_weight(getDigest(line)), line) for line in iterable)
         else:
-            pairs = ((get_weight(getBasename(getDigest(line))), line)
-                    for line in iterable)
+            pairs = ((get_weight(getBasename(getDigest(line))), line) for line in iterable)
         return (p for p in pairs if p[0])
 
     def _refineFilter(self, first_get_weight, get_weight, iterable):
@@ -256,26 +264,140 @@ class Manager(object):
                 filter_method = partial(self._fuzzyFilter,
                                         False,
                                         fuzzy_match.getWeight)
+                highlight_method = partial(self._highlight,
+                                           False,
+                                           fuzzy_match.getHighlights)
             elif self._cli.pattern[0] == '':    # e.g. ;abc
                 fuzzy_match = FuzzyMatch(self._cli.pattern[1])
                 filter_method = partial(self._fuzzyFilter,
                                         True,
                                         fuzzy_match.getWeight)
+                highlight_method = partial(self._highlight,
+                                           True,
+                                           fuzzy_match.getHighlights)
             else:
                 fuzzy_match0 = FuzzyMatch(self._cli.pattern[0])
                 fuzzy_match1 = FuzzyMatch(self._cli.pattern[1])
                 filter_method = partial(self._refineFilter,
                                         fuzzy_match0.getWeight,
                                         fuzzy_match1.getWeight)
+                highlight_method = partial(self._highlightRefine,
+                                           fuzzy_match0.getHighlights,
+                                           fuzzy_match1.getHighlights)
         else:
             fuzzy_match = FuzzyMatch(self._cli.pattern)
             filter_method = partial(self._fuzzyFilter,
                                     self._cli.isFullPath,
                                     fuzzy_match.getWeight)
+            highlight_method = partial(self._highlight,
+                                       self._cli.isFullPath,
+                                       fuzzy_match.getHighlights)
 
         pairs = self._filter(30000, filter_method, content)
         pairs.sort(key=operator.itemgetter(0), reverse=True)
         setBuffer(vim.current.buffer, [p[1] for p in pairs])
+        highlight_method()
+
+    def _clearHighlights(self):
+        for i in self._highlight_ids:
+            vim.command("call matchdelete(%d)" % i)
+        self._highlight_ids = []
+
+    def _resetHighlights(self):
+        self._clearHighlights()
+        for i, pos in enumerate(self._highlight_pos, self._help_length + 1):
+            pos = [[i] + p for p in pos]
+            # The maximum number of positions is 8 in matchaddpos().
+            for j in range(0, len(pos), 8):
+                id = int(vim.eval("matchaddpos('Lf_hl_match', %s)"
+                         % str(pos[j:j+8])))
+                self._highlight_ids.append(id)
+
+        for i, pos in enumerate(self._highlight_refine_pos, self._help_length + 1):
+            pos = [[i] + p for p in pos]
+            # The maximum number of positions is 8 in matchaddpos().
+            for j in range(0, len(pos), 8):
+                id = int(vim.eval("matchaddpos('Lf_hl_match_refine', %s)"
+                         % str(pos[j:j+8])))
+                self._highlight_ids.append(id)
+
+    def _highlight(self, is_full_path, get_highlights):
+        # matchaddpos() is introduced by Patch 7.4.330
+        if (vim.eval("exists('*matchaddpos')") == '0' or
+                vim.eval("g:Lf_HighlightIndividual") == '0'):
+            return
+        cb = vim.current.buffer
+        if len(cb) == 1 and cb[0] == '': # buffer is empty.
+            return
+
+        win_height = vim.current.window.height
+        self._clearHighlights()
+
+        getDigest = self._getDigest
+        if is_full_path:
+            # e.g., self._highlight_pos = [ [ [2,3], [6,2] ], [ [1,4], [7,6], ... ], ... ]
+            # where [2, 3] indicates the highlight starts at the 2nd column with the
+            # length of 3 in bytes
+            self._highlight_pos = [get_highlights(getDigest(line))
+                                   for line in cb[:win_height]]
+            for i, pos in enumerate(self._highlight_pos, 1):
+                pos = [[i] + p for p in pos]
+                # The maximum number of positions is 8 in matchaddpos().
+                for j in range(0, len(pos), 8):
+                    id = int(vim.eval("matchaddpos('Lf_hl_match', %s)"
+                             % str(pos[j:j+8])))
+                    self._highlight_ids.append(id)
+        else:
+            self._highlight_pos = [get_highlights(getBasename(getDigest(line)))
+                                   for line in cb[:win_height]]
+            for i, pos in enumerate(self._highlight_pos, 1):
+                dir_len = len(getDirname(cb[i-1]))
+                if dir_len > 0:
+                    for j in range(len(pos)):
+                        pos[j][0] += dir_len + 1
+                pos = [[i] + p for p in pos]
+                # The maximum number of positions is 8 in matchaddpos().
+                for j in range(0, len(pos), 8):
+                    id = int(vim.eval("matchaddpos('Lf_hl_match', %s)"
+                             % str(pos[j:j+8])))
+                    self._highlight_ids.append(id)
+
+    def _highlightRefine(self, first_get_highlights, get_highlights):
+        # matchaddpos() is introduced by Patch 7.4.330
+        if (vim.eval("exists('*matchaddpos')") == '0' or
+                vim.eval("g:Lf_HighlightIndividual") == '0'):
+            return
+        cb = vim.current.buffer
+        if len(cb) == 1 and cb[0] == '': # buffer is empty.
+            return
+
+        win_height = vim.current.window.height
+        self._clearHighlights()
+
+        getDigest = self._getDigest
+        self._highlight_pos = [first_get_highlights(getBasename(getDigest(line)))
+                               for line in cb[:win_height]]
+        for i, pos in enumerate(self._highlight_pos, 1):
+            dir_len = len(getDirname(cb[i-1]))
+            if dir_len > 0:
+                for j in range(len(pos)):
+                    pos[j][0] += dir_len + 1
+            pos = [[i] + p for p in pos]
+            # The maximum number of positions is 8 in matchaddpos().
+            for j in range(0, len(pos), 8):
+                id = int(vim.eval("matchaddpos('Lf_hl_match', %s)"
+                         % str(pos[j:j+8])))
+                self._highlight_ids.append(id)
+
+        self._highlight_refine_pos = [get_highlights(getDirname(getDigest(line)))
+                                      for line in cb[:win_height]]
+        for i, pos in enumerate(self._highlight_refine_pos, 1):
+            pos = [[i] + p for p in pos]
+            # The maximum number of positions is 8 in matchaddpos().
+            for j in range(0, len(pos), 8):
+                id = int(vim.eval("matchaddpos('Lf_hl_match_refine', %s)"
+                         % str(pos[j:j+8])))
+                self._highlight_ids.append(id)
 
     def _regexFilter(self, iterable):
         try:
@@ -308,6 +430,7 @@ class Manager(object):
             del vim.current.buffer[0]
         self._createHelpHint()
         self.clearSelections()
+        self._resetHighlights()
         vim.command("setlocal nomodifiable")
 
     def _accept(self, file, mode):
@@ -359,9 +482,11 @@ class Manager(object):
     def _quit(self):
         self._cli.clear()
         self.clearSelections()
+        self._clearHighlights()
         if self._win_pos != 0 and len(vim.windows) > 1:
             vim.command("hide")
-            vim.command("exec '%d wincmd w'" % self._orig_win_nr)
+            # 'silent!' is used to skip error E16.
+            vim.command("silent! exec '%d wincmd w'" % self._orig_win_nr)
         else:
             if self._orig_buffer is None or vim.eval("bufexists('%s')" %
                     escQuote(self._orig_buffer)) == '0':
@@ -452,6 +577,7 @@ class Manager(object):
     def input(self, normal_mode=True):
         vim.command("setlocal modifiable")
         self._hideHelp()
+        self._resetHighlights()
 
         if not normal_mode:
             setBuffer(vim.current.buffer, self._content)
@@ -501,6 +627,7 @@ class Manager(object):
                 self.clearSelections()
                 self._cli.hideCursor()
                 self._createHelpHint()
+                self._resetHighlights()
                 vim.command("setlocal nomodifiable")
                 break
             elif equal(cmd, '<F5>'):
