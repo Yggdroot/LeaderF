@@ -95,7 +95,8 @@ class FuzzyMatch(object):
                     end = end_pos
             # e.g., text = 'a~c~~~~ab~c', pattern = 'abc',
             # to find the index of the second 'a'
-            if d == ~0:
+            # `d == last` is for the case when text = 'kpi_oos1', pattern = 'kos'
+            if d == ~0 or d == last:
                 y = x >> i
                 if y == 0:
                     break
