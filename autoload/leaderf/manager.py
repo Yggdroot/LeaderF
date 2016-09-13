@@ -300,7 +300,7 @@ class Manager(object):
 
     def _clearHighlights(self):
         for i in self._highlight_ids:
-            vim.command("call matchdelete(%d)" % i)
+            vim.command("silent! call matchdelete(%d)" % i)
         self._highlight_ids = []
 
     def _resetHighlights(self):
