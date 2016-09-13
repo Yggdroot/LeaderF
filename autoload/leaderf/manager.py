@@ -330,7 +330,7 @@ class Manager(object):
         if len(cb) == 1 and cb[0] == '': # buffer is empty.
             return
 
-        win_height = vim.current.window.height
+        highlight_number = int(vim.eval("g:Lf_NumberOfHighlight"))
         self._clearHighlights()
 
         getDigest = self._getDigest
@@ -339,7 +339,7 @@ class Manager(object):
             # where [2, 3] indicates the highlight starts at the 2nd column with the
             # length of 3 in bytes
             self._highlight_pos = [get_highlights(getDigest(line))
-                                   for line in cb[:win_height]]
+                                   for line in cb[:highlight_number]]
             for i, pos in enumerate(self._highlight_pos, 1):
                 pos = [[i] + p for p in pos]
                 # The maximum number of positions is 8 in matchaddpos().
@@ -349,7 +349,7 @@ class Manager(object):
                     self._highlight_ids.append(id)
         else:
             self._highlight_pos = [get_highlights(getBasename(getDigest(line)))
-                                   for line in cb[:win_height]]
+                                   for line in cb[:highlight_number]]
             for i, pos in enumerate(self._highlight_pos, 1):
                 dir_len = len(getDirname(cb[i-1]))
                 if dir_len > 0:
@@ -371,12 +371,12 @@ class Manager(object):
         if len(cb) == 1 and cb[0] == '': # buffer is empty.
             return
 
-        win_height = vim.current.window.height
+        highlight_number = int(vim.eval("g:Lf_NumberOfHighlight"))
         self._clearHighlights()
 
         getDigest = self._getDigest
         self._highlight_pos = [first_get_highlights(getBasename(getDigest(line)))
-                               for line in cb[:win_height]]
+                               for line in cb[:highlight_number]]
         for i, pos in enumerate(self._highlight_pos, 1):
             dir_len = len(getDirname(cb[i-1]))
             if dir_len > 0:
@@ -390,7 +390,7 @@ class Manager(object):
                 self._highlight_ids.append(id)
 
         self._highlight_refine_pos = [get_highlights(getDirname(getDigest(line)))
-                                      for line in cb[:win_height]]
+                                      for line in cb[:highlight_number]]
         for i, pos in enumerate(self._highlight_refine_pos, 1):
             pos = [[i] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
