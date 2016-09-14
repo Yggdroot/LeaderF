@@ -517,6 +517,7 @@ class Manager(object):
 
         if normal_mode: # when called in Normal mode
             self._createHelpHint()
+            self._resetHighlights()
             vim.command("setlocal nomodifiable")
 
     def addSelections(self):
