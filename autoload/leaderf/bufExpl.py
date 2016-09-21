@@ -35,7 +35,7 @@ class BufferExplorer(Explorer):
         return 'Buffer'
 
     def getStlCurDir(self):
-        return escQuote(lfEncoding(os.getcwd()))
+        return escQuote(lfEncode(os.getcwd()))
 
     def supportsNameOnly(self):
         return True

@@ -34,7 +34,7 @@ class MruExplorer(Explorer):
         return 'Mru'
 
     def getStlCurDir(self):
-        return escQuote(lfEncoding(os.getcwd()))
+        return escQuote(lfEncode(os.getcwd()))
 
     def supportsMulti(self):
         return True

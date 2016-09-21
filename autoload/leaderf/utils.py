@@ -10,10 +10,10 @@ from functools import wraps
 
 if sys.version_info >= (3,0):
 
-    def lfEncoding(str):
+    def lfEncode(str):
         return str
 
-    def lfDecoding(str):
+    def lfDecode(str):
         return str
 
     def lfOpen(file, mode='r', buffering=-1, encoding=None, errors=None,
@@ -24,7 +24,7 @@ else: # python 2.x
 
     range = xrange
 
-    def lfEncoding(str):
+    def lfEncode(str):
         try:
             if locale.getdefaultlocale()[1] is None:
                 return str
@@ -36,7 +36,7 @@ else: # python 2.x
         except UnicodeDecodeError:
             return str
 
-    def lfDecoding(str):
+    def lfDecode(str):
         try:
             if locale.getdefaultlocale()[1] is None:
                 return str

@@ -18,7 +18,7 @@ def showRelativePath(func):
         if vim.eval("g:Lf_ShowRelativePath") == '1':
             # os.path.relpath() is too slow!
             dir = os.getcwd() if len(args) == 1 else args[1]
-            cwd_length = len(lfEncoding(dir))
+            cwd_length = len(lfEncode(dir))
             if not dir.endswith(os.sep):
                 cwd_length += 1
             return [line[cwd_length:] for line in func(*args, **kwargs)]
@@ -57,7 +57,7 @@ class FileExplorer(Explorer):
             for name in files:
                 if True not in (fnmatch.fnmatch(name, j)
                                 for j in wildignore['file']):
-                    file_list.append(lfEncoding(os.path.join(dir_path,name)))
+                    file_list.append(lfEncode(os.path.join(dir_path,name)))
                 if time.time() - start_time > float(
                         vim.eval("g:Lf_IndexTimeLimit")):
                     return file_list
@@ -160,7 +160,7 @@ class FileExplorer(Explorer):
 
     def getContent(self, *args, **kwargs):
         if len(args) > 0:
-            if os.path.exists(lfDecoding(args[0])):
+            if os.path.exists(lfDecode(args[0])):
                 vim.command("silent cd %s" % args[0])
             else:
                 vim.command("echohl ErrorMsg | redraw | echon "
@@ -187,7 +187,7 @@ class FileExplorer(Explorer):
         return 'File'
 
     def getStlCurDir(self):
-        return escQuote(lfEncoding(os.path.abspath(self._cur_dir)))
+        return escQuote(lfEncode(os.path.abspath(self._cur_dir)))
 
     def supportsMulti(self):
         return True
