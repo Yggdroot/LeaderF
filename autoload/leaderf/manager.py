@@ -237,6 +237,7 @@ class Manager(object):
             end = self._index + 5000
             result.extend(filter_method(content[self._index:end]))
             self._index = end
+
         return result
 
     def _fuzzyFilter(self, is_full_path, get_weight, iterable):
@@ -258,9 +259,10 @@ class Manager(object):
         return ((i[0] + i[1], i[2]) for i in triples if i[0] and i[1])
 
     def _fuzzySearch(self, content):
+        encoding = vim.eval("&encoding")
         if self._cli.isRefinement:
             if self._cli.pattern[1] == '':      # e.g. abc;
-                fuzzy_match = FuzzyMatch(self._cli.pattern[0])
+                fuzzy_match = FuzzyMatch(self._cli.pattern[0], encoding)
                 filter_method = partial(self._fuzzyFilter,
                                         False,
                                         fuzzy_match.getWeight)
@@ -268,7 +270,7 @@ class Manager(object):
                                            False,
                                            fuzzy_match.getHighlights)
             elif self._cli.pattern[0] == '':    # e.g. ;abc
-                fuzzy_match = FuzzyMatch(self._cli.pattern[1])
+                fuzzy_match = FuzzyMatch(self._cli.pattern[1], encoding)
                 filter_method = partial(self._fuzzyFilter,
                                         True,
                                         fuzzy_match.getWeight)
@@ -276,8 +278,8 @@ class Manager(object):
                                            True,
                                            fuzzy_match.getHighlights)
             else:
-                fuzzy_match0 = FuzzyMatch(self._cli.pattern[0])
-                fuzzy_match1 = FuzzyMatch(self._cli.pattern[1])
+                fuzzy_match0 = FuzzyMatch(self._cli.pattern[0], encoding)
+                fuzzy_match1 = FuzzyMatch(self._cli.pattern[1], encoding)
                 filter_method = partial(self._refineFilter,
                                         fuzzy_match0.getWeight,
                                         fuzzy_match1.getWeight)
@@ -285,7 +287,7 @@ class Manager(object):
                                            fuzzy_match0.getHighlights,
                                            fuzzy_match1.getHighlights)
         else:
-            fuzzy_match = FuzzyMatch(self._cli.pattern)
+            fuzzy_match = FuzzyMatch(self._cli.pattern, encoding)
             filter_method = partial(self._fuzzyFilter,
                                     self._cli.isFullPath,
                                     fuzzy_match.getWeight)

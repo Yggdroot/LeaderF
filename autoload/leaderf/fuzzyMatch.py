@@ -15,13 +15,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+
+if sys.version_info >= (3, 0):
+    def Unicode(str, encoding):
+        return str
+else:
+    def Unicode(str, encoding):
+        try:
+            return unicode(str, encoding)
+        except ValueError:
+            return str
+
 
 class FuzzyMatch(object):
-    def __init__(self, pattern):
-        self._pattern = pattern
+    def __init__(self, pattern, encoding):
+        self._pattern = Unicode(pattern, encoding)
+        self._encoding = encoding
         self._pattern_mask = {}
-        self._is_pattern_lower = (pattern + 'a').islower()
-        for i, c in enumerate(pattern):
+        self._is_pattern_lower = (self._pattern + 'a').islower()
+        for i, c in enumerate(self._pattern):
             if c in self._pattern_mask:
                 self._pattern_mask[c] ^= (1 << i)
             else:
@@ -232,6 +245,7 @@ class FuzzyMatch(object):
             return 2 + special + 1.0/(beg + end) + 1.0/len(text)
 
     def getWeight(self, text):
+        text = Unicode(text, self._encoding)
         pattern_len = len(self._pattern)
         if pattern_len == 1:
             return FuzzyMatch.evaluateOneChar(text, self._pattern)
@@ -410,6 +424,13 @@ class FuzzyMatch(object):
         return val[key]
 
     def getHighlights(self, text):
+        """
+        return a list of pair [col, length], where `col` is the column number(start
+        from 1, the value must correspond to the byte index of `text`) and `length`
+        is the length of the highlight in bytes.
+        e.g., [ [2,3], [6,2], [10,4], ... ]
+        """
+        text = Unicode(text, self._encoding)
         first_char = self._pattern[0]
         last_char = self._pattern[-1]
         if self._is_pattern_lower:
@@ -461,5 +482,10 @@ class FuzzyMatch(object):
                                                           self._pattern_mask,
                                                           0,
                                                           val)
+        for i, highlight in enumerate(highlights):
+            col, length = highlight
+            highlight[0] = len(text[:col-1].encode(self._encoding)) + 1
+            highlight[1] = len(text[col-1:col-1+length].encode(self._encoding))
+
         return highlights
 
