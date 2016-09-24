@@ -18,7 +18,7 @@ class MruExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         with lfOpen(mru.getCacheFileName(), 'r+', errors = 'ignore') as f:
             lines = f.readlines()
-            lines[:] = [name for name in lines if os.path.exists(name.rstrip())]
+            lines = [name for name in lines if os.path.exists(lfDecode(name.rstrip()))]
             f.seek(0)
             f.truncate(0)
             f.writelines(lines)
