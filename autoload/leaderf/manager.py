@@ -570,6 +570,7 @@ class Manager(object):
                     "echo ' searching ...' | echohl NONE")
         self._content = self._getExplorer().getContent(*args, **kwargs)
         if not self._content:
+            vim.command("echohl Error | redraw | echo ' No content!'")
             return
         self._gotoBuffer()
         vim.command("let g:Lf_statusline_curDir = '%s'" %
