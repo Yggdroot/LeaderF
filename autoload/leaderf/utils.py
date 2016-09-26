@@ -58,7 +58,7 @@ def showRelativePath(func):
     def deco(*args, **kwargs):
         if vim.eval("g:Lf_ShowRelativePath") == '1':
             try:
-                return [os.path.relpath(line) for line in func(*args, **kwargs)]
+                return [os.path.relpath(line, lfEncode(os.getcwd())) for line in func(*args, **kwargs)]
             except ValueError:
                 return func(*args, **kwargs)
         else:

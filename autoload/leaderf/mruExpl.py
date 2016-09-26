@@ -45,7 +45,7 @@ class MruExplorer(Explorer):
     def delFromCache(self, name):
         with lfOpen(mru.getCacheFileName(), 'r+', errors = 'ignore') as f:
             lines = f.readlines()
-            lines.remove(name + '\n')
+            lines.remove(lfEncode(os.path.abspath(lfDecode(name))) + '\n')
             f.seek(0)
             f.truncate(0)
             f.writelines(lines)

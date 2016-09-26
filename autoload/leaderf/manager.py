@@ -15,7 +15,7 @@ from leaderf.fuzzyMatch import FuzzyMatch
 #*****************************************************
 class Manager(object):
     def __init__(self):
-        self._buffer_name = vim.eval("expand('$VIMRUNTIME/[LeaderF]')")
+        self._buffer_name = vim.eval("expand('$VIMRUNTIME/LeaderF')")
         self._win_pos = int(vim.eval("g:Lf_WindowPosition"))
         self._autochdir = 0
         self._cli = LfCli()

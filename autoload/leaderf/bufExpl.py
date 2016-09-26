@@ -18,11 +18,11 @@ class BufferExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         show_unlisted = False if len(args) == 0 else args[0]
         if show_unlisted:
-            return [b.name for b in vim.buffers if b.name is not None]
+            return [b.name for b in vim.buffers if b.name and os.path.basename(b.name) != "LeaderF"]
         if int(vim.eval("v:version")) > 703:
-            return [b.name for b in vim.buffers if b.options["buflisted"]]
+            return [b.name for b in vim.buffers if b.name and b.options["buflisted"]]
         else:
-            return [b.name for b in vim.buffers if vim.eval("buflisted('%s')"
+            return [b.name for b in vim.buffers if b.name and vim.eval("buflisted('%s')"
                     % escQuote(b.name)) == '1']
 
     def acceptSelection(self, *args, **kwargs):
@@ -72,19 +72,13 @@ class BufExplManager(Manager):
         if vim.current.window.cursor[0] <= self._help_length:
             return
         vim.command("setlocal modifiable")
-        try:
-            line = vim.current.line
-            if wipe == 0:
-                vim.command("confirm bd %s" % re.sub(' ', '\\ ',
-                            os.path.abspath(line)))
-            else:
-                vim.command("confirm bw %s" % re.sub(' ', '\\ ',
-                            os.path.abspath(line)))
-            if len(self._content) > 0:
-                self._content.remove(line)
-            del vim.current.line
-        except:
-            pass
+        line = vim.current.line
+        line = lfEncode(os.path.abspath(lfDecode(line)))
+        if wipe == 0:
+            vim.command("confirm bd %s" % re.sub(' ', '\\ ', line))
+        else:
+            vim.command("confirm bw %s" % re.sub(' ', '\\ ', line))
+        del vim.current.line
         vim.command("setlocal nomodifiable")
 
 
