@@ -177,7 +177,7 @@ class FuzzyMatch(object):
                                              text[second_beg-1] in '_.- /\\'):
                         special = 2
                         beg = second_beg
-                return 4 + special + 1.0/(beg + 1) + 1.0/len(text)
+                return 4 + special + (1 >> beg) + 1.0/(beg + 1) + 1.0/len(text)
             else:
                 beg = text_lower.find(pattern[0])
                 if beg == -1:
@@ -201,7 +201,7 @@ class FuzzyMatch(object):
                                 beg = second_beg
                         special += 2
                         end = second_end
-                return 2 + special + 1.0/(beg + end) + 1.0/len(text)
+                return 2 + special + (1 >> beg) + 1.0/(beg + end) + 1.0/len(text)
         elif pattern[0].isupper():
             beg = text.find(pattern[0])
             if beg == -1:
@@ -215,7 +215,7 @@ class FuzzyMatch(object):
                 if end == -1:
                     return 0
                 elif end == beg + 1:
-                    return 4 + 1.0/(beg + end) + 1.0/len(text)
+                    return 4 + (1 >> beg) + 1.0/(beg + end) + 1.0/len(text)
                 special = 0
                 if text[end].isupper() or text[end-1] in '_.- /\\':
                     special = 2
@@ -224,7 +224,7 @@ class FuzzyMatch(object):
                     if second_end != -1 and (text[second_end].isupper() or
                                              text[second_end-1] in '_.- /\\'):
                         special = 2
-                return 2 + special + 1.0/(beg + end) + 1.0/len(text)
+                return 2 + special + (1 >> beg) + 1.0/(beg + end) + 1.0/len(text)
         else: # e.g. pattern is 'aB'
             text_lower = text.lower()
             beg = text_lower.find(pattern[0])
@@ -242,7 +242,7 @@ class FuzzyMatch(object):
                                          text[second_beg-1] in '_.- /\\'):
                     special = 2
                     beg = second_beg
-            return 2 + special + 1.0/(beg + end) + 1.0/len(text)
+            return 2 + special + (1 >> beg) + 1.0/(beg + end) + 1.0/len(text)
 
     def getWeight(self, text):
         text = Unicode(text, self._encoding)
