@@ -23,7 +23,7 @@ if sys.version_info >= (3, 0):
 else:
     def Unicode(str, encoding):
         try:
-            return unicode(str, encoding)
+            return unicode(str, encoding, 'ignore')
         except ValueError:
             return str
 
