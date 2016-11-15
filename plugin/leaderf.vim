@@ -159,10 +159,6 @@ let s:Lf_CommandMap = {
 call s:InitDict('g:Lf_CommandMap', s:Lf_CommandMap)
 
 
-if !has("gui_running")
-    let g:Lf_CursorBlink = 0
-endif
-
 autocmd BufWinEnter,BufWritePost * call lfMru#record(expand('<afile>:p'))
 
 

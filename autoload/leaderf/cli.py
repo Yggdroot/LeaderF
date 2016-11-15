@@ -113,7 +113,8 @@ class LfCli(object):
             else:
                 vim.command("hi! default link Lf_hl_cursor NONE")
             self._start_time = datetime.now()
-            self._blinkon = not self._blinkon
+            if vim.eval("g:Lf_CursorBlink") == '1':
+                self._blinkon = not self._blinkon
 
         if self._is_fuzzy:
             if self._is_full_path:
@@ -301,22 +302,21 @@ class LfCli(object):
                 self._buildPrompt()
                 self._idle = False
 
-                vim.command("let nr = getchar(%s)"
-                            % vim.eval("g:Lf_CursorBlink == 1 ? 0 : ''"))
-                vim.command("sleep 1m")
-                vim.command("let str = strtrans(nr)")
-                vim.command("let ch = !type(nr) ? nr2char(nr) : nr")
+                vim.command("let nr = getchar(1)")
+                if vim.eval("!type(nr) && nr == 0") == '1':
+                    self._idle = True
+                    continue
                 # https://groups.google.com/forum/#!topic/vim_dev/gg-l-kaCz_M
                 # '<80><fc>^B' is <Shift>, '<80><fc>^D' is <Ctrl>,
                 # '<80><fc>^H' is <Alt>, '<80><fc>^L' is <Ctrl + Alt>
-                if vim.eval("!type(nr) && nr == 0") == '1' or vim.eval(
-                        "str == '<80><fc>^B' || str == '<80><fc>^D' || "
-                        "str == '<80><fc>^H' || str == '<80><fc>^L' || "
-                        "str == '<80><fc>$' || str == '<80><fc>\"' || "
-                        "str == '<80><fc>('") == '1':
+                elif vim.eval("type(nr) != 0") == '1':
+                    vim.command("call getchar(0)")
+                    vim.command("call feedkeys('a') | call getchar()")
                     self._idle = True
                     continue
                 else:
+                    vim.command("let nr = getchar()")
+                    vim.command("let ch = !type(nr) ? nr2char(nr) : nr")
                     self._blinkon = True
 
                 if vim.eval("!type(nr) && nr >= 0x20") == '1':
