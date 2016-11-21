@@ -353,7 +353,7 @@ class Manager(object):
             self._highlight_pos = [get_highlights(getBasename(getDigest(line)))
                                    for line in cb[:highlight_number]]
             for i, pos in enumerate(self._highlight_pos, 1):
-                dir_len = len(getDirname(cb[i-1]))
+                dir_len = lfBytesLen(getDirname(cb[i-1]))
                 if dir_len > 0:
                     for j in range(len(pos)):
                         pos[j][0] += dir_len + 1
@@ -380,7 +380,7 @@ class Manager(object):
         self._highlight_pos = [first_get_highlights(getBasename(getDigest(line)))
                                for line in cb[:highlight_number]]
         for i, pos in enumerate(self._highlight_pos, 1):
-            dir_len = len(getDirname(cb[i-1]))
+            dir_len = lfBytesLen(getDirname(cb[i-1]))
             if dir_len > 0:
                 for j in range(len(pos)):
                     pos[j][0] += dir_len + 1

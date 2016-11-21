@@ -20,6 +20,11 @@ if sys.version_info >= (3, 0):
                newline=None, closefd=True):
         return open(file, mode, buffering, encoding, errors, newline, closefd)
 
+    def lfBytesLen(str):
+        """ string length in bytes """
+        return len(str.encode(vim.eval("&encoding"), errors="ignore"))
+
+
 else: # python 2.x
 
     range = xrange
@@ -49,6 +54,10 @@ else: # python 2.x
     def lfOpen(file, mode='r', buffering=-1, encoding=None, errors=None,
                newline=None, closefd=True):
         return open(file, mode, buffering)
+
+    def lfBytesLen(str):
+        """ string length in bytes """
+        return len(str)
 
 
 #-----------------------------------------------------------------------------
