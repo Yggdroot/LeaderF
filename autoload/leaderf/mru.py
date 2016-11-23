@@ -5,6 +5,7 @@ import vim
 import os
 import os.path
 import fnmatch
+import time
 from leaderf.utils import *
 
 
@@ -17,6 +18,7 @@ class Mru(object):
                                        '.LfCache', 'mru')
         self._cache_file = os.path.join(self._cache_dir, 'mruCache')
         self._initCache()
+        self._mru_buffers = {}
 
     def _initCache(self):
         if not os.path.exists(self._cache_dir):
@@ -46,6 +48,15 @@ class Mru(object):
             f.seek(0)
             f.truncate(0)
             f.writelines(lines)
+
+    def setBufferTimestamp(self, buf_name):
+        self._mru_buffers[buf_name] = time.time()
+
+    def getMruBuffers(self):
+        buffers = sorted(self._mru_buffers.items(), key=lambda d:d[1], reverse=True)
+        mru_buf = [i[0] for i in buffers]
+        return mru_buf[1:] + mru_buf[0:1]
+
 
 #*****************************************************
 # mru is a singleton
