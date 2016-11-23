@@ -18,5 +18,6 @@ function! lfMru#record(name)
     endif
 
     exec g:Lf_py 'mru.saveToCache(r"""'.a:name.'""")'
+    exec g:Lf_py 'mru.setBufferTimestamp(r"""'.a:name.'""")'
 endfunction
 

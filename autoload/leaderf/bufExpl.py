@@ -8,6 +8,7 @@ import os.path
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
+from leaderf.mru import *
 
 
 #*****************************************************
@@ -17,13 +18,16 @@ class BufferExplorer(Explorer):
     @showRelativePath
     def getContent(self, *args, **kwargs):
         show_unlisted = False if len(args) == 0 else args[0]
+        buffers = {b.name:b for b in vim.buffers}
         if show_unlisted:
-            return [b.name for b in vim.buffers if b.name and os.path.basename(b.name) != "LeaderF"]
+            return [b for b in mru.getMruBuffers() if b in buffers \
+                    and os.path.basename(b) != "LeaderF"]
         if int(vim.eval("v:version")) > 703:
-            return [b.name for b in vim.buffers if b.name and b.options["buflisted"]]
+            return [b for b in mru.getMruBuffers() if b in buffers \
+                    and buffers[b].options["buflisted"]]
         else:
-            return [b.name for b in vim.buffers if b.name and vim.eval("buflisted('%s')"
-                    % escQuote(b.name)) == '1']
+            return [b for b in mru.getMruBuffers() if b in buffers \
+                    and vim.eval("buflisted('%s')" % escQuote(b)) == '1']
 
     def acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
