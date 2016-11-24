@@ -18,10 +18,9 @@ class BufferExplorer(Explorer):
     @showRelativePath
     def getContent(self, *args, **kwargs):
         show_unlisted = False if len(args) == 0 else args[0]
-        buffers = {b.name:b for b in vim.buffers}
+        buffers = { b.name:b for b in vim.buffers }
         if show_unlisted:
-            return [b for b in mru.getMruBuffers() if b in buffers \
-                    and os.path.basename(b) != "LeaderF"]
+            return [b for b in mru.getMruBuffers() if b in buffers]
         if int(vim.eval("v:version")) > 703:
             return [b for b in mru.getMruBuffers() if b in buffers \
                     and buffers[b].options["buflisted"]]
