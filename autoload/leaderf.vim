@@ -107,6 +107,10 @@ function! leaderf#startBufExpl(...)
 endfunction
 
 function! leaderf#startMruExpl(...)
-    call leaderf#LfPy("mruExplManager.startExplorer()")
+    if a:0 == 0
+        call leaderf#LfPy("mruExplManager.startExplorer(vim.current.buffer.name)")
+    else
+        call leaderf#LfPy("mruExplManager.startExplorer(vim.current.buffer.name, f='cwd')")
+    endif
 endfunction
 

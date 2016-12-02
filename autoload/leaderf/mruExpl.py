@@ -16,13 +16,18 @@ from leaderf.mru import *
 class MruExplorer(Explorer):
     @showRelativePath
     def getContent(self, *args, **kwargs):
-        with lfOpen(mru.getCacheFileName(), 'r+', errors = 'ignore') as f:
+        with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore') as f:
             lines = f.readlines()
             lines = [name for name in lines if os.path.exists(lfDecode(name.rstrip()))]
             f.seek(0)
             f.truncate(0)
             f.writelines(lines)
-            return lines
+            if len(kwargs) > 0:
+                lines = [name for name in lines if lfDecode(name).startswith(os.getcwd())]
+            if args[0] == lines[0].rstrip():
+                return lines[1:] + lines[0:1]
+            else:
+                return lines
 
     def acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -43,7 +48,7 @@ class MruExplorer(Explorer):
         return True
 
     def delFromCache(self, name):
-        with lfOpen(mru.getCacheFileName(), 'r+', errors = 'ignore') as f:
+        with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore') as f:
             lines = f.readlines()
             lines.remove(lfEncode(os.path.abspath(lfDecode(name))) + '\n')
             f.seek(0)

@@ -15,7 +15,9 @@ from leaderf.utils import *
 class Mru(object):
     def __init__(self):
         self._cache_dir = os.path.join(vim.eval("g:Lf_CacheDiretory"),
-                                       '.LfCache', 'mru')
+                                       '.LfCache',
+                                       'python' + vim.eval("g:Lf_PythonVersion"),
+                                       'mru')
         self._cache_file = os.path.join(self._cache_dir, 'mruCache')
         self._initCache()
         self._mru_buffers = {}
@@ -24,7 +26,7 @@ class Mru(object):
         if not os.path.exists(self._cache_dir):
             os.makedirs(self._cache_dir)
         if not os.path.exists(self._cache_file):
-            with lfOpen(self._cache_file, 'w', errors = 'ignore'):
+            with lfOpen(self._cache_file, 'w', errors='ignore'):
                 pass
 
     def getCacheFileName(self):
@@ -34,7 +36,7 @@ class Mru(object):
         if True in (fnmatch.fnmatch(buf_name, i)
                     for i in vim.eval("g:Lf_MruFileExclude")):
             return
-        with lfOpen(self._cache_file, 'r+', errors = 'ignore') as f:
+        with lfOpen(self._cache_file, 'r+', errors='ignore') as f:
             lines = f.readlines()
             for i, line in enumerate(lines):
                 if buf_name == line.rstrip():

@@ -35,7 +35,9 @@ class FileExplorer(Explorer):
         self._cur_dir = ''
         self._content = []
         self._cache_dir = os.path.join(vim.eval("g:Lf_CacheDiretory"),
-                                       '.LfCache', 'file')
+                                       '.LfCache',
+                                       'python' + vim.eval("g:Lf_PythonVersion"),
+                                       'file')
         self._cache_index = os.path.join(self._cache_dir, 'cacheIndex')
         self._initCache()
 
@@ -43,7 +45,7 @@ class FileExplorer(Explorer):
         if not os.path.exists(self._cache_dir):
             os.makedirs(self._cache_dir)
         if not os.path.exists(self._cache_index):
-            with lfOpen(self._cache_index, 'w', errors = 'ignore'):
+            with lfOpen(self._cache_index, 'w', errors='ignore'):
                 pass
 
     def _getFiles(self, dir):
@@ -66,7 +68,7 @@ class FileExplorer(Explorer):
     @showRelativePath
     def _getFileList(self, dir):
         dir = dir if dir.endswith(os.sep) else dir + os.sep
-        with lfOpen(self._cache_index, 'r+', errors = 'ignore') as f:
+        with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
             lines = f.readlines()
             path_length = 0
             target = -1
@@ -85,7 +87,7 @@ class FileExplorer(Explorer):
                 f.writelines(lines)
                 with lfOpen(os.path.join(self._cache_dir,
                                          lines[target].split(None, 2)[1]),
-                            'r', errors = 'ignore') as cache_file:
+                            'r', errors='ignore') as cache_file:
                     if lines[target].split(None, 2)[2].strip() == dir:
                         return cache_file.readlines()
                     else:
@@ -128,7 +130,7 @@ class FileExplorer(Explorer):
                         f.truncate(0)
                         f.writelines(lines)
                     with lfOpen(os.path.join(self._cache_dir, cache_file_name),
-                                'w', errors = 'ignore') as cache_file:
+                                'w', errors='ignore') as cache_file:
                         for line in file_list:
                             cache_file.write(line + '\n')
                 return file_list
@@ -136,7 +138,7 @@ class FileExplorer(Explorer):
     def _refresh(self):
         dir = os.path.abspath(self._cur_dir)
         dir = dir if dir.endswith(os.sep) else dir + os.sep
-        with lfOpen(self._cache_index, 'r+', errors = 'ignore') as f:
+        with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
             lines = f.readlines()
             path_length = 0
             target = -1
@@ -154,7 +156,7 @@ class FileExplorer(Explorer):
                 cache_file_name = lines[target].split(None, 2)[1]
                 file_list = self._getFiles(dir)
                 with lfOpen(os.path.join(self._cache_dir, cache_file_name),
-                            'w', errors = 'ignore') as cache_file:
+                            'w', errors='ignore') as cache_file:
                     for line in file_list:
                         cache_file.write(line + '\n')
 

@@ -160,6 +160,7 @@ class Manager(object):
         vim.command("setlocal noswapfile")
         vim.command("setlocal nolist")
         vim.command("setlocal nonumber")
+        vim.command("setlocal norelativenumber")
         vim.command("setlocal nospell")
         vim.command("setlocal nowrap")
         vim.command("setlocal nofoldenable")
@@ -585,6 +586,7 @@ class Manager(object):
 
         if not normal_mode:
             setBuffer(vim.current.buffer, self._content)
+            vim.command("normal! gg")
             self._index = 0
 
         quit = False
