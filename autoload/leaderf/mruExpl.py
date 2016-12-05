@@ -24,7 +24,7 @@ class MruExplorer(Explorer):
             f.writelines(lines)
             if len(kwargs) > 0:
                 lines = [name for name in lines if lfDecode(name).startswith(os.getcwd())]
-            if args[0] == lines[0].rstrip():
+            if len(lines) >0 and args[0] == lines[0].rstrip():
                 return lines[1:] + lines[0:1]
             else:
                 return lines
