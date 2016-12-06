@@ -16,12 +16,13 @@ def showRelativePath(func):
     @wraps(func)
     def deco(*args, **kwargs):
         if vim.eval("g:Lf_ShowRelativePath") == '1':
-            try:
-                return [line if line.startswith("[No Name ")
-                        else lfEncode(os.path.relpath(lfDecode(line), os.getcwd()))
-                        for line in func(*args, **kwargs)]
-            except ValueError:
-                return func(*args, **kwargs)
+            result = []
+            for line in func(*args, **kwargs):
+                try:
+                    result.append(lfEncode(os.path.relpath(lfDecode(line), os.getcwd())))
+                except ValueError:
+                    result.append(line)
+            return result
         else:
             return func(*args, **kwargs)
     return deco
