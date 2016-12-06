@@ -4,10 +4,25 @@
 import vim
 import os
 import os.path
+from functools import wraps
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
 from leaderf.mru import *
+
+
+def showRelativePath(func):
+    @wraps(func)
+    def deco(*args, **kwargs):
+        if vim.eval("g:Lf_ShowRelativePath") == '1':
+            try:
+                return [lfEncode(os.path.relpath(lfDecode(line), os.getcwd()))
+                        for line in func(*args, **kwargs)]
+            except ValueError:
+                return func(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
+    return deco
 
 
 #*****************************************************

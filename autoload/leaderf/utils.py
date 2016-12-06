@@ -6,7 +6,6 @@ import sys
 import re
 import os
 import locale
-from functools import wraps
 
 if sys.version_info >= (3, 0):
 
@@ -61,18 +60,6 @@ else: # python 2.x
 
 
 #-----------------------------------------------------------------------------
-
-def showRelativePath(func):
-    @wraps(func)
-    def deco(*args, **kwargs):
-        if vim.eval("g:Lf_ShowRelativePath") == '1':
-            try:
-                return [lfEncode(os.path.relpath(lfDecode(line), os.getcwd())) for line in func(*args, **kwargs)]
-            except ValueError:
-                return func(*args, **kwargs)
-        else:
-            return func(*args, **kwargs)
-    return deco
 
 # os.path.basename is too slow!
 def getBasename(path):

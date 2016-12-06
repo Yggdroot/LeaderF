@@ -20,7 +20,7 @@ class Mru(object):
                                        'mru')
         self._cache_file = os.path.join(self._cache_dir, 'mruCache')
         self._initCache()
-        self._mru_buffers = {}
+        self._mru_bufnrs = {}
 
     def _initCache(self):
         if not os.path.exists(self._cache_dir):
@@ -51,14 +51,16 @@ class Mru(object):
             f.truncate(0)
             f.writelines(lines)
 
-    def setBufferTimestamp(self, buf_name):
-        self._mru_buffers[buf_name] = time.time()
+    def setBufferTimestamp(self, buf_number):
+        self._mru_bufnrs[buf_number] = time.time()
 
-    def getMruBuffers(self):
-        buffers = sorted(self._mru_buffers.items(), key=lambda d:d[1], reverse=True)
-        mru_buf = [i[0] for i in buffers]
-        return mru_buf[1:] + mru_buf[0:1]
+    def getMruBufnrs(self):
+        bufnrs = sorted(self._mru_bufnrs.items(), key=lambda d:d[1], reverse=True)
+        mru_bufnrs = [i[0] for i in bufnrs]
+        return mru_bufnrs[1:] + mru_bufnrs[0:1]
 
+    def delMruBufnr(self, buf_number):
+        del self._mru_bufnrs[buf_number]
 
 #*****************************************************
 # mru is a singleton

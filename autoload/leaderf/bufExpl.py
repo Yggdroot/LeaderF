@@ -5,10 +5,26 @@ import vim
 import re
 import os
 import os.path
+from functools import wraps
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
 from leaderf.mru import *
+
+
+def showRelativePath(func):
+    @wraps(func)
+    def deco(*args, **kwargs):
+        if vim.eval("g:Lf_ShowRelativePath") == '1':
+            try:
+                return [line if line.startswith("[No Name ")
+                        else lfEncode(os.path.relpath(lfDecode(line), os.getcwd()))
+                        for line in func(*args, **kwargs)]
+            except ValueError:
+                return func(*args, **kwargs)
+        else:
+            return func(*args, **kwargs)
+    return deco
 
 
 #*****************************************************
@@ -18,21 +34,38 @@ class BufferExplorer(Explorer):
     @showRelativePath
     def getContent(self, *args, **kwargs):
         show_unlisted = False if len(args) == 0 else args[0]
-        buffers = { b.name:b for b in vim.buffers }
         if show_unlisted:
-            return [b for b in mru.getMruBuffers() if b in buffers]
-        if int(vim.eval("v:version")) > 703:
-            return [b for b in mru.getMruBuffers() if b in buffers \
-                    and buffers[b].options["buflisted"]]
+            buffers = {b.number: b for b in vim.buffers
+                       if os.path.basename(b.name) != "LeaderF"}
         else:
-            return [b for b in mru.getMruBuffers() if b in buffers \
-                    and vim.eval("buflisted('%s')" % escQuote(b)) == '1']
+            buffers = {b.number: b for b in vim.buffers 
+                       if vim.eval("buflisted(%d)" % b.number) == '1'}
+
+        bufnames = []
+        for nr in mru.getMruBufnrs():
+            if nr in buffers:
+                buf_name = buffers[nr].name
+                if not buf_name:
+                    buf_name = "[No Name %d]" % nr
+                bufnames.append(buf_name)
+                del buffers[nr]
+            else:
+                mru.delMruBufnr(nr)
+        left_bufnames = [b.name if b.name else "[No Name %d]" % b.number
+                         for b in buffers.values()]
+        bufnames.extend(left_bufnames)
+
+        return bufnames
 
     def acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
         file = args[0]
-        vim.command("hide edit %s" % escSpecial(file))
+        if file.startswith("[No Name "):
+            buf_number = int(re.sub(r"^.*?(\d+).$", r"\1", file))
+            vim.command("hide buffer %d" % buf_number)
+        else:
+            vim.command("hide edit %s" % escSpecial(file))
 
     def getStlFunction(self):
         return 'Buffer'

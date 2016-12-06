@@ -13,7 +13,6 @@ exec g:Lf_py "sys.path.insert(0, cwd)"
 exec g:Lf_py "from leaderf.mru import *"
 
 function! lfMru#record(name)
-    exec g:Lf_py 'mru.setBufferTimestamp(r"""'.a:name.'""")'
     if a:name == '' || !filereadable(a:name)
         return
     endif
@@ -21,3 +20,6 @@ function! lfMru#record(name)
     exec g:Lf_py 'mru.saveToCache(r"""'.a:name.'""")'
 endfunction
 
+function! lfMru#recordBuffer(bufNum)
+    exec g:Lf_py 'mru.setBufferTimestamp('.a:bufNum.')'
+endfunction

@@ -159,7 +159,8 @@ let s:Lf_CommandMap = {
 call s:InitDict('g:Lf_CommandMap', s:Lf_CommandMap)
 
 
-autocmd BufWinEnter,BufWritePost * call lfMru#record(expand('<afile>:p'))
+autocmd BufWinEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
+            \ call lfMru#recordBuffer(expand('<abuf>'))
 
 
 command! -bar -nargs=? -complete=dir Leaderf call leaderf#startFileExpl(<f-args>)
