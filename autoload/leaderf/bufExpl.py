@@ -50,11 +50,8 @@ class BufferExplorer(Explorer):
                     buf_name = "[No Name %d]" % nr
                 bufnames.append(buf_name)
                 del buffers[nr]
-            else:
+            elif vim.eval("bufnr(%d)" % nr) == '-1':
                 mru.delMruBufnr(nr)
-        left_bufnames = [b.name if b.name else "[No Name %d]" % b.number
-                         for b in buffers.values()]
-        bufnames.extend(left_bufnames)
 
         return bufnames
 

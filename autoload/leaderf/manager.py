@@ -464,7 +464,7 @@ class Manager(object):
             return
         if len(self._selections) > 0:
             files = []
-            for i in self._selections:
+            for i in sorted(self._selections.keys()):
                 files.append(vim.current.buffer[i-1])
             self._quit()
             if mode == '':

@@ -5,7 +5,6 @@ import vim
 import os
 import os.path
 import fnmatch
-import time
 from leaderf.utils import *
 
 
@@ -21,6 +20,7 @@ class Mru(object):
         self._cache_file = os.path.join(self._cache_dir, 'mruCache')
         self._initCache()
         self._mru_bufnrs = {}
+        self._timestamp = 0
 
     def _initCache(self):
         if not os.path.exists(self._cache_dir):
@@ -52,7 +52,8 @@ class Mru(object):
             f.writelines(lines)
 
     def setBufferTimestamp(self, buf_number):
-        self._mru_bufnrs[buf_number] = time.time()
+        self._mru_bufnrs[buf_number] = self._timestamp
+        self._timestamp += 1
 
     def getMruBufnrs(self):
         bufnrs = sorted(self._mru_bufnrs.items(), key=lambda d:d[1], reverse=True)
