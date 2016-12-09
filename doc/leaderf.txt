@@ -62,6 +62,15 @@ g:Lf_WindowPosition                             *g:Lf_WindowPosition*
     other - the match window is in the vertical split window.
     Default value is 1.
 
+g:Lf_WindowHeight                               *g:Lf_WindowHeight*
+    This option is used to set the default height of the match window.
+    If the value is a floating point number less than 1, it means the
+    percentage of the height of the vim window.
+    e.g., let g:Lf_WindowHeight = 0.30
+    The option will be ignored if the value of *g:Lf_WindowPosition* is
+    not 1 and 2.
+    Default value is 16.
+
 g:Lf_TabpagePosition                            *g:Lf_TabpagePosition*
     Specify where to put the newly opened tab page.
     The value can be 0, 1, 2, ...

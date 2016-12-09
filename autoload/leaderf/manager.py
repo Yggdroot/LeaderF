@@ -17,6 +17,7 @@ class Manager(object):
     def __init__(self):
         self._buffer_name = vim.eval("expand('$VIMRUNTIME/LeaderF')")
         self._win_pos = int(vim.eval("g:Lf_WindowPosition"))
+        self._win_height = float(vim.eval("g:Lf_WindowHeight"))
         self._autochdir = 0
         self._cli = LfCli()
         self._explorer = None
@@ -148,8 +149,18 @@ class Manager(object):
             vim.command("silent! noa keepj hide edit %s" % self._buffer_name)
         elif self._win_pos == 1:
             vim.command("silent! noa keepj bo sp %s" % self._buffer_name)
+            if self._win_height >= 1:
+                vim.command("resize %d" % self._win_height)
+            elif self._win_height > 0:
+                print (int(vim.eval("&lines")) * self._win_height)
+                vim.command("resize %d" % (int(vim.eval("&lines")) * self._win_height))
         elif self._win_pos == 2:
             vim.command("silent! noa keepj to sp %s" % self._buffer_name)
+            if self._win_height >= 1:
+                vim.command("resize %d" % self._win_height)
+            elif self._win_height > 0:
+                print (int(vim.eval("&lines")) * self._win_height)
+                vim.command("resize %d" % (int(vim.eval("&lines")) * self._win_height))
         else:
             vim.command("silent! noa keepj to vsp %s" % self._buffer_name)
 
