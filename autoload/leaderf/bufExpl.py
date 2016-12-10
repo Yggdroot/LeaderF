@@ -107,11 +107,11 @@ class BufExplManager(Manager):
             return
         vim.command("setlocal modifiable")
         line = vim.current.line
-        line = lfEncode(os.path.abspath(lfDecode(line)))
-        if wipe == 0:
-            vim.command("confirm bd %s" % re.sub(' ', '\\ ', line))
+        if line.startswith("[No Name "):
+            buf_number = int(re.sub(r"^.*?(\d+).$", r"\1", line))
+            vim.command("confirm %s %d" % ('bw' if wipe else 'bd', buf_number))
         else:
-            vim.command("confirm bw %s" % re.sub(' ', '\\ ', line))
+            vim.command("confirm %s %s" % ('bw' if wipe else 'bd', escSpecial(line)))
         del vim.current.line
         vim.command("setlocal nomodifiable")
 

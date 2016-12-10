@@ -18,6 +18,8 @@ class Manager(object):
         self._buffer_name = vim.eval("expand('$VIMRUNTIME/LeaderF')")
         self._win_pos = int(vim.eval("g:Lf_WindowPosition"))
         self._win_height = float(vim.eval("g:Lf_WindowHeight"))
+        self._show_tabline = int(vim.eval("&showtabline"))
+        self._tabpage_nr = 0
         self._autochdir = 0
         self._cli = LfCli()
         self._explorer = None
@@ -128,13 +130,21 @@ class Manager(object):
 
     def _gotoBuffer(self):
         self._resetAutochdir()
-        self._orig_buffer = vim.current.buffer.name
-        self._orig_win_nr = int(vim.eval("winnr()"))
-        nr = self._bufwinnr(self._buffer_name)
-        if nr == 0:
-            self._createBufWindow()
+        if self._win_pos == 0:
+            self._orig_tabpage = int(vim.eval("tabpagenr()"))
+            if int(vim.eval("tabpagenr('$')")) < 2:
+                vim.command("set showtabline=0")
+            if self._tabpage_nr > 0:
+                vim.command("tabnext %d" % self._tabpage_nr)
+            else:
+                self._createBufWindow()
         else:
-            vim.command("exec '%d wincmd w'" % nr)
+            self._orig_win_nr = int(vim.eval("winnr()"))
+            nr = self._bufwinnr(self._buffer_name)
+            if nr == 0:
+                self._createBufWindow()
+            else:
+                vim.command("exec '%d wincmd w'" % nr)
         self._setAttributes()
         self._setStatusline()
         self._defineMaps()
@@ -146,7 +156,8 @@ class Manager(object):
 
     def _createBufWindow(self):
         if self._win_pos == 0:
-            vim.command("silent! noa keepj hide edit %s" % self._buffer_name)
+            vim.command("silent! noa keepj $tabedit %s" % self._buffer_name)
+            self._tabpage_nr = int(vim.eval("tabpagenr()"))
         elif self._win_pos == 1:
             vim.command("silent! noa keepj bo sp %s" % self._buffer_name)
             if self._win_height >= 1:
@@ -497,16 +508,22 @@ class Manager(object):
         self._cli.clear()
         self.clearSelections()
         self._clearHighlights()
-        if self._win_pos != 0 and len(vim.windows) > 1:
-            vim.command("hide")
-            # 'silent!' is used to skip error E16.
-            vim.command("silent! exec '%d wincmd w'" % self._orig_win_nr)
+        if self._win_pos == 0:
+            try:
+                vim.command("tabclose! | tabnext %d" % self._orig_tabpage)
+            except: #E85, vim7.3 still reports the error
+                vim.command("new | only")
+
+            vim.command("set showtabline=%d" % self._show_tabline)
+            self._tabpage_nr = 0
         else:
-            if self._orig_buffer is None or vim.eval("bufexists('%s')" %
-                    escQuote(self._orig_buffer)) == '0':
-                vim.command("bd")
+            if len(vim.windows) > 1:
+                vim.command("hide")
+                # 'silent!' is used to skip error E16.
+                vim.command("silent! exec '%d wincmd w'" % self._orig_win_nr)
             else:
-                vim.command("hide edit %s" % escSpecial(self._orig_buffer))
+                vim.command("bd")
+
         if self._win_pos != 0:
             vim.command("call getchar(0) | redraw | echo")
         else:
