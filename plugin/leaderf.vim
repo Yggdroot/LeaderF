@@ -160,7 +160,7 @@ let s:Lf_CommandMap = {
 call s:InitDict('g:Lf_CommandMap', s:Lf_CommandMap)
 
 
-autocmd BufAdd,BufWinEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
+autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
             \ call lfMru#recordBuffer(expand('<abuf>'))
 
 
