@@ -163,14 +163,12 @@ class Manager(object):
             if self._win_height >= 1:
                 vim.command("resize %d" % self._win_height)
             elif self._win_height > 0:
-                print (int(vim.eval("&lines")) * self._win_height)
                 vim.command("resize %d" % (int(vim.eval("&lines")) * self._win_height))
         elif self._win_pos == 2:
             vim.command("silent! noa keepj to sp %s" % self._buffer_name)
             if self._win_height >= 1:
                 vim.command("resize %d" % self._win_height)
             elif self._win_height > 0:
-                print (int(vim.eval("&lines")) * self._win_height)
                 vim.command("resize %d" % (int(vim.eval("&lines")) * self._win_height))
         else:
             vim.command("silent! noa keepj to vsp %s" % self._buffer_name)
