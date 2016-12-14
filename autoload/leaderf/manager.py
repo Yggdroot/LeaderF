@@ -521,9 +521,9 @@ class Manager(object):
                 vim.command("hide")
                 # 'silent!' is used to skip error E16.
                 vim.command("silent! exec '%d wincmd w'" % self._orig_win_nr)
+                vim.command(self._restore_sizes)
             else:
                 vim.command("bd")
-            vim.command("%s" % self._restore_sizes)
 
         if self._win_pos != 0:
             vim.command("call getchar(0) | redraw | echo")
