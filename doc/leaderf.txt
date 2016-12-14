@@ -69,7 +69,7 @@ g:Lf_WindowHeight                               *g:Lf_WindowHeight*
     e.g., let g:Lf_WindowHeight = 0.30
     The option will be ignored if the value of *g:Lf_WindowPosition* is
     not 1 and 2.
-    Default value is 16.
+    Default value is 0.5.
 
 g:Lf_TabpagePosition                            *g:Lf_TabpagePosition*
     Specify where to put the newly opened tab page.

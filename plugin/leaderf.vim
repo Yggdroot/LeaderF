@@ -84,7 +84,7 @@ endfunction
 call s:InitVar('g:Lf_ShortcutF', '<Leader>f')
 call s:InitVar('g:Lf_ShortcutB', '<Leader>b')
 call s:InitVar('g:Lf_WindowPosition', 1)
-call s:InitVar('g:Lf_WindowHeight', 16)
+call s:InitVar('g:Lf_WindowHeight', 0.5)
 call s:InitVar('g:Lf_TabpagePosition', 2)
 call s:InitVar('g:Lf_SplitPath', 0)
 call s:InitVar('g:Lf_ShowRelativePath', 1)

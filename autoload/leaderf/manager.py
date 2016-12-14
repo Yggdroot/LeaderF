@@ -155,6 +155,8 @@ class Manager(object):
         self._highlight_refine_pos = []
 
     def _createBufWindow(self):
+        if self._win_pos != 0:
+            self._restore_sizes = vim.eval("winrestcmd()")
         if self._win_pos == 0:
             vim.command("silent! noa keepj $tabedit %s" % self._buffer_name)
             self._tabpage_nr = int(vim.eval("tabpagenr()"))
@@ -521,6 +523,7 @@ class Manager(object):
                 vim.command("silent! exec '%d wincmd w'" % self._orig_win_nr)
             else:
                 vim.command("bd")
+            vim.command("%s" % self._restore_sizes)
 
         if self._win_pos != 0:
             vim.command("call getchar(0) | redraw | echo")
