@@ -19,14 +19,14 @@ Screenshots
 Requirements
 ------------
 
- - vim7.0 or higher.
+ - vim7.3 or higher. Only support vim7.4.330 or higher from [v1.01](https://github.com/Yggdroot/LeaderF/releases/tag/v1.01).
  - vim compiled with Python support, you can check by using `echo has('python')` or `echo has('python3')` to see if the result is `1`; Make sure that your python2 version is Python **2.7** or higher and python3 version is Python **3.1** or higher.
 
 Installation
 ------------
 
 To install this plugin just put the plugin files in your `~/.vim` (Linux) or `~/vimfiles` (Windows).<br>
-For [Vundle][3] user, just add `Bundle 'Yggdroot/LeaderF'` to your `.vimrc`.
+For [Vundle][3] user, just add `Plugin 'Yggdroot/LeaderF'` to your `.vimrc`.
 
 Usage
 -----
@@ -39,6 +39,9 @@ Usage
 
  - `:LeaderfMru`<br>
  Launch LeaderF to search Mru.
+ 
+ - `:LeaderfMruCwd`<br>
+ Launch LeaderF to search Mru in current working directory.
 
 Once LeaderF is launched:
 
