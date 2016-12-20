@@ -56,12 +56,35 @@ class Manager(object):
         """
         pass
 
-    def _getDigest(self, line):
+    def _getDigest(self, line, mode):
         """
         this function can be overridden
-        specify what part to match regex for a line in the match window
+        specify what part in the line to be processed and highlighted
+        Args:
+            mode: 0, return the full path
+                  1, return the name only
+                  2, return the directory name
         """
-        return line
+        if mode == 0:
+            return line
+        elif mode == 1:
+            return getBasename(line)
+        else:
+            return getDirname(line)
+
+    def _getDigestStartPos(self, line, mode):
+        """
+        this function can be overridden
+        return the start position of the digest returned by _getDigest()
+        Args:
+            mode: 0, return the full path
+                  1, return the name only
+                  2, return the directory name
+        """
+        if mode == 0 or mode == 2:
+            return 0
+        else:
+            return lfBytesLen(getDirname(line))
 
     def _createHelp(self):
         return []
@@ -267,17 +290,14 @@ class Manager(object):
         """
         return a list, each item is a pair (weight, line)
         """
-        getDigest = self._getDigest
-        if is_full_path:
-            pairs = ((get_weight(getDigest(line)), line) for line in iterable)
-        else:
-            pairs = ((get_weight(getBasename(getDigest(line))), line) for line in iterable)
+        getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
+        pairs = ((get_weight(getDigest(line)), line) for line in iterable)
         return (p for p in pairs if p[0])
 
     def _refineFilter(self, first_get_weight, get_weight, iterable):
         getDigest = self._getDigest
-        triples = ((first_get_weight(getBasename(getDigest(line))),
-                    get_weight(getDirname(getDigest(line))), line)
+        triples = ((first_get_weight(getDigest(line, 1)),
+                    get_weight(getDigest(line, 2)), line)
                     for line in iterable)
         return ((i[0] + i[1], i[2]) for i in triples if i[0] and i[1])
 
@@ -358,34 +378,24 @@ class Manager(object):
         highlight_number = int(vim.eval("g:Lf_NumberOfHighlight"))
         self._clearHighlights()
 
-        getDigest = self._getDigest
-        if is_full_path:
-            # e.g., self._highlight_pos = [ [ [2,3], [6,2] ], [ [1,4], [7,6], ... ], ... ]
-            # where [2, 3] indicates the highlight starts at the 2nd column with the
-            # length of 3 in bytes
-            self._highlight_pos = [get_highlights(getDigest(line))
-                                   for line in cb[:highlight_number]]
-            for i, pos in enumerate(self._highlight_pos, 1):
-                pos = [[i] + p for p in pos]
-                # The maximum number of positions is 8 in matchaddpos().
-                for j in range(0, len(pos), 8):
-                    id = int(vim.eval("matchaddpos('Lf_hl_match', %s)"
-                             % str(pos[j:j+8])))
-                    self._highlight_ids.append(id)
-        else:
-            self._highlight_pos = [get_highlights(getBasename(getDigest(line)))
-                                   for line in cb[:highlight_number]]
-            for i, pos in enumerate(self._highlight_pos, 1):
-                dir_len = lfBytesLen(getDirname(cb[i-1]))
-                if dir_len > 0:
-                    for j in range(len(pos)):
-                        pos[j][0] += dir_len + 1
-                pos = [[i] + p for p in pos]
-                # The maximum number of positions is 8 in matchaddpos().
-                for j in range(0, len(pos), 8):
-                    id = int(vim.eval("matchaddpos('Lf_hl_match', %s)"
-                             % str(pos[j:j+8])))
-                    self._highlight_ids.append(id)
+        getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
+
+        # e.g., self._highlight_pos = [ [ [2,3], [6,2] ], [ [1,4], [7,6], ... ], ... ]
+        # where [2, 3] indicates the highlight starts at the 2nd column with the
+        # length of 3 in bytes
+        self._highlight_pos = [get_highlights(getDigest(line))
+                               for line in cb[:highlight_number]]
+        for i, pos in enumerate(self._highlight_pos, 1):
+            start_pos = self._getDigestStartPos(cb[i-1], 0 if is_full_path else 1)
+            if start_pos > 0:
+                for j in range(len(pos)):
+                    pos[j][0] += start_pos
+            pos = [[i] + p for p in pos]
+            # The maximum number of positions is 8 in matchaddpos().
+            for j in range(0, len(pos), 8):
+                id = int(vim.eval("matchaddpos('Lf_hl_match', %s)"
+                         % str(pos[j:j+8])))
+                self._highlight_ids.append(id)
 
     def _highlightRefine(self, first_get_highlights, get_highlights):
         # matchaddpos() is introduced by Patch 7.4.330
@@ -400,13 +410,13 @@ class Manager(object):
         self._clearHighlights()
 
         getDigest = self._getDigest
-        self._highlight_pos = [first_get_highlights(getBasename(getDigest(line)))
+        self._highlight_pos = [first_get_highlights(getDigest(line, 1))
                                for line in cb[:highlight_number]]
         for i, pos in enumerate(self._highlight_pos, 1):
-            dir_len = lfBytesLen(getDirname(cb[i-1]))
-            if dir_len > 0:
+            start_pos = self._getDigestStartPos(cb[i-1], 1)
+            if start_pos > 0:
                 for j in range(len(pos)):
-                    pos[j][0] += dir_len + 1
+                    pos[j][0] += start_pos
             pos = [[i] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
@@ -414,9 +424,13 @@ class Manager(object):
                          % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
-        self._highlight_refine_pos = [get_highlights(getDirname(getDigest(line)))
+        self._highlight_refine_pos = [get_highlights(getDigest(line, 2))
                                       for line in cb[:highlight_number]]
         for i, pos in enumerate(self._highlight_refine_pos, 1):
+            start_pos = self._getDigestStartPos(cb[i-1], 2)
+            if start_pos > 0:
+                for j in range(len(pos)):
+                    pos[j][0] += start_pos
             pos = [[i] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
@@ -432,7 +446,7 @@ class Manager(object):
             else:
                 return (line for line in iterable
                         if '-1' != vim.eval("g:LfNoErrMsgMatch('%s', '%s')" %
-                        (escQuote(self._getDigest(line).strip()),
+                        (escQuote(self._getDigest(line, 0).strip()),
                         escQuote(self._cli.pattern))))
         except vim.error:
             return iter([])

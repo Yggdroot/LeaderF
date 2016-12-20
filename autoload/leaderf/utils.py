@@ -69,10 +69,7 @@ def getBasename(path):
 # os.path.dirname is too slow!
 def getDirname(path):
     slash_pos = path.rfind(os.sep)
-    return ('' if slash_pos == -1
-            else '/' if slash_pos == 0
-            else path[:slash_pos+1] if os.name == 'nt' and path[slash_pos-1] == ':'
-            else path[:slash_pos])
+    return '' if slash_pos == -1 else path[:slash_pos+1]
 
 def escQuote(str):
     return "" if str is None else str.replace("'","''")
