@@ -169,6 +169,7 @@ command! -bar -nargs=0 LeaderfBuffer call leaderf#startBufExpl()
 command! -bar -nargs=0 LeaderfBufferAll call leaderf#startBufExpl(1)
 command! -bar -nargs=0 LeaderfMru call leaderf#startMruExpl()
 command! -bar -nargs=0 LeaderfMruCwd call leaderf#startMruExpl(1)
+command! -bar -nargs=0 LeaderfTag call leaderf#startTagExpl()
 
 exec 'nnoremap <silent>' g:Lf_ShortcutF ':<C-U>Leaderf<CR>'
 exec 'nnoremap <silent>' g:Lf_ShortcutB ':<C-U>LeaderfBuffer<CR>'

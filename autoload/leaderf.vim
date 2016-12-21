@@ -13,6 +13,7 @@ exec g:Lf_py "sys.path.insert(0, cwd)"
 exec g:Lf_py "from leaderf.bufExpl import *"
 exec g:Lf_py "from leaderf.fileExpl import *"
 exec g:Lf_py "from leaderf.mruExpl import *"
+exec g:Lf_py "from leaderf.tagExpl import *"
 
 
 function! g:LfFileExplMaps()
@@ -67,6 +68,23 @@ function! g:LfMruExplMaps()
     nnoremap <buffer> <silent> c             :exec g:Lf_py "mruExplManager.clearSelections()"<CR>
 endfunction
 
+function! g:LfTagExplMaps()
+    nmapclear <buffer>
+    nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "tagExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> o             :exec g:Lf_py "tagExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "tagExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> x             :exec g:Lf_py "tagExplManager.accept('h')"<CR>
+    nnoremap <buffer> <silent> v             :exec g:Lf_py "tagExplManager.accept('v')"<CR>
+    nnoremap <buffer> <silent> t             :exec g:Lf_py "tagExplManager.accept('t')"<CR>
+    nnoremap <buffer> <silent> q             :exec g:Lf_py "tagExplManager.quit()"<CR>
+    nnoremap <buffer> <silent> i             :exec g:Lf_py "tagExplManager.input()"<CR>
+    nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "tagExplManager.toggleHelp()"<CR>
+    nnoremap <buffer> <silent> d             :exec g:Lf_py "tagExplManager.deleteMru()"<CR>
+    nnoremap <buffer> <silent> s             :exec g:Lf_py "tagExplManager.addSelections()"<CR>
+    nnoremap <buffer> <silent> a             :exec g:Lf_py "tagExplManager.selectAll()"<CR>
+    nnoremap <buffer> <silent> c             :exec g:Lf_py "tagExplManager.clearSelections()"<CR>
+endfunction
+
 function! leaderf#LfPy(cmd)
     if v:version > 703
         exec g:Lf_py . a:cmd
@@ -114,3 +132,7 @@ function! leaderf#startMruExpl(...)
     endif
 endfunction
 
+function! leaderf#startTagExpl(...)
+    let a:cmd = "tagExplManager.startExplorer()"
+    call leaderf#LfPy(a:cmd)
+endfunction

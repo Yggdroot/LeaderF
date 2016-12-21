@@ -612,6 +612,7 @@ class Manager(object):
                     self._getExplorer().getStlFunction())
         vim.command("echohl WarningMsg | redraw |"
                     "echo ' searching ...' | echohl NONE")
+        
         self._content = self._getExplorer().getContent(*args, **kwargs)
         if not self._content:
             vim.command("echohl Error | redraw | echo ' No content!' | echohl NONE")
