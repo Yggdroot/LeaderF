@@ -89,6 +89,14 @@ class Manager(object):
     def _createHelp(self):
         return []
 
+    def _preStart(self):
+        pass
+
+    def _cleanup(self):
+        self._cli.clear()
+        self.clearSelections()
+        self._clearHighlights()
+
     #**************************************************************
 
     def _createHelpHint(self):
@@ -181,22 +189,22 @@ class Manager(object):
         if self._win_pos != 0:
             self._restore_sizes = vim.eval("winrestcmd()")
         if self._win_pos == 0:
-            vim.command("silent! noa keepj $tabedit %s" % self._buffer_name)
+            vim.command("silent! noa keepa keepj $tabedit %s" % self._buffer_name)
             self._tabpage_nr = int(vim.eval("tabpagenr()"))
         elif self._win_pos == 1:
-            vim.command("silent! noa keepj bo sp %s" % self._buffer_name)
+            vim.command("silent! noa keepa keepj bo sp %s" % self._buffer_name)
             if self._win_height >= 1:
                 vim.command("resize %d" % self._win_height)
             elif self._win_height > 0:
                 vim.command("resize %d" % (int(vim.eval("&lines")) * self._win_height))
         elif self._win_pos == 2:
-            vim.command("silent! noa keepj to sp %s" % self._buffer_name)
+            vim.command("silent! noa keepa keepj to sp %s" % self._buffer_name)
             if self._win_height >= 1:
                 vim.command("resize %d" % self._win_height)
             elif self._win_height > 0:
                 vim.command("resize %d" % (int(vim.eval("&lines")) * self._win_height))
         else:
-            vim.command("silent! noa keepj to vsp %s" % self._buffer_name)
+            vim.command("silent! noa keepa keepj to vsp %s" % self._buffer_name)
 
     def _setAttributes(self):
         vim.command("setlocal nobuflisted")
@@ -362,7 +370,7 @@ class Manager(object):
             pos = [[i] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
-                id = int(vim.eval("matchaddpos('Lf_hl_match_refine', %s)"
+                id = int(vim.eval("matchaddpos('Lf_hl_matchRefine', %s)"
                          % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
@@ -434,7 +442,7 @@ class Manager(object):
             pos = [[i] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
-                id = int(vim.eval("matchaddpos('Lf_hl_match_refine', %s)"
+                id = int(vim.eval("matchaddpos('Lf_hl_matchRefine', %s)"
                          % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
@@ -519,9 +527,7 @@ class Manager(object):
         self._setAutochdir()
 
     def _quit(self):
-        self._cli.clear()
-        self.clearSelections()
-        self._clearHighlights()
+        self._cleanup()
         if self._win_pos == 0:
             try:
                 vim.command("tabclose! | tabnext %d" % self._orig_tabpage)
@@ -532,7 +538,7 @@ class Manager(object):
             self._tabpage_nr = 0
         else:
             if len(vim.windows) > 1:
-                vim.command("hide")
+                vim.command("silent! hide")
                 # 'silent!' is used to skip error E16.
                 vim.command("silent! exec '%d wincmd w'" % self._orig_win_nr)
                 vim.command(self._restore_sizes)
@@ -620,6 +626,7 @@ class Manager(object):
         vim.command("let g:Lf_statusline_curDir = '%s'" %
                     self._getExplorer().getStlCurDir())
         vim.command("let g:Lf_statusline_total = '%d'" % len(self._content))
+        self._preStart()
         self.input(False)
 
     def input(self, normal_mode=True):
