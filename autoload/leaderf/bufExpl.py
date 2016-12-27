@@ -18,6 +18,7 @@ from leaderf.mru import *
 class BufferExplorer(Explorer):
     def __init__(self):
         self._prefix_length = 0
+        self._max_bufname_len = 0
 
     def getContent(self, *args, **kwargs):
         show_unlisted = False if len(args) == 0 else args[0]
@@ -32,6 +33,10 @@ class BufferExplorer(Explorer):
         bufnr_len = len(str(len(vim.buffers)))
         self._prefix_length = bufnr_len + 8
 
+        self._max_bufname_len = max(int(vim.eval("strdisplaywidth('%s')"
+                                                  % escQuote(getBasename(buffers[nr].name))))
+                                    for nr in mru.getMruBufnrs() if nr in buffers)
+
         bufnames = []
         for nr in mru.getMruBufnrs():
             if nr in buffers:
@@ -43,15 +48,20 @@ class BufferExplorer(Explorer):
                         buf_name = lfEncode(os.path.relpath(lfDecode(buf_name), os.getcwd()))
                     except ValueError:
                         pass
+                basename = getBasename(buf_name)
+                dirname = getDirname(buf_name)
+                space_num = self._max_bufname_len - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
                 # e.g., 12 u %a+- aaa.txt
-                buf_name = "{:{width}d} {:1s} {:1s}{:1s}{:1s}{:1s} {}".format(nr,
+                buf_name = "{:{width}d} {:1s} {:1s}{:1s}{:1s}{:1s} {}{:<{space}s} {}".format(nr,
                             '' if buffers[nr].options["buflisted"] else 'u',
                             '%' if int(vim.eval("bufnr('%')")) == nr
                                 else '#' if int(vim.eval("bufnr('#')")) == nr else '',
                             'a' if vim.eval("bufwinnr(%d)" % nr) != '-1' else 'h',
                             '+' if buffers[nr].options["modified"] else '',
                             '-' if not buffers[nr].options["modifiable"] else '',
-                            buf_name, width=bufnr_len)
+                            basename, '',
+                            dirname if dirname else '.' + os.sep,
+                            width=bufnr_len, space=space_num)
                 bufnames.append(buf_name)
                 del buffers[nr]
             elif vim.eval("bufnr(%d)" % nr) == '-1':
@@ -78,6 +88,9 @@ class BufferExplorer(Explorer):
     def getPrefixLength(self):
         return self._prefix_length
 
+    def getMaxBufnameLen(self):
+        return self._max_bufname_len
+
 
 #*****************************************************
 # BufExplManager
@@ -101,27 +114,37 @@ class BufExplManager(Manager):
                   1, return the name only
                   2, return the directory name
         """
+        if not line:
+            return ''
         prefix_len = self._getExplorer().getPrefixLength()
         if mode == 0:
             return line[prefix_len:]
         elif mode == 1:
-            return getBasename(line[prefix_len:])
+            return line[prefix_len:self._getDigestStartPos(line, 2)].rstrip()
         else:
-            return getDirname(line[prefix_len:])
+            return line[self._getDigestStartPos(line, 2):]
 
     def _getDigestStartPos(self, line, mode):
         """
         return the start position of the digest returned by _getDigest()
         Args:
-            mode: 0, return the full path
-                  1, return the name only
-                  2, return the directory name
+            mode: 0, return the start postion of full path
+                  1, return the start postion of name only
+                  2, return the start postion of directory name
         """
+        if not line:
+            return 0
         prefix_len = self._getExplorer().getPrefixLength()
-        if mode == 0 or mode == 2:
+        if mode == 0:
+            return prefix_len
+        elif mode == 1:
             return prefix_len
         else:
-            return prefix_len + lfBytesLen(getDirname(line[prefix_len:]))
+            buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
+            basename = getBasename(vim.buffers[buf_number].name)
+            space_num = self._getExplorer().getMaxBufnameLen() \
+                        - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
+            return prefix_len + lfBytesLen(basename) + space_num + 1
 
     def _createHelp(self):
         help = []

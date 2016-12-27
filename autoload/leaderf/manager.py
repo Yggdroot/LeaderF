@@ -77,9 +77,9 @@ class Manager(object):
         this function can be overridden
         return the start position of the digest returned by _getDigest()
         Args:
-            mode: 0, return the full path
-                  1, return the name only
-                  2, return the directory name
+            mode: 0, return the start postion of full path
+                  1, return the start postion of name only
+                  2, return the start postion of directory name
         """
         if mode == 0 or mode == 2:
             return 0
