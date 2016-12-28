@@ -38,6 +38,7 @@ if has("syntax")
     highlight def link Lf_hl_bufIndicators      Statement
     highlight def link Lf_hl_bufModified        String
     highlight def link Lf_hl_bufNomodifiable    Comment
+    highlight def link Lf_hl_bufDirname         Directory
 endif
 
 let b:current_syntax = "leaderf"

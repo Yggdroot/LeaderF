@@ -13,10 +13,6 @@ class Explorer(metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def acceptSelection(self, *args, **kwargs):
-        pass
-
-    @abstractmethod
     def getStlFunction(self):
         pass
 

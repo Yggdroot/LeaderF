@@ -56,6 +56,18 @@ class Manager(object):
         """
         pass
 
+    def _argaddFiles(self, files):
+        # It will raise E480 without 'silent!'
+        vim.command("silent! argdelete *")
+        for file in files:
+            vim.command("argadd %s" % escSpecial(file))
+
+    def _acceptSelection(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+        file = args[0]
+        vim.command("hide edit %s" % escSpecial(file))
+
     def _getDigest(self, line, mode):
         """
         this function can be overridden
@@ -499,7 +511,7 @@ class Manager(object):
                         vim.command("tabm -1")
                     elif tab_pos == 3:
                         vim.command("tabm")
-                self._getExplorer().acceptSelection(file)
+                self._acceptSelection(file)
         except (KeyboardInterrupt, vim.error):
             pass
 
@@ -513,16 +525,13 @@ class Manager(object):
                 files.append(vim.current.buffer[i-1])
             self._quit()
             if mode == '':
-                # It will raise E480 without 'silent!'
-                vim.command("silent! argdelete *")
-                for file in files:
-                    vim.command("argadd %s" % escSpecial(file))
+                self._argaddFiles(files)
                 self._accept(files[0], mode)
             else:
                 for file in files:
                     self._accept(file, mode)
         else:
-            file = '' if vim.current.line == '' else vim.current.line
+            file = vim.current.line
             self._quit()
             self._accept(file, mode)
         self._setAutochdir()

@@ -174,12 +174,6 @@ class FileExplorer(Explorer):
             self._content = self._getFileList(dir)
         return self._content
 
-    def acceptSelection(self, *args, **kwargs):
-        if len(args) == 0:
-            return
-        file = args[0]
-        vim.command("hide edit %s" % escSpecial(file))
-
     def getFreshContent(self, *args, **kwargs):
         self._refresh()
         self._content = self._getFileList(self._cur_dir)

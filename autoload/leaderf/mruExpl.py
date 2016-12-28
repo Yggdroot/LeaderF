@@ -4,34 +4,20 @@
 import vim
 import os
 import os.path
-from functools import wraps
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
 from leaderf.mru import *
 
 
-def showRelativePath(func):
-    @wraps(func)
-    def deco(*args, **kwargs):
-        if vim.eval("g:Lf_ShowRelativePath") == '1':
-            result = []
-            for line in func(*args, **kwargs):
-                try:
-                    result.append(lfEncode(os.path.relpath(lfDecode(line), os.getcwd())))
-                except ValueError:
-                    result.append(line)
-            return result
-        else:
-            return func(*args, **kwargs)
-    return deco
-
-
 #*****************************************************
 # MruExplorer
 #*****************************************************
 class MruExplorer(Explorer):
-    @showRelativePath
+    def __init__(self):
+        self._prefix_length = 0
+        self._max_bufname_len = 0
+
     def getContent(self, *args, **kwargs):
         with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore') as f:
             lines = f.readlines()
@@ -39,18 +25,34 @@ class MruExplorer(Explorer):
             f.seek(0)
             f.truncate(0)
             f.writelines(lines)
-            if len(kwargs) > 0:
-                lines = [name for name in lines if lfDecode(name).startswith(os.getcwd())]
-            if len(lines) >0 and args[0] == lines[0].rstrip():
-                return lines[1:] + lines[0:1]
-            else:
-                return lines
 
-    def acceptSelection(self, *args, **kwargs):
-        if len(args) == 0:
-            return
-        file = args[0]
-        vim.command("hide edit %s" % escSpecial(file))
+        if len(kwargs) > 0:
+            lines = [name for name in lines if lfDecode(name).startswith(os.getcwd())]
+
+        lines = [line.rstrip() for line in lines] # remove the '\n'
+
+        if len(lines) == 0:
+            return lines
+
+        if args[0] == lines[0]:
+            lines = lines[1:] + lines[0:1]
+
+        self._max_bufname_len = max(int(vim.eval("strdisplaywidth('%s')"
+                                        % escQuote(getBasename(line))))
+                                    for line in lines)
+        for i, line in enumerate(lines):
+            if vim.eval("g:Lf_ShowRelativePath") == '1':
+                try:
+                    line = lfEncode(os.path.relpath(lfDecode(line), os.getcwd()))
+                except ValueError:
+                    pass
+            basename = getBasename(line)
+            dirname = getDirname(line)
+            space_num = self._max_bufname_len \
+                        - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
+            lines[i] = '{}{} "{}"'.format(getBasename(line), ' ' * space_num,
+                                          dirname if dirname else '.' + os.sep)
+        return lines
 
     def getStlFunction(self):
         return 'Mru'
@@ -72,15 +74,80 @@ class MruExplorer(Explorer):
             f.truncate(0)
             f.writelines(lines)
 
+    def getPrefixLength(self):
+        return self._prefix_length
+
+    def getMaxBufnameLen(self):
+        return self._max_bufname_len
+
 #*****************************************************
 # MruExplManager
 #*****************************************************
 class MruExplManager(Manager):
+    def __init__(self):
+        super(MruExplManager, self).__init__()
+        self._match_ids = []
+
     def _getExplClass(self):
         return MruExplorer
 
     def _defineMaps(self):
         vim.command("call g:LfMruExplMaps()")
+
+    def _argaddFiles(self, files):
+        # It will raise E480 without 'silent!'
+        vim.command("silent! argdelete *")
+        for file in files:
+            dirname = self._getDigest(file, 2)
+            basename = self._getDigest(file, 1)
+            vim.command("argadd %s" % escSpecial(dirname + basename))
+
+    def _acceptSelection(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+        line = args[0]
+        dirname = self._getDigest(line, 2)
+        basename = self._getDigest(line, 1)
+        vim.command("hide edit %s" % escSpecial(dirname + basename))
+
+    def _getDigest(self, line, mode):
+        """
+        specify what part in the line to be processed and highlighted
+        Args:
+            mode: 0, return the full path
+                  1, return the name only
+                  2, return the directory name
+        """
+        if not line:
+            return ''
+        prefix_len = self._getExplorer().getPrefixLength()
+        if mode == 0:
+            return line[prefix_len:]
+        elif mode == 1:
+            start_pos = line.find('"') # what if there is " in file name?
+            return line[prefix_len:start_pos-1].rstrip()
+        else:
+            start_pos = line.find('"') # what if there is " in file name?
+            return line[start_pos+1 : -1]
+
+    def _getDigestStartPos(self, line, mode):
+        """
+        return the start position of the digest returned by _getDigest()
+        Args:
+            mode: 0, return the start postion of full path
+                  1, return the start postion of name only
+                  2, return the start postion of directory name
+        """
+        if not line:
+            return 0
+        prefix_len = self._getExplorer().getPrefixLength()
+        if mode == 0:
+            return prefix_len
+        elif mode == 1:
+            return prefix_len
+        else:
+            start_pos = line.find('"') # what if there is " in file name?
+            return lfBytesLen(line[:start_pos+1])
 
     def _createHelp(self):
         help = []
@@ -98,6 +165,16 @@ class MruExplManager(Manager):
         help.append('" ---------------------------------------------------------')
         return help
 
+    def _preStart(self):
+        super(MruExplManager, self)._preStart()
+        id = int(vim.eval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
+        self._match_ids.append(id)
+
+    def _cleanup(self):
+        super(MruExplManager, self)._cleanup()
+        for i in self._match_ids:
+            vim.command("silent! call matchdelete(%d)" % i)
+        self._match_ids = []
 
     def deleteMru(self):
         if vim.current.window.cursor[0] <= self._help_length:

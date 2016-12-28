@@ -15,10 +15,6 @@ class Explorer(object):
         pass
 
     @abstractmethod
-    def acceptSelection(self, *args, **kwargs):
-        pass
-
-    @abstractmethod
     def getStlFunction(self):
         pass
 

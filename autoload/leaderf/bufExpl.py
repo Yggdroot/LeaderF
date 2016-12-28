@@ -26,7 +26,7 @@ class BufferExplorer(Explorer):
             buffers = {b.number: b for b in vim.buffers
                        if os.path.basename(b.name) != "LeaderF"}
         else:
-            buffers = {b.number: b for b in vim.buffers 
+            buffers = {b.number: b for b in vim.buffers
                        if vim.eval("buflisted(%d)" % b.number) == '1'}
 
         # e.g., 12 u %a+- aaa.txt
@@ -53,7 +53,7 @@ class BufferExplorer(Explorer):
                 space_num = self._max_bufname_len \
                             - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
                 # e.g., 12 u %a+- aaa.txt
-                buf_name = "{:{width}d} {:1s} {:1s}{:1s}{:1s}{:1s} {}{} {}".format(nr,
+                buf_name = '{:{width}d} {:1s} {:1s}{:1s}{:1s}{:1s} {}{} "{}"'.format(nr,
                             '' if buffers[nr].options["buflisted"] else 'u',
                             '%' if int(vim.eval("bufnr('%')")) == nr
                                 else '#' if int(vim.eval("bufnr('#')")) == nr else '',
@@ -69,13 +69,6 @@ class BufferExplorer(Explorer):
                 mru.delMruBufnr(nr)
 
         return bufnames
-
-    def acceptSelection(self, *args, **kwargs):
-        if len(args) == 0:
-            return
-        file = args[0]
-        buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", file))
-        vim.command("hide buffer %d" % buf_number)
 
     def getStlFunction(self):
         return 'Buffer'
@@ -107,6 +100,13 @@ class BufExplManager(Manager):
     def _defineMaps(self):
         vim.command("call g:LfBufExplMaps()")
 
+    def _acceptSelection(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+        line = args[0]
+        buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
+        vim.command("hide buffer %d" % buf_number)
+
     def _getDigest(self, line, mode):
         """
         specify what part in the line to be processed and highlighted
@@ -121,9 +121,12 @@ class BufExplManager(Manager):
         if mode == 0:
             return line[prefix_len:]
         elif mode == 1:
-            return line[prefix_len:self._getDigestStartPos(line, 2)].rstrip()
+            buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
+            basename = getBasename(vim.buffers[buf_number].name)
+            return basename if basename else "[No Name]"
         else:
-            return line[self._getDigestStartPos(line, 2):]
+            start_pos = line.find('"')
+            return line[start_pos+1 : -1]
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -145,7 +148,7 @@ class BufExplManager(Manager):
             basename = getBasename(vim.buffers[buf_number].name)
             space_num = self._getExplorer().getMaxBufnameLen() \
                         - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
-            return prefix_len + lfBytesLen(basename) + space_num + 1
+            return prefix_len + lfBytesLen(basename) + space_num + 2
 
     def _createHelp(self):
         help = []
@@ -173,6 +176,8 @@ class BufExplManager(Manager):
         id = int(vim.eval("matchadd('Lf_hl_bufModified', '^\s*\d\+\s*u\=\s*[#%]\=.+\s*\zs.*$')"))
         self._match_ids.append(id)
         id = int(vim.eval("matchadd('Lf_hl_bufNomodifiable', '^\s*\d\+\s*u\=\s*[#%]\=..-\s*\zs.*$')"))
+        self._match_ids.append(id)
+        id = int(vim.eval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
         self._match_ids.append(id)
 
     def _cleanup(self):
