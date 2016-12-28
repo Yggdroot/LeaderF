@@ -96,6 +96,7 @@ class Manager(object):
         self._cli.clear()
         self.clearSelections()
         self._clearHighlights()
+        self._clearHighlightsPos()
 
     #**************************************************************
 
@@ -103,8 +104,7 @@ class Manager(object):
         help = []
         if not self._show_help:
             help.append('" Press <F1> for help')
-            help.append('" -------------------------------------------------'
-                        '--------')
+            help.append('" ---------------------------------------------------------')
         else:
             help += self._createHelp()
         self._help_length = len(help)
@@ -179,11 +179,7 @@ class Manager(object):
         self._setAttributes()
         self._setStatusline()
         self._defineMaps()
-        self._cli.clear()
-        self.clearSelections()
-        self._clearHighlights()
-        self._highlight_pos = []
-        self._highlight_refine_pos = []
+        self._cleanup()
 
     def _createBufWindow(self):
         if self._win_pos != 0:
@@ -255,6 +251,7 @@ class Manager(object):
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
             setBuffer(cb, content)
             self._clearHighlights()
+            self._clearHighlightsPos()
             return
 
         if self._cli.isFuzzy:
@@ -355,6 +352,10 @@ class Manager(object):
         for i in self._highlight_ids:
             vim.command("silent! call matchdelete(%d)" % i)
         self._highlight_ids = []
+
+    def _clearHighlightsPos(self):
+        self._highlight_pos = []
+        self._highlight_refine_pos = []
 
     def _resetHighlights(self):
         self._clearHighlights()

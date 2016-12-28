@@ -34,7 +34,7 @@ class BufferExplorer(Explorer):
         self._prefix_length = bufnr_len + 8
 
         self._max_bufname_len = max(int(vim.eval("strdisplaywidth('%s')"
-                                                  % escQuote(getBasename(buffers[nr].name))))
+                                        % escQuote(getBasename(buffers[nr].name))))
                                     for nr in mru.getMruBufnrs() if nr in buffers)
 
         bufnames = []
@@ -50,18 +50,19 @@ class BufferExplorer(Explorer):
                         pass
                 basename = getBasename(buf_name)
                 dirname = getDirname(buf_name)
-                space_num = self._max_bufname_len - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
+                space_num = self._max_bufname_len \
+                            - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
                 # e.g., 12 u %a+- aaa.txt
-                buf_name = "{:{width}d} {:1s} {:1s}{:1s}{:1s}{:1s} {}{:<{space}s} {}".format(nr,
+                buf_name = "{:{width}d} {:1s} {:1s}{:1s}{:1s}{:1s} {}{} {}".format(nr,
                             '' if buffers[nr].options["buflisted"] else 'u',
                             '%' if int(vim.eval("bufnr('%')")) == nr
                                 else '#' if int(vim.eval("bufnr('#')")) == nr else '',
                             'a' if vim.eval("bufwinnr(%d)" % nr) != '-1' else 'h',
                             '+' if buffers[nr].options["modified"] else '',
                             '-' if not buffers[nr].options["modifiable"] else '',
-                            basename, '',
+                            basename, ' ' * space_num,
                             dirname if dirname else '.' + os.sep,
-                            width=bufnr_len, space=space_num)
+                            width=bufnr_len)
                 bufnames.append(buf_name)
                 del buffers[nr]
             elif vim.eval("bufnr(%d)" % nr) == '-1':
