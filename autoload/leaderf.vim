@@ -45,9 +45,6 @@ function! g:LfBufExplMaps()
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "bufExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "bufExplManager.deleteBuffer(1)"<CR>
     nnoremap <buffer> <silent> D             :exec g:Lf_py "bufExplManager.deleteBuffer()"<CR>
-    nnoremap <buffer> <silent> s             :exec g:Lf_py "bufExplManager.addSelections()"<CR>
-    nnoremap <buffer> <silent> a             :exec g:Lf_py "bufExplManager.selectAll()"<CR>
-    nnoremap <buffer> <silent> c             :exec g:Lf_py "bufExplManager.clearSelections()"<CR>
 endfunction
 
 function! g:LfMruExplMaps()
