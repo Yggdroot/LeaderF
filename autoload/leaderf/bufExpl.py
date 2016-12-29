@@ -125,8 +125,8 @@ class BufExplManager(Manager):
             basename = getBasename(vim.buffers[buf_number].name)
             return basename if basename else "[No Name]"
         else:
-            start_pos = line.find('"')
-            return line[start_pos+1 : -1]
+            start_pos = line.find(' "')
+            return line[start_pos+2 : -1]
 
     def _getDigestStartPos(self, line, mode):
         """

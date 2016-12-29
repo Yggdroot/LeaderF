@@ -49,7 +49,7 @@ Once LeaderF is launched:
  - `<C-R>` : switch between fuzzy search mode and regex mode.
  - `<C-F>` : switch between full path search mode and name only search mode.
  - `<ESC>` : switch to normal mode.
- - `<C-V>` : paste from clipboard.
+ - `<C-V>`, `<S-Insert>` : paste from clipboard.
  - `<C-U>` : clear the prompt.
  - `<C-J>`, `<Down>`, `<C-K>`, `<Up>` : navigate the result list.
  - `<2-LeftMouse>` or `<CR>` : open the file under cursor or selected(when multiple files are selected).
@@ -61,6 +61,12 @@ Once LeaderF is launched:
  - `<S-LeftMouse>` : select consecutive multiple files.
  - `<C-A>` : select all files.
  - `<C-L>` : clear all selections.
+ - `<BS>`  : delete the preceding character in the prompt.
+ - `<Del>` : delete the current character in the prompt.
+ - `<Home>`: move the cursor to the begin of the prompt.
+ - `<End>` : move the cursor to the end of the prompt.
+ - `<Left>`: move the cursor one character to the left.
+ - `<Right>` : move the cursor one character to the right.
 
 Input formats:
 

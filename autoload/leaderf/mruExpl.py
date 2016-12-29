@@ -124,11 +124,11 @@ class MruExplManager(Manager):
         if mode == 0:
             return line[prefix_len:]
         elif mode == 1:
-            start_pos = line.find('"') # what if there is " in file name?
-            return line[prefix_len:start_pos-1].rstrip()
+            start_pos = line.find(' "') # what if there is " in file name?
+            return line[prefix_len:start_pos].rstrip()
         else:
-            start_pos = line.find('"') # what if there is " in file name?
-            return line[start_pos+1 : -1]
+            start_pos = line.find(' "') # what if there is " in file name?
+            return line[start_pos+2 : -1]
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -146,8 +146,8 @@ class MruExplManager(Manager):
         elif mode == 1:
             return prefix_len
         else:
-            start_pos = line.find('"') # what if there is " in file name?
-            return lfBytesLen(line[:start_pos+1])
+            start_pos = line.find(' "') # what if there is " in file name?
+            return lfBytesLen(line[:start_pos+2])
 
     def _createHelp(self):
         help = []

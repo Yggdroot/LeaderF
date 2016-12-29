@@ -97,8 +97,6 @@ g:Lf_DefaultMode                                *g:Lf_DefaultMode*
 g:Lf_CursorBlink                                *g:Lf_CursorBlink*
     Set this option to 1 to let the cursor in the prompt blink, if you don't
     want the cursor to blink, set the value to 0.
-    Due to some unknown bug of vim, the default value for terminal vim is
-    always 0.
 
 g:Lf_CacheDiretory                              *g:Lf_CacheDiretory*
     Set this option to change the location of the cache directory.
@@ -197,6 +195,9 @@ USAGE                                           *leaderf-usage*
 :LeaderfMru                                     *LeaderfMru*
     Launch LeaderF to search Mru.
 
+:LeaderfMruCwd                                  *LeaderfMruCwd*
+    Launch LeaderF to search Mru in current working directory.
+
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.
@@ -211,7 +212,10 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-]> : open in vertical split window.
     <C-T> : open in new tabpage.
     <F5>  : refresh the cache.
-    <C-LeftMouse> or <C-Z> : select multiple files.
+    <C-LeftMouse> or <C-S> : select multiple files.
+    <S-LeftMouse> : select consecutive multiple files.
+    <C-A> : select all files.
+    <C-L> : clear all selections.
     <BS>  : delete the preceding character in the prompt.
     <Del> : delete the current character in the prompt.
     <Home>: move the cursor to the begin of the prompt.
