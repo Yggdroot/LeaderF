@@ -617,6 +617,10 @@ class Manager(object):
                 self._selections[i] = id
 
     def selectAll(self):
+        if len(vim.current.buffer) > 300:
+            vim.command("echohl Error | redraw | echo ' Too many files selected!' | echohl NONE")
+            vim.command("sleep 1")
+            return
         for i in range(len(vim.current.buffer)):
             if i >= self._help_length and i+1 not in self._selections:
                 id = int(vim.eval("matchadd('Lf_hl_selection', '\%%%dl.')" % (i+1)))
