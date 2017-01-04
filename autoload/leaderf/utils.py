@@ -7,6 +7,9 @@ import re
 import os
 import locale
 
+lfCmd = vim.command
+lfEval = vim.eval
+
 if sys.version_info >= (3, 0):
 
     def lfEncode(str):
@@ -21,7 +24,7 @@ if sys.version_info >= (3, 0):
 
     def lfBytesLen(str):
         """ string length in bytes """
-        return len(str.encode(vim.eval("&encoding"), errors="ignore"))
+        return len(str.encode(lfEval("&encoding"), errors="ignore"))
 
 
 else: # python 2.x
@@ -34,7 +37,7 @@ else: # python 2.x
                 return str
             else:
                 return str.decode(locale.getdefaultlocale()[1]).encode(
-                        vim.eval("&encoding"))
+                        lfEval("&encoding"))
         except ValueError:
             return str
         except UnicodeDecodeError:
@@ -45,7 +48,7 @@ else: # python 2.x
             if locale.getdefaultlocale()[1] is None:
                 return str
             else:
-                return str.decode(vim.eval("&encoding")).encode(
+                return str.decode(lfEval("&encoding")).encode(
                         locale.getdefaultlocale()[1])
         except UnicodeDecodeError:
             return str
@@ -78,7 +81,7 @@ def escSpecial(str):
     return re.sub('([%#" ])', r"\\\1", str)
 
 def hasBug():
-    return int(vim.eval("v:version")) < 704 and sys.version_info >= (3,0)
+    return int(lfEval("v:version")) < 704 and sys.version_info >= (3,0)
 
 # In vim7.3, `buffer[nr:] = content` will raise
 # "TypeError: sequence index must be integer, not 'slice'"
@@ -90,7 +93,7 @@ def appendBuffer(buffer, content, nr):
     """
     if hasBug():
         for i, line in enumerate(content):
-            vim.command("call setline(%d, '%s')" % (nr+i+1, escQuote(line).rstrip()))
+            lfCmd("call setline(%d, '%s')" % (nr+i+1, escQuote(line).rstrip()))
     else:
         buffer[nr:] = content
 
@@ -100,9 +103,9 @@ def insertBuffer(buffer, content, nr):
     this function operations on the vim.current.buffer like appendBuffer();
     insert a list of lines to the current buffer below line `nr`(start from 1)
     """
-    if int(vim.eval("v:version")) < 704:
+    if int(lfEval("v:version")) < 704:
         for i, line in enumerate(content):
-            vim.command("call append(%d, '%s')" % (nr+i, escQuote(line).rstrip()))
+            lfCmd("call append(%d, '%s')" % (nr+i, escQuote(line).rstrip()))
     else:
         buffer.append(content, nr)
 
@@ -122,8 +125,8 @@ def swapLine(m, n):
         linem = cb[m]
         linen = cb[n]
         linem, linen = linen, linem
-        vim.command("call setline(%d, '%s')" % (m+1, escQuote(linem)))
-        vim.command("call setline(%d, '%s')" % (n+1, escQuote(linen)))
+        lfCmd("call setline(%d, '%s')" % (m+1, escQuote(linem)))
+        lfCmd("call setline(%d, '%s')" % (n+1, escQuote(linen)))
     else:
         cb[m], cb[n] = cb[n], cb[m]
 

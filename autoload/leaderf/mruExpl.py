@@ -37,11 +37,11 @@ class MruExplorer(Explorer):
         if args[0] == lines[0]:
             lines = lines[1:] + lines[0:1]
 
-        self._max_bufname_len = max(int(vim.eval("strdisplaywidth('%s')"
+        self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(line))))
                                     for line in lines)
         for i, line in enumerate(lines):
-            if vim.eval("g:Lf_ShowRelativePath") == '1':
+            if lfEval("g:Lf_ShowRelativePath") == '1':
                 try:
                     line = lfEncode(os.path.relpath(lfDecode(line), os.getcwd()))
                 except ValueError:
@@ -49,7 +49,7 @@ class MruExplorer(Explorer):
             basename = getBasename(line)
             dirname = getDirname(line)
             space_num = self._max_bufname_len \
-                        - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
+                        - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
             lines[i] = '{}{} "{}"'.format(getBasename(line), ' ' * space_num,
                                           dirname if dirname else '.' + os.sep)
         return lines
@@ -92,15 +92,15 @@ class MruExplManager(Manager):
         return MruExplorer
 
     def _defineMaps(self):
-        vim.command("call g:LfMruExplMaps()")
+        lfCmd("call g:LfMruExplMaps()")
 
     def _argaddFiles(self, files):
         # It will raise E480 without 'silent!'
-        vim.command("silent! argdelete *")
+        lfCmd("silent! argdelete *")
         for file in files:
             dirname = self._getDigest(file, 2)
             basename = self._getDigest(file, 1)
-            vim.command("argadd %s" % escSpecial(dirname + basename))
+            lfCmd("argadd %s" % escSpecial(dirname + basename))
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -108,7 +108,7 @@ class MruExplManager(Manager):
         line = args[0]
         dirname = self._getDigest(line, 2)
         basename = self._getDigest(line, 1)
-        vim.command("hide edit %s" % escSpecial(dirname + basename))
+        lfCmd("hide edit %s" % escSpecial(dirname + basename))
 
     def _getDigest(self, line, mode):
         """
@@ -167,25 +167,25 @@ class MruExplManager(Manager):
 
     def _preStart(self):
         super(MruExplManager, self)._preStart()
-        id = int(vim.eval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
+        id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
         self._match_ids.append(id)
 
     def _cleanup(self):
         super(MruExplManager, self)._cleanup()
         for i in self._match_ids:
-            vim.command("silent! call matchdelete(%d)" % i)
+            lfCmd("silent! call matchdelete(%d)" % i)
         self._match_ids = []
 
     def deleteMru(self):
         if vim.current.window.cursor[0] <= self._help_length:
             return
-        vim.command("setlocal modifiable")
+        lfCmd("setlocal modifiable")
         line = vim.current.line
         self._explorer.delFromCache(line)
         if len(self._content) > 0:
             self._content.remove(line + '\n')
         del vim.current.line
-        vim.command("setlocal nomodifiable")
+        lfCmd("setlocal nomodifiable")
 
 
 

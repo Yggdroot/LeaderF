@@ -27,13 +27,13 @@ class BufferExplorer(Explorer):
                        if os.path.basename(b.name) != "LeaderF"}
         else:
             buffers = {b.number: b for b in vim.buffers
-                       if vim.eval("buflisted(%d)" % b.number) == '1'}
+                       if lfEval("buflisted(%d)" % b.number) == '1'}
 
         # e.g., 12 u %a+- aaa.txt
         bufnr_len = len(str(len(vim.buffers)))
         self._prefix_length = bufnr_len + 8
 
-        self._max_bufname_len = max(int(vim.eval("strdisplaywidth('%s')"
+        self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(buffers[nr].name))))
                                     for nr in mru.getMruBufnrs() if nr in buffers)
 
@@ -43,7 +43,7 @@ class BufferExplorer(Explorer):
                 buf_name = buffers[nr].name
                 if not buf_name:
                     buf_name = "[No Name]"
-                if vim.eval("g:Lf_ShowRelativePath") == '1':
+                if lfEval("g:Lf_ShowRelativePath") == '1':
                     try:
                         buf_name = lfEncode(os.path.relpath(lfDecode(buf_name), os.getcwd()))
                     except ValueError:
@@ -51,13 +51,13 @@ class BufferExplorer(Explorer):
                 basename = getBasename(buf_name)
                 dirname = getDirname(buf_name)
                 space_num = self._max_bufname_len \
-                            - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
+                            - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
                 # e.g., 12 u %a+- aaa.txt
                 buf_name = '{:{width}d} {:1s} {:1s}{:1s}{:1s}{:1s} {}{} "{}"'.format(nr,
                             '' if buffers[nr].options["buflisted"] else 'u',
-                            '%' if int(vim.eval("bufnr('%')")) == nr
-                                else '#' if int(vim.eval("bufnr('#')")) == nr else '',
-                            'a' if vim.eval("bufwinnr(%d)" % nr) != '-1' else 'h',
+                            '%' if int(lfEval("bufnr('%')")) == nr
+                                else '#' if int(lfEval("bufnr('#')")) == nr else '',
+                            'a' if lfEval("bufwinnr(%d)" % nr) != '-1' else 'h',
                             '+' if buffers[nr].options["modified"] else '',
                             '-' if not buffers[nr].options["modifiable"] else '',
                             basename, ' ' * space_num,
@@ -65,7 +65,7 @@ class BufferExplorer(Explorer):
                             width=bufnr_len)
                 bufnames.append(buf_name)
                 del buffers[nr]
-            elif vim.eval("bufnr(%d)" % nr) == '-1':
+            elif lfEval("bufnr(%d)" % nr) == '-1':
                 mru.delMruBufnr(nr)
 
         return bufnames
@@ -98,14 +98,14 @@ class BufExplManager(Manager):
         return BufferExplorer
 
     def _defineMaps(self):
-        vim.command("call g:LfBufExplMaps()")
+        lfCmd("call g:LfBufExplMaps()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
         line = args[0]
         buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
-        vim.command("hide buffer %d" % buf_number)
+        lfCmd("hide buffer %d" % buf_number)
 
     def _getDigest(self, line, mode):
         """
@@ -147,7 +147,7 @@ class BufExplManager(Manager):
             buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
             basename = getBasename(vim.buffers[buf_number].name)
             space_num = self._getExplorer().getMaxBufnameLen() \
-                        - int(vim.eval("strdisplaywidth('%s')" % escQuote(basename)))
+                        - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
             return prefix_len + lfBytesLen(basename) + space_num + 2
 
     def _createHelp(self):
@@ -166,32 +166,32 @@ class BufExplManager(Manager):
 
     def _preStart(self):
         super(BufExplManager, self)._preStart()
-        id = int(vim.eval("matchadd('Lf_hl_bufNumber', '^\s*\zs\d\+')"))
+        id = int(lfEval("matchadd('Lf_hl_bufNumber', '^\s*\zs\d\+')"))
         self._match_ids.append(id)
-        id = int(vim.eval("matchadd('Lf_hl_bufIndicators', '^\s*\d\+\s*\zsu\=\s*[#%]\=...')"))
+        id = int(lfEval("matchadd('Lf_hl_bufIndicators', '^\s*\d\+\s*\zsu\=\s*[#%]\=...')"))
         self._match_ids.append(id)
-        id = int(vim.eval("matchadd('Lf_hl_bufModified', '^\s*\d\+\s*u\=\s*[#%]\=.+\s*\zs.*$')"))
+        id = int(lfEval("matchadd('Lf_hl_bufModified', '^\s*\d\+\s*u\=\s*[#%]\=.+\s*\zs.*$')"))
         self._match_ids.append(id)
-        id = int(vim.eval("matchadd('Lf_hl_bufNomodifiable', '^\s*\d\+\s*u\=\s*[#%]\=..-\s*\zs.*$')"))
+        id = int(lfEval("matchadd('Lf_hl_bufNomodifiable', '^\s*\d\+\s*u\=\s*[#%]\=..-\s*\zs.*$')"))
         self._match_ids.append(id)
-        id = int(vim.eval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
+        id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
         self._match_ids.append(id)
 
     def _cleanup(self):
         super(BufExplManager, self)._cleanup()
         for i in self._match_ids:
-            vim.command("silent! call matchdelete(%d)" % i)
+            lfCmd("silent! call matchdelete(%d)" % i)
         self._match_ids = []
 
     def deleteBuffer(self, wipe=0):
         if vim.current.window.cursor[0] <= self._help_length:
             return
-        vim.command("setlocal modifiable")
+        lfCmd("setlocal modifiable")
         line = vim.current.line
         buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
-        vim.command("confirm %s %d" % ('bw' if wipe else 'bd', buf_number))
+        lfCmd("confirm %s %d" % ('bw' if wipe else 'bd', buf_number))
         del vim.current.line
-        vim.command("setlocal nomodifiable")
+        lfCmd("setlocal nomodifiable")
 
 
 

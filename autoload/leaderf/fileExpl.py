@@ -15,7 +15,7 @@ from leaderf.manager import *
 def showRelativePath(func):
     @wraps(func)
     def deco(*args, **kwargs):
-        if vim.eval("g:Lf_ShowRelativePath") == '1':
+        if lfEval("g:Lf_ShowRelativePath") == '1':
             # os.path.relpath() is too slow!
             dir = os.getcwd() if len(args) == 1 else args[1]
             cwd_length = len(lfEncode(dir))
@@ -34,9 +34,9 @@ class FileExplorer(Explorer):
     def __init__(self):
         self._cur_dir = ''
         self._content = []
-        self._cache_dir = os.path.join(vim.eval("g:Lf_CacheDiretory"),
+        self._cache_dir = os.path.join(lfEval("g:Lf_CacheDiretory"),
                                        '.LfCache',
-                                       'python' + vim.eval("g:Lf_PythonVersion"),
+                                       'python' + lfEval("g:Lf_PythonVersion"),
                                        'file')
         self._cache_index = os.path.join(self._cache_dir, 'cacheIndex')
         self._initCache()
@@ -50,10 +50,10 @@ class FileExplorer(Explorer):
 
     def _getFiles(self, dir):
         start_time = time.time()
-        wildignore = vim.eval("g:Lf_WildIgnore")
+        wildignore = lfEval("g:Lf_WildIgnore")
         file_list = []
         for dir_path, dirs, files in os.walk(dir, followlinks = False
-                if vim.eval("g:Lf_FollowLinks") == '0' else True):
+                if lfEval("g:Lf_FollowLinks") == '0' else True):
             dirs[:] = [i for i in dirs if True not in (fnmatch.fnmatch(i,j)
                        for j in wildignore['dir'])]
             for name in files:
@@ -61,7 +61,7 @@ class FileExplorer(Explorer):
                                 for j in wildignore['file']):
                     file_list.append(lfEncode(os.path.join(dir_path,name)))
                 if time.time() - start_time > float(
-                        vim.eval("g:Lf_IndexTimeLimit")):
+                        lfEval("g:Lf_IndexTimeLimit")):
                     return file_list
         return file_list
 
@@ -100,9 +100,9 @@ class FileExplorer(Explorer):
                 start_time = time.time()
                 file_list = self._getFiles(dir)
                 delta_seconds = time.time() - start_time
-                if delta_seconds > float(vim.eval("g:Lf_NeedCacheTime")):
+                if delta_seconds > float(lfEval("g:Lf_NeedCacheTime")):
                     cache_file_name = ''
-                    if len(lines) < int(vim.eval("g:Lf_NumberOfCache")):
+                    if len(lines) < int(lfEval("g:Lf_NumberOfCache")):
                         f.seek(0, 2)
                         ts = time.time()
                         line = '%.3f cache_%.3f %s\n' % (ts, ts, dir)
@@ -163,13 +163,13 @@ class FileExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         if len(args) > 0:
             if os.path.exists(lfDecode(args[0])):
-                vim.command("silent cd %s" % args[0])
+                lfCmd("silent cd %s" % args[0])
             else:
-                vim.command("echohl ErrorMsg | redraw | echon "
-                            "'Unknown directory `%s`' | echohl NONE" % args[0])
+                lfCmd("echohl ErrorMsg | redraw | echon "
+                      "'Unknown directory `%s`' | echohl NONE" % args[0])
                 return None
         dir = os.getcwd()
-        if vim.eval("g:Lf_UseMemoryCache") == 0 or dir != self._cur_dir:
+        if lfEval("g:Lf_UseMemoryCache") == 0 or dir != self._cur_dir:
             self._cur_dir = dir
             self._content = self._getFileList(dir)
         return self._content
@@ -200,7 +200,7 @@ class FileExplManager(Manager):
         return FileExplorer
 
     def _defineMaps(self):
-        vim.command("call g:LfFileExplMaps()")
+        lfCmd("call g:LfFileExplMaps()")
 
     def _createHelp(self):
         help = []

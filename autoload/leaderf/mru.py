@@ -13,9 +13,9 @@ from leaderf.utils import *
 #*****************************************************
 class Mru(object):
     def __init__(self):
-        self._cache_dir = os.path.join(vim.eval("g:Lf_CacheDiretory"),
+        self._cache_dir = os.path.join(lfEval("g:Lf_CacheDiretory"),
                                        '.LfCache',
-                                       'python' + vim.eval("g:Lf_PythonVersion"),
+                                       'python' + lfEval("g:Lf_PythonVersion"),
                                        'mru')
         self._cache_file = os.path.join(self._cache_dir, 'mruCache')
         self._initCache()
@@ -34,7 +34,7 @@ class Mru(object):
 
     def saveToCache(self, buf_name):
         if True in (fnmatch.fnmatch(buf_name, i)
-                    for i in vim.eval("g:Lf_MruFileExclude")):
+                    for i in lfEval("g:Lf_MruFileExclude")):
             return
         with lfOpen(self._cache_file, 'r+', errors='ignore') as f:
             lines = f.readlines()
@@ -45,7 +45,7 @@ class Mru(object):
                     del lines[i]
                     break
             lines.insert(0, buf_name + '\n')
-            if len(lines) > int(vim.eval("g:Lf_MruMaxFiles")):
+            if len(lines) > int(lfEval("g:Lf_MruMaxFiles")):
                 del lines[-1]
             f.seek(0)
             f.truncate(0)
