@@ -67,7 +67,7 @@ g:Lf_WindowHeight                               *g:Lf_WindowHeight*
     If the value is a floating point number less than 1, it means the
     percentage of the height of the vim window.
     e.g., let g:Lf_WindowHeight = 0.30
-    The option will be ignored if the value of *g:Lf_WindowPosition* is
+    The option will be ignored if the value of |g:Lf_WindowPosition| is
     not 1 and 2.
     Default value is 0.5.
 
