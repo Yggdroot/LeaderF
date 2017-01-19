@@ -626,6 +626,7 @@ class Manager(object):
                     self._getExplorer().getStlFunction())
         lfCmd("echohl WarningMsg | redraw |"
                     "echo ' searching ...' | echohl NONE")
+        
         self._content = self._getExplorer().getContent(*args, **kwargs)
         if not self._content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
