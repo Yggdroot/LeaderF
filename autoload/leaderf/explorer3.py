@@ -13,7 +13,7 @@ class Explorer(metaclass = ABCMeta):
         pass
 
     @abstractmethod
-    def getStlFunction(self):
+    def getStlCategory(self):
         pass
 
     def getFreshContent(self, *args, **kwargs):

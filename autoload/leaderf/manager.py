@@ -5,22 +5,28 @@ import vim
 import re
 import operator
 from functools import partial
+from functools import wraps
+from leaderf.instance import LfInstance
 from leaderf.cli import LfCli
 from leaderf.utils import *
 from leaderf.fuzzyMatch import FuzzyMatch
 
+
+def modifiableController(func):
+    @wraps(func)
+    def deco(self, *args, **kwargs):
+        self._getInstance().buffer.options['modifiable'] = 1
+        func(self, *args, **kwargs)
+        self._getInstance().buffer.options['modifiable'] = 0
+    return deco
 
 #*****************************************************
 # Manager
 #*****************************************************
 class Manager(object):
     def __init__(self):
-        self._buffer_name = lfEval("expand('$VIMRUNTIME/LeaderF')")
-        self._win_pos = int(lfEval("g:Lf_WindowPosition"))
-        self._win_height = float(lfEval("g:Lf_WindowHeight"))
-        self._show_tabline = int(lfEval("&showtabline"))
-        self._tabpage_nr = 0
         self._autochdir = 0
+        self._instance = None
         self._cli = LfCli()
         self._explorer = None
         self._content = []
@@ -31,8 +37,6 @@ class Manager(object):
         self._highlight_pos = []
         self._highlight_refine_pos = []
         self._highlight_ids = []
-        self._initStlVar()
-        self._setStlMode()
         self._getExplClass()
 
     #**************************************************************
@@ -101,16 +105,39 @@ class Manager(object):
     def _createHelp(self):
         return []
 
-    def _preStart(self):
+    def _setStlMode(self):
+        if self._cli.isFuzzy:
+            if self._cli.isFullPath:
+                mode = 'FullPath'
+            else:
+                mode = 'NameOnly'
+        else:
+            mode = 'Regex'
+        self._getInstance().setStlMode(mode)
+
+    def _beforeEnter(self):
+        self._resetAutochdir()
+
+    def _afterEnter(self):
+        self._cleanup()
+        self._defineMaps()
+
+    def _beforeExit(self):
+        self._cleanup()
+
+    def _afterExit(self):
         pass
 
-    def _cleanup(self):
-        self._cli.clear()
-        self.clearSelections()
-        self._clearHighlights()
-        self._clearHighlightsPos()
-
     #**************************************************************
+
+    def _getInstance(self):
+        if self._instance is None:
+            self._instance = LfInstance(self._getExplorer().getStlCategory(),
+                                        self._beforeEnter,
+                                        self._afterEnter,
+                                        self._beforeExit,
+                                        self._afterExit)
+        return self._instance
 
     def _createHelpHint(self):
         help = []
@@ -120,43 +147,17 @@ class Manager(object):
         else:
             help += self._createHelp()
         self._help_length = len(help)
-        vim.current.buffer.append(help, 0)
-        vim.current.window.cursor = (self._help_length + 1, 0)
+        self._getInstance().buffer.append(help, 0)
+        self._getInstance().window.cursor = (self._help_length + 1, 0)
 
     def _hideHelp(self):
-        # should be 'del vim.current.buffer[:self._help_length]',
-        # but there is bug in vim7.3
-        for i in range(self._help_length):
-            del vim.current.buffer[0]
+        del self._getInstance().buffer[:self._help_length]
         self._help_length = 0
 
     def _getExplorer(self):
         if self._explorer is None:
             self._explorer = self._getExplClass()()
         return self._explorer
-
-    def _initStlVar(self):
-        lfCmd("let g:Lf_statusline_function = '-'")
-        lfCmd("let g:Lf_statusline_curDir = '-'")
-        lfCmd("let g:Lf_statusline_total = '0'")
-
-    def _setStlMode(self):
-        if self._cli.isFuzzy:
-            if self._cli.isFullPath:
-                lfCmd("let g:Lf_statusline_mode = 'FullPath'")
-            else:
-                lfCmd("let g:Lf_statusline_mode = 'NameOnly'")
-        else:
-            lfCmd("let g:Lf_statusline_mode = 'Regexp'")
-
-    def _bufwinnr(self, name):
-        nr = 1
-        for w in vim.windows:
-            if (w.buffer.name is not None and
-                    os.path.abspath(w.buffer.name) == os.path.abspath(name)):
-                return nr
-            nr += 1
-        return 0
 
     def _resetAutochdir(self):
         if int(lfEval("&autochdir")) == 1:
@@ -171,75 +172,6 @@ class Manager(object):
             # to the directory containing the file which was opened or selected.
             lfCmd("set autochdir")
 
-    def _gotoBuffer(self):
-        self._resetAutochdir()
-        if self._win_pos == 0:
-            self._orig_tabpage = int(lfEval("tabpagenr()"))
-            if int(lfEval("tabpagenr('$')")) < 2:
-                lfCmd("set showtabline=0")
-            if self._tabpage_nr > 0:
-                lfCmd("tabnext %d" % self._tabpage_nr)
-            else:
-                self._createBufWindow()
-        else:
-            self._orig_win_nr = int(lfEval("winnr()"))
-            nr = self._bufwinnr(self._buffer_name)
-            if nr == 0:
-                self._createBufWindow()
-            else:
-                lfCmd("exec '%d wincmd w'" % nr)
-        self._setAttributes()
-        self._setStatusline()
-        self._defineMaps()
-        self._cleanup()
-
-    def _createBufWindow(self):
-        if self._win_pos != 0:
-            self._restore_sizes = lfEval("winrestcmd()")
-        if self._win_pos == 0:
-            lfCmd("silent! noa keepa keepj $tabedit %s" % self._buffer_name)
-            self._tabpage_nr = int(lfEval("tabpagenr()"))
-        elif self._win_pos == 1:
-            lfCmd("silent! noa keepa keepj bo sp %s" % self._buffer_name)
-            if self._win_height >= 1:
-                lfCmd("resize %d" % self._win_height)
-            elif self._win_height > 0:
-                lfCmd("resize %d" % (int(lfEval("&lines")) * self._win_height))
-        elif self._win_pos == 2:
-            lfCmd("silent! noa keepa keepj to sp %s" % self._buffer_name)
-            if self._win_height >= 1:
-                lfCmd("resize %d" % self._win_height)
-            elif self._win_height > 0:
-                lfCmd("resize %d" % (int(lfEval("&lines")) * self._win_height))
-        else:
-            lfCmd("silent! noa keepa keepj to vsp %s" % self._buffer_name)
-
-    def _setAttributes(self):
-        lfCmd("setlocal nobuflisted")
-        lfCmd("setlocal buftype=nofile")
-        lfCmd("setlocal bufhidden=hide")
-        lfCmd("setlocal noswapfile")
-        lfCmd("setlocal nolist")
-        lfCmd("setlocal number")
-        lfCmd("setlocal norelativenumber")
-        lfCmd("setlocal nospell")
-        lfCmd("setlocal nowrap")
-        lfCmd("setlocal nofoldenable")
-        lfCmd("setlocal foldcolumn=0")
-        lfCmd("setlocal cursorline")
-        lfCmd("setlocal filetype=leaderf")
-
-    def _setStatusline(self):
-        lfCmd("setlocal statusline=LeaderF:\ [%#Lf_hl_stlFunction#"
-              "%{g:Lf_statusline_function}%#Lf_hl_none#,")
-        lfCmd("setlocal statusline+=\ %#Lf_hl_stlMode#%-9("
-              "%{g:Lf_statusline_mode}%#Lf_hl_none#]%)")
-        lfCmd("setlocal statusline+=\ \ %<%#Lf_hl_stlCurDir#"
-              "%{g:Lf_statusline_curDir}%#Lf_hl_none#")
-        lfCmd("setlocal statusline+=%=%lL/%-5L\ \ Total:"
-              "%{g:Lf_statusline_total}\ ")
-        lfCmd("redraw!")
-
     def _toUp(self):
         lfCmd("norm! k")
 
@@ -247,21 +179,21 @@ class Manager(object):
         lfCmd("norm! j")
 
     def _leftClick(self):
-        nr = self._bufwinnr(self._buffer_name)
-        if nr == int(lfEval("v:mouse_win")):
+        if self._getInstance().window.number == int(lfEval("v:mouse_win")):
             lfCmd("exec v:mouse_lnum")
             lfCmd("exec 'norm!'.v:mouse_col.'|'")
             self.clearSelections()
+            exit_loop = False
         else:
             self.quit()
-            self._exit_loop = True
+            exit_loop = True
+        return exit_loop
 
     def _search(self, content):
         self.clearSelections()
         self._cli.highlightMatches()
-        cb = vim.current.buffer
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
-            setBuffer(cb, content)
+            self._getInstance().setBuffer(content)
             self._clearHighlights()
             self._clearHighlightsPos()
             return
@@ -281,7 +213,7 @@ class Manager(object):
             content: The list to be filtered.
         """
         length = len(content)
-        cb = vim.current.buffer
+        cb = self._getInstance().buffer
         result = []
         if self._index == 0:
             self._index = step
@@ -357,7 +289,7 @@ class Manager(object):
 
         pairs = self._filter(30000, filter_method, content)
         pairs.sort(key=operator.itemgetter(0), reverse=True)
-        setBuffer(vim.current.buffer, [p[1] for p in pairs])
+        self._getInstance().setBuffer([p[1] for p in pairs])
         highlight_method()
 
     def _clearHighlights(self):
@@ -390,7 +322,7 @@ class Manager(object):
         if (lfEval("exists('*matchaddpos')") == '0' or
                 lfEval("g:Lf_HighlightIndividual") == '0'):
             return
-        cb = vim.current.buffer
+        cb = self._getInstance().buffer
         if len(cb) == 1 and cb[0] == '': # buffer is empty.
             return
 
@@ -420,7 +352,7 @@ class Manager(object):
         if (lfEval("exists('*matchaddpos')") == '0' or
                 lfEval("g:Lf_HighlightIndividual") == '0'):
             return
-        cb = vim.current.buffer
+        cb = self._getInstance().buffer
         if len(cb) == 1 and cb[0] == '': # buffer is empty.
             return
 
@@ -470,22 +402,26 @@ class Manager(object):
         if not self._cli.isPrefix:
             self._index = 0
         lines = self._filter(8000, self._regexFilter, content)
-        setBuffer(vim.current.buffer, lines)
+        self._getInstance().setBuffer(lines)
 
     def clearSelections(self):
         for i in self._selections.values():
             lfCmd("call matchdelete(%d)" % i)
         self._selections.clear()
 
+    def _cleanup(self):
+        self._cli.clear()
+        self.clearSelections()
+        self._clearHighlights()
+        self._clearHighlightsPos()
+
+    @modifiableController
     def toggleHelp(self):
-        lfCmd("setlocal modifiable")
         self._show_help = not self._show_help
-        for i in range(self._help_length):
-            del vim.current.buffer[0]
+        del self._getInstance().buffer[:self._help_length]
         self._createHelpHint()
         self.clearSelections()
         self._resetHighlights()
-        lfCmd("setlocal nomodifiable")
 
     def _accept(self, file, mode):
         try:
@@ -510,14 +446,14 @@ class Manager(object):
             pass
 
     def accept(self, mode=''):
-        if vim.current.window.cursor[0] <= self._help_length:
+        if self._getInstance().window.cursor[0] <= self._help_length:
             lfCmd("norm! j")
             return
         if len(self._selections) > 0:
             files = []
             for i in sorted(self._selections.keys()):
-                files.append(vim.current.buffer[i-1])
-            self._quit()
+                files.append(self._getInstance().buffer[i-1])
+            self._getInstance().exitBuffer()
             if mode == '':
                 self._argaddFiles(files)
                 self._accept(files[0], mode)
@@ -525,37 +461,14 @@ class Manager(object):
                 for file in files:
                     self._accept(file, mode)
         else:
-            file = vim.current.line
-            self._quit()
+            file = self._getInstance().currentLine
+            self._getInstance().exitBuffer()
             self._accept(file, mode)
+
         self._setAutochdir()
 
-    def _quit(self):
-        self._cleanup()
-        if self._win_pos == 0:
-            try:
-                lfCmd("tabclose! | tabnext %d" % self._orig_tabpage)
-            except: #E85, vim7.3 still reports the error
-                lfCmd("new | only")
-
-            lfCmd("set showtabline=%d" % self._show_tabline)
-            self._tabpage_nr = 0
-        else:
-            if len(vim.windows) > 1:
-                lfCmd("silent! hide")
-                # 'silent!' is used to skip error E16.
-                lfCmd("silent! exec '%d wincmd w'" % self._orig_win_nr)
-                lfCmd(self._restore_sizes)
-            else:
-                lfCmd("bd")
-
-        if self._win_pos != 0:
-            lfCmd("call getchar(0) | redraw | echo")
-        else:
-            lfCmd("call getchar(0)")
-
     def quit(self):
-        self._quit()
+        self._getInstance().exitBuffer()
         self._setAutochdir()
 
     def refresh(self, normal_mode=True):
@@ -564,9 +477,9 @@ class Manager(object):
             return
 
         if normal_mode: # when called in Normal mode
-            lfCmd("setlocal modifiable")
+            self._getInstance().buffer.options['modifiable'] = 1
 
-        setBuffer(vim.current.buffer, self._content)
+        self._getInstance().setBuffer(self._content)
         if self._cli.pattern:
             self._index = 0
             self._search(self._content)
@@ -574,17 +487,17 @@ class Manager(object):
         if normal_mode: # when called in Normal mode
             self._createHelpHint()
             self._resetHighlights()
-            lfCmd("setlocal nomodifiable")
+            self._getInstance().buffer.options['modifiable'] = 0
 
     def addSelections(self):
-        nr = self._bufwinnr(self._buffer_name)
+        nr = self._getInstance().window.number
         if (int(lfEval("v:mouse_win")) != 0 and
                 nr != int(lfEval("v:mouse_win"))):
             return
         elif nr == int(lfEval("v:mouse_win")):
             lfCmd("exec v:mouse_lnum")
             lfCmd("exec 'norm!'.v:mouse_col.'|'")
-        line_nr = vim.current.window.cursor[0]
+        line_nr = self._getInstance().window.cursor[0]
         if line_nr <= self._help_length:
             lfCmd("norm! j")
             return
@@ -597,8 +510,8 @@ class Manager(object):
             self._selections[line_nr] = id
 
     def selectMulti(self):
-        orig_line = vim.current.window.cursor[0]
-        nr = self._bufwinnr(self._buffer_name)
+        orig_line = self._getInstance().window.cursor[0]
+        nr = self._getInstance().window.number
         if (int(lfEval("v:mouse_win")) != 0 and
                 nr != int(lfEval("v:mouse_win"))):
             return
@@ -611,43 +524,42 @@ class Manager(object):
                 self._selections[i] = id
 
     def selectAll(self):
-        if len(vim.current.buffer) > 300:
+        line_num = len(self._getInstance().buffer)
+        if line_num > 300:
             lfCmd("echohl Error | redraw | echo ' Too many files selected!' | echohl NONE")
             lfCmd("sleep 1")
             return
-        for i in range(len(vim.current.buffer)):
+        for i in range(line_num):
             if i >= self._help_length and i+1 not in self._selections:
                 id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % (i+1)))
                 self._selections[i+1] = id
 
-    def startExplorer(self, *args, **kwargs):
+    def startExplorer(self, win_pos, *args, **kwargs):
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
-        lfCmd("let g:Lf_statusline_function = '%s'" %
-                    self._getExplorer().getStlFunction())
         lfCmd("echohl WarningMsg | redraw |"
-                    "echo ' searching ...' | echohl NONE")
+              "echo ' searching ...' | echohl NONE")
         self._content = self._getExplorer().getContent(*args, **kwargs)
         if not self._content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
-        self._gotoBuffer()
-        lfCmd("let g:Lf_statusline_curDir = '%s'" %
-                    self._getExplorer().getStlCurDir())
-        lfCmd("let g:Lf_statusline_total = '%d'" % len(self._content))
-        self._preStart()
+        self._getInstance().enterBuffer(win_pos)
+
+        self._getInstance().setStlCategory(self._getExplorer().getStlCategory())
+        self._setStlMode()
+        self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
+        self._getInstance().setStlTotal(len(self._content))
+
+        self._getInstance().setBuffer(self._content)
+        lfCmd("normal! gg")
+        self._index = 0
+
         self.input(False)
 
+    @modifiableController
     def input(self, normal_mode=True):
-        lfCmd("setlocal modifiable")
         self._hideHelp()
         self._resetHighlights()
 
-        if not normal_mode:
-            setBuffer(vim.current.buffer, self._content)
-            lfCmd("normal! gg")
-            self._index = 0
-
-        quit = False
         for cmd in self._cli.input():
             if equal(cmd, '<Update>'):
                 self._search(self._content)
@@ -664,9 +576,7 @@ class Manager(object):
             elif equal(cmd, '<Down>'):
                 self._toDown()
             elif equal(cmd, '<LeftMouse>'):
-                self._exit_loop = False
-                self._leftClick()
-                if self._exit_loop:
+                if self._leftClick():
                     break
             elif equal(cmd, '<2-LeftMouse>'):
                 self._leftClick()
@@ -685,14 +595,13 @@ class Manager(object):
                 self.accept('t')
                 break
             elif equal(cmd, '<Quit>'):
-                quit = True
+                self.quit()
                 break
             elif equal(cmd, '<Esc>'):   # switch to Normal mode
                 self.clearSelections()
                 self._cli.hideCursor()
                 self._createHelpHint()
                 self._resetHighlights()
-                lfCmd("setlocal nomodifiable")
                 break
             elif equal(cmd, '<F5>'):
                 self.refresh(False)
@@ -710,6 +619,4 @@ class Manager(object):
             else:
                 if self._cmdExtension(cmd):
                     break
-        if quit: # due to a bug which is fixed by Patch 7.4.084, I have to write this ugly code
-            self.quit()
 

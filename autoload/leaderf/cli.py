@@ -8,7 +8,7 @@ from functools import wraps
 from leaderf.utils import *
 
 
-def ctrlCursor(func):
+def cursorController(func):
     @wraps(func)
     def deco(*args, **kwargs):
         lfCmd("let g:lf_old_gcr = &gcr")
@@ -19,15 +19,8 @@ def ctrlCursor(func):
             for i in func(*args, **kwargs):
                 yield i
         finally:
-            try:
-                lfCmd("let &gcr = g:lf_old_gcr")
-                lfCmd("let &t_ve = g:lf_old_t_ve")
-            except: # there is a bug here, fixed by Patch 7.4.084.
-                try:
-                    lfCmd("let &gcr = g:lf_old_gcr")
-                    lfCmd("let &t_ve = g:lf_old_t_ve")
-                except:
-                    pass
+            lfCmd("let &gcr = g:lf_old_gcr")
+            lfCmd("let &t_ve = g:lf_old_t_ve")
     return deco
 
 
@@ -49,13 +42,15 @@ class LfCli(object):
         self._setDefaultMode()
 
     def _setDefaultMode(self):
-        mode = int(lfEval("g:Lf_DefaultMode"))
-        if mode == 0:       # nameOnly mode
+        mode = lfEval("g:Lf_DefaultMode")
+        if mode == 'NameOnly':       # nameOnly mode
             self._is_fuzzy = True
             self._is_full_path = False
-        elif mode == 1:     # fullPath mode
+        elif mode == 'FullPath':     # fullPath mode
             self._is_fuzzy = True
             self._is_full_path = True
+        elif mode == 'Fuzzy':     # fuzzy mode
+            self._is_fuzzy = True
         else:               # regex mode
             self._is_fuzzy = False
             self._is_full_path = True
@@ -288,7 +283,7 @@ class LfCli(object):
     def isFuzzy(self):
         return self._is_fuzzy
 
-    @ctrlCursor
+    @cursorController
     def input(self):
         try:
             self._blinkon = True

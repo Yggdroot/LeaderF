@@ -54,7 +54,7 @@ class MruExplorer(Explorer):
                                           dirname if dirname else '.' + os.sep)
         return lines
 
-    def getStlFunction(self):
+    def getStlCategory(self):
         return 'Mru'
 
     def getStlCurDir(self):
@@ -92,7 +92,7 @@ class MruExplManager(Manager):
         return MruExplorer
 
     def _defineMaps(self):
-        lfCmd("call g:LfMruExplMaps()")
+        lfCmd("call leaderf#mruExplMaps()")
 
     def _argaddFiles(self, files):
         # It will raise E480 without 'silent!'
@@ -165,13 +165,13 @@ class MruExplManager(Manager):
         help.append('" ---------------------------------------------------------')
         return help
 
-    def _preStart(self):
-        super(MruExplManager, self)._preStart()
+    def _afterEnter(self):
+        super(MruExplManager, self)._afterEnter()
         id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
         self._match_ids.append(id)
 
-    def _cleanup(self):
-        super(MruExplManager, self)._cleanup()
+    def _beforeExit(self):
+        super(MruExplManager, self)._beforeExit()
         for i in self._match_ids:
             lfCmd("silent! call matchdelete(%d)" % i)
         self._match_ids = []
@@ -181,9 +181,11 @@ class MruExplManager(Manager):
             return
         lfCmd("setlocal modifiable")
         line = vim.current.line
-        self._explorer.delFromCache(line)
+        dirname = self._getDigest(line, 2)
+        basename = self._getDigest(line, 1)
+        self._explorer.delFromCache(escSpecial(dirname + basename))
         if len(self._content) > 0:
-            self._content.remove(line + '\n')
+            self._content.remove(line)
         del vim.current.line
         lfCmd("setlocal nomodifiable")
 

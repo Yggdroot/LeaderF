@@ -70,7 +70,7 @@ class BufferExplorer(Explorer):
 
         return bufnames
 
-    def getStlFunction(self):
+    def getStlCategory(self):
         return 'Buffer'
 
     def getStlCurDir(self):
@@ -98,7 +98,7 @@ class BufExplManager(Manager):
         return BufferExplorer
 
     def _defineMaps(self):
-        lfCmd("call g:LfBufExplMaps()")
+        lfCmd("call leaderf#bufExplMaps()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -164,8 +164,8 @@ class BufExplManager(Manager):
         help.append('" ---------------------------------------------------------')
         return help
 
-    def _preStart(self):
-        super(BufExplManager, self)._preStart()
+    def _afterEnter(self):
+        super(BufExplManager, self)._afterEnter()
         id = int(lfEval("matchadd('Lf_hl_bufNumber', '^\s*\zs\d\+')"))
         self._match_ids.append(id)
         id = int(lfEval("matchadd('Lf_hl_bufIndicators', '^\s*\d\+\s*\zsu\=\s*[#%]\=...')"))
@@ -177,8 +177,8 @@ class BufExplManager(Manager):
         id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
         self._match_ids.append(id)
 
-    def _cleanup(self):
-        super(BufExplManager, self)._cleanup()
+    def _beforeExit(self):
+        super(BufExplManager, self)._beforeExit()
         for i in self._match_ids:
             lfCmd("silent! call matchdelete(%d)" % i)
         self._match_ids = []

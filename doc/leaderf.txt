@@ -1,11 +1,13 @@
 *leaderf.txt*   Quickly locate files, buffers, mrus, ... in large project.
 *leaderf* *LeaderF*
 ==============================================================================
-@        'II'                          'II                  'II''''I         @
-@         II        ....   ....      .. II    ....  ... ..   II  .           @
-@         II      .I...II '' .II   .'  'II  .I...II  II' ''  II''I           @
-@         II      II      .I' II   I.   II  II       II      II              @
-@        .II....I  'I...' 'I..'I.  'I..'II.  'I...' .II.    .II.             @
+/      '7MMF'                            '7MM                `7MM"""YMM      /
+/        MM                                MM                  MM    `7      /
+/        MM         .gP"Ya   ,6"Yb.   ,M""bMM  .gP"Ya `7Mb,od8 MM   d        /
+/        MM        ,M'   Yb 8)   MM ,AP    MM ,M'   Yb  MM' "' MM""MM        /
+/        MM      , 8M""""""  ,pm9MM 8MI    MM 8M""""""  MM     MM   Y        /
+/        MM     ,M YM.    , 8M   MM `Mb    MM YM.    ,  MM     MM            /
+/      .JMMmmmmMMM  'Mbmmd' 'Moo9^Yo.'Wbmd"MML.`Mbmmd'.JMML. .JMML.          /
 ==============================================================================
 
 CONTENTS                                        *leaderf-contents*
@@ -54,21 +56,22 @@ g:Lf_ShortcutB                                  *g:Lf_ShortcutB*
     Default value is '<leader>b'.
 
 g:Lf_WindowPosition                             *g:Lf_WindowPosition*
-    Setting this option can change the position of the match window.
-    The value can be 0, 1, 2, ...
-    0 - the match window take up the full screen
-    1 - the match window is at the bottom of the screen.
-    2 - the match window is at the top of the screen.
-    other - the match window is in the vertical split window.
-    Default value is 1.
+    Setting this option can change the position of the LeaderF window.
+    The value can be 'fullScreen', 'top', 'bottom', 'left', 'right'.
+    'fullScreen' - the LeaderF window take up the full screen
+    'top' - the LeaderF window is at the top of the screen.
+    'bottom' - the LeaderF window is at the bottom of the screen.
+    'left' - the LeaderF window is at the left of the screen.
+    'right' - the LeaderF window is at the right of the screen.
+    Default value is 'bottom'.
 
 g:Lf_WindowHeight                               *g:Lf_WindowHeight*
-    This option is used to set the default height of the match window.
+    This option is used to set the default height of the LeaderF window.
     If the value is a floating point number less than 1, it means the
     percentage of the height of the vim window.
     e.g., let g:Lf_WindowHeight = 0.30
     The option will be ignored if the value of |g:Lf_WindowPosition| is
-    not 1 and 2.
+    not 'top' and 'bottom'.
     Default value is 0.5.
 
 g:Lf_TabpagePosition                            *g:Lf_TabpagePosition*
@@ -81,7 +84,7 @@ g:Lf_TabpagePosition                            *g:Lf_TabpagePosition*
     Default value is 2.
 
 g:Lf_ShowRelativePath                           *g:Lf_ShowRelativePath*
-    Whether to show the relative path in the match window.
+    Whether to show the relative path in the LeaderF window.
     0 - no
     1 - yes
     Default value is 1.
@@ -89,10 +92,11 @@ g:Lf_ShowRelativePath                           *g:Lf_ShowRelativePath*
 g:Lf_DefaultMode                                *g:Lf_DefaultMode*
     Specify the default mode when LeaderF is launched.
     There are 3 modes, and the corresponding values are:
-    0 - fuzzy mode, match file name only when searching
-    1 - fuzzy mode, match full path when searching
-    2 - regex mode
-    Default value is 0
+    'NameOnly' - fuzzy mode, match file name only when searching
+    'FullPath' - fuzzy mode, match full path when searching
+    'Fuzzy' - fuzzy mode, when lines in the result are not file path
+    'Regex' - regex mode
+    Default value is 'NameOnly'
 
 g:Lf_CursorBlink                                *g:Lf_CursorBlink*
     Set this option to 1 to let the cursor in the prompt blink, if you don't
@@ -151,6 +155,8 @@ g:Lf_WildIgnore                                 *g:Lf_WildIgnore*
     -------------------------------------------
 <
 g:Lf_DelimiterChar                              *g:Lf_DelimiterChar*
+    In NameOnly mode, if you want to refine the result by typing extra
+    characters to match the directory, type this character first.
     Default value is ';'.
 
 g:Lf_MruFileExclude                             *g:Lf_MruFileExclude*
@@ -167,12 +173,171 @@ g:Lf_MruMaxFiles                                *g:Lf_MruMaxFiles*
 
 g:Lf_HighlightIndividual                        *g:Lf_HighlightIndividual*
     Whether to highlight individual character of the input in the result.
+    Set the value to 0 to highlight consecutive characters.
     Default value is 1.
 
 g:Lf_NumberOfHighlight                          *g:Lf_NumberOfHighlight*
     Specify the number of highlight lines in the result.
     Default value is 100.
 
+g:Lf_StlColorscheme                             *g:Lf_StlColorscheme*
+    You can configure the colorscheme of statusline for LeaderF.
+    e.g. >
+    let g:Lf_StlColorscheme = 'powerline'
+<
+    The colorscheme files can be found in the directory >
+	"LeaderF/autoload/leaderf/colorscheme/"
+<
+    Default value is 'default'.
+
+g:Lf_StlSeparator                               *g:Lf_StlSeparator*
+    A Dictionary to store separators.
+    The default value is >
+    let g:Lf_StlSeparator = { 'left': '►', 'right': '◄' }
+<
+    If you don't like using separators, you can set the value as below: >
+    let g:Lf_StlSeparator = { 'left': '', 'right': '' }
+<
+    You can also use the patched font you used for |vim-powerline| and |powerline|.
+
+    The patched fonts for |powerline| are available at
+    https://github.com/Lokaltog/powerline-fonts
+
+    A tutorial to create a patched font for |vim-powerline| is available at
+    https://github.com/Lokaltog/vim-powerline/tree/develop/fontpatcher
+
+    If you have installed the patched font for |powerline|, following setting looks
+    nice. >
+    let g:Lf_StlSeparator = { 'left': '', 'right': '' }
+<
+    If you have installed the patched font for |vim-powerline|, following setting
+    looks nice. >
+    let g:Lf_StlSeparator = { 'left': '⮀', 'right': '⮂' }
+<
+    If the statusline does not correctly show the special characters, use the
+    unicode numbers.
+    For |powerline| font users: >
+    let g:Lf_StlSeparator = { 'left': "\ue0b0", 'right': "\ue0b2" }
+<
+    For |vim-powerline| font users: >
+    let g:Lf_StlSeparator = { 'left': "\u2b80", 'right': "\u2b82" }
+<
+g:Lf_StlPalette                                 *g:Lf_StlPalette*
+    This is a directory, you can customize the colorscheme using this option.
+    Default colorscheme is equivalent to the following setting: >
+    let g:Lf_StlPalette = {
+            \   'stlName': {
+            \       'gui': 'bold',
+            \       'font': 'NONE',
+            \       'guifg': '#2F5C00',
+            \       'guibg': '#BAFFA3',
+            \       'cterm': 'bold',
+            \       'ctermfg': '22',
+            \       'ctermbg': '157'
+            \   },
+            \   'stlCategory': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#000000',
+            \       'guibg': '#F28379',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '16',
+            \       'ctermbg': '210'
+            \   },
+            \   'stlNameOnlyMode': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#000000',
+            \       'guibg': '#E8ED51',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '16',
+            \       'ctermbg': '227'
+            \   },
+            \   'stlFullPathMode': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#000000',
+            \       'guibg': '#AAAAFF',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '16',
+            \       'ctermbg': '147'
+            \   },
+            \   'stlFuzzyMode': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#000000',
+            \       'guibg': '#E8ED51',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '16',
+            \       'ctermbg': '227'
+            \   },
+            \   'stlRegexMode': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#000000',
+            \       'guibg': '#7FECAD',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '16',
+            \       'ctermbg': '121'
+            \   },
+            \   'stlCwd': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#EBFFEF',
+            \       'guibg': '#606168',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '195',
+            \       'ctermbg': '241'
+            \   },
+            \   'stlBlank': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': 'NONE',
+            \       'guibg': '#3B3E4C',
+            \       'cterm': 'NONE',
+            \       'ctermfg': 'NONE',
+            \       'ctermbg': '237'
+            \   },
+            \   'stlLineInfo': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#000000',
+            \       'guibg': '#EBFFEF',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '16',
+            \       'ctermbg': '195'
+            \   },
+            \   'stlTotal': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#000000',
+            \       'guibg': '#BCDC5C',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '16',
+            \       'ctermbg': '149'
+            \   }
+            \ }
+<
+    For example, if you want to change the color of 'stlName', you can configure
+    like this: >
+    let g:Lf_StlPalette.stlName = {
+            \       'gui': 'bold',
+            \       'font': 'NONE',
+            \       'guifg': '#2F5C00',
+            \       'guibg': '#BAFFA3',
+            \       'cterm': 'bold',
+            \       'ctermfg': '22',
+            \       'ctermbg': '157'
+            \ }
+<
+    or just change the color of GUI: >
+    let g:Lf_StlPalette.stlName = {
+            \       'gui': 'bold',
+            \       'font': 'NONE',
+            \       'guifg': '#2F5C00',
+            \       'guibg': '#BAFFA3'
+            \ }
+<
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
     prompt(|leaderf-prompt|).

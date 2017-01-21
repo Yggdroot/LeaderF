@@ -15,7 +15,7 @@ exec g:Lf_py "from leaderf.fileExpl import *"
 exec g:Lf_py "from leaderf.mruExpl import *"
 
 
-function! g:LfFileExplMaps()
+function! leaderf#fileExplMaps()
     nmapclear <buffer>
     nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "fileExplManager.accept()"<CR>
     nnoremap <buffer> <silent> o             :exec g:Lf_py "fileExplManager.accept()"<CR>
@@ -32,7 +32,7 @@ function! g:LfFileExplMaps()
     nnoremap <buffer> <silent> c             :exec g:Lf_py "fileExplManager.clearSelections()"<CR>
 endfunction
 
-function! g:LfBufExplMaps()
+function! leaderf#bufExplMaps()
     nmapclear <buffer>
     nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "bufExplManager.accept()"<CR>
     nnoremap <buffer> <silent> o             :exec g:Lf_py "bufExplManager.accept()"<CR>
@@ -47,7 +47,7 @@ function! g:LfBufExplMaps()
     nnoremap <buffer> <silent> D             :exec g:Lf_py "bufExplManager.deleteBuffer()"<CR>
 endfunction
 
-function! g:LfMruExplMaps()
+function! leaderf#mruExplMaps()
     nmapclear <buffer>
     nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "mruExplManager.accept()"<CR>
     nnoremap <buffer> <silent> o             :exec g:Lf_py "mruExplManager.accept()"<CR>
@@ -65,49 +65,32 @@ function! g:LfMruExplMaps()
 endfunction
 
 function! leaderf#LfPy(cmd)
-    if v:version > 703
-        exec g:Lf_py . a:cmd
-    else
-        let old_gcr = &gcr
-        let old_t_ve = &t_ve
-        try
-            exec g:Lf_py . a:cmd
-        catch /^Vim:Interrupt$/	" catch interrupts (CTRL-C)
-            let &gcr = old_gcr
-            let &t_ve = old_t_ve
-            let obj = substitute(a:cmd,'\..*', '', '')
-            exec g:Lf_py . obj .".quit()"
-            call getchar(0)
-            redraw
-            echo
-        catch /^Vim\%((\a\+)\)\=:E/
-        endtry
-    endif
+    exec g:Lf_py . a:cmd
 endfunction
 
-function! leaderf#startFileExpl(...)
+function! leaderf#startFileExpl(win_pos, ...)
     if a:0 == 0
-        call leaderf#LfPy("fileExplManager.startExplorer()")
+        call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."')")
     else
         let dir = fnamemodify(a:1.'/',":h:gs?\\?/?")
-        call leaderf#LfPy("fileExplManager.startExplorer('".dir."')")
+        call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."','".dir."')")
     endif
 endfunction
 
-function! leaderf#startBufExpl(...)
+function! leaderf#startBufExpl(win_pos, ...)
     if a:0 == 0
-        call leaderf#LfPy("bufExplManager.startExplorer()")
+        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."')")
     else
         let arg = a:1 == 0 ? 'False' : 'True'
-        call leaderf#LfPy("bufExplManager.startExplorer(".arg.")")
+        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."',".arg.")")
     endif
 endfunction
 
-function! leaderf#startMruExpl(...)
+function! leaderf#startMruExpl(win_pos, ...)
     if a:0 == 0
-        call leaderf#LfPy("mruExplManager.startExplorer(vim.current.buffer.name)")
+        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name)")
     else
-        call leaderf#LfPy("mruExplManager.startExplorer(vim.current.buffer.name, f='cwd')")
+        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name, f='cwd')")
     endif
 endfunction
 

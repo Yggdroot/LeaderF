@@ -26,14 +26,11 @@ if has("syntax")
         syn match Lf_hl_dirname  display '^.*/'   containedin=Lf_hl_nonHelp contained
     endif
 
-    highlight def link Lf_hl_selection          Todo
+    highlight def Lf_hl_selection guibg=#A5EB84 guifg=Black ctermbg=156 ctermfg=Black
     highlight def link Lf_hl_help               comment
     highlight def link Lf_hl_helpCmd            Identifier
-    highlight Lf_hl_match gui=bold guifg=LightGreen cterm=bold ctermfg=LightGreen
-    highlight Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=Magenta
-    highlight def link Lf_hl_stlFunction        Statusline
-    highlight def link Lf_hl_stlMode            Statusline
-    highlight def link Lf_hl_stlCurDir          Statusline
+    highlight def Lf_hl_match gui=bold guifg=LightGreen cterm=bold ctermfg=LightGreen
+    highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=Magenta
     highlight def link Lf_hl_bufNumber          Constant
     highlight def link Lf_hl_bufIndicators      Statement
     highlight def link Lf_hl_bufModified        String

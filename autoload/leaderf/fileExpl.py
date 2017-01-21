@@ -179,7 +179,7 @@ class FileExplorer(Explorer):
         self._content = self._getFileList(self._cur_dir)
         return self._content
 
-    def getStlFunction(self):
+    def getStlCategory(self):
         return 'File'
 
     def getStlCurDir(self):
@@ -200,7 +200,7 @@ class FileExplManager(Manager):
         return FileExplorer
 
     def _defineMaps(self):
-        lfCmd("call g:LfFileExplMaps()")
+        lfCmd("call leaderf#fileExplMaps()")
 
     def _createHelp(self):
         help = []
