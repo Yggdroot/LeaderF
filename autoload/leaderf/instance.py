@@ -193,7 +193,7 @@ class LfInstance(object):
         self._after_exit()
 
     def setBuffer(self, content):
-        self.buffer.options['modifiable'] = 1
+        self.buffer.options['modifiable'] = True
         self._buffer_object[:] = content
 
     @property

@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import vim
-import re
 import operator
 from functools import partial
 from functools import wraps
@@ -15,9 +14,9 @@ from leaderf.fuzzyMatch import FuzzyMatch
 def modifiableController(func):
     @wraps(func)
     def deco(self, *args, **kwargs):
-        self._getInstance().buffer.options['modifiable'] = 1
+        self._getInstance().buffer.options['modifiable'] = True
         func(self, *args, **kwargs)
-        self._getInstance().buffer.options['modifiable'] = 0
+        self._getInstance().buffer.options['modifiable'] = False
     return deco
 
 #*****************************************************
@@ -477,7 +476,7 @@ class Manager(object):
             return
 
         if normal_mode: # when called in Normal mode
-            self._getInstance().buffer.options['modifiable'] = 1
+            self._getInstance().buffer.options['modifiable'] = True
 
         self._getInstance().setBuffer(self._content)
         if self._cli.pattern:
@@ -487,7 +486,7 @@ class Manager(object):
         if normal_mode: # when called in Normal mode
             self._createHelpHint()
             self._resetHighlights()
-            self._getInstance().buffer.options['modifiable'] = 0
+            self._getInstance().buffer.options['modifiable'] = False
 
     def addSelections(self):
         nr = self._getInstance().window.number
