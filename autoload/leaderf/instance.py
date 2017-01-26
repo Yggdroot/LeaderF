@@ -93,7 +93,7 @@ class LfInstance(object):
 
         # clear the buffer first to avoid a flash
         if self._buffer_object:
-            self.buffer.options['modifiable'] = 1
+            self.buffer.options['modifiable'] = True
             del self._buffer_object[:]
 
         if win_pos == 'bottom':
