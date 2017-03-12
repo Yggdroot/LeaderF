@@ -62,7 +62,7 @@ class TagExplManager(Manager):
             return
         line = args[0]
         # {tagname}<Tab>{tagfile}<Tab>{tagaddress}[;"<Tab>{tagfield}..]
-        tagfile, right = line.split('\t', 2)[1:]
+        tagname, tagfile, right = line.split('\t', 2)
         res = right.split(';"\t', 1)
         tagaddress = res[0]
         lfCmd("hide edit %s" % escSpecial(tagfile))
@@ -73,16 +73,24 @@ class TagExplManager(Manager):
 
             # In case there are mutiple matches.
             if len(res) > 1:
-                result = re.search('(?<=\w\t)\w+:\S+', res[1])
+                result = re.search('(?<=\t)line:\d+', res[1])
                 if result:
-                    tagfield = result.group(0).split(":")
-                    name = tagfield[0]
-                    value = tagfield[-1]
-                    lfCmd("call search('\m%s\_s\+%s\_[^;{]*{', 'w')" % (name, value))
+                    line_num = result.group(0).split(':')[1]
+                    lfCmd(line_num)
+                else: # for c, c++
+                    keyword = "(class|enum|struct|union)"
+                    result = re.search('(?<=\t)%s:\S+' % keyword, res[1])
+                    if result:
+                        tagfield = result.group(0).split(":")
+                        name = tagfield[0]
+                        value = tagfield[-1]
+                        lfCmd("call search('\m%s\_s\+%s\_[^;{]*{', 'w')" % (name, value))
 
             pattern = "\M" + tagaddress[1:-1]
             lfCmd("call search('%s', 'w')" % escQuote(pattern))
-        lfCmd("norm! ^")
+
+        if lfEval("search('\V%s', 'Wc')" % escQuote(tagname)) == '0':
+            lfCmd("norm! ^")
 
     def _getDigest(self, line, mode):
         """
@@ -125,9 +133,10 @@ class TagExplManager(Manager):
         self._match_ids.append(id)
         id = int(lfEval('''matchadd('Lf_hl_tagType', ';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)')'''))
         self._match_ids.append(id)
-        keyword = "\(namespace\|class\|enum\|file\|function\|kind\|struct\|union\)"
-        id = int(lfEval('''matchadd('Lf_hl_tagKeyword', ';"\t.\{-}\zs%s:\ze')''' % keyword))
-        self._match_ids.append(id)
+        keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
+        for i in keyword:
+            id = int(lfEval('''matchadd('Lf_hl_tagKeyword', '\(;"\t.\{-}\)\@<=%s:')''' % i))
+            self._match_ids.append(id)
 
     def _beforeExit(self):
         super(TagExplManager, self)._beforeExit()
