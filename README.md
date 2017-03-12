@@ -43,6 +43,9 @@ Usage
  - `:LeaderfMruCwd`<br>
  Launch LeaderF to search Mru in current working directory.
 
+ - `:LeaderfTag`<br>
+ Launch LeaderF to navigate tags.
+
 Once LeaderF is launched:
 
  - `<C-C>` : quit from LeaderF.

@@ -106,10 +106,13 @@ class Manager(object):
 
     def _setStlMode(self):
         if self._cli.isFuzzy:
-            if self._cli.isFullPath:
-                mode = 'FullPath'
+            if self._getExplorer().isFilePath():
+                if self._cli.isFullPath:
+                    mode = 'FullPath'
+                else:
+                    mode = 'NameOnly'
             else:
-                mode = 'NameOnly'
+                mode = 'Fuzzy'
         else:
             mode = 'Regex'
         self._getInstance().setStlMode(mode)
@@ -487,6 +490,8 @@ class Manager(object):
             self._createHelpHint()
             self._resetHighlights()
             self._getInstance().buffer.options['modifiable'] = False
+
+        self._getInstance().setStlTotal(len(self._content))
 
     def addSelections(self):
         nr = self._getInstance().window.number

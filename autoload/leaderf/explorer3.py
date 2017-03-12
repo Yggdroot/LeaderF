@@ -28,3 +28,6 @@ class Explorer(metaclass = ABCMeta):
     def supportsNameOnly(self):
         return False
 
+    def isFilePath(self):
+        return True
+

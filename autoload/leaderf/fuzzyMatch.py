@@ -57,10 +57,10 @@ class FuzzyMatch(object):
             special = 2 if not text[i-1].isupper() else 0
         elif text[i-1] == '.':
             special = 1.9
-        elif text[i-1] in '/\\':
-            special = 2
-        # elif not text[i-1].isalnum() :    # ;,"'...
+        # elif text[i-1] in '/\\':
         #     special = 2
+        elif not text[i-1].isalnum() :    # ;,"':...
+            special = 2
         else:
             special = 0
         d = -2      # -0b10 or ~1

@@ -91,7 +91,7 @@ g:Lf_ShowRelativePath                           *g:Lf_ShowRelativePath*
 
 g:Lf_DefaultMode                                *g:Lf_DefaultMode*
     Specify the default mode when LeaderF is launched.
-    There are 3 modes, and the corresponding values are:
+    There are 4 modes, and the corresponding values are:
     'NameOnly' - fuzzy mode, match file name only when searching
     'FullPath' - fuzzy mode, match full path when searching
     'Fuzzy' - fuzzy mode, when lines in the result are not file path

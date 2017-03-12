@@ -205,6 +205,7 @@ command! -bar -nargs=0 LeaderfBuffer call leaderf#startBufExpl(g:Lf_WindowPositi
 command! -bar -nargs=0 LeaderfBufferAll call leaderf#startBufExpl(g:Lf_WindowPosition, 1)
 command! -bar -nargs=0 LeaderfMru call leaderf#startMruExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfMruCwd call leaderf#startMruExpl(g:Lf_WindowPosition, 1)
+command! -bar -nargs=0 LeaderfTag call leaderf#startTagExpl(g:Lf_WindowPosition)
 
 
 exec 'nnoremap <silent> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'

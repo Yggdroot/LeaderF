@@ -36,6 +36,9 @@ if has("syntax")
     highlight def link Lf_hl_bufModified        String
     highlight def link Lf_hl_bufNomodifiable    Comment
     highlight def link Lf_hl_bufDirname         Directory
+    highlight def link Lf_hl_tagFile            Directory
+    highlight def link Lf_hl_tagType            Type
+    highlight def link Lf_hl_tagKeyword         Keyword
 endif
 
 let b:current_syntax = "leaderf"
