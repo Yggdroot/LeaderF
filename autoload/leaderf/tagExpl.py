@@ -89,7 +89,7 @@ class TagExplManager(Manager):
             pattern = "\M" + tagaddress[1:-1]
             lfCmd("call search('%s', 'w')" % escQuote(pattern))
 
-        if lfEval("search('\V%s', 'Wc')" % escQuote(tagname)) == '0':
+        if lfEval("search('\V%s', 'wc')" % escQuote(tagname)) == '0':
             lfCmd("norm! ^")
 
     def _getDigest(self, line, mode):
