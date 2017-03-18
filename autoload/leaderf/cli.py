@@ -291,6 +291,7 @@ class LfCli(object):
                 self._buildPrompt()
                 self._idle = False
 
+                lfCmd("sleep 1m")
                 lfCmd("let nr = getchar(1)")
                 if lfEval("!type(nr) && nr == 0") == '1':
                     self._idle = True
