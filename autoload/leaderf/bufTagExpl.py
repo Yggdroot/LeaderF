@@ -117,10 +117,11 @@ class BufTagExplorer(Explorer):
                                                   )
             tag_list.append(line)
             if self._supports_preview:
-                code = "{:{taglen}s}\t{}".format(' ' * len(item[0]),
-                                                 buffer[int(item[2][:-2]) - 1].lstrip(),
-                                                 taglen=tag_len
-                                                 )
+                # code = "{:{taglen}s}\t{}".format(' ' * len(item[0]),
+                #                                  buffer[int(item[2][:-2]) - 1].lstrip(),
+                #                                  taglen=tag_len
+                #                                  )
+                code = "\t\t{}".format(buffer[int(item[2][:-2]) - 1].lstrip())
                 tag_list.append(code)
 
         self._tag_list[buffer.number] = tag_list
