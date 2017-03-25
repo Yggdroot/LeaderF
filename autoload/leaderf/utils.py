@@ -5,6 +5,7 @@ import vim
 import sys
 import re
 import os
+import os.path
 import locale
 
 lfCmd = vim.command
@@ -85,3 +86,9 @@ def equal(str1, str2, ignorecase=True):
         return str1.upper() == str2.upper()
     else:
         return str1 == str2
+
+def lfRelpath(path, start=os.curdir):
+    try:
+        return lfEncode(os.path.relpath(lfDecode(path), start))
+    except ValueError:
+        return path

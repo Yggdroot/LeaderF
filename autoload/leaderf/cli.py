@@ -39,6 +39,7 @@ class LfCli(object):
         self._refine = False
         self._delimiter = lfEval("g:Lf_DelimiterChar")
         self._supports_nameonly = False
+        self._supports_refine = False
         self._setDefaultMode()
 
     def _setDefaultMode(self):
@@ -132,8 +133,8 @@ class LfCli(object):
     def _buildPattern(self):
         if self._is_fuzzy:
             # supports refinement only in nameOnly mode
-            if (self._supports_nameonly and not self._is_full_path and
-                    self._delimiter in self._cmdline):
+            if (((self._supports_nameonly and not self._is_full_path) or
+                    self._supports_refine) and self._delimiter in self._cmdline):
                 self._refine = True
                 idx = self._cmdline.index(self._delimiter)
                 self._pattern = (''.join(self._cmdline[:idx]),
@@ -233,13 +234,8 @@ class LfCli(object):
                     regex = r'\c' + regex
 
                 try:
-                    if int(lfEval("v:version")) > 703:
-                        lfCmd("syn match Lf_hl_match '%s' containedin="
-                              "Lf_hl_dirname, Lf_hl_filename contained" % regex)
-                    else:
-                        regex = re.sub(r'\\', r'\\\\', regex)
-                        lfEval("""g:LfNoErrMsgCmd("syn match Lf_hl_match '%s' """
-                               """containedin=Lf_hl_dirname, Lf_hl_filename contained")""" % regex)
+                    lfCmd("syn match Lf_hl_match '%s' containedin="
+                          "Lf_hl_dirname, Lf_hl_filename contained" % regex)
                 except vim.error:
                     pass
 
@@ -249,6 +245,9 @@ class LfCli(object):
 
     def setNameOnlyFeature(self, state):
         self._supports_nameonly = state
+
+    def setRefineFeature(self, state):
+        self._supports_refine = state
 
     @property
     def isPrefix(self): #assume that there are no \%23l, \%23c, \%23v, \%...

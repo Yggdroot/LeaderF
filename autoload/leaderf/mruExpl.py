@@ -42,10 +42,7 @@ class MruExplorer(Explorer):
                                     for line in lines)
         for i, line in enumerate(lines):
             if lfEval("g:Lf_ShowRelativePath") == '1':
-                try:
-                    line = lfEncode(os.path.relpath(lfDecode(line), os.getcwd()))
-                except ValueError:
-                    pass
+                line = lfRelpath(line)
             basename = getBasename(line)
             dirname = getDirname(line)
             space_num = self._max_bufname_len \
@@ -108,7 +105,10 @@ class MruExplManager(Manager):
         line = args[0]
         dirname = self._getDigest(line, 2)
         basename = self._getDigest(line, 1)
-        lfCmd("hide edit %s" % escSpecial(dirname + basename))
+        try:
+            lfCmd("hide edit %s" % escSpecial(dirname + basename))
+        except: # E37
+            pass
 
     def _getDigest(self, line, mode):
         """

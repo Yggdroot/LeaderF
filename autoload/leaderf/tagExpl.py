@@ -5,11 +5,9 @@ import vim
 import re
 import os
 import os.path
-from functools import wraps
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
-from leaderf.mru import *
 
 
 #*****************************************************
@@ -65,7 +63,10 @@ class TagExplManager(Manager):
         tagname, tagfile, right = line.split('\t', 2)
         res = right.split(';"\t', 1)
         tagaddress = res[0]
-        lfCmd("hide edit %s" % escSpecial(tagfile))
+        try:
+            lfCmd("hide edit %s" % escSpecial(tagfile))
+        except: # E37
+            pass
         if tagaddress[0] not in '/?':
             lfCmd(tagaddress)
         else:
@@ -75,8 +76,8 @@ class TagExplManager(Manager):
             if len(res) > 1:
                 result = re.search('(?<=\t)line:\d+', res[1])
                 if result:
-                    line_num = result.group(0).split(':')[1]
-                    lfCmd(line_num)
+                    line_nr = result.group(0).split(':')[1]
+                    lfCmd(line_nr)
                 else: # for c, c++
                     keyword = "(class|enum|struct|union)"
                     result = re.search('(?<=\t)%s:\S+' % keyword, res[1])
@@ -91,6 +92,7 @@ class TagExplManager(Manager):
 
         if lfEval("search('\V%s', 'wc')" % escQuote(tagname)) == '0':
             lfCmd("norm! ^")
+        lfCmd("norm! zz")
 
     def _getDigest(self, line, mode):
         """

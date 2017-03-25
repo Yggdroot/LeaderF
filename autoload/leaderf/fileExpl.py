@@ -169,7 +169,7 @@ class FileExplorer(Explorer):
                       "'Unknown directory `%s`' | echohl NONE" % args[0])
                 return None
         dir = os.getcwd()
-        if lfEval("g:Lf_UseMemoryCache") == 0 or dir != self._cur_dir:
+        if lfEval("g:Lf_UseMemoryCache") == '0' or dir != self._cur_dir:
             self._cur_dir = dir
             self._content = self._getFileList(dir)
         return self._content

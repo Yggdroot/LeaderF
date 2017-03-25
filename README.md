@@ -1,10 +1,10 @@
 LeaderF
 =======
 
-This plugin is mainly used for locating files, buffers, mrus in large project.
+This plugin is mainly used for locating files, buffers, mrus, tags in large project.
 
  - Written in Python.
- - Support for fuzzy and regex searching.
+ - Support fuzzy and regex searching.
  - Manage buffers and mrus.
  - Open multiple files at once.
  - Extensible.
@@ -39,12 +39,18 @@ Usage
 
  - `:LeaderfMru`<br>
  Launch LeaderF to search Mru.
- 
+
  - `:LeaderfMruCwd`<br>
  Launch LeaderF to search Mru in current working directory.
 
  - `:LeaderfTag`<br>
  Launch LeaderF to navigate tags.
+
+ - `:LeaderfBufTag`<br>
+ Launch LeaderF to navigate tags of current buffer.
+
+ - `:LeaderfBufTagAll`<br>
+ Launch LeaderF to navigate tags of all opening buffers.
 
 Once LeaderF is launched:
 

@@ -1,4 +1,4 @@
-*leaderf.txt*   Quickly locate files, buffers, mrus, ... in large project.
+*leaderf.txt*   Quickly locate files, buffers, mrus, tags, ... in large project.
 *leaderf* *LeaderF*
 ==============================================================================
 /      '7MMF'                            '7MM                `7MM"""YMM      /
@@ -21,10 +21,10 @@ Credits                                         |leaderf-credits|
 ==============================================================================
 INTRODUCTION                                    *leaderf-introduction*
 
-This plugin is mainly used for locating files, buffers, mrus in large project.
+This plugin is mainly used for locating files, buffers, mrus, tags in large project.
 
 - Written in Python.
-- Support for fuzzy and regex searching.
+- Support fuzzy and regex searching.
 - Manage buffers and mrus.
 - Open multiple files at once.
 - Extensible.
@@ -115,7 +115,7 @@ g:Lf_NeedCacheTime                              *g:Lf_NeedCacheTime*
     Default value is 1.5 seconds.
 
 g:Lf_NumberOfCache                              *g:Lf_NumberOfCache*
-    This option specify the number of cache.
+    This option specifies the number of cache.
     Default value is 5.
 
 g:Lf_UseMemoryCache                             *g:Lf_UseMemoryCache*
@@ -338,6 +338,19 @@ g:Lf_StlPalette                                 *g:Lf_StlPalette*
             \       'guibg': '#BAFFA3'
             \ }
 <
+g:Lf_Ctags                                      *g:Lf_Ctags*
+    Use this option to specify the ctags executable you use. If ctags is not
+    in one of the directories in your $PATH environment variable, you should
+    set it by yourself. e.g., >
+    let g:Lf_Ctags = "/usr/local/universal-ctags/ctags"
+<
+    Default value is "ctags".
+
+g:Lf_PreviewCode                                *g:Lf_PreviewCode*
+    Use this option to specify whether to show the preview of the code the tag
+    locates in when navigating the tags.
+    Default value is 1.
+
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
     prompt(|leaderf-prompt|).
@@ -362,6 +375,15 @@ USAGE                                           *leaderf-usage*
 
 :LeaderfMruCwd                                  *LeaderfMruCwd*
     Launch LeaderF to search Mru in current working directory.
+
+:LeaderfTag                                     *LeaderfTag*
+    Launch LeaderF to navigate tags.
+
+:LeaderfBufTag                                  *LeaderfBufTag*
+    Launch LeaderF to navigate tags of current buffer.
+
+:LeaderfBufTagAll                               *LeaderfBufTagAll*
+    Launch LeaderF to navigate tags of all opening buffers.
 
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C> : quit from LeaderF.

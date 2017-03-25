@@ -95,15 +95,17 @@ call s:InitVar('g:Lf_MruFileExclude', [])
 call s:InitVar('g:Lf_MruMaxFiles', 100)
 call s:InitVar('g:Lf_HighlightIndividual', 1)
 call s:InitVar('g:Lf_NumberOfHighlight', 100)
-call s:InitVar('g:Lf_WildIgnore',{
+call s:InitVar('g:Lf_WildIgnore', {
             \ 'dir': ['.svn','.git'],
             \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']
             \})
-call s:InitVar('g:Lf_StlSeparator',{
+call s:InitVar('g:Lf_StlSeparator', {
             \ 'left': '►',
             \ 'right': '◄'
             \})
-call s:InitVar('g:Lf_StlPalette',{})
+call s:InitVar('g:Lf_StlPalette', {})
+call s:InitVar('g:Lf_Ctags', 'ctags')
+call s:InitVar('g:Lf_PreviewCode', 1)
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
@@ -206,6 +208,8 @@ command! -bar -nargs=0 LeaderfBufferAll call leaderf#startBufExpl(g:Lf_WindowPos
 command! -bar -nargs=0 LeaderfMru call leaderf#startMruExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfMruCwd call leaderf#startMruExpl(g:Lf_WindowPosition, 1)
 command! -bar -nargs=0 LeaderfTag call leaderf#startTagExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfBufTag call leaderf#startBufTagExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfBufTagAll call leaderf#startBufTagExpl(g:Lf_WindowPosition, 1)
 
 
 exec 'nnoremap <silent> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'

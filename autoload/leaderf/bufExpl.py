@@ -44,10 +44,7 @@ class BufferExplorer(Explorer):
                 if not buf_name:
                     buf_name = "[No Name]"
                 if lfEval("g:Lf_ShowRelativePath") == '1':
-                    try:
-                        buf_name = lfEncode(os.path.relpath(lfDecode(buf_name), os.getcwd()))
-                    except ValueError:
-                        pass
+                    buf_name = lfRelpath(buf_name)
                 basename = getBasename(buf_name)
                 dirname = getDirname(buf_name)
                 space_num = self._max_bufname_len \

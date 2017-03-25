@@ -72,6 +72,7 @@ class LfInstance(object):
         lfCmd("setlocal nowrap")
         lfCmd("setlocal nofoldenable")
         lfCmd("setlocal foldcolumn=0")
+        lfCmd("setlocal shiftwidth=4")
         lfCmd("setlocal cursorline")
         lfCmd("setlocal filetype=leaderf")
 

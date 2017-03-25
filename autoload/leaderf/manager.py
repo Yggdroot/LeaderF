@@ -69,7 +69,10 @@ class Manager(object):
         if len(args) == 0:
             return
         file = args[0]
-        lfCmd("hide edit %s" % escSpecial(file))
+        try:
+            lfCmd("hide edit %s" % escSpecial(file))
+        except: # E37
+            pass
 
     def _getDigest(self, line, mode):
         """
@@ -129,6 +132,24 @@ class Manager(object):
 
     def _afterExit(self):
         pass
+
+    def _getList(self, pairs):
+        """
+        this function can be overridden
+        return a list constructed from pairs
+        Args:
+            pairs: a list of tuple(weight, line, ...)
+        """
+        return [p[1] for p in pairs]
+
+    def _getUnit(self):
+        """
+        indicates how many lines are considered as a unit
+        """
+        return 1
+
+    def _supportsRefine(self):
+        return False
 
     #**************************************************************
 
@@ -214,6 +235,8 @@ class Manager(object):
                 return an iterable.
             content: The list to be filtered.
         """
+        unit = self._getUnit()
+        step = step // unit * unit
         length = len(content)
         cb = self._getInstance().buffer
         result = []
@@ -230,8 +253,9 @@ class Manager(object):
                 result.extend(filter_method(content[self._index:end]))
                 self._index = end
 
+        step = 5000 // unit * unit
         while len(result) < 200 and self._index < length:
-            end = self._index + 5000
+            end = self._index + step
             result.extend(filter_method(content[self._index:end]))
             self._index = end
 
@@ -291,7 +315,7 @@ class Manager(object):
 
         pairs = self._filter(30000, filter_method, content)
         pairs.sort(key=operator.itemgetter(0), reverse=True)
-        self._getInstance().setBuffer([p[1] for p in pairs])
+        self._getInstance().setBuffer(self._getList(pairs))
         highlight_method()
 
     def _clearHighlights(self):
@@ -333,17 +357,19 @@ class Manager(object):
 
         getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
 
+        unit = self._getUnit()
+
         # e.g., self._highlight_pos = [ [ [2,3], [6,2] ], [ [1,4], [7,6], ... ], ... ]
         # where [2, 3] indicates the highlight starts at the 2nd column with the
         # length of 3 in bytes
         self._highlight_pos = [get_highlights(getDigest(line))
-                               for line in cb[:highlight_number]]
-        for i, pos in enumerate(self._highlight_pos, 1):
-            start_pos = self._getDigestStartPos(cb[i-1], 0 if is_full_path else 1)
+                               for line in cb[:][:highlight_number:unit]]
+        for i, pos in enumerate(self._highlight_pos):
+            start_pos = self._getDigestStartPos(cb[unit*i], 0 if is_full_path else 1)
             if start_pos > 0:
                 for j in range(len(pos)):
                     pos[j][0] += start_pos
-            pos = [[i] + p for p in pos]
+            pos = [[unit*i+1] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
                 id = int(lfEval("matchaddpos('Lf_hl_match', %s)" % str(pos[j:j+8])))
@@ -362,27 +388,28 @@ class Manager(object):
         self._clearHighlights()
 
         getDigest = self._getDigest
+        unit = self._getUnit()
         self._highlight_pos = [first_get_highlights(getDigest(line, 1))
-                               for line in cb[:highlight_number]]
-        for i, pos in enumerate(self._highlight_pos, 1):
-            start_pos = self._getDigestStartPos(cb[i-1], 1)
+                               for line in cb[:][:highlight_number:unit]]
+        for i, pos in enumerate(self._highlight_pos):
+            start_pos = self._getDigestStartPos(cb[unit*i], 1)
             if start_pos > 0:
                 for j in range(len(pos)):
                     pos[j][0] += start_pos
-            pos = [[i] + p for p in pos]
+            pos = [[unit*i+1] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
                 id = int(lfEval("matchaddpos('Lf_hl_match', %s)" % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
         self._highlight_refine_pos = [get_highlights(getDigest(line, 2))
-                                      for line in cb[:highlight_number]]
-        for i, pos in enumerate(self._highlight_refine_pos, 1):
-            start_pos = self._getDigestStartPos(cb[i-1], 2)
+                                      for line in cb[:][:highlight_number:unit]]
+        for i, pos in enumerate(self._highlight_refine_pos):
+            start_pos = self._getDigestStartPos(cb[unit*i], 2)
             if start_pos > 0:
                 for j in range(len(pos)):
                     pos[j][0] += start_pos
-            pos = [[i] + p for p in pos]
+            pos = [[unit*i+1] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
                 id = int(lfEval("matchaddpos('Lf_hl_matchRefine', %s)" % str(pos[j:j+8])))
@@ -396,7 +423,7 @@ class Manager(object):
                 return (line for line in iterable
                         if '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" %
                         (escQuote(self._getDigest(line, 0).strip()),
-                        escQuote(self._cli.pattern))))
+                         escQuote(self._cli.pattern))))
         except vim.error:
             return iter([])
 
@@ -416,6 +443,7 @@ class Manager(object):
         self.clearSelections()
         self._clearHighlights()
         self._clearHighlightsPos()
+        self._help_length = 0
 
     @modifiableController
     def toggleHelp(self):
@@ -425,27 +453,24 @@ class Manager(object):
         self.clearSelections()
         self._resetHighlights()
 
-    def _accept(self, file, mode):
-        try:
-            if file:
-                if mode == '':
-                    pass
-                elif mode == 'h':
-                    lfCmd("split")
-                elif mode == 'v':
-                    lfCmd("vsplit")
-                elif mode == 't':
-                    lfCmd("tabedit")
-                    tab_pos = int(lfEval("g:Lf_TabpagePosition"))
-                    if tab_pos == 0:
-                        lfCmd("tabm 0")
-                    elif tab_pos == 1:
-                        lfCmd("tabm -1")
-                    elif tab_pos == 3:
-                        lfCmd("tabm")
-                self._acceptSelection(file)
-        except (KeyboardInterrupt, vim.error):
-            pass
+    def _accept(self, file, mode, *args, **kwargs):
+        if file:
+            if mode == '':
+                pass
+            elif mode == 'h':
+                lfCmd("split")
+            elif mode == 'v':
+                lfCmd("vsplit")
+            elif mode == 't':
+                lfCmd("tabedit")
+                tab_pos = int(lfEval("g:Lf_TabpagePosition"))
+                if tab_pos == 0:
+                    lfCmd("tabm 0")
+                elif tab_pos == 1:
+                    lfCmd("tabm -1")
+                elif tab_pos == 3:
+                    lfCmd("tabm")
+            self._acceptSelection(file, *args, **kwargs)
 
     def accept(self, mode=''):
         if self._getInstance().window.cursor[0] <= self._help_length:
@@ -464,8 +489,9 @@ class Manager(object):
                     self._accept(file, mode)
         else:
             file = self._getInstance().currentLine
+            line_nr = self._getInstance().window.cursor[0]
             self._getInstance().exitBuffer()
-            self._accept(file, mode)
+            self._accept(file, mode, self._getInstance().buffer, line_nr)
 
         self._setAutochdir()
 
@@ -540,6 +566,7 @@ class Manager(object):
 
     def startExplorer(self, win_pos, *args, **kwargs):
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
+        self._cli.setRefineFeature(self._supportsRefine())
         lfCmd("echohl WarningMsg | redraw |"
               "echo ' searching ...' | echohl NONE")
         self._content = self._getExplorer().getContent(*args, **kwargs)
@@ -551,7 +578,7 @@ class Manager(object):
         self._getInstance().setStlCategory(self._getExplorer().getStlCategory())
         self._setStlMode()
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
-        self._getInstance().setStlTotal(len(self._content))
+        self._getInstance().setStlTotal(len(self._content) // self._getUnit())
 
         self._getInstance().setBuffer(self._content)
         lfCmd("normal! gg")

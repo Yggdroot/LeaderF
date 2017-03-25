@@ -39,6 +39,12 @@ if has("syntax")
     highlight def link Lf_hl_tagFile            Directory
     highlight def link Lf_hl_tagType            Type
     highlight def link Lf_hl_tagKeyword         Keyword
+    highlight def link Lf_hl_buftagKind         Title
+    highlight def link Lf_hl_buftagScopeType    Keyword
+    highlight def link Lf_hl_buftagScope        Type
+    highlight def link Lf_hl_buftagDirname      Directory
+    highlight def link Lf_hl_buftagLineNum      Constant
+    highlight def link Lf_hl_buftagCode         Comment
 endif
 
 let b:current_syntax = "leaderf"
