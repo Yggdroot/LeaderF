@@ -380,10 +380,10 @@ USAGE                                           *leaderf-usage*
     Launch LeaderF to navigate tags.
 
 :LeaderfBufTag                                  *LeaderfBufTag*
-    Launch LeaderF to navigate tags of current buffer.
+    Launch LeaderF to navigate tags in current buffer.
 
 :LeaderfBufTagAll                               *LeaderfBufTagAll*
-    Launch LeaderF to navigate tags of all opening buffers.
+    Launch LeaderF to navigate tags in all opening buffers.
 
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C> : quit from LeaderF.

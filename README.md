@@ -47,10 +47,10 @@ Usage
  Launch LeaderF to navigate tags.
 
  - `:LeaderfBufTag`<br>
- Launch LeaderF to navigate tags of current buffer.
+ Launch LeaderF to navigate tags in current buffer.
 
  - `:LeaderfBufTagAll`<br>
- Launch LeaderF to navigate tags of all opening buffers.
+ Launch LeaderF to navigate tags in all opening buffers.
 
 Once LeaderF is launched:
 
