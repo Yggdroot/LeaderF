@@ -3,6 +3,7 @@
 
 import vim
 import re
+import time
 from datetime import datetime
 from functools import wraps
 from leaderf.utils import *
@@ -290,7 +291,7 @@ class LfCli(object):
                 self._buildPrompt()
                 self._idle = False
 
-                lfCmd("sleep 1m")
+                time.sleep(0.001)
                 lfCmd("let nr = getchar(1)")
                 if lfEval("!type(nr) && nr == 0") == '1':
                     self._idle = True
