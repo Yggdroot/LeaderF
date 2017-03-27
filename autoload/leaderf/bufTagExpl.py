@@ -22,8 +22,9 @@ class BufTagExplorer(Explorer):
         self._tag_list = {}        # a dict with (key, value) = (buffer number, taglist)
         self._buf_changedtick = {} # a dict with (key, value) = (buffer number, changedtick)
         for buf in vim.buffers:
-            changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % buf.number))
-            self._buf_changedtick[buf.number] = changedtick
+            if buf.options["buflisted"]:
+                changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % buf.number))
+                self._buf_changedtick[buf.number] = changedtick
 
     def getContent(self, *args, **kwargs):
         tag_list = []
@@ -136,6 +137,13 @@ class BufTagExplorer(Explorer):
 
     def isFilePath(self):
         return False
+
+    def removeCache(self, buf_number):
+        if buf_number in self._tag_list:
+            del self._tag_list[buf_number]
+
+        if buf_number in self._buf_changedtick:
+            del self._buf_changedtick[buf_number]
 
 
 #*****************************************************
@@ -317,6 +325,10 @@ class BufTagExplManager(Manager):
                 lfCmd("norm! 2j")
         else:
             super(BufTagExplManager, self)._toDown()
+
+    def removeCache(self, buf_number):
+        self._getExplorer().removeCache(buf_number)
+
 
 #*****************************************************
 # bufTagExplManager is a singleton

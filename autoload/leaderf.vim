@@ -128,6 +128,10 @@ function! leaderf#startTagExpl(win_pos, ...)
     call leaderf#LfPy("tagExplManager.startExplorer('".a:win_pos."')")
 endfunction
 
+function! leaderf#removeCache(bufNum)
+    call leaderf#LfPy("bufTagExplManager.removeCache(".a:bufNum.")")
+endfunction
+
 function! leaderf#startBufTagExpl(win_pos, ...)
     if a:0 == 0
         call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."')")

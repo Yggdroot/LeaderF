@@ -182,6 +182,8 @@ call s:InitCommandMap('g:Lf_CommandMap', s:Lf_CommandMap)
 autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
             \ call lfMru#recordBuffer(expand('<abuf>'))
 
+autocmd BufWipeout * call leaderf#removeCache(expand('<abuf>'))
+
 nnoremap <silent> <Plug>LeaderfFileTop :<C-U>call leaderf#startFileExpl('top')<CR>
 nnoremap <silent> <Plug>LeaderfFileBottom :<C-U>call leaderf#startFileExpl('bottom')<CR>
 nnoremap <silent> <Plug>LeaderfFileLeft :<C-U>call leaderf#startFileExpl('left')<CR>
