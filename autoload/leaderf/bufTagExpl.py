@@ -33,12 +33,7 @@ class BufTagExplorer(Explorer):
             for b in vim.buffers:
                 if b.options["buflisted"]:
                     if lfEval("bufloaded(%d)" % b.number) == '0':
-                        saved_eventignore = vim.options["eventignore"]
-                        vim.options["eventignore"] = "all"
-                        try:
-                            lfCmd("silent hide buffer %d" % b.number)
-                        finally:
-                            vim.options["eventignore"] = saved_eventignore
+                        lfCmd("silent hide buffer %d" % b.number)
                     tag_list.extend(self._getTaglist(b))
             if vim.current.buffer is not cur_buffer:
                 vim.current.buffer = cur_buffer
