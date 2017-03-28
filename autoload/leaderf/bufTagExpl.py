@@ -29,9 +29,19 @@ class BufTagExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         tag_list = []
         if len(args) > 0: # all buffers
+            cur_buffer = vim.current.buffer
             for b in vim.buffers:
                 if b.options["buflisted"]:
+                    if lfEval("bufloaded(%d)" % b.number) == '0':
+                        saved_eventignore = vim.options["eventignore"]
+                        vim.options["eventignore"] = "all"
+                        try:
+                            lfCmd("silent hide buffer %d" % b.number)
+                        finally:
+                            vim.options["eventignore"] = saved_eventignore
                     tag_list.extend(self._getTaglist(b))
+            if vim.current.buffer is not cur_buffer:
+                vim.current.buffer = cur_buffer
         else:
             tag_list = self._getTaglist(vim.current.buffer)
         return tag_list
@@ -321,8 +331,7 @@ class BufTagExplManager(Manager):
 
     def _toDown(self):
         if self._supports_preview:
-            if lfEval("line('$') - line('.') > 2") == '1':
-                lfCmd("norm! 2j")
+            lfCmd("norm! 3jk")
         else:
             super(BufTagExplManager, self)._toDown()
 
