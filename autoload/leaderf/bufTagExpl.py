@@ -54,8 +54,8 @@ class BufTagExplorer(Explorer):
 
         # {tagname}<Tab>{tagfile}<Tab>{tagaddress}[;"<Tab>{tagfield}..]
         # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}<Tab>{scope}
-        process = subprocess.Popen("{} -n -u --fields=-ft+Ks {} -f- -L- ".format(self._ctags,
-                                                                                 extra_options),
+        process = subprocess.Popen("{} -n -u --fields=Ks {} -f- -L- ".format(self._ctags,
+                                                                             extra_options),
                                    shell=True,
                                    stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE,
