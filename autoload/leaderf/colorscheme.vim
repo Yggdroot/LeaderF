@@ -69,7 +69,12 @@ function! leaderf#colorscheme#highlight(category)
             let s:palette = g:leaderf#colorscheme#{g:colors_name}#palette
         catch /^Vim\%((\a\+)\)\=:E121/
             echohl WarningMsg
-            echo "Could not load colorscheme '".g:colors_name."', use 'default'."
+            try
+                echo "Could not load colorscheme '".g:colors_name."', use 'default'."
+            catch /^Vim\%((\a\+)\)\=:E121/
+                echo "Could not load colorscheme, use 'default'."
+            endtry
+            sleep 1
             echohl None
 
             let s:palette = g:leaderf#colorscheme#default#palette
