@@ -172,9 +172,9 @@ class FunctionExplManager(Manager):
                   2, return the remaining part
         """
         if mode == 0:
-            return line
+            return line[2:]
         elif mode == 1:
-            return line.rsplit("\t", 1)[0]
+            return line.rsplit("\t", 1)[0][2:]
         else:
             return line.rsplit("\t", 1)[1][1:-1]
 
@@ -187,9 +187,9 @@ class FunctionExplManager(Manager):
                   2, return the start position remaining part
         """
         if mode == 0:
-            return 0
+            return 2
         elif mode == 1:
-            return 0
+            return 2
         else:
             return len(line.rsplit("\t", 1)[0]) + 2
 
