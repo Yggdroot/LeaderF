@@ -159,7 +159,7 @@ class FunctionExplManager(Manager):
         # {kind} {code} {file} {line}
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line
         tagfile, line_nr = line.rsplit(":", 1)
-        lfCmd("hide buffer +%s %s" % (line_nr, escSpecial(tagfile)))
+        lfCmd("hide buffer +%s %s" % (line_nr, escSpecial(os.path.abspath(tagfile))))
         lfCmd("norm! ^")
         lfCmd("norm! zz")
 

@@ -73,6 +73,7 @@ function! leaderf#colorscheme#highlight(category)
                 echo "Could not load colorscheme '".g:colors_name."', use 'default'."
             catch /^Vim\%((\a\+)\)\=:E121/
                 echo "Could not load colorscheme, use 'default'."
+                let g:colors_name = "default"
             endtry
             sleep 1
             echohl None

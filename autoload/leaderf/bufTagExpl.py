@@ -178,7 +178,7 @@ class BufTagExplManager(Manager):
         items = re.split(" *\t *", line)
         tagname = items[0]
         tagfile, line_nr = items[3:]
-        lfCmd("hide buffer +%s %s" % (line_nr, escSpecial(tagfile)))
+        lfCmd("hide buffer +%s %s" % (line_nr, escSpecial(os.path.abspath(tagfile))))
         lfCmd("norm! ^")
         lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
         lfCmd("norm! zz")
