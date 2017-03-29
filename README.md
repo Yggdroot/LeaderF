@@ -52,6 +52,12 @@ Usage
  - `:LeaderfBufTagAll`<br>
  Launch LeaderF to navigate tags in all opening buffers.
 
+ - `:LeaderfFunction`<br>
+ Launch LeaderF to navigate functions or methods in current buffer.
+
+ - `:LeaderfFunctionAll`<br>
+ Launch LeaderF to navigate functions or methods in all opening buffers.
+
 Once LeaderF is launched:
 
  - `<C-C>` : quit from LeaderF.

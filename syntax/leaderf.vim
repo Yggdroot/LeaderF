@@ -29,8 +29,8 @@ if has("syntax")
     highlight def Lf_hl_selection guibg=#A5EB84 guifg=Black ctermbg=156 ctermfg=Black
     highlight def link Lf_hl_help               comment
     highlight def link Lf_hl_helpCmd            Identifier
-    highlight def Lf_hl_match gui=bold guifg=LightGreen cterm=bold ctermfg=LightGreen
-    highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=Magenta
+    highlight def Lf_hl_match gui=bold guifg=SpringGreen cterm=bold ctermfg=49
+    highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
     highlight def link Lf_hl_bufNumber          Constant
     highlight def link Lf_hl_bufIndicators      Statement
     highlight def link Lf_hl_bufModified        String
@@ -45,6 +45,12 @@ if has("syntax")
     highlight def link Lf_hl_buftagDirname      Directory
     highlight def link Lf_hl_buftagLineNum      Constant
     highlight def link Lf_hl_buftagCode         Comment
+    highlight def link Lf_hl_funcKind           Title
+    highlight def link Lf_hl_funcReturnType     Type
+    highlight def link Lf_hl_funcScope          Keyword
+    highlight def link Lf_hl_funcName           Function
+    highlight def link Lf_hl_funcDirname        Directory
+    highlight def link Lf_hl_funcLineNum        Constant
 endif
 
 let b:current_syntax = "leaderf"

@@ -186,7 +186,7 @@ g:Lf_StlColorscheme                             *g:Lf_StlColorscheme*
     let g:Lf_StlColorscheme = 'powerline'
 <
     The colorscheme files can be found in the directory >
-	"LeaderF/autoload/leaderf/colorscheme/"
+    "LeaderF/autoload/leaderf/colorscheme/"
 <
     Default value is 'default'.
 
@@ -384,6 +384,12 @@ USAGE                                           *leaderf-usage*
 
 :LeaderfBufTagAll                               *LeaderfBufTagAll*
     Launch LeaderF to navigate tags in all opening buffers.
+
+:LeaderfFunction                                *LeaderfFunction*
+    Launch LeaderF to navigate functions or methods in current buffer.
+
+:LeaderfFunctionAll                             *LeaderfFunctionAll*
+    Launch LeaderF to navigate functions or methods in all opening buffers.
 
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C> : quit from LeaderF.

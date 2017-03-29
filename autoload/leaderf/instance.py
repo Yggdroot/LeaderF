@@ -126,6 +126,7 @@ class LfInstance(object):
                   .format(self._category))
             lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlightMode('{0}', g:Lf_{0}_StlMode)"
                   .format(self._category))
+            lfCmd("autocmd ColorScheme <buffer> doautocmd syntax")
 
     def _enterOpeningBuffer(self):
         if (self._tabpage_object and self._tabpage_object.valid

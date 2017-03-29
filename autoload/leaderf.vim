@@ -15,6 +15,7 @@ exec g:Lf_py "from leaderf.fileExpl import *"
 exec g:Lf_py "from leaderf.mruExpl import *"
 exec g:Lf_py "from leaderf.tagExpl import *"
 exec g:Lf_py "from leaderf.bufTagExpl import *"
+exec g:Lf_py "from leaderf.functionExpl import *"
 
 
 function! leaderf#fileExplMaps()
@@ -80,7 +81,6 @@ function! leaderf#tagExplMaps()
     nnoremap <buffer> <silent> <F5>          :exec g:Lf_py "tagExplManager.refresh()"<CR>
 endfunction
 
-
 function! leaderf#bufTagExplMaps()
     nmapclear <buffer>
     nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "bufTagExplManager.accept()"<CR>
@@ -92,6 +92,19 @@ function! leaderf#bufTagExplMaps()
     nnoremap <buffer> <silent> q             :exec g:Lf_py "bufTagExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "bufTagExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "bufTagExplManager.toggleHelp()"<CR>
+endfunction
+
+function! leaderf#functionExplMaps()
+    nmapclear <buffer>
+    nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "functionExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> o             :exec g:Lf_py "functionExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "functionExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> x             :exec g:Lf_py "functionExplManager.accept('h')"<CR>
+    nnoremap <buffer> <silent> v             :exec g:Lf_py "functionExplManager.accept('v')"<CR>
+    nnoremap <buffer> <silent> t             :exec g:Lf_py "functionExplManager.accept('t')"<CR>
+    nnoremap <buffer> <silent> q             :exec g:Lf_py "functionExplManager.quit()"<CR>
+    nnoremap <buffer> <silent> i             :exec g:Lf_py "functionExplManager.input()"<CR>
+    nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "functionExplManager.toggleHelp()"<CR>
 endfunction
 
 function! leaderf#LfPy(cmd)
@@ -130,6 +143,7 @@ endfunction
 
 function! leaderf#removeCache(bufNum)
     call leaderf#LfPy("bufTagExplManager.removeCache(".a:bufNum.")")
+    call leaderf#LfPy("functionExplManager.removeCache(".a:bufNum.")")
 endfunction
 
 function! leaderf#startBufTagExpl(win_pos, ...)
@@ -137,5 +151,13 @@ function! leaderf#startBufTagExpl(win_pos, ...)
         call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."')")
     else
         call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."',"."1)")
+    endif
+endfunction
+
+function! leaderf#startFunctionExpl(win_pos, ...)
+    if a:0 == 0
+        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."')")
+    else
+        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."',"."1)")
     endif
 endfunction
