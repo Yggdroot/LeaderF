@@ -114,13 +114,14 @@ class BufTagExplorer(Explorer):
             num = std_tag_kind_len - tag_kind_len
             space_num = num if num > 0 else 0
             bufname = buffer.name if vim.options["autochdir"] else lfRelpath(buffer.name)
-            line = "{}{}\t{}\t{:2s}{}\t{}".format(tag_kind,
-                                                  ' ' * space_num,
-                                                  scope,          # scope
-                                                  ' ',
-                                                  bufname,        # file
-                                                  item[2][:-2]    # line
-                                                  )
+            line = "{}{}\t{}\t{:2s}{}:{}\t{}".format(tag_kind,
+                                                     ' ' * space_num,
+                                                     scope,          # scope
+                                                     ' ',
+                                                     bufname,        # file
+                                                     item[2][:-2],   # line
+                                                     buffer.number
+                                                     )
             tag_list.append(line)
             if self._supports_preview:
                 # code = "{:{taglen}s}\t{}".format(' ' * len(item[0]),
@@ -174,11 +175,12 @@ class BufTagExplManager(Manager):
             buffer = args[1]
             line_nr = args[2]
             line = buffer[line_nr - 2]
-        # {tag} {kind} {scope} {file} {line}
+        # {tag} {kind} {scope} {file}:{line} {buf_number}
         items = re.split(" *\t *", line)
         tagname = items[0]
-        tagfile, line_nr = items[3:]
-        lfCmd("hide buffer +%s %s" % (line_nr, escSpecial(os.path.abspath(tagfile))))
+        line_nr = items[3].rsplit(":", 1)[1]
+        buf_number = items[4]
+        lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         lfCmd("norm! ^")
         lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
         lfCmd("norm! zz")
@@ -235,7 +237,7 @@ class BufTagExplManager(Manager):
         self._match_ids.append(id)
         id = int(lfEval('''matchadd('Lf_hl_buftagDirname', '[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+')'''))
         self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagLineNum', '\d\+$')'''))
+        id = int(lfEval('''matchadd('Lf_hl_buftagLineNum', '\d\+\t\ze\d\+$')'''))
         self._match_ids.append(id)
         id = int(lfEval('''matchadd('Lf_hl_buftagCode', '^\s\+.*')'''))
         self._match_ids.append(id)

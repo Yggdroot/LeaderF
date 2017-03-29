@@ -110,11 +110,12 @@ class FunctionExplorer(Explorer):
         func_list = []
         for _, item  in enumerate(output):
             bufname = buffer.name if vim.options["autochdir"] else lfRelpath(buffer.name)
-            line = "{}\t{}\t[{}:{}]".format(item[3],
-                                            buffer[int(item[2][:-2]) - 1].strip(),
-                                            bufname,        # file
-                                            item[2][:-2]    # line
-                                            )
+            line = "{}\t{}\t[{}:{} {}]".format(item[3],
+                                               buffer[int(item[2][:-2]) - 1].strip(),
+                                               bufname,        # file
+                                               item[2][:-2],   # line
+                                               buffer.number
+                                               )
             func_list.append(line)
 
         self._func_list[buffer.number] = func_list
@@ -157,9 +158,9 @@ class FunctionExplManager(Manager):
             return
         line = args[0]
         # {kind} {code} {file} {line}
-        line = line.rsplit("\t", 1)[1][1:-1]    # file:line
-        tagfile, line_nr = line.rsplit(":", 1)
-        lfCmd("hide buffer +%s %s" % (line_nr, escSpecial(os.path.abspath(tagfile))))
+        line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
+        line_nr, buf_number = line.rsplit(":", 1)[1].split()
+        lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         lfCmd("norm! ^")
         lfCmd("norm! zz")
 
@@ -215,9 +216,9 @@ class FunctionExplManager(Manager):
         self._match_ids.append(id)
         id = int(lfEval('''matchadd('Lf_hl_funcName', '^\w\t.\{-}\s*\zs[~]\=\w\+\W\{-}\ze[(\[]')'''))
         self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_funcDirname', '\t\zs\[.*:\d\+]$')'''))
+        id = int(lfEval('''matchadd('Lf_hl_funcDirname', '\t\zs\[.*:\d\+ \d\+]$')'''))
         self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_funcLineNum', ':\zs\d\+\ze]$')'''))
+        id = int(lfEval('''matchadd('Lf_hl_funcLineNum', ':\zs\d\+\ze \d\+]$')'''))
         self._match_ids.append(id)
 
     def _beforeExit(self):
