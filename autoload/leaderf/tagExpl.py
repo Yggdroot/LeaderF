@@ -65,8 +65,8 @@ class TagExplManager(Manager):
         tagaddress = res[0]
         try:
             lfCmd("hide edit %s" % escSpecial(tagfile))
-        except: # E37
-            pass
+        except vim.error as e: # E37
+            print(e)
         if tagaddress[0] not in '/?':
             lfCmd(tagaddress)
         else:

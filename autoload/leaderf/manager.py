@@ -71,8 +71,8 @@ class Manager(object):
         file = args[0]
         try:
             lfCmd("hide edit %s" % escSpecial(file))
-        except: # E37
-            pass
+        except vim.error as e: # E37
+            print(e)
 
     def _getDigest(self, line, mode):
         """

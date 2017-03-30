@@ -107,8 +107,8 @@ class MruExplManager(Manager):
         basename = self._getDigest(line, 1)
         try:
             lfCmd("hide edit %s" % escSpecial(dirname + basename))
-        except: # E37
-            pass
+        except vim.error as e: # E37
+            print(e)
 
     def _getDigest(self, line, mode):
         """
