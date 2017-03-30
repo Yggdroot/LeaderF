@@ -214,6 +214,8 @@ command! -bar -nargs=0 LeaderfBufTag call leaderf#startBufTagExpl(g:Lf_WindowPos
 command! -bar -nargs=0 LeaderfBufTagAll call leaderf#startBufTagExpl(g:Lf_WindowPosition, 1)
 command! -bar -nargs=0 LeaderfFunction call leaderf#startFunctionExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfFunctionAll call leaderf#startFunctionExpl(g:Lf_WindowPosition, 1)
+command! -bar -nargs=0 LeaderfLine call leaderf#startLineExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfLineAll call leaderf#startLineExpl(g:Lf_WindowPosition, 1)
 
 
 exec 'nnoremap <silent> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'

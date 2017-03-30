@@ -51,6 +51,7 @@ if has("syntax")
     highlight def link Lf_hl_funcName           Function
     highlight def link Lf_hl_funcDirname        Directory
     highlight def link Lf_hl_funcLineNum        Constant
+    highlight def link Lf_hl_lineLocation       Comment
 endif
 
 let b:current_syntax = "leaderf"

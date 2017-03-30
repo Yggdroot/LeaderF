@@ -16,6 +16,7 @@ exec g:Lf_py "from leaderf.mruExpl import *"
 exec g:Lf_py "from leaderf.tagExpl import *"
 exec g:Lf_py "from leaderf.bufTagExpl import *"
 exec g:Lf_py "from leaderf.functionExpl import *"
+exec g:Lf_py "from leaderf.lineExpl import *"
 
 
 function! leaderf#fileExplMaps()
@@ -107,6 +108,19 @@ function! leaderf#functionExplMaps()
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "functionExplManager.toggleHelp()"<CR>
 endfunction
 
+function! leaderf#lineExplMaps()
+    nmapclear <buffer>
+    nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "lineExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> o             :exec g:Lf_py "lineExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "lineExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> x             :exec g:Lf_py "lineExplManager.accept('h')"<CR>
+    nnoremap <buffer> <silent> v             :exec g:Lf_py "lineExplManager.accept('v')"<CR>
+    nnoremap <buffer> <silent> t             :exec g:Lf_py "lineExplManager.accept('t')"<CR>
+    nnoremap <buffer> <silent> q             :exec g:Lf_py "lineExplManager.quit()"<CR>
+    nnoremap <buffer> <silent> i             :exec g:Lf_py "lineExplManager.input()"<CR>
+    nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "lineExplManager.toggleHelp()"<CR>
+endfunction
+
 function! leaderf#LfPy(cmd)
     exec g:Lf_py . a:cmd
 endfunction
@@ -159,5 +173,13 @@ function! leaderf#startFunctionExpl(win_pos, ...)
         call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."')")
     else
         call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."',"."1)")
+    endif
+endfunction
+
+function! leaderf#startLineExpl(win_pos, ...)
+    if a:0 == 0
+        call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."')")
+    else
+        call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."',"."1)")
     endif
 endfunction

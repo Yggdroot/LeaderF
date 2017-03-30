@@ -383,13 +383,19 @@ USAGE                                           *leaderf-usage*
     Launch LeaderF to navigate tags in current buffer.
 
 :LeaderfBufTagAll                               *LeaderfBufTagAll*
-    Launch LeaderF to navigate tags in all opening buffers.
+    Launch LeaderF to navigate tags in all listed buffers.
 
 :LeaderfFunction                                *LeaderfFunction*
     Launch LeaderF to navigate functions or methods in current buffer.
 
 :LeaderfFunctionAll                             *LeaderfFunctionAll*
-    Launch LeaderF to navigate functions or methods in all opening buffers.
+    Launch LeaderF to navigate functions or methods in all listed buffers.
+
+:LeaderfLine                                    *LeaderfLine*
+    Launch LeaderF to search a line in current buffer.
+
+:LeaderfLineAll                                 *LeaderfLineAll*
+    Launch LeaderF to search a line in all listed buffers.
 
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C> : quit from LeaderF.
