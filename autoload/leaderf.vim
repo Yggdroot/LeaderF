@@ -10,14 +10,13 @@
 exec g:Lf_py "import vim, sys"
 exec g:Lf_py "cwd = vim.eval('expand(\"<sfile>:p:h\")')"
 exec g:Lf_py "sys.path.insert(0, cwd)"
-exec g:Lf_py "from leaderf.bufExpl import *"
-exec g:Lf_py "from leaderf.fileExpl import *"
-exec g:Lf_py "from leaderf.mruExpl import *"
-exec g:Lf_py "from leaderf.tagExpl import *"
-exec g:Lf_py "from leaderf.bufTagExpl import *"
-exec g:Lf_py "from leaderf.functionExpl import *"
-exec g:Lf_py "from leaderf.lineExpl import *"
 
+function! s:ImportOnce(var, cmd)
+    if !exists(a:var)
+        exec 'let '.a:var.'= 1'
+        exec g:Lf_py a:cmd
+    endif
+endfunction
 
 function! leaderf#fileExplMaps()
     nmapclear <buffer>
@@ -126,6 +125,7 @@ function! leaderf#LfPy(cmd)
 endfunction
 
 function! leaderf#startFileExpl(win_pos, ...)
+    call s:ImportOnce("s:Lf_fileExpl_loaded", "from leaderf.fileExpl import *")
     if a:0 == 0
         call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."')")
     else
@@ -135,6 +135,7 @@ function! leaderf#startFileExpl(win_pos, ...)
 endfunction
 
 function! leaderf#startBufExpl(win_pos, ...)
+    call s:ImportOnce("s:Lf_bufExpl_loaded", "from leaderf.bufExpl import *")
     if a:0 == 0
         call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."')")
     else
@@ -144,6 +145,7 @@ function! leaderf#startBufExpl(win_pos, ...)
 endfunction
 
 function! leaderf#startMruExpl(win_pos, ...)
+    call s:ImportOnce("s:Lf_mruExpl_loaded", "from leaderf.mruExpl import *")
     if a:0 == 0
         call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name)")
     else
@@ -152,15 +154,21 @@ function! leaderf#startMruExpl(win_pos, ...)
 endfunction
 
 function! leaderf#startTagExpl(win_pos, ...)
+    call s:ImportOnce("s:Lf_tagExpl_loaded", "from leaderf.tagExpl import *")
     call leaderf#LfPy("tagExplManager.startExplorer('".a:win_pos."')")
 endfunction
 
 function! leaderf#removeCache(bufNum)
-    call leaderf#LfPy("bufTagExplManager.removeCache(".a:bufNum.")")
-    call leaderf#LfPy("functionExplManager.removeCache(".a:bufNum.")")
+    if exists("s:Lf_bufTagExpl_loaded")
+        call leaderf#LfPy("bufTagExplManager.removeCache(".a:bufNum.")")
+    endif
+    if exists("s:Lf_functionExpl_loaded")
+        call leaderf#LfPy("functionExplManager.removeCache(".a:bufNum.")")
+    endif
 endfunction
 
 function! leaderf#startBufTagExpl(win_pos, ...)
+    call s:ImportOnce("s:Lf_bufTagExpl_loaded", "from leaderf.bufTagExpl import *")
     if a:0 == 0
         call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."')")
     else
@@ -169,6 +177,7 @@ function! leaderf#startBufTagExpl(win_pos, ...)
 endfunction
 
 function! leaderf#startFunctionExpl(win_pos, ...)
+    call s:ImportOnce("s:Lf_functionExpl_loaded", "from leaderf.functionExpl import *")
     if a:0 == 0
         call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."')")
     else
@@ -177,6 +186,7 @@ function! leaderf#startFunctionExpl(win_pos, ...)
 endfunction
 
 function! leaderf#startLineExpl(win_pos, ...)
+    call s:ImportOnce("s:Lf_lineExpl_loaded", "from leaderf.lineExpl import *")
     if a:0 == 0
         call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."')")
     else
