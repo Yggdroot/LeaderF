@@ -10,7 +10,7 @@
 if exists('g:leaderf_loaded') || &compatible
     finish
 elseif v:version < 704 || v:version == 704 && has("patch330") == 0
-    echohl WarningMsg
+    echohl Error
     echo "LeaderF requires Vim 7.4.330+."
     echohl None
     finish
@@ -26,7 +26,7 @@ if !exists("g:Lf_PythonVersion")
         let g:Lf_PythonVersion = 2
         let g:Lf_py = "py "
     else
-        echohl WarningMsg
+        echohl Error
         echo "Error: LeaderF requires vim compiled with +python or +python3"
         echohl None
         finish
@@ -36,7 +36,7 @@ else
         if has("python")
             let g:Lf_py = "py "
         else
-            echohl WarningMsg
+            echohl Error
             echo 'LeaderF Error: has("python") == 0'
             echohl None
             finish
@@ -45,7 +45,7 @@ else
         if has("python3")
             let g:Lf_py = "py3 "
         else
-            echohl WarningMsg
+            echohl Error
             echo 'LeaderF Error: has("python3") == 0'
             echohl None
             finish
@@ -96,7 +96,7 @@ call s:InitVar('g:Lf_MruMaxFiles', 100)
 call s:InitVar('g:Lf_HighlightIndividual', 1)
 call s:InitVar('g:Lf_NumberOfHighlight', 100)
 call s:InitVar('g:Lf_WildIgnore', {
-            \ 'dir': ['.svn','.git'],
+            \ 'dir': ['.svn','.git','.hg'],
             \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']
             \})
 call s:InitVar('g:Lf_StlSeparator', {

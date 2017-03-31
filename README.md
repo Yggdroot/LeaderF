@@ -31,10 +31,10 @@ For [Vundle][3] user, just add `Plugin 'Yggdroot/LeaderF'` to your `.vimrc`.
 Usage
 -----
 
- - `:LeaderfFile` or `:LeaderfFile [directory]` or `,f`<br>
+ - `:LeaderfFile` or `:LeaderfFile [directory]` or `<leader>f`<br>
  Launch LeaderF to search files.
 
- - `:LeaderfBuffer` or `,b`<br>
+ - `:LeaderfBuffer` or `<leader>b`<br>
  Launch LeaderF to search buffers.
 
  - `:LeaderfMru`<br>
