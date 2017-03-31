@@ -139,7 +139,7 @@ g:Lf_WildIgnore                                 *g:Lf_WildIgnore*
     Specify the files and directories you want to exclude while indexing.
     Default value is: >
     let g:Lf_WildIgnore = {
-            \ 'dir': ['.svn','.git'],
+            \ 'dir': ['.svn','.git','.hg'],
             \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']
             \}
 <
@@ -361,10 +361,10 @@ g:Lf_CommandMap                                 *g:Lf_CommandMap*
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
-:Leaderf [directory] or ,f                      *Leaderf*
+:Leaderf [directory] or |<leader>|f               *Leaderf*
     Launch LeaderF to search files.
 
-:LeaderfBuffer or ,b                            *LeaderfBuffer*
+:LeaderfBuffer or |<leader>|b                     *LeaderfBuffer*
     Launch LeaderF to search buffers.
 
 :LeaderfBufferAll                               *LeaderfBufferAll*
