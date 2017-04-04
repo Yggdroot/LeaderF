@@ -12,16 +12,20 @@ from leaderf.utils import *
 def cursorController(func):
     @wraps(func)
     def deco(*args, **kwargs):
-        lfCmd("let g:lf_old_gcr = &gcr")
-        lfCmd("let g:lf_old_t_ve = &t_ve")
+        if lfEval("exists('g:lf_gcr_stack')") == '0':
+            lfCmd("let g:lf_gcr_stack = []")
+        lfCmd("call add(g:lf_gcr_stack, &gcr)")
         lfCmd("set gcr=a:invisible")
+        if lfEval("exists('g:lf_t_ve_stack')") == '0':
+            lfCmd("let g:lf_t_ve_stack = []")
+        lfCmd("call add(g:lf_t_ve_stack, &t_ve)")
         lfCmd("set t_ve=")
         try:
             for i in func(*args, **kwargs):
                 yield i
         finally:
-            lfCmd("let &gcr = g:lf_old_gcr")
-            lfCmd("let &t_ve = g:lf_old_t_ve")
+            lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
+            lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
     return deco
 
 

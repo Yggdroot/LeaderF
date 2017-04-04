@@ -64,6 +64,12 @@ Usage
  - `:LeaderfLineAll`<br>
  Launch LeaderF to search a line in all listed buffers.
 
+ - `:LeaderfHistoryCmd`<br>
+ Launch LeaderF to execute the command in the history.
+
+ - `:LeaderfHistorySearch`<br>
+ Launch LeaderF to execute the search command in the history.
+
 Once LeaderF is launched:
 
  - `<C-C>` : quit from LeaderF.

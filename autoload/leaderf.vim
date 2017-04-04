@@ -132,6 +132,19 @@ function! leaderf#lineExplMaps()
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "lineExplManager.toggleHelp()"<CR>
 endfunction
 
+function! leaderf#historyExplMaps()
+    nmapclear <buffer>
+    nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "historyExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> o             :exec g:Lf_py "historyExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "historyExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> x             :exec g:Lf_py "historyExplManager.accept('h')"<CR>
+    nnoremap <buffer> <silent> v             :exec g:Lf_py "historyExplManager.accept('v')"<CR>
+    nnoremap <buffer> <silent> t             :exec g:Lf_py "historyExplManager.accept('t')"<CR>
+    nnoremap <buffer> <silent> q             :exec g:Lf_py "historyExplManager.quit()"<CR>
+    nnoremap <buffer> <silent> i             :exec g:Lf_py "historyExplManager.input()"<CR>
+    nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "historyExplManager.toggleHelp()"<CR>
+endfunction
+
 function! leaderf#LfPy(cmd)
     exec g:Lf_py . a:cmd
 endfunction
@@ -218,4 +231,11 @@ function! leaderf#startLineExpl(win_pos, ...)
     else
         call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."',"."1)")
     endif
+endfunction
+
+function! leaderf#startHistoryExpl(win_pos, type)
+    if s:ImportOnce("s:Lf_historyExpl_loaded", "from leaderf.historyExpl import *") == 0
+        return
+    endif
+    call leaderf#LfPy("historyExplManager.startExplorer('".a:win_pos."', '".a:type."')")
 endfunction

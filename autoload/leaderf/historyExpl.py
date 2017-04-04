@@ -10,34 +10,37 @@ from leaderf.manager import *
 
 
 #*****************************************************
-# LineExplorer
+# HistoryExplorer
 #*****************************************************
-class LineExplorer(Explorer):
+class HistoryExplorer(Explorer):
     def __init__(self):
-        pass
+        self._history_type = "History"
 
     def getContent(self, *args, **kwargs):
-        line_list = []
-        if len(args) > 0: # all buffers
-            cur_buffer = vim.current.buffer
-            for b in vim.buffers:
-                if b.options["buflisted"]:
-                    if lfEval("bufloaded(%d)" % b.number) == '0':
-                        lfCmd("silent hide buffer %d" % b.number)
-                    line_list.extend(self._getLineList(b))
-            if vim.current.buffer is not cur_buffer:
-                vim.current.buffer = cur_buffer
-        else:
-            line_list = self._getLineList(vim.current.buffer)
-        return line_list
+        result_list = []
+        if len(args) > 0:
+            tmp = lfEval("@x")
+            lfCmd("redir @x")
+            if args[0] == "cmd":
+                self._history_type = "Cmd_History"
+                lfCmd("silent history :")
+            elif args[0] == "search":
+                self._history_type = "Search_History"
+                lfCmd("silent history /")
+            else:
+                self._history_type = "History"
+                lfCmd("let @x = ''")
+            result = lfEval("@x")
+            lfCmd("let @x = '%s'" % escQuote(tmp))
+            lfCmd("redir END")
+            result_list = result.splitlines()
+            start = len(result_list[-1]) - len(result_list[-1][1:].lstrip())
+            result_list = [line[start:] for line in result_list]
 
-    def _getLineList(self, buffer):
-        bufname = os.path.basename(buffer.name)
-        return ["%s\t[%s:%d %d]" % (line, bufname, i, buffer.number)
-                for i, line in enumerate(buffer, 1) if line and not line.isspace()]
+        return result_list[2:][::-1]
 
     def getStlCategory(self):
-        return 'Line'
+        return self._history_type
 
     def getStlCurDir(self):
         return escQuote(lfEncode(os.getcwd()))
@@ -45,30 +48,36 @@ class LineExplorer(Explorer):
     def isFilePath(self):
         return False
 
+    def getHistoryType(self):
+        return self._history_type
+
 
 #*****************************************************
-# LineExplManager
+# HistoryExplManager
 #*****************************************************
-class LineExplManager(Manager):
+class HistoryExplManager(Manager):
     def __init__(self):
-        super(LineExplManager, self).__init__()
+        super(HistoryExplManager, self).__init__()
         self._match_ids = []
 
     def _getExplClass(self):
-        return LineExplorer
+        return HistoryExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#lineExplMaps()")
+        lfCmd("call leaderf#historyExplMaps()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
         line = args[0]
-        line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
-        line_nr, buf_number = line.rsplit(":", 1)[1].split()
-        lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
-        lfCmd("norm! ^")
-        lfCmd("norm! zz")
+        cmd = line.lstrip().split(None, 1)[1]
+        if self._getExplorer().getHistoryType() == "Cmd_History":
+            lfCmd(cmd)
+        elif self._getExplorer().getHistoryType() == "Search_History":
+            try:
+                lfCmd("/%s" % cmd)
+            except vim.error as e:
+                print(e)
 
     def _getDigest(self, line, mode):
         """
@@ -78,7 +87,7 @@ class LineExplManager(Manager):
                   1, return the whole line
                   2, return the whole line
         """
-        return line.rsplit("\t", 1)[0]
+        return line
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -103,20 +112,20 @@ class LineExplManager(Manager):
         return help
 
     def _afterEnter(self):
-        super(LineExplManager, self)._afterEnter()
-        id = int(lfEval('''matchadd('Lf_hl_lineLocation', '\t\zs\[.*:\d\+ \d\+]$')'''))
+        super(HistoryExplManager, self)._afterEnter()
+        id = int(lfEval('''matchadd('Lf_hl_historyIndex', '^\s*\d\+')'''))
         self._match_ids.append(id)
 
     def _beforeExit(self):
-        super(LineExplManager, self)._beforeExit()
+        super(HistoryExplManager, self)._beforeExit()
         for i in self._match_ids:
             lfCmd("silent! call matchdelete(%d)" % i)
         self._match_ids = []
 
 
 #*****************************************************
-# lineExplManager is a singleton
+# historyExplManager is a singleton
 #*****************************************************
-lineExplManager = LineExplManager()
+historyExplManager = HistoryExplManager()
 
-__all__ = ['lineExplManager']
+__all__ = ['historyExplManager']

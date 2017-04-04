@@ -216,6 +216,8 @@ command! -bar -nargs=0 LeaderfFunction call leaderf#startFunctionExpl(g:Lf_Windo
 command! -bar -nargs=0 LeaderfFunctionAll call leaderf#startFunctionExpl(g:Lf_WindowPosition, 1)
 command! -bar -nargs=0 LeaderfLine call leaderf#startLineExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfLineAll call leaderf#startLineExpl(g:Lf_WindowPosition, 1)
+command! -bar -nargs=0 LeaderfHistoryCmd call leaderf#startHistoryExpl(g:Lf_WindowPosition, "cmd")
+command! -bar -nargs=0 LeaderfHistorySearch call leaderf#startHistoryExpl(g:Lf_WindowPosition, "search") | norm! n
 
 
 exec 'nnoremap <silent> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
