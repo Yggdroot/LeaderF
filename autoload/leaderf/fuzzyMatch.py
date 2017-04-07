@@ -121,10 +121,10 @@ class FuzzyMatch(object):
                         special = 2
                     elif text[i-1] == '.':
                         special = 1.9
-                    elif text[i-1] in '/\\':
+                    # elif text[i-1] in '/\\':
+                        # special = 2
+                    elif not text[i-1].isalnum() :    # ;,"'...
                         special = 2
-                    # elif not text[i-1].isalnum() :    # ;,"'...
-                    #     special = 2
                     else:
                         special = 0
                     d = -2      # -0b10 or ~1
@@ -403,10 +403,10 @@ class FuzzyMatch(object):
                         special = 2
                     elif text[i-1] == '.':
                         special = 1.9
-                    elif text[i-1] in '/\\':
+                    # elif text[i-1] in '/\\':
+                        # special = 2
+                    elif not text[i-1].isalnum() :    # ;,"'...
                         special = 2
-                    # elif not text[i-1].isalnum() :    # ;,"'...
-                    #     special = 2
                     else:
                         special = 0
                     d = -2      # -0b10 or ~1
