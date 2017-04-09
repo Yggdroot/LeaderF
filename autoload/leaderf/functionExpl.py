@@ -59,7 +59,7 @@ class FunctionExplorer(Explorer):
                     if lfEval("bufloaded(%d)" % b.number) == '0':
                         lfCmd("silent hide buffer %d" % b.number)
                     func_list.extend(self._getFunctionList(b))
-            if vim.current.buffer is not cur_buffer:
+            if vim.current.buffer != cur_buffer:
                 vim.current.buffer = cur_buffer
         else:
             func_list = self._getFunctionList(vim.current.buffer)

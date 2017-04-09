@@ -212,4 +212,4 @@ class LfInstance(object):
 
     @property
     def currentLine(self):
-        return vim.current.line if self._buffer_object is vim.current.buffer else None
+        return vim.current.line if self._buffer_object == vim.current.buffer else None

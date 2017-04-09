@@ -25,7 +25,7 @@ class LineExplorer(Explorer):
                     if lfEval("bufloaded(%d)" % b.number) == '0':
                         lfCmd("silent hide buffer %d" % b.number)
                     line_list.extend(self._getLineList(b))
-            if vim.current.buffer is not cur_buffer:
+            if vim.current.buffer != cur_buffer:
                 vim.current.buffer = cur_buffer
         else:
             line_list = self._getLineList(vim.current.buffer)

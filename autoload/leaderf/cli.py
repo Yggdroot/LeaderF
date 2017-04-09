@@ -371,8 +371,7 @@ class LfCli(object):
                     else:
                         yield cmd
         except KeyboardInterrupt: # <C-C>
-            if int(lfEval("v:version")) > 703:
-                yield '<Quit>'
-            else:
-                pass
+            yield '<Quit>'
+        except vim.error: # for neovim
+            yield '<Quit>'
 
