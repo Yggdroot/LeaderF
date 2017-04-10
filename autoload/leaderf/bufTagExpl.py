@@ -50,9 +50,9 @@ class BufTagExplorer(Explorer):
         else:
             self._buf_changedtick[buffer.number] = changedtick
 
-        if buffer.options["filetype"] == b"cpp":
+        if lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "cpp":
             extra_options = "--c++-kinds=+p"
-        elif buffer.options["filetype"] == b"c":
+        elif lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "c":
             extra_options = "--c-kinds=+p"
         else:
             extra_options = ""

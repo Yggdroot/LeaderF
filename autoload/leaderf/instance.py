@@ -93,9 +93,9 @@ class LfInstance(object):
             self._restore_sizes = lfEval("winrestcmd()")
 
         # clear the buffer first to avoid a flash
-        if self._buffer_object:
+        if self._buffer_object and lfEval("has('nvim')") == '0':
             self.buffer.options['modifiable'] = True
-            del self._buffer_object[:]
+            del self._buffer_object[:]  # neovim has bug here
 
         if win_pos == 'bottom':
             lfCmd("silent! noa keepa keepj bo sp %s" % self._buffer_name)

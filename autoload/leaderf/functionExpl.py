@@ -21,29 +21,29 @@ class FunctionExplorer(Explorer):
         self._func_list = {}       # a dict with (key, value) = (buffer number, taglist)
         self._buf_changedtick = {} # a dict with (key, value) = (buffer number, changedtick)
         self._ctags_options = {
-                b"aspvbs": "--asp-kinds=f",
-                b"awk": "--awk-kinds=f",
-                b"c": "--c-kinds=fp",
-                b"cpp": "--c++-kinds=fp",
-                b"cs": "--c#-kinds=m",
-                b"erlang": "--erlang-kinds=f",
-                b"fortran": "--fortran-kinds=f",
-                b"java": "--java-kinds=m",
-                b"javascript": "--javascript-kinds=f",
-                b"lisp": "--lisp-kinds=f",
-                b"lua": "--lua-kinds=f",
-                b"matlab": "--matlab-kinds=f",
-                b"pascal": "--pascal-kinds=f",
-                b"php": "--php-kinds=f",
-                b"python": "--python-kinds=fm",
-                b"ruby": "--ruby-kinds=fF",
-                b"scheme": "--scheme-kinds=f",
-                b"sh": "--sh-kinds=f",
-                b"sql": "--sql-kinds=f",
-                b"tcl": "--tcl-kinds=m",
-                b"verilog": "--verilog-kinds=f",
-                b"vim": "--vim-kinds=f",
-                b"go": "--go-kinds=f"   # universal ctags
+                "aspvbs": "--asp-kinds=f",
+                "awk": "--awk-kinds=f",
+                "c": "--c-kinds=fp",
+                "cpp": "--c++-kinds=fp",
+                "cs": "--c#-kinds=m",
+                "erlang": "--erlang-kinds=f",
+                "fortran": "--fortran-kinds=f",
+                "java": "--java-kinds=m",
+                "javascript": "--javascript-kinds=f",
+                "lisp": "--lisp-kinds=f",
+                "lua": "--lua-kinds=f",
+                "matla": "--matlab-kinds=f",
+                "pascal": "--pascal-kinds=f",
+                "php": "--php-kinds=f",
+                "python": "--python-kinds=fm",
+                "ruby": "--ruby-kinds=fF",
+                "scheme": "--scheme-kinds=f",
+                "sh": "--sh-kinds=f",
+                "sql": "--sql-kinds=f",
+                "tcl": "--tcl-kinds=m",
+                "verilog": "--verilog-kinds=f",
+                "vim": "--vim-kinds=f",
+                "go": "--go-kinds=f"   # universal ctags
                 }
         for buf in vim.buffers:
             if buf.options["buflisted"]:
@@ -74,7 +74,7 @@ class FunctionExplorer(Explorer):
         else:
             self._buf_changedtick[buffer.number] = changedtick
 
-        extra_options = self._ctags_options.get(buffer.options["filetype"], "")
+        extra_options = self._ctags_options.get(lfEval("getbufvar(%d, '&filetype')" % buffer.number), "")
 
         # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}
         process = subprocess.Popen("{} -n -u --fields=k {} -f- -L- ".format(self._ctags, extra_options),
