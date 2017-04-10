@@ -373,5 +373,6 @@ class LfCli(object):
         except KeyboardInterrupt: # <C-C>
             yield '<Quit>'
         except vim.error: # for neovim
+            lfCmd("call getchar(0)")
             yield '<Quit>'
 
