@@ -113,8 +113,8 @@ class LfCli(object):
                 lfCmd("hi! default link Lf_hl_cursor Cursor")
             else:
                 lfCmd("hi! default link Lf_hl_cursor NONE")
-            self._start_time = datetime.now()
             if lfEval("g:Lf_CursorBlink") == '1':
+                self._start_time = datetime.now()
                 self._blinkon = not self._blinkon
 
         if self._is_fuzzy:
@@ -296,22 +296,27 @@ class LfCli(object):
                 self._idle = False
 
                 time.sleep(0.001)
-                lfCmd("let nr = getchar(1)")
-                if lfEval("!type(nr) && nr == 0") == '1':
-                    self._idle = True
-                    continue
-                # https://groups.google.com/forum/#!topic/vim_dev/gg-l-kaCz_M
-                # '<80><fc>^B' is <Shift>, '<80><fc>^D' is <Ctrl>,
-                # '<80><fc>^H' is <Alt>, '<80><fc>^L' is <Ctrl + Alt>
-                elif lfEval("type(nr) != 0") == '1':
-                    lfCmd("call getchar(0)")
-                    lfCmd("call feedkeys('a') | call getchar()")
-                    self._idle = True
-                    continue
+
+                if lfEval("g:Lf_CursorBlink") == '1':
+                    lfCmd("let nr = getchar(1)")
+                    if lfEval("!type(nr) && nr == 0") == '1':
+                        self._idle = True
+                        continue
+                    # https://groups.google.com/forum/#!topic/vim_dev/gg-l-kaCz_M
+                    # '<80><fc>^B' is <Shift>, '<80><fc>^D' is <Ctrl>,
+                    # '<80><fc>^H' is <Alt>, '<80><fc>^L' is <Ctrl + Alt>
+                    elif lfEval("type(nr) != 0") == '1':
+                        lfCmd("call getchar(0)")
+                        lfCmd("call feedkeys('a') | call getchar()")
+                        self._idle = True
+                        continue
+                    else:
+                        lfCmd("let nr = getchar()")
+                        lfCmd("let ch = !type(nr) ? nr2char(nr) : nr")
+                        self._blinkon = True
                 else:
                     lfCmd("let nr = getchar()")
                     lfCmd("let ch = !type(nr) ? nr2char(nr) : nr")
-                    self._blinkon = True
 
                 if lfEval("!type(nr) && nr >= 0x20") == '1':
                     self._insert(lfEval("ch"))
