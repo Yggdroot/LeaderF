@@ -584,10 +584,10 @@ class Manager(object):
         lfCmd("normal! gg")
         self._index = 0
 
-        self.input(False)
+        self.input()
 
     @modifiableController
-    def input(self, normal_mode=True):
+    def input(self):
         self._hideHelp()
         self._resetHighlights()
 
