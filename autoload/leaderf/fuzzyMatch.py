@@ -50,7 +50,7 @@ class FuzzyMatch(object):
         if k in val and val[k][2] > j + 1:
             return val[k]
         max_prefix_score = max_score = beg = end = 0
-        i = ((x & -x) - 1).bit_length()
+        i = (x & -x).bit_length() - 1
         if i == 0 or text[i-1] in '_- ':
             special = 2
         elif text[i].isupper():
@@ -59,7 +59,7 @@ class FuzzyMatch(object):
             special = 1.9
         # elif text[i-1] in '/\\':
         #     special = 2
-        elif not text[i-1].isalnum() :    # ;,"':...
+        elif not text[i-1].isalnum():    # ;,"':...
             special = 2
         else:
             special = 0
@@ -114,7 +114,7 @@ class FuzzyMatch(object):
                 if y == 0:
                     break
                 else:
-                    i += ((y & -y) - 1).bit_length()
+                    i += (y & -y).bit_length() - 1
                     if text[i].isupper():
                         special = 2 if not text[i-1].isupper() else 0
                     elif text[i-1] in '_- ':
@@ -122,8 +122,8 @@ class FuzzyMatch(object):
                     elif text[i-1] == '.':
                         special = 1.9
                     # elif text[i-1] in '/\\':
-                        # special = 2
-                    elif not text[i-1].isalnum() :    # ;,"'...
+                    #     special = 2
+                    elif not text[i-1].isalnum():    # ;,"':...
                         special = 2
                     else:
                         special = 0
@@ -334,7 +334,7 @@ class FuzzyMatch(object):
             return (0, [])
         max_prefix_score = max_score = 0
         highlights = []
-        i = ((x & -x) - 1).bit_length()
+        i = (x & -x).bit_length() - 1
         if i == 0 or text[i-1] in '_- ':
             special = 2
         elif text[i].isupper():
@@ -343,7 +343,7 @@ class FuzzyMatch(object):
             special = 1.9
         # elif text[i-1] in '/\\':
         #     special = 2
-        elif not text[i-1].isalnum() :    # ;,"'...
+        elif not text[i-1].isalnum():    # ;,"':...
             special = 2
         else:
             special = 0
@@ -396,7 +396,7 @@ class FuzzyMatch(object):
                 if y == 0:
                     break
                 else:
-                    i += ((y & -y) - 1).bit_length()
+                    i += (y & -y).bit_length() - 1
                     if text[i].isupper():
                         special = 2 if not text[i-1].isupper() else 0
                     elif text[i-1] in '_- ':
@@ -404,8 +404,8 @@ class FuzzyMatch(object):
                     elif text[i-1] == '.':
                         special = 1.9
                     # elif text[i-1] in '/\\':
-                        # special = 2
-                    elif not text[i-1].isalnum() :    # ;,"'...
+                    #     special = 2
+                    elif not text[i-1].isalnum():    # ;,"':...
                         special = 2
                     else:
                         special = 0
