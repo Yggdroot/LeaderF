@@ -569,8 +569,8 @@ class Manager(object):
         self._cli.setRefineFeature(self._supportsRefine())
         lfCmd("echohl WarningMsg | redraw |"
               "echo ' searching ...' | echohl NONE")
-        self._content = self._getExplorer().getContent(*args, **kwargs)
-        if not self._content:
+        content = self._getExplorer().getContent(*args, **kwargs)
+        if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
         self._getInstance().enterBuffer(win_pos)
@@ -578,9 +578,10 @@ class Manager(object):
         self._getInstance().setStlCategory(self._getExplorer().getStlCategory())
         self._setStlMode()
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
-        self._getInstance().setStlTotal(len(self._content) // self._getUnit())
 
-        self._getInstance().setBuffer(self._content)
+        self._getInstance().setBuffer(content, self._getUnit())
+        self._content = self._getInstance().buffer[:]
+
         lfCmd("normal! gg")
         self._index = 0
 

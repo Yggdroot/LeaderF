@@ -7,9 +7,12 @@ import os
 import os.path
 import subprocess
 import tempfile
+import itertools
+import multiprocessing
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
+from leaderf.asyncExecutor import AsyncExecutor
 
 
 #*****************************************************
@@ -21,32 +24,63 @@ class BufTagExplorer(Explorer):
         self._supports_preview = int(lfEval("g:Lf_PreviewCode"))
         self._tag_list = {}        # a dict with (key, value) = (buffer number, taglist)
         self._buf_changedtick = {} # a dict with (key, value) = (buffer number, changedtick)
-        for buf in vim.buffers:
-            if buf.options["buflisted"]:
-                changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % buf.number))
-                self._buf_changedtick[buf.number] = changedtick
 
     def getContent(self, *args, **kwargs):
-        tag_list = []
         if len(args) > 0: # all buffers
             cur_buffer = vim.current.buffer
             for b in vim.buffers:
                 if b.options["buflisted"]:
                     if lfEval("bufloaded(%d)" % b.number) == '0':
-                        lfCmd("silent hide buffer %d" % b.number)
-                    tag_list.extend(self._getTaglist(b))
+                        vim.current.buffer = b
             if vim.current.buffer != cur_buffer:
                 vim.current.buffer = cur_buffer
-        else:
-            tag_list = self._getTaglist(vim.current.buffer)
-        return tag_list
 
-    def _getTaglist(self, buffer):
+            for b in vim.buffers:
+                if b.options["buflisted"] and b.name:
+                    changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % b.number))
+                    if changedtick != self._buf_changedtick.get(b.number, -1):
+                        break
+            else:
+                return list(itertools.chain.from_iterable(self._tag_list.values()))
+
+            return itertools.chain.from_iterable(self._getTagList())
+        else:
+            result = self._getTagResult(vim.current.buffer)
+            if isinstance(result, list):
+                return result
+            else:
+                return self._formatResult(*result)
+
+    def _getTagList(self):
+        buffers = [b for b in vim.buffers]
+        n = multiprocessing.cpu_count()
+        for i in range(0, len(vim.buffers), n):
+            tag_list = []
+            exe_result = []
+            for b in buffers[i:i+n]:
+                if b.options["buflisted"] and b.name:
+                    result = self._getTagResult(b)
+                    if isinstance(result, list):
+                        tag_list.extend(result)
+                    else:
+                        exe_result.append(result)
+            if not exe_result:
+                yield tag_list
+            else:
+                exe_taglist = (self._formatResult(*r) for r in exe_result)
+                # list can reduce the flash of screen
+                yield list(itertools.chain(tag_list, itertools.chain.from_iterable(exe_taglist)))
+
+    def _getTagResult(self, buffer):
+        if not buffer.name:
+            return []
         changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % buffer.number))
         # there is no change since last call
         if changedtick == self._buf_changedtick.get(buffer.number, -1):
             if buffer.number in self._tag_list:
                 return self._tag_list[buffer.number]
+            else:
+                return []
         else:
             self._buf_changedtick[buffer.number] = changedtick
 
@@ -57,15 +91,7 @@ class BufTagExplorer(Explorer):
         else:
             extra_options = ""
 
-        # {tagname}<Tab>{tagfile}<Tab>{tagaddress}[;"<Tab>{tagfield}..]
-        # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}<Tab>{scope}
-        process = subprocess.Popen("{} -n -u --fields=Ks {} -f- -L- ".format(self._ctags,
-                                                                             extra_options),
-                                   shell=True,
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   universal_newlines=True)
+        executor = AsyncExecutor()
         if buffer.options["modified"] == True:
             with tempfile.NamedTemporaryFile(mode='w+',
                                              suffix='_'+os.path.basename(buffer.name),
@@ -73,21 +99,34 @@ class BufTagExplorer(Explorer):
                 for line in buffer[:]:
                     f.write(line + '\n')
                 file_name = f.name
-            out = process.communicate(lfDecode(file_name))
-            os.remove(file_name)
+            # {tagname}<Tab>{tagfile}<Tab>{tagaddress}[;"<Tab>{tagfield}..]
+            # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}<Tab>{scope}
+            cmd = '{} -n -u --fields=Ks {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(file_name))
+            result = executor.execute(cmd, partial(os.remove, file_name))
         else:
-            out = process.communicate(lfDecode(buffer.name))
+            cmd = '{} -n -u --fields=Ks {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(buffer.name))
+            result = executor.execute(cmd)
 
-        if out[1]:
-            lfCmd("echoerr '%s'" % escQuote(out[1].rstrip()))
+        return (buffer, result)
 
-        if not out[0]:
+    def _formatResult(self, buffer, result):
+        if not buffer.name:
+            return []
+
+        out_data, err_data = result
+
+        err = b"".join(err_data)
+        if err:
+            lfCmd("echoerr '%s'" % escQuote(err.decode(lfEval("&encoding"))))
             return []
 
         # a list of [tag, file, line, kind, scope]
-        output = [line.split('\t') for line in out[0].splitlines()]
+        output = [lfBytes2Str(line).split('\t') for line in out_data]
+        if not output:
+            return []
+
         if len(output[0]) < 4:
-            lfCmd("echoerr '%s'" % escQuote(out[0].rstrip()))
+            lfCmd("echoerr '%s'" % escQuote(str(output[0])))
             return []
 
         tag_total_len = 0
@@ -184,6 +223,7 @@ class BufTagExplManager(Manager):
         lfCmd("norm! ^")
         lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
         lfCmd("norm! zz")
+        lfCmd("setlocal cursorline! | redraw | sleep 100m | setlocal cursorline!")
 
     def _getDigest(self, line, mode):
         """

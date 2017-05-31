@@ -7,9 +7,12 @@ import os
 import os.path
 import subprocess
 import tempfile
+import itertools
+import multiprocessing
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
+from leaderf.asyncExecutor import AsyncExecutor
 
 
 #*****************************************************
@@ -45,44 +48,69 @@ class FunctionExplorer(Explorer):
                 "vim": "--vim-kinds=f",
                 "go": "--go-kinds=f"   # universal ctags
                 }
-        for buf in vim.buffers:
-            if buf.options["buflisted"]:
-                changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % buf.number))
-                self._buf_changedtick[buf.number] = changedtick
 
     def getContent(self, *args, **kwargs):
-        func_list = []
         if len(args) > 0: # all buffers
             cur_buffer = vim.current.buffer
             for b in vim.buffers:
                 if b.options["buflisted"]:
                     if lfEval("bufloaded(%d)" % b.number) == '0':
-                        lfCmd("silent hide buffer %d" % b.number)
-                    func_list.extend(self._getFunctionList(b))
+                        vim.current.buffer = b
             if vim.current.buffer != cur_buffer:
                 vim.current.buffer = cur_buffer
-        else:
-            func_list = self._getFunctionList(vim.current.buffer)
-        return func_list
 
-    def _getFunctionList(self, buffer):
+            for b in vim.buffers:
+                if b.options["buflisted"] and b.name:
+                    changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % b.number))
+                    if changedtick != self._buf_changedtick.get(b.number, -1):
+                        break
+            else:
+                return list(itertools.chain.from_iterable(self._func_list.values()))
+
+            return itertools.chain.from_iterable(self._getFunctionList())
+        else:
+            result = self._getFunctionResult(vim.current.buffer)
+            if isinstance(result, list):
+                return result
+            else:
+                return self._formatResult(*result)
+
+    def _getFunctionList(self):
+        buffers = [b for b in vim.buffers]
+        n = multiprocessing.cpu_count()
+        for i in range(0, len(vim.buffers), n):
+            func_list = []
+            exe_result = []
+            for b in buffers[i:i+n]:
+                if b.options["buflisted"] and b.name:
+                    result = self._getFunctionResult(b)
+                    if isinstance(result, list):
+                        func_list.extend(result)
+                    else:
+                        exe_result.append(result)
+            if not exe_result:
+                yield func_list
+            else:
+                exe_taglist = (self._formatResult(*r) for r in exe_result)
+                # list can reduce the flash of screen
+                yield list(itertools.chain(func_list, itertools.chain.from_iterable(exe_taglist)))
+
+    def _getFunctionResult(self, buffer):
+        if not buffer.name:
+            return []
         changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % buffer.number))
         # there is no change since last call
         if changedtick == self._buf_changedtick.get(buffer.number, -1):
             if buffer.number in self._func_list:
                 return self._func_list[buffer.number]
+            else:
+                return []
         else:
             self._buf_changedtick[buffer.number] = changedtick
 
         extra_options = self._ctags_options.get(lfEval("getbufvar(%d, '&filetype')" % buffer.number), "")
 
-        # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}
-        process = subprocess.Popen("{} -n -u --fields=k {} -f- -L- ".format(self._ctags, extra_options),
-                                   shell=True,
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   universal_newlines=True)
+        executor = AsyncExecutor()
         if buffer.options["modified"] == True:
             with tempfile.NamedTemporaryFile(mode='w+',
                                              suffix='_'+os.path.basename(buffer.name),
@@ -90,21 +118,32 @@ class FunctionExplorer(Explorer):
                 for line in buffer[:]:
                     f.write(line + '\n')
                 file_name = f.name
-            out = process.communicate(lfDecode(file_name))
-            os.remove(file_name)
+            # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}
+            cmd = '{} -n -u --fields=k {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(file_name))
+            result = executor.execute(cmd, partial(os.remove, file_name))
         else:
-            out = process.communicate(lfDecode(buffer.name))
+            cmd = '{} -n -u --fields=k {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(buffer.name))
+            result = executor.execute(cmd)
 
-        if out[1]:
-            lfCmd("echoerr '%s'" % escQuote(out[1].rstrip()))
+        return (buffer, result)
 
-        if not out[0]:
+    def _formatResult(self, buffer, result):
+        if not buffer.name:
+            return []
+
+        out_data, err_data = result
+
+        err = b"".join(err_data)
+        if err:
+            lfCmd("echoerr '%s'" % escQuote(err.decode(lfEval("&encoding"))))
             return []
 
         # a list of [tag, file, line, kind]
-        output = [line.split('\t') for line in out[0].splitlines()]
+        output = [lfBytes2Str(line).split('\t') for line in out_data]
+        if not output:
+            return []
         if len(output[0]) < 4:
-            lfCmd("echoerr '%s'" % escQuote(out[0].rstrip()))
+            lfCmd("echoerr '%s'" % escQuote(str(output[0])))
             return []
 
         func_list = []
@@ -163,6 +202,7 @@ class FunctionExplManager(Manager):
         lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         lfCmd("norm! ^")
         lfCmd("norm! zz")
+        lfCmd("setlocal cursorline! | redraw | sleep 100m | setlocal cursorline!")
 
     def _getDigest(self, line, mode):
         """

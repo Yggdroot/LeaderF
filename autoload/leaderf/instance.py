@@ -5,6 +5,8 @@ import vim
 import re
 import os
 import os.path
+import time
+import itertools
 from leaderf.utils import *
 
 
@@ -64,6 +66,7 @@ class LfInstance(object):
         lfCmd("setlocal nobuflisted")
         lfCmd("setlocal buftype=nofile")
         lfCmd("setlocal bufhidden=hide")
+        lfCmd("setlocal undolevels=-1")
         lfCmd("setlocal noswapfile")
         lfCmd("setlocal nolist")
         lfCmd("setlocal number")
@@ -92,10 +95,13 @@ class LfInstance(object):
         if win_pos != 'fullScreen':
             self._restore_sizes = lfEval("winrestcmd()")
 
-        # clear the buffer first to avoid a flash
-        if self._buffer_object:
-            self.buffer.options['modifiable'] = True
-            del self._buffer_object[:]
+        """ `vim.current.buffer[:] = list` will cost longer and longer time with this block.
+            I don't know why?
+        """
+        # # clear the buffer first to avoid a flash
+        # if self._buffer_object:
+        #     self.buffer.options['modifiable'] = True
+        #     del self._buffer_object[:]
 
         if win_pos == 'bottom':
             lfCmd("silent! noa keepa keepj bo sp %s" % self._buffer_name)
@@ -194,12 +200,51 @@ class LfInstance(object):
 
         self._after_exit()
 
-    def setBuffer(self, content):
+    def setBuffer(self, content, unit=1):
         self.buffer.options['modifiable'] = True
         if lfEval("has('nvim')") == '1':
             # NvimError: string cannot contain newlines
-            content = [ line.rstrip("\r\n") for line in content ]
-        self._buffer_object[:] = content
+            if isinstance(content, list):
+                content = [ line.rstrip("\r\n") for line in content ]
+                self._buffer_object[:] = content
+                return
+
+            self._buffer_object[:] = []
+
+            start = time.time()
+            i = 0
+            for i, line in enumerate(content):
+                if i == 0:
+                    self._buffer_object[i] = line.rstrip("\r\n")
+                else:
+                    self._buffer_object.append(line.rstrip("\r\n"))
+                if time.time() - start > 0.2:
+                    start = time.time()
+                    self.setStlTotal((i+1)//unit)
+                    lfCmd("redrawstatus")
+            self.setStlTotal((i+1)//unit)
+            lfCmd("redrawstatus")
+
+        else:
+            if isinstance(content, list):
+                self._buffer_object[:] = content
+                return
+
+            self._buffer_object[:] = []
+
+            start = time.time()
+            i = 0
+            for i, line in enumerate(content):
+                if i == 0:
+                    self._buffer_object[i] = line
+                else:
+                    self._buffer_object.append(line)
+                if time.time() - start > 0.2:
+                    start = time.time()
+                    self.setStlTotal((i+1)//unit)
+                    lfCmd("redrawstatus")
+            self.setStlTotal((i+1)//unit)
+            lfCmd("redrawstatus")
 
     @property
     def tabpage(self):
