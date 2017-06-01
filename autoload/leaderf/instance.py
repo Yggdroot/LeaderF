@@ -207,6 +207,7 @@ class LfInstance(object):
             if isinstance(content, list):
                 content = [ line.rstrip("\r\n") for line in content ]
                 self._buffer_object[:] = content
+                self.setStlTotal(len(content)//unit)
                 return
 
             self._buffer_object[:] = []
@@ -228,6 +229,7 @@ class LfInstance(object):
         else:
             if isinstance(content, list):
                 self._buffer_object[:] = content
+                self.setStlTotal(len(content)//unit)
                 return
 
             self._buffer_object[:] = []
