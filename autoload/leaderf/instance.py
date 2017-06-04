@@ -202,6 +202,8 @@ class LfInstance(object):
 
     def setBuffer(self, content, unit=1):
         self.buffer.options['modifiable'] = True
+        self.setStlTotal(0)
+        lfCmd("redrawstatus")
         if lfEval("has('nvim')") == '1':
             # NvimError: string cannot contain newlines
             if isinstance(content, list):
@@ -212,20 +214,22 @@ class LfInstance(object):
 
             self._buffer_object[:] = []
 
-            start = time.time()
-            i = 0
-            for i, line in enumerate(content):
-                if i == 0:
-                    self._buffer_object[i] = line.rstrip("\r\n")
-                else:
-                    self._buffer_object.append(line.rstrip("\r\n"))
-                if time.time() - start > 0.2:
-                    start = time.time()
-                    self.setStlTotal((i+1)//unit)
-                    lfCmd("redrawstatus")
-            self.setStlTotal((i+1)//unit)
-            lfCmd("redrawstatus")
-
+            try:
+                start = time.time()
+                i = 0
+                for i, line in enumerate(content):
+                    if i == 0:
+                        self._buffer_object[i] = line.rstrip("\r\n")
+                    else:
+                        self._buffer_object.append(line.rstrip("\r\n"))
+                    if time.time() - start > 0.2:
+                        start = time.time()
+                        self.setStlTotal((i+1)//unit)
+                        lfCmd("redrawstatus")
+                self.setStlTotal((i+1)//unit)
+                lfCmd("redrawstatus")
+            except vim.error: # <C-C>
+                pass
         else:
             if isinstance(content, list):
                 self._buffer_object[:] = content
@@ -234,19 +238,22 @@ class LfInstance(object):
 
             self._buffer_object[:] = []
 
-            start = time.time()
-            i = 0
-            for i, line in enumerate(content):
-                if i == 0:
-                    self._buffer_object[i] = line
-                else:
-                    self._buffer_object.append(line)
-                if time.time() - start > 0.2:
-                    start = time.time()
-                    self.setStlTotal((i+1)//unit)
-                    lfCmd("redrawstatus")
-            self.setStlTotal((i+1)//unit)
-            lfCmd("redrawstatus")
+            try:
+                start = time.time()
+                i = 0
+                for i, line in enumerate(content):
+                    if i == 0:
+                        self._buffer_object[i] = line
+                    else:
+                        self._buffer_object.append(line)
+                    if time.time() - start > 0.2:
+                        start = time.time()
+                        self.setStlTotal((i+1)//unit)
+                        lfCmd("redrawstatus")
+                self.setStlTotal((i+1)//unit)
+                lfCmd("redrawstatus")
+            except KeyboardInterrupt: # <C-C>
+                pass
 
     @property
     def tabpage(self):

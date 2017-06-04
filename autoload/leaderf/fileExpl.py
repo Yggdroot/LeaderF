@@ -11,6 +11,7 @@ from functools import wraps
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
+from leaderf.asyncExecutor import AsyncExecutor
 
 def showRelativePath(func):
     @wraps(func)
@@ -160,6 +161,92 @@ class FileExplorer(Explorer):
                     for line in file_list:
                         cache_file.write(line + '\n')
 
+    def _buildCmd(self, dir):
+        if lfEval("g:Lf_ShowRelativePath") == '1':
+            dir = os.path.relpath(dir)
+
+        if lfEval("exists('g:Lf_ExternalCommand')") == '1':
+            cmd = lfEval("g:Lf_ExternalCommand") % dir.join('""')
+        elif lfEval("executable('rg')") == '1':
+            wildignore = lfEval("g:Lf_WildIgnore")
+            if os.name == 'nt': # there is bug
+                color = ""
+                ignore = ""
+                for i in wildignore["dir"]:
+                    ignore += ' -g "!%s"' % i
+                for i in wildignore["file"]:
+                    ignore += ' -g "!%s"' % i
+            else:
+                color = "--color never"
+                ignore = ""
+                for i in wildignore["dir"]:
+                    ignore += " -g '!%s'" % i
+                for i in wildignore["file"]:
+                    ignore += " -g '!%s'" % i
+
+            if lfEval("g:Lf_FollowLinks") == '1':
+                followlinks = "-L"
+            else:
+                followlinks = ""
+
+            cmd = 'rg --files %s %s %s "%s"' % (color, ignore, followlinks, dir)
+        elif lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
+            wildignore = lfEval("g:Lf_WildIgnore")
+            ignore = ""
+            for i in wildignore["dir"]:
+                ignore += " --ignore=%s" % i
+            for i in wildignore["file"]:
+                ignore += " --ignore=%s" % i
+
+            if lfEval("g:Lf_FollowLinks") == '1':
+                followlinks = "-f"
+            else:
+                followlinks = ""
+
+            cmd = 'pt --nocolor %s %s -g="" "%s"' % (ignore, followlinks, dir)
+        elif lfEval("executable('ag')") == '1':
+            wildignore = lfEval("g:Lf_WildIgnore")
+            ignore = ""
+            for i in wildignore["dir"]:
+                ignore += ' --ignore "%s"' % i
+            for i in wildignore["file"]:
+                ignore += ' --ignore "%s"' % i
+
+            if lfEval("g:Lf_FollowLinks") == '1':
+                followlinks = "-f"
+            else:
+                followlinks = ""
+            cmd = 'ag --nocolor %s %s -g "" "%s"' % (ignore, followlinks, dir)
+        elif lfEval("executable('find')") == '1' and os.name != 'nt':
+            wildignore = lfEval("g:Lf_WildIgnore")
+            ignore_dir = ""
+            for d in wildignore["dir"]:
+                ignore_dir += '-type d -name "%s" -prune -o ' % d
+
+            ignore_file = ""
+            for f in wildignore["file"]:
+                    ignore_file += '-type f -name "%s" -o ' % f
+
+            if lfEval("g:Lf_FollowLinks") == '1':
+                followlinks = "-L"
+            else:
+                followlinks = ""
+
+            if lfEval("g:Lf_ShowRelativePath") == '1':
+                strip = "| sed 's#^\./##'"
+            else:
+                strip = ""
+
+            cmd = 'find %s "%s" %s %s -type f -print %s' % (followlinks,
+                                                            dir,
+                                                            ignore_dir,
+                                                            ignore_file,
+                                                            strip)
+        else:
+            cmd = None
+
+        return cmd
+
     def getContent(self, *args, **kwargs):
         if len(args) > 0:
             if os.path.exists(lfDecode(args[0])):
@@ -168,7 +255,14 @@ class FileExplorer(Explorer):
                 lfCmd("echohl ErrorMsg | redraw | echon "
                       "'Unknown directory `%s`' | echohl NONE" % args[0])
                 return None
+
         dir = os.getcwd()
+        cmd = self._buildCmd(dir)
+        if cmd:
+            executor = AsyncExecutor()
+            result = executor.execute(cmd)
+            return result
+
         if lfEval("g:Lf_UseMemoryCache") == '0' or dir != self._cur_dir:
             self._cur_dir = dir
             self._content = self._getFileList(dir)

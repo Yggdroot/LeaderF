@@ -113,15 +113,8 @@ class BufTagExplorer(Explorer):
         if not buffer.name:
             return []
 
-        out_data, err_data = result
-
-        err = b"".join(err_data)
-        if err:
-            lfCmd("echoerr '%s'" % escQuote(err.decode(lfEval("&encoding"))))
-            return []
-
         # a list of [tag, file, line, kind, scope]
-        output = [lfBytes2Str(line).split('\t') for line in out_data]
+        output = [lfBytes2Str(line).split('\t') for line in result]
         if not output:
             return []
 

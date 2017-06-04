@@ -1,6 +1,7 @@
 import sys
 import subprocess
 import threading
+from leaderf.utils import *
 
 if sys.version_info >= (3, 0):
     from queue import Queue
@@ -17,34 +18,39 @@ class AsyncExecutor(object):
         self._outQueue = Queue()
         self._errQueue = Queue()
 
-    def _readerThread(self, fd, queue):
+    def _readerThread(self, fd, queue, process):
         try:
             for line in iter(fd.readline, b""):
                 queue.put(line)
+        except:
+            process.terminate()
         finally:
             queue.put(None)
 
     def execute(self, cmd, cleanup=None):
         process = subprocess.Popen(cmd, shell=True,
-                                   stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    universal_newlines=False)
 
         stdout_thread = threading.Thread(target=self._readerThread,
-                                         args=(process.stdout, self._outQueue))
+                                         args=(process.stdout, self._outQueue, process))
         stdout_thread.daemon = True
         stdout_thread.start()
 
         stderr_thread = threading.Thread(target=self._readerThread,
-                                         args=(process.stderr, self._errQueue))
+                                         args=(process.stderr, self._errQueue, process))
         stderr_thread.daemon = True
         stderr_thread.start()
 
-        def read(fd, queue, cleanup):
+        def read(fd, outQueue, errQueue, cleanup):
             try:
-                for line in iter(queue.get, None):
+                for line in iter(outQueue.get, None):
                     yield line.rstrip(b"\r\n")
+
+                err = b"".join(iter(errQueue.get, None))
+                if err:
+                    raise Exception(lfEncode(lfBytes2Str(err)))
             finally:
                 fd.close()
                 if cleanup:
@@ -52,20 +58,15 @@ class AsyncExecutor(object):
 
         stdout_thread.join(0.01)
 
-        out = read(process.stdout, self._outQueue, cleanup)
-        err = read(process.stderr, self._errQueue, None)
+        out = read(process.stdout, self._outQueue, self._errQueue, cleanup)
 
-        return (out, err)
+        return out
 
 
 if __name__ == "__main__":
     executor = AsyncExecutor()
-    out, err = executor.execute("ctags -f- -R")
+    out = executor.execute("ctags -f- -R")
     print("stdout begin: ============================================")
     for i in out:
         print(repr(i))
     print("stdout end: ==============================================")
-    print("stderr begin: ============================================")
-    for i in err:
-        print(repr(i))
-    print("stderr end: ==============================================")
