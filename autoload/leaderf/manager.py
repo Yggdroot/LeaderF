@@ -500,14 +500,17 @@ class Manager(object):
         self._setAutochdir()
 
     def refresh(self, normal_mode=True):
-        self._content = self._getExplorer().getFreshContent()
-        if self._content is None:
+        content = self._getExplorer().getFreshContent()
+        if not content:
+            lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
 
         if normal_mode: # when called in Normal mode
             self._getInstance().buffer.options['modifiable'] = True
 
-        self._getInstance().setBuffer(self._content)
+        self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
+        self._content = self._getInstance().buffer[:]
+
         if self._cli.pattern:
             self._index = 0
             self._search(self._content)
@@ -516,8 +519,6 @@ class Manager(object):
             self._createHelpHint()
             self._resetHighlights()
             self._getInstance().buffer.options['modifiable'] = False
-
-        self._getInstance().setStlTotal(len(self._content))
 
     def addSelections(self):
         nr = self._getInstance().window.number
@@ -579,7 +580,7 @@ class Manager(object):
         self._setStlMode()
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
-        self._getInstance().setBuffer(content, self._getUnit())
+        self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
         self._content = self._getInstance().buffer[:]
 
         lfCmd("normal! gg")

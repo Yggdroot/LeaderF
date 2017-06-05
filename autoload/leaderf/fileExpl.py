@@ -40,6 +40,7 @@ class FileExplorer(Explorer):
                                        'python' + lfEval("g:Lf_PythonVersion"),
                                        'file')
         self._cache_index = os.path.join(self._cache_dir, 'cacheIndex')
+        self._external_cmd = ""
         self._initCache()
 
     def _initCache(self):
@@ -162,6 +163,9 @@ class FileExplorer(Explorer):
                         cache_file.write(line + '\n')
 
     def _buildCmd(self, dir):
+        if self._external_cmd:
+            return self._external_cmd
+
         if lfEval("g:Lf_ShowRelativePath") == '1':
             dir = os.path.relpath(dir)
 
@@ -169,7 +173,7 @@ class FileExplorer(Explorer):
             cmd = lfEval("g:Lf_ExternalCommand") % dir.join('""')
         elif lfEval("executable('rg')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")
-            if os.name == 'nt': # there is bug
+            if os.name == 'nt': # https://github.com/BurntSushi/ripgrep/issues/500
                 color = ""
                 ignore = ""
                 for i in wildignore["dir"]:
@@ -248,6 +252,9 @@ class FileExplorer(Explorer):
 
         return cmd
 
+    def setContent(self, content):
+        self._content = content
+
     def getContent(self, *args, **kwargs):
         if len(args) > 0:
             if os.path.exists(lfDecode(args[0])):
@@ -258,18 +265,24 @@ class FileExplorer(Explorer):
                 return None
 
         dir = os.getcwd()
-        cmd = self._buildCmd(dir)
-        if cmd:
-            executor = AsyncExecutor()
-            result = executor.execute(cmd)
-            return result
 
-        if lfEval("g:Lf_UseMemoryCache") == '0' or dir != self._cur_dir:
+        if lfEval("g:Lf_UseMemoryCache") == '0' or dir != self._cur_dir or \
+                not self._content:
             self._cur_dir = dir
-            self._content = self._getFileList(dir)
+            cmd = self._buildCmd(dir)
+            if cmd:
+                executor = AsyncExecutor()
+                content = executor.execute(cmd)
+                return content
+            else:
+                self._content = self._getFileList(dir)
+
         return self._content
 
     def getFreshContent(self, *args, **kwargs):
+        if self._external_cmd:
+            return getContent(*args, **kwargs)
+
         self._refresh()
         self._content = self._getFileList(self._cur_dir)
         return self._content

@@ -31,3 +31,5 @@ class Explorer(metaclass = ABCMeta):
     def isFilePath(self):
         return True
 
+    def setContent(self, content):
+        pass

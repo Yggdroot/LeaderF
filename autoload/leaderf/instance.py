@@ -203,18 +203,20 @@ class LfInstance(object):
 
         self._after_exit()
 
-    def setBuffer(self, content, unit=1):
+    def setBuffer(self, content):
         self.buffer.options['modifiable'] = True
-        self.setStlTotal(0)
-        lfCmd("redrawstatus")
+        if lfEval("has('nvim')") == '1':
+            # NvimError: string cannot contain newlines
+            content = [ line.rstrip("\r\n") for line in content ]
+        self._buffer_object[:] = content
+
+    def initBuffer(self, content, unit, set_content):
         if isinstance(content, list):
-            if lfEval("has('nvim')") == '1':
-                # NvimError: string cannot contain newlines
-                content = [ line.rstrip("\r\n") for line in content ]
-            self._buffer_object[:] = content
+            self.setBuffer(content)
             self.setStlTotal(len(content)//unit)
             return
 
+        self.buffer.options['modifiable'] = True
         self._buffer_object[:] = []
 
         try:
@@ -231,6 +233,7 @@ class LfInstance(object):
                     lfCmd("redrawstatus")
             self.setStlTotal((i+1)//unit)
             lfCmd("redrawstatus")
+            set_content(self.buffer[:])
         except vim.error: # neovim <C-C>
             pass
         except KeyboardInterrupt: # <C-C>

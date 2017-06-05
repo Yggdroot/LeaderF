@@ -33,3 +33,5 @@ class Explorer(object):
     def isFilePath(self):
         return True
 
+    def setContent(self, content):
+        pass
