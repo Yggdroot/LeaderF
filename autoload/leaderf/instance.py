@@ -95,13 +95,16 @@ class LfInstance(object):
         if win_pos != 'fullScreen':
             self._restore_sizes = lfEval("winrestcmd()")
 
-        """ `vim.current.buffer[:] = list` will cost longer and longer time with this block.
+        """
+        https://github.com/vim/vim/issues/1737
+        https://github.com/vim/vim/issues/1738
+        `vim.current.buffer[:] = list` will cost longer and longer time with this block.
             I don't know why?
         """
-        # clear the buffer first to avoid a flash
-        if self._buffer_object:
-            self.buffer.options['modifiable'] = True
-            self._buffer_object[:] = []
+        # # clear the buffer first to avoid a flash
+        # if self._buffer_object:
+        #     self.buffer.options['modifiable'] = True
+        #     del self._buffer_object[:]
 
         if win_pos == 'bottom':
             lfCmd("silent! noa keepa keepj bo sp %s" % self._buffer_name)

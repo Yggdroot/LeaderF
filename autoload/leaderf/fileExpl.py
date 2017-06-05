@@ -216,6 +216,7 @@ class FileExplorer(Explorer):
                 followlinks = "-f"
             else:
                 followlinks = ""
+
             cmd = 'ag --nocolor %s %s -g "" "%s"' % (ignore, followlinks, dir)
         elif lfEval("executable('find')") == '1' and os.name != 'nt':
             wildignore = lfEval("g:Lf_WildIgnore")
