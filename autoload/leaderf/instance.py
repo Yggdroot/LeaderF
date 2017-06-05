@@ -98,10 +98,10 @@ class LfInstance(object):
         """ `vim.current.buffer[:] = list` will cost longer and longer time with this block.
             I don't know why?
         """
-        # # clear the buffer first to avoid a flash
-        # if self._buffer_object:
-        #     self.buffer.options['modifiable'] = True
-        #     del self._buffer_object[:]
+        # clear the buffer first to avoid a flash
+        if self._buffer_object:
+            self.buffer.options['modifiable'] = True
+            self._buffer_object[:] = []
 
         if win_pos == 'bottom':
             lfCmd("silent! noa keepa keepj bo sp %s" % self._buffer_name)
@@ -204,56 +204,34 @@ class LfInstance(object):
         self.buffer.options['modifiable'] = True
         self.setStlTotal(0)
         lfCmd("redrawstatus")
-        if lfEval("has('nvim')") == '1':
-            # NvimError: string cannot contain newlines
-            if isinstance(content, list):
+        if isinstance(content, list):
+            if lfEval("has('nvim')") == '1':
+                # NvimError: string cannot contain newlines
                 content = [ line.rstrip("\r\n") for line in content ]
-                self._buffer_object[:] = content
-                self.setStlTotal(len(content)//unit)
-                return
+            self._buffer_object[:] = content
+            self.setStlTotal(len(content)//unit)
+            return
 
-            self._buffer_object[:] = []
+        self._buffer_object[:] = []
 
-            try:
-                start = time.time()
-                i = 0
-                for i, line in enumerate(content):
-                    if i == 0:
-                        self._buffer_object[i] = line.rstrip("\r\n")
-                    else:
-                        self._buffer_object.append(line.rstrip("\r\n"))
-                    if time.time() - start > 0.2:
-                        start = time.time()
-                        self.setStlTotal((i+1)//unit)
-                        lfCmd("redrawstatus")
-                self.setStlTotal((i+1)//unit)
-                lfCmd("redrawstatus")
-            except vim.error: # <C-C>
-                pass
-        else:
-            if isinstance(content, list):
-                self._buffer_object[:] = content
-                self.setStlTotal(len(content)//unit)
-                return
-
-            self._buffer_object[:] = []
-
-            try:
-                start = time.time()
-                i = 0
-                for i, line in enumerate(content):
-                    if i == 0:
-                        self._buffer_object[i] = line
-                    else:
-                        self._buffer_object.append(line)
-                    if time.time() - start > 0.2:
-                        start = time.time()
-                        self.setStlTotal((i+1)//unit)
-                        lfCmd("redrawstatus")
-                self.setStlTotal((i+1)//unit)
-                lfCmd("redrawstatus")
-            except KeyboardInterrupt: # <C-C>
-                pass
+        try:
+            start = time.time()
+            i = 0
+            for i, line in enumerate(content):
+                if i == 0:
+                    self._buffer_object[i] = line
+                else:
+                    self._buffer_object.append(line)
+                if time.time() - start > 0.2:
+                    start = time.time()
+                    self.setStlTotal((i+1)//unit)
+                    lfCmd("redrawstatus")
+            self.setStlTotal((i+1)//unit)
+            lfCmd("redrawstatus")
+        except vim.error: # neovim <C-C>
+            pass
+        except KeyboardInterrupt: # <C-C>
+            pass
 
     @property
     def tabpage(self):
