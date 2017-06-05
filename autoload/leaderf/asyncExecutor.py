@@ -52,7 +52,11 @@ class AsyncExecutor(object):
                 if err:
                     raise Exception(lfEncode(lfBytes2Str(err)))
             finally:
-                fd.close()
+                try:
+                    fd.close()
+                except IOError:
+                    pass
+
                 if cleanup:
                     cleanup()
 

@@ -40,7 +40,7 @@ class FileExplorer(Explorer):
                                        'python' + lfEval("g:Lf_PythonVersion"),
                                        'file')
         self._cache_index = os.path.join(self._cache_dir, 'cacheIndex')
-        self._external_cmd = ""
+        self._external_cmd = None
         self._initCache()
 
     def _initCache(self):
@@ -250,6 +250,8 @@ class FileExplorer(Explorer):
         else:
             cmd = None
 
+        self._external_cmd = cmd
+
         return cmd
 
     def setContent(self, content):
@@ -281,7 +283,8 @@ class FileExplorer(Explorer):
 
     def getFreshContent(self, *args, **kwargs):
         if self._external_cmd:
-            return getContent(*args, **kwargs)
+            self._content = []
+            return self.getContent(*args, **kwargs)
 
         self._refresh()
         self._content = self._getFileList(self._cur_dir)
