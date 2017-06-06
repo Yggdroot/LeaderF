@@ -1,4 +1,6 @@
+import os
 import sys
+import shlex
 import subprocess
 import threading
 from leaderf.utils import *
@@ -23,15 +25,24 @@ class AsyncExecutor(object):
             for line in iter(fd.readline, b""):
                 queue.put(line)
         except:
-            process.terminate()
+            if os.name == 'nt':
+                subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=process.pid), shell=True)
+            else:
+                process.terminate()
         finally:
             queue.put(None)
 
     def execute(self, cmd, cleanup=None):
-        process = subprocess.Popen(cmd, shell=True,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   universal_newlines=False)
+        if os.name == 'nt':
+            process = subprocess.Popen(cmd, shell=True,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE,
+                                       universal_newlines=False)
+        else:
+            process = subprocess.Popen(shlex.split(cmd), shell=False,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE,
+                                       universal_newlines=False)
 
         stdout_thread = threading.Thread(target=self._readerThread,
                                          args=(process.stdout, self._outQueue, process))
