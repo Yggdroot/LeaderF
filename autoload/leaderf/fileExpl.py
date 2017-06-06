@@ -242,11 +242,11 @@ class FileExplorer(Explorer):
             else:
                 strip = ""
 
-            cmd = 'find %s "%s" %s %s -type f -print %s' % (followlinks,
-                                                            dir,
-                                                            ignore_dir,
-                                                            ignore_file,
-                                                            strip)
+            cmd = 'find %s "%s" -name . -o %s %s -type f -print %s' % (followlinks,
+                                                                       dir,
+                                                                       ignore_dir,
+                                                                       ignore_file,
+                                                                       strip)
         else:
             cmd = None
 
