@@ -39,7 +39,7 @@ class AsyncExecutor(object):
                                        stderr=subprocess.PIPE,
                                        universal_newlines=False)
         else:
-            process = subprocess.Popen(shlex.split(cmd), shell=False,
+            process = subprocess.Popen("exec " + cmd, shell=True,
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
                                        universal_newlines=False)
