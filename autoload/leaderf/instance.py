@@ -75,6 +75,7 @@ class LfInstance(object):
         lfCmd("setlocal nowrap")
         lfCmd("setlocal nofoldenable")
         lfCmd("setlocal foldcolumn=0")
+        lfCmd("setlocal foldmethod=manual")
         lfCmd("setlocal shiftwidth=4")
         lfCmd("setlocal cursorline")
         lfCmd("setlocal filetype=leaderf")
@@ -98,13 +99,11 @@ class LfInstance(object):
         """
         https://github.com/vim/vim/issues/1737
         https://github.com/vim/vim/issues/1738
-        `vim.current.buffer[:] = list` will cost longer and longer time with this block.
-            I don't know why?
         """
-        # # clear the buffer first to avoid a flash
-        # if self._buffer_object:
-        #     self.buffer.options['modifiable'] = True
-        #     del self._buffer_object[:]
+        # clear the buffer first to avoid a flash
+        if self._buffer_object:
+            self.buffer.options['modifiable'] = True
+            del self._buffer_object[:]
 
         if win_pos == 'bottom':
             lfCmd("silent! noa keepa keepj bo sp %s" % self._buffer_name)
