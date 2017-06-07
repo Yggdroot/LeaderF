@@ -163,9 +163,6 @@ class FileExplorer(Explorer):
                         cache_file.write(line + '\n')
 
     def _buildCmd(self, dir):
-        if self._external_cmd:
-            return self._external_cmd
-
         if lfEval("g:Lf_ShowRelativePath") == '1':
             dir = os.path.relpath(dir)
 

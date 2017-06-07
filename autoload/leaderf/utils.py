@@ -28,10 +28,15 @@ if sys.version_info >= (3, 0):
         return len(str.encode(lfEval("&encoding"), errors="ignore"))
 
     def lfBytes2Str(bytes):
-        if locale.getdefaultlocale()[1] is None:
-            return bytes.decode()
-        else:
-            return bytes.decode(locale.getdefaultlocale()[1])
+        try:
+            if locale.getdefaultlocale()[1] is None:
+                return bytes.decode()
+            else:
+                return bytes.decode(locale.getdefaultlocale()[1])
+        except ValueError:
+            return bytes.decode(errors="ignore")
+        except UnicodeDecodeError:
+            return bytes.decode(errors="ignore")
 
 else: # python 2.x
 
