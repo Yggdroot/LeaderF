@@ -76,15 +76,41 @@ else: # python 2.x
 
 #-----------------------------------------------------------------------------
 
-# os.path.basename is too slow!
-def getBasename(path):
-    slash_pos = path.rfind(os.sep)
-    return path if slash_pos == -1 else path[slash_pos + 1:]
+if os.name == 'nt':
 
-# os.path.dirname is too slow!
-def getDirname(path):
-    slash_pos = path.rfind(os.sep)
-    return '' if slash_pos == -1 else path[:slash_pos+1]
+    # os.path.basename is too slow!
+    def getBasename(path):
+        for i, c in enumerate(reversed(path)):
+            if c in '/\\':
+                backslash_pos = len(path) - i
+                break
+        else:
+            return path
+
+        return path[backslash_pos:]
+
+    # os.path.dirname is too slow!
+    def getDirname(path):
+        for i, c in enumerate(reversed(path)):
+            if c in '/\\':
+                backslash_pos = len(path) - i
+                break
+        else:
+            return ''
+
+        return path[:backslash_pos]
+
+else:
+
+    # os.path.basename is too slow!
+    def getBasename(path):
+        slash_pos = path.rfind(os.sep)
+        return path if slash_pos == -1 else path[slash_pos + 1:]
+
+    # os.path.dirname is too slow!
+    def getDirname(path):
+        slash_pos = path.rfind(os.sep)
+        return '' if slash_pos == -1 else path[:slash_pos+1]
 
 def escQuote(str):
     return "" if str is None else str.replace("'","''")

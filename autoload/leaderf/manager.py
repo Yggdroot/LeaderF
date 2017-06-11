@@ -313,7 +313,11 @@ class Manager(object):
                                        self._cli.isFullPath,
                                        fuzzy_match.getHighlights)
 
-        pairs = self._filter(30000, filter_method, content)
+        if self._cli.isFullPath:
+            step = 15000
+        else:
+            step = 30000
+        pairs = self._filter(step, filter_method, content)
         pairs.sort(key=operator.itemgetter(0), reverse=True)
         self._getInstance().setBuffer(self._getList(pairs))
         highlight_method()

@@ -7,6 +7,7 @@ import os
 import os.path
 import fnmatch
 import time
+import locale
 from functools import wraps
 from leaderf.utils import *
 from leaderf.explorer import *
@@ -162,13 +163,53 @@ class FileExplorer(Explorer):
                     for line in file_list:
                         cache_file.write(line + '\n')
 
+    def _exists(self, path, dir):
+        """
+        return True if `dir` exists in `path` or its ancestor path,
+        otherwise return False
+        """
+        if os.name == 'nt':
+            # e.g. C:\\
+            root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
+        else:
+            root = '/'
+
+        while os.path.abspath(path) != root:
+            cur_dir = os.path.join(path, dir)
+            if os.path.exists(cur_dir) and os.path.isdir(cur_dir):
+                return True
+            path = os.path.join(path, "..")
+
+        cur_dir = os.path.join(path, dir)
+        if os.path.exists(cur_dir) and os.path.isdir(cur_dir):
+            return True
+
+        return False
+
     def _buildCmd(self, dir):
         if lfEval("g:Lf_ShowRelativePath") == '1':
             dir = os.path.relpath(dir)
 
         if lfEval("exists('g:Lf_ExternalCommand')") == '1':
             cmd = lfEval("g:Lf_ExternalCommand") % dir.join('""')
-        elif lfEval("executable('rg')") == '1':
+            return cmd
+
+        if lfEval("g:Lf_UseVersionControlTool") == '1':
+            if self._exists(dir, ".git"):
+                return "git ls-files"
+            elif self._exists(dir, ".hg"):
+                return "hg files"
+
+        if lfEval("exists('g:Lf_DefaultExternalTool')") == '1':
+            default_tool = {"rg": 0, "pt": 0, "ag": 0, "find": 0}
+            tool = lfEval("g:Lf_DefaultExternalTool")
+            if tool and lfEval("executable('%s')" % tool) == '0':
+                raise Exception("executable '%s' can not be found!" % tool)
+            default_tool[tool] = 1
+        else:
+            default_tool = {"rg": 1, "pt": 1, "ag": 1, "find": 1}
+
+        if default_tool["rg"] and lfEval("executable('rg')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")
             if os.name == 'nt': # https://github.com/BurntSushi/ripgrep/issues/500
                 color = ""
@@ -191,7 +232,7 @@ class FileExplorer(Explorer):
                 followlinks = ""
 
             cmd = 'rg --files %s %s %s "%s"' % (color, ignore, followlinks, dir)
-        elif lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
+        elif default_tool["pt"] and lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
             for i in wildignore["dir"]:
@@ -205,7 +246,7 @@ class FileExplorer(Explorer):
                 followlinks = ""
 
             cmd = 'pt --nocolor %s %s -g="" "%s"' % (ignore, followlinks, dir)
-        elif lfEval("executable('ag')") == '1':
+        elif default_tool["ag"] and lfEval("executable('ag')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
             for i in wildignore["dir"]:
@@ -219,7 +260,8 @@ class FileExplorer(Explorer):
                 followlinks = ""
 
             cmd = 'ag --nocolor %s %s -g "" "%s"' % (ignore, followlinks, dir)
-        elif lfEval("executable('find')") == '1' and os.name != 'nt':
+        elif default_tool["find"] and lfEval("executable('find')") == '1' \
+                and lfEval("executable('sed')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore_dir = ""
             for d in wildignore["dir"]:
@@ -271,7 +313,10 @@ class FileExplorer(Explorer):
             cmd = self._buildCmd(dir)
             if cmd:
                 executor = AsyncExecutor()
-                content = executor.execute(cmd)
+                if cmd.split(None, 1)[0] == "dir":
+                    content = executor.execute(cmd, encoding=locale.getdefaultlocale()[1])
+                else:
+                    content = executor.execute(cmd)
                 return content
             else:
                 self._content = self._getFileList(dir)

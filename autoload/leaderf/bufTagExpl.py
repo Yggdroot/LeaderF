@@ -102,7 +102,7 @@ class BufTagExplorer(Explorer):
             # {tagname}<Tab>{tagfile}<Tab>{tagaddress}[;"<Tab>{tagfield}..]
             # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}<Tab>{scope}
             cmd = '{} -n -u --fields=Ks {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(file_name))
-            result = executor.execute(cmd, partial(os.remove, file_name))
+            result = executor.execute(cmd, cleanup=partial(os.remove, file_name))
         else:
             cmd = '{} -n -u --fields=Ks {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(buffer.name))
             result = executor.execute(cmd)

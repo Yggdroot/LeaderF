@@ -120,7 +120,7 @@ class FunctionExplorer(Explorer):
                 file_name = f.name
             # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}
             cmd = '{} -n -u --fields=k {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(file_name))
-            result = executor.execute(cmd, partial(os.remove, file_name))
+            result = executor.execute(cmd, cleanup=partial(os.remove, file_name))
         else:
             cmd = '{} -n -u --fields=k {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(buffer.name))
             result = executor.execute(cmd)

@@ -31,9 +31,9 @@ This plugin is mainly used for locating files, buffers, mrus, tags in large proj
 ==============================================================================
 REQUIREMENTS                                    *leaderf-requirements*
 
-- vim7.0 or higher.
-- vim compiled with Python support, you can check by using echo has('python')
-  or echo has('python3') to see if the result is 1.
+- vim7.4.330 or higher.
+- vim compiled with Python support, you can check by using `echo has('python')`
+  or `echo has('python3')` to see if the result is 1.
 ==============================================================================
 OPTIONS                                         *leaderf-options*
 
@@ -349,7 +349,42 @@ g:Lf_Ctags                                      *g:Lf_Ctags*
 g:Lf_PreviewCode                                *g:Lf_PreviewCode*
     Use this option to specify whether to show the preview of the code the tag
     locates in when navigating the tags.
+
     Default value is 1.
+
+g:Lf_DefaultExternalTool                        *g:Lf_DefaultExternalTool*
+    Use this option to specify the default external tool which is used to
+    index the files. Possible values are 'rg', 'pt'(not available on Windows),
+    'ag', 'find'.  If you do not want to use the external tool: >
+    let g:Lf_DefaultExternalTool = ""
+<
+    By default, use the external tool in the sequence of 'rg', 'pt', 'ag', 'find'
+    if one is available. If none of the tools are available, falls back to the
+    build-in python implementation which is a little slower.
+
+g:Lf_UseVersionControlTool                      *g:Lf_UseVersionControlTool*
+    This option specifies whether to use version control tool to index the
+    files when inside a repository under control. If not a version control
+    repository or value is 0, falls back to |g:Lf_DefaultExternalTool|.
+    e.g.
+    use command `git ls-files` for git repository;
+    use command `hg files` for hg repository.
+    Note: |g:Lf_WildIgnore| is ignored when using these commands.
+
+    Default value is 1.
+
+g:Lf_ExternalCommand                            *g:Lf_ExternalCommand*
+    Use this option to specify a external command to index the files. If not
+    specified, falls back to |g:Lf_UseVersionControlTool|.
+
+    Use "%s"(quotes are necessary for directory name with space in it) as the
+    placeholder of the start directory.
+    e.g. >
+    let g:Lf_ExternalCommand = 'dir "%s" /s/b/a-d-h-s'       " On Windows
+    let g:Lf_ExternalCommand = 'find "%s" -type f'           " On MacOSX/Linux
+<
+    Note: |g:Lf_UseVersionControlTool| and |g:Lf_DefaultExternalTool| are
+    ignored if this option is specified.
 
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
@@ -361,7 +396,7 @@ g:Lf_CommandMap                                 *g:Lf_CommandMap*
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
-:Leaderf [directory] or |<leader>|f               *Leaderf*
+:LeaderfFile [directory] or |<leader>|f           *LeaderfFile*
     Launch LeaderF to search files.
 
 :LeaderfBuffer or |<leader>|b                     *LeaderfBuffer*

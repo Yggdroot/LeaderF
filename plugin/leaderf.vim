@@ -106,6 +106,7 @@ call s:InitVar('g:Lf_StlSeparator', {
 call s:InitVar('g:Lf_StlPalette', {})
 call s:InitVar('g:Lf_Ctags', 'ctags')
 call s:InitVar('g:Lf_PreviewCode', 1)
+call s:InitVar('g:Lf_UseVersionControlTool', 1)
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],

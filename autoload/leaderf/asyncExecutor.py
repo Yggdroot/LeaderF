@@ -28,20 +28,23 @@ class AsyncExecutor(object):
             if os.name == 'nt':
                 subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=process.pid), shell=True)
             else:
-                process.terminate()
+                os.killpg(os.getpgid(process.pid), signal.SIGTERM)
         finally:
             queue.put(None)
 
-    def execute(self, cmd, cleanup=None):
+    def execute(self, cmd, encoding=None, cleanup=None):
         if os.name == 'nt':
-            process = subprocess.Popen(cmd, shell=True,
+            process = subprocess.Popen(cmd, bufsize=-1,
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
+                                       shell=True,
                                        universal_newlines=False)
         else:
-            process = subprocess.Popen("exec " + cmd, shell=True,
+            process = subprocess.Popen(cmd, bufsize=-1,
                                        stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE,
+                                       preexec_fn=os.setsid,
+                                       shell=True,
                                        universal_newlines=False)
 
         stdout_thread = threading.Thread(target=self._readerThread,
@@ -54,10 +57,14 @@ class AsyncExecutor(object):
         stderr_thread.daemon = True
         stderr_thread.start()
 
-        def read(fd, outQueue, errQueue, cleanup):
+        def read(fd, outQueue, errQueue, encoding, cleanup):
             try:
-                for line in iter(outQueue.get, None):
-                    yield line.rstrip(b"\r\n")
+                if encoding:
+                    for line in iter(outQueue.get, None):
+                        yield line.rstrip(b"\r\n").decode(encoding)
+                else:
+                    for line in iter(outQueue.get, None):
+                        yield line.rstrip(b"\r\n")
 
                 err = b"".join(iter(errQueue.get, None))
                 if err:
@@ -73,7 +80,7 @@ class AsyncExecutor(object):
 
         stdout_thread.join(0.01)
 
-        out = read(process.stdout, self._outQueue, self._errQueue, cleanup)
+        out = read(process.stdout, self._outQueue, self._errQueue, encoding, cleanup)
 
         return out
 
