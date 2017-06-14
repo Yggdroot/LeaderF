@@ -198,7 +198,7 @@ class FileExplorer(Explorer):
             if self._exists(dir, ".git"):
                 return "git ls-files"
             elif self._exists(dir, ".hg"):
-                return "hg files"
+                return 'hg files "%s"' % dir
 
         if lfEval("exists('g:Lf_DefaultExternalTool')") == '1':
             default_tool = {"rg": 0, "pt": 0, "ag": 0, "find": 0}
