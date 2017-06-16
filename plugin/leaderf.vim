@@ -221,6 +221,13 @@ command! -bar -nargs=0 LeaderfHistoryCmd call leaderf#startHistoryExpl(g:Lf_Wind
 command! -bar -nargs=0 LeaderfHistorySearch call leaderf#startHistoryExpl(g:Lf_WindowPosition, "search") | norm! n
 
 
-exec 'nnoremap <silent> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
-exec 'nnoremap <silent> ' g:Lf_ShortcutB ':<C-U>LeaderfBuffer<CR>'
+try
+    exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
+catch /^Vim\%((\a\+)\)\=:E227/
+endtry
+
+try
+    exec 'nnoremap <silent><unique> ' g:Lf_ShortcutB ':<C-U>LeaderfBuffer<CR>'
+catch /^Vim\%((\a\+)\)\=:E227/
+endtry
 
