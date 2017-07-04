@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import vim
+import time
 import operator
+import itertools
 from functools import partial
 from functools import wraps
 from leaderf.instance import LfInstance
@@ -129,6 +131,7 @@ class Manager(object):
 
     def _beforeExit(self):
         self._cleanup()
+        self._getExplorer().cleanup()
 
     def _afterExit(self):
         pass
@@ -212,7 +215,7 @@ class Manager(object):
             exit_loop = True
         return exit_loop
 
-    def _search(self, content):
+    def _search(self, content, is_continue=False, step=30000):
         self.clearSelections()
         self._cli.highlightMatches()
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
@@ -222,11 +225,11 @@ class Manager(object):
             return
 
         if self._cli.isFuzzy:
-            self._fuzzySearch(content)
+            self._fuzzySearch(content, is_continue, step)
         else:
-            self._regexSearch(content)
+            self._regexSearch(content, is_continue, step)
 
-    def _filter(self, step, filter_method, content):
+    def _filter(self, step, filter_method, content, is_continue):
         """ Construct a list from result of filter_method(content).
 
         Args:
@@ -241,23 +244,38 @@ class Manager(object):
         cb = self._getInstance().buffer
         result = []
         if self._index == 0:
-            self._index = step
-            if self._index < length:
-                result.extend(filter_method(content[:self._index]))
-            else:
-                result.extend(filter_method(content))
-        else:
-            result.extend(filter_method(cb[:]))
-            if self._index < length:
-                end = self._index + step - len(cb)
-                result.extend(filter_method(content[self._index:end]))
-                self._index = end
-
-        step = 5000 // unit * unit
-        while len(result) < 200 and self._index < length:
-            end = self._index + step
+            self._previous_result = []
+            self._cb_content = []
+            self._index = min(step, length)
+            result.extend(filter_method(content[:self._index]))
+        elif is_continue:
+            end = min(self._index + step, length)
             result.extend(filter_method(content[self._index:end]))
             self._index = end
+        else:
+            if len(cb) >= step:
+                result.extend(filter_method(cb[:step]))
+                self._cb_content += cb[step:]
+            else:
+                result.extend(filter_method(cb[:]))
+                left = step - len(cb)
+                if len(self._cb_content) >= left:
+                    result.extend(filter_method(self._cb_content[:left]))
+                    self._cb_content = self._cb_content[left:]
+                else:
+                    result.extend(filter_method(self._cb_content))
+                    left -= len(self._cb_content)
+                    self._cb_content = []
+                    if self._index < length:
+                        end = min(self._index + left, length)
+                        result.extend(filter_method(content[self._index:end]))
+                        self._index = end
+
+        if is_continue:
+            self._previous_result += result
+            result = self._previous_result
+        else:
+            self._previous_result = result
 
         return result
 
@@ -276,7 +294,7 @@ class Manager(object):
                     for line in iterable)
         return ((i[0] + i[1], i[2]) for i in triples if i[0] and i[1])
 
-    def _fuzzySearch(self, content):
+    def _fuzzySearch(self, content, is_continue, step):
         encoding = lfEval("&encoding")
         if self._cli.isRefinement:
             if self._cli.pattern[1] == '':      # e.g. abc;
@@ -313,11 +331,10 @@ class Manager(object):
                                        self._cli.isFullPath,
                                        fuzzy_match.getHighlights)
 
-        if self._cli.isFullPath:
-            step = 15000
-        else:
-            step = 30000
-        pairs = self._filter(step, filter_method, content)
+        if self._cli.isFullPath and step == 30000:
+            step = 8000
+
+        pairs = self._filter(step, filter_method, content, is_continue)
         pairs.sort(key=operator.itemgetter(0), reverse=True)
         self._getInstance().setBuffer(self._getList(pairs))
         highlight_method()
@@ -431,10 +448,10 @@ class Manager(object):
         except vim.error:
             return iter([])
 
-    def _regexSearch(self, content):
+    def _regexSearch(self, content, is_continue, step):
         if not self._cli.isPrefix:
             self._index = 0
-        lines = self._filter(8000, self._regexFilter, content)
+        lines = self._filter(8000, self._regexFilter, content, is_continue)
         self._getInstance().setBuffer(lines)
 
     def clearSelections(self):
@@ -512,8 +529,13 @@ class Manager(object):
         if normal_mode: # when called in Normal mode
             self._getInstance().buffer.options['modifiable'] = True
 
+        self._clearHighlights()
+        self._clearHighlightsPos()
+        self.clearSelections()
+
         self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
         self._content = self._getInstance().buffer[:]
+        self._iteration_end = True
 
         if self._cli.pattern:
             self._index = 0
@@ -584,20 +606,72 @@ class Manager(object):
         self._setStlMode()
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
-        self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
-        self._content = self._getInstance().buffer[:]
-
         lfCmd("normal! gg")
         self._index = 0
+        self._start_time = time.time()
 
-        self.input()
+        if isinstance(content, list):
+            self._content = content
+            self._iteration_end = True
+            self._getInstance().setStlTotal(len(content)//self._getUnit())
+            self._getInstance().setBuffer(content)
+            self.input()
+        else:
+            if lfEval("g:Lf_CursorBlink") == '0':
+                self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
+                self._content = self._getInstance().buffer[:]
+                self._iteration_end = True
+                self.input()
+            else:
+                self._content = []
+                self._iteration_end = False
+                self._backup = None
+                self.input(content)
+
+    def setContent(self, content):
+        if not content or self._iteration_end == True:
+            if time.time() - self._start_time > 0.1:
+                self._start_time = time.time()
+                if self._index < len(self._content):
+                    self._search(self._content, True, 1000)
+                    return True
+            return False
+
+        i = -1
+        for i, line in enumerate(itertools.islice(content, 10)):
+            self._content.append(line)
+            if self._index == 0:
+                if i == 0 and len(self._getInstance().buffer[0]) == 0: # the buffer is empty
+                    self._getInstance().buffer[0] = line
+                else:
+                    self._getInstance().appendLine(line)
+
+        if i == -1:
+            self._iteration_end = True
+            self._getExplorer().setContent(self._content)
+            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+            lfCmd("redrawstatus")
+            if self._index < len(self._content):
+                self._search(self._content, True, 1000)
+            return False
+        else:
+            if time.time() - self._start_time > 0.1:
+                self._start_time = time.time()
+                self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+                lfCmd("redrawstatus")
+                if self._index < len(self._content):
+                    self._search(self._content, True, 1000)
+            return True
 
     @modifiableController
-    def input(self):
+    def input(self, content=None):
         self._hideHelp()
         self._resetHighlights()
 
-        for cmd in self._cli.input():
+        if self._iteration_end == False and self._backup:
+            content = self._backup
+
+        for cmd in self._cli.input(partial(self.setContent, content)):
             if equal(cmd, '<Update>'):
                 self._search(self._content)
             elif equal(cmd, '<Shorten>'):
@@ -639,6 +713,7 @@ class Manager(object):
                 self._cli.hideCursor()
                 self._createHelpHint()
                 self._resetHighlights()
+                self._backup = content
                 break
             elif equal(cmd, '<F5>'):
                 self.refresh(False)

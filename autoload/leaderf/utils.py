@@ -27,12 +27,15 @@ if sys.version_info >= (3, 0):
         """ string length in bytes """
         return len(str.encode(lfEval("&encoding"), errors="ignore"))
 
-    def lfBytes2Str(bytes):
+    def lfBytes2Str(bytes, encoding=None):
         try:
-            if locale.getdefaultlocale()[1] is None:
-                return bytes.decode()
+            if encoding:
+                return bytes.decode(encoding)
             else:
-                return bytes.decode(locale.getdefaultlocale()[1])
+                if locale.getdefaultlocale()[1] is None:
+                    return bytes.decode()
+                else:
+                    return bytes.decode(locale.getdefaultlocale()[1])
         except ValueError:
             return bytes.decode(errors="ignore")
         except UnicodeDecodeError:
@@ -71,7 +74,7 @@ else: # python 2.x
         """ string length in bytes """
         return len(str)
 
-    def lfBytes2Str(bytes):
+    def lfBytes2Str(bytes, encoding=None):
         return bytes
 
 #-----------------------------------------------------------------------------

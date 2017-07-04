@@ -87,6 +87,7 @@ class LfCli(object):
     def clear(self):
         self._cmdline[:] = []
         self._cursor_pos = 0
+        self._pattern = ''
 
     def _toLeft(self):
         if self._cursor_pos > 0:
@@ -288,14 +289,15 @@ class LfCli(object):
         return self._is_fuzzy
 
     @cursorController
-    def input(self):
+    def input(self, callback):
         try:
             self._blinkon = True
             while 1:
                 self._buildPrompt()
                 self._idle = False
 
-                time.sleep(0.001)
+                if callback() == False:
+                    time.sleep(0.001)
 
                 if lfEval("g:Lf_CursorBlink") == '1':
                     lfCmd("let nr = getchar(1)")

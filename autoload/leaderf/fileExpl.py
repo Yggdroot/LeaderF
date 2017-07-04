@@ -43,6 +43,7 @@ class FileExplorer(Explorer):
         self._cache_index = os.path.join(self._cache_dir, 'cacheIndex')
         self._external_cmd = None
         self._initCache()
+        self._executor = []
 
     def _initCache(self):
         if not os.path.exists(self._cache_dir):
@@ -192,13 +193,18 @@ class FileExplorer(Explorer):
 
         if lfEval("exists('g:Lf_ExternalCommand')") == '1':
             cmd = lfEval("g:Lf_ExternalCommand") % dir.join('""')
+            self._external_cmd = cmd
             return cmd
 
         if lfEval("g:Lf_UseVersionControlTool") == '1':
             if self._exists(dir, ".git"):
-                return "git ls-files"
+                cmd = "git ls-files"
+                self._external_cmd = cmd
+                return cmd
             elif self._exists(dir, ".hg"):
-                return 'hg files "%s"' % dir
+                cmd = 'hg files "%s"' % dir
+                self._external_cmd = cmd
+                return cmd
 
         if lfEval("exists('g:Lf_DefaultExternalTool')") == '1':
             default_tool = {"rg": 0, "pt": 0, "ag": 0, "find": 0}
@@ -313,10 +319,11 @@ class FileExplorer(Explorer):
             cmd = self._buildCmd(dir)
             if cmd:
                 executor = AsyncExecutor()
+                self._executor.append(executor)
                 if cmd.split(None, 1)[0] == "dir":
-                    content = executor.execute(cmd, encoding=locale.getdefaultlocale()[1])
-                else:
                     content = executor.execute(cmd)
+                else:
+                    content = executor.execute(cmd, encoding=lfEval("&encoding"))
                 return content
             else:
                 self._content = self._getFileList(dir)
@@ -343,6 +350,11 @@ class FileExplorer(Explorer):
 
     def supportsNameOnly(self):
         return True
+
+    def cleanup(self):
+        for exe in self._executor:
+            exe.killProcess()
+        self._executor = []
 
 
 #*****************************************************

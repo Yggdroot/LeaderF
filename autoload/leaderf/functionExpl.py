@@ -23,6 +23,7 @@ class FunctionExplorer(Explorer):
         self._ctags = lfEval("g:Lf_Ctags")
         self._func_list = {}       # a dict with (key, value) = (buffer number, taglist)
         self._buf_changedtick = {} # a dict with (key, value) = (buffer number, changedtick)
+        self._executor = []
         self._ctags_options = {
                 "aspvbs": "--asp-kinds=f",
                 "awk": "--awk-kinds=f",
@@ -111,6 +112,7 @@ class FunctionExplorer(Explorer):
         extra_options = self._ctags_options.get(lfEval("getbufvar(%d, '&filetype')" % buffer.number), "")
 
         executor = AsyncExecutor()
+        self._executor.append(executor)
         if buffer.options["modified"] == True:
             with tempfile.NamedTemporaryFile(mode='w+',
                                              suffix='_'+os.path.basename(buffer.name),
@@ -132,7 +134,7 @@ class FunctionExplorer(Explorer):
             return []
 
         # a list of [tag, file, line, kind]
-        output = [lfBytes2Str(line).split('\t') for line in result]
+        output = [line.split('\t') for line in result]
         if not output:
             return []
         if len(output[0]) < 4:
@@ -169,6 +171,11 @@ class FunctionExplorer(Explorer):
 
         if buf_number in self._buf_changedtick:
             del self._buf_changedtick[buf_number]
+
+    def cleanup(self):
+        for exe in self._executor:
+            exe.killProcess()
+        self._executor = []
 
 
 #*****************************************************

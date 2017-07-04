@@ -209,6 +209,9 @@ class LfInstance(object):
             content = [ line.rstrip("\r\n") for line in content ]
         self._buffer_object[:] = content
 
+    def appendLine(self, line):
+        self._buffer_object.append(line)
+
     def initBuffer(self, content, unit, set_content):
         if isinstance(content, list):
             self.setBuffer(content)
@@ -226,7 +229,7 @@ class LfInstance(object):
                     self._buffer_object[i] = line
                 else:
                     self._buffer_object.append(line)
-                if time.time() - start > 0.2:
+                if time.time() - start > 0.1:
                     start = time.time()
                     self.setStlTotal((i+1)//unit)
                     lfCmd("redrawstatus")

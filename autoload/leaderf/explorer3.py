@@ -33,3 +33,6 @@ class Explorer(metaclass = ABCMeta):
 
     def setContent(self, content):
         pass
+
+    def cleanup(self):
+        pass

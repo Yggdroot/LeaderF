@@ -35,3 +35,6 @@ class Explorer(object):
 
     def setContent(self, content):
         pass
+
+    def cleanup(self):
+        pass

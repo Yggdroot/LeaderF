@@ -24,6 +24,7 @@ class BufTagExplorer(Explorer):
         self._supports_preview = int(lfEval("g:Lf_PreviewCode"))
         self._tag_list = {}        # a dict with (key, value) = (buffer number, taglist)
         self._buf_changedtick = {} # a dict with (key, value) = (buffer number, changedtick)
+        self._executor = []
 
     def getContent(self, *args, **kwargs):
         if len(args) > 0: # all buffers
@@ -92,6 +93,7 @@ class BufTagExplorer(Explorer):
             extra_options = ""
 
         executor = AsyncExecutor()
+        self._executor.append(executor)
         if buffer.options["modified"] == True:
             with tempfile.NamedTemporaryFile(mode='w+',
                                              suffix='_'+os.path.basename(buffer.name),
@@ -114,7 +116,7 @@ class BufTagExplorer(Explorer):
             return []
 
         # a list of [tag, file, line, kind, scope]
-        output = [lfBytes2Str(line).split('\t') for line in result]
+        output = [line.split('\t') for line in result]
         if not output:
             return []
 
@@ -182,6 +184,11 @@ class BufTagExplorer(Explorer):
 
         if buf_number in self._buf_changedtick:
             del self._buf_changedtick[buf_number]
+
+    def cleanup(self):
+        for exe in self._executor:
+            exe.killProcess()
+        self._executor = []
 
 
 #*****************************************************
