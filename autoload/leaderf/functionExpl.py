@@ -273,6 +273,27 @@ class FunctionExplManager(Manager):
     def removeCache(self, buf_number):
         self._getExplorer().removeCache(buf_number)
 
+    def _previewResult(self):
+        if lfEval("g:Lf_PreviewResult['Function']") == '0':
+            return
+
+        if self._getInstance().empty():
+            return
+
+        orig_pos = self._getInstance().getOriginalPos()
+        cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
+
+        line = self._getInstance().currentLine
+
+        saved_eventignore = vim.options['eventignore']
+        vim.options['eventignore'] = 'all'
+        try:
+            vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
+            self._acceptSelection(line)
+        finally:
+            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
+            vim.options['eventignore'] = saved_eventignore
+
 
 #*****************************************************
 # functionExplManager is a singleton
