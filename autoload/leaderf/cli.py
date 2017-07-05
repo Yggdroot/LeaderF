@@ -57,6 +57,7 @@ class LfCli(object):
             self._is_full_path = True
         elif mode == 'Fuzzy':     # fuzzy mode
             self._is_fuzzy = True
+            self._is_full_path = False
         else:               # regex mode
             self._is_fuzzy = False
             self._is_full_path = True

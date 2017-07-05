@@ -331,7 +331,7 @@ class Manager(object):
                                        self._cli.isFullPath,
                                        fuzzy_match.getHighlights)
 
-        if self._cli.isFullPath and step == 30000:
+        if self._getExplorer().isFilePath() and self._cli.isFullPath and step == 30000:
             step = 8000
 
         pairs = self._filter(step, filter_method, content, is_continue)
