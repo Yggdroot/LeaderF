@@ -324,9 +324,15 @@ class Manager(object):
                                            fuzzy_match1.getHighlights)
         else:
             fuzzy_match = FuzzyMatch(self._cli.pattern, encoding)
-            filter_method = partial(self._fuzzyFilter,
-                                    self._cli.isFullPath,
-                                    fuzzy_match.getWeight)
+            if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                filter_method = partial(self._fuzzyFilter,
+                                        self._cli.isFullPath,
+                                        fuzzy_match.getWeight2)
+            else:
+                filter_method = partial(self._fuzzyFilter,
+                                        self._cli.isFullPath,
+                                        fuzzy_match.getWeight)
+
             highlight_method = partial(self._highlight,
                                        self._cli.isFullPath,
                                        fuzzy_match.getHighlights)
