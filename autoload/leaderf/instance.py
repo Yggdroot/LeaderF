@@ -35,6 +35,7 @@ class LfInstance(object):
         self._win_height = float(lfEval("g:Lf_WindowHeight"))
         self._show_tabline = int(lfEval("&showtabline"))
         self._is_autocmd_set = False
+        self._orig_pos = () # (tabpage, window, buffer)
         self._initStlVar()
         self._highlightStl()
 
@@ -163,6 +164,8 @@ class LfInstance(object):
         if self._enterOpeningBuffer():
             return
 
+        self._orig_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
+
         self._before_enter()
 
         if win_pos == 'fullScreen':
@@ -256,3 +259,9 @@ class LfInstance(object):
     @property
     def currentLine(self):
         return vim.current.line if self._buffer_object == vim.current.buffer else None
+
+    def empty(self):
+        return len(self._buffer_object) == 1 and self._buffer_object[0] == ''
+
+    def getOriginalPos(self):
+        return self._orig_pos

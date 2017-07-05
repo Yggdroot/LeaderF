@@ -220,8 +220,9 @@ class BufTagExplManager(Manager):
         line_nr = items[3].rsplit(":", 1)[1]
         buf_number = items[4]
         lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
-        lfCmd("norm! ^")
-        lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
+        if "preview" not in kwargs:
+            lfCmd("norm! ^")
+            lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
         lfCmd("norm! zz")
         lfCmd("setlocal cursorline! | redraw | sleep 100m | setlocal cursorline!")
 
@@ -374,6 +375,28 @@ class BufTagExplManager(Manager):
 
     def removeCache(self, buf_number):
         self._getExplorer().removeCache(buf_number)
+
+    def _previewResult(self):
+        if lfEval("g:Lf_PreviewResult['BufTag']") == '0':
+            return
+
+        if self._getInstance().empty():
+            return
+
+        orig_pos = self._getInstance().getOriginalPos()
+        cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
+
+        line = self._getInstance().currentLine
+        line_nr = self._getInstance().window.cursor[0]
+
+        saved_eventignore = vim.options['eventignore']
+        vim.options['eventignore'] = 'all'
+        try:
+            vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
+            self._acceptSelection(line, self._getInstance().buffer, line_nr, preview=True)
+        finally:
+            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
+            vim.options['eventignore'] = saved_eventignore
 
 
 #*****************************************************

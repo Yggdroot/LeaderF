@@ -154,6 +154,9 @@ class Manager(object):
     def _supportsRefine(self):
         return False
 
+    def _previewResult(self):
+        pass
+
     #**************************************************************
 
     def _getInstance(self):
@@ -228,6 +231,8 @@ class Manager(object):
             self._fuzzySearch(content, is_continue, step)
         else:
             self._regexSearch(content, is_continue, step)
+
+        self._previewResult()
 
     def _filter(self, step, filter_method, content, is_continue):
         """ Construct a list from result of filter_method(content).
@@ -518,7 +523,7 @@ class Manager(object):
             file = self._getInstance().currentLine
             line_nr = self._getInstance().window.cursor[0]
             self._getInstance().exitBuffer()
-            self._accept(file, mode, self._getInstance().buffer, line_nr)
+            self._accept(file, mode, self._getInstance().buffer, line_nr) # for bugTag
 
         self._setAutochdir()
 
@@ -638,7 +643,7 @@ class Manager(object):
         if not content or self._iteration_end == True:
             if time.time() - self._start_time > 0.1:
                 self._start_time = time.time()
-                if self._index < len(self._content):
+                if self._cli.pattern and self._index < len(self._content):
                     self._search(self._content, True, 1000)
                     return True
             return False
@@ -690,11 +695,14 @@ class Manager(object):
                     self._search(self._content)
             elif equal(cmd, '<Up>'):
                 self._toUp()
+                self._previewResult()
             elif equal(cmd, '<Down>'):
                 self._toDown()
+                self._previewResult()
             elif equal(cmd, '<LeftMouse>'):
                 if self._leftClick():
                     break
+                self._previewResult()
             elif equal(cmd, '<2-LeftMouse>'):
                 self._leftClick()
                 self.accept()
