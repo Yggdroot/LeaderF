@@ -223,7 +223,7 @@ g:Lf_StlSeparator                               *g:Lf_StlSeparator*
     let g:Lf_StlSeparator = { 'left': "\u2b80", 'right': "\u2b82" }
 <
 g:Lf_StlPalette                                 *g:Lf_StlPalette*
-    This is a directory, you can customize the colorscheme using this option.
+    This is a dictionary, you can customize the colorscheme using this option.
     Default colorscheme is equivalent to the following setting: >
     let g:Lf_StlPalette = {
             \   'stlName': {
@@ -386,6 +386,22 @@ g:Lf_ExternalCommand                            *g:Lf_ExternalCommand*
     Note: |g:Lf_UseVersionControlTool| and |g:Lf_DefaultExternalTool| are
     ignored if this option is specified.
 
+g:Lf_PreviewResult                              *g:Lf_PreviewResult*
+    This is a dictionary, indicates whether to enable the preview of the result.
+    Default value is: >
+    let g:Lf_PreviewResult = {
+            \ 'File': 0,
+            \ 'Buffer': 0,
+            \ 'Mru': 0,
+            \ 'Tag': 0,
+            \ 'BufTag': 1,
+            \ 'Function': 1,
+            \ 'Line': 0
+            \}
+<
+    e.g., if you want to disable the preview of BufTag explorer: >
+    let g:Lf_PreviewResult = { 'BufTag': 0 }
+<
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
     prompt(|leaderf-prompt|).

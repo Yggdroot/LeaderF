@@ -59,6 +59,18 @@ function! s:InitVar(var, value)
     endif
 endfunction
 
+function! s:InitDict(var, dict)
+    if !exists(a:var)
+        exec 'let '.a:var.'='.string(a:dict)
+    else
+        let tmp = a:dict
+        for [key, value] in items(eval(a:var))
+            let tmp[key] = value
+        endfor
+        exec 'let '.a:var.'='.string(tmp)
+    endif
+endfunction
+
 function! g:LfNoErrMsgMatch(expr, pat)
     try
         return match(a:expr, a:pat)
@@ -107,7 +119,7 @@ call s:InitVar('g:Lf_StlPalette', {})
 call s:InitVar('g:Lf_Ctags', 'ctags')
 call s:InitVar('g:Lf_PreviewCode', 0)
 call s:InitVar('g:Lf_UseVersionControlTool', 1)
-call s:InitVar('g:Lf_PreviewResult', {
+call s:InitDict('g:Lf_PreviewResult', {
             \ 'File': 0,
             \ 'Buffer': 0,
             \ 'Mru': 0,
