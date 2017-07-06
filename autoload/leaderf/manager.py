@@ -121,6 +121,7 @@ class Manager(object):
         else:
             mode = 'Regex'
         self._getInstance().setStlMode(mode)
+        self._cli.setCurrentMode(mode)
 
     def _beforeEnter(self):
         self._resetAutochdir()

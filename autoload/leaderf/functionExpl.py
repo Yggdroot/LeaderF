@@ -185,6 +185,7 @@ class FunctionExplManager(Manager):
     def __init__(self):
         super(FunctionExplManager, self).__init__()
         self._match_ids = []
+        self._orig_line = ''
 
     def _getExplClass(self):
         return FunctionExplorer
@@ -280,10 +281,14 @@ class FunctionExplManager(Manager):
         if self._getInstance().empty() or vim.current.buffer != self._getInstance().buffer:
             return
 
+        line = self._getInstance().currentLine
+        if self._orig_line == line:
+            return
+
+        self._orig_line = line
+
         orig_pos = self._getInstance().getOriginalPos()
         cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
-
-        line = self._getInstance().currentLine
 
         saved_eventignore = vim.options['eventignore']
         vim.options['eventignore'] = 'all'

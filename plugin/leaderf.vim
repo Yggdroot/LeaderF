@@ -240,6 +240,7 @@ command! -bar -nargs=0 LeaderfLine call leaderf#startLineExpl(g:Lf_WindowPositio
 command! -bar -nargs=0 LeaderfLineAll call leaderf#startLineExpl(g:Lf_WindowPosition, 1)
 command! -bar -nargs=0 LeaderfHistoryCmd call leaderf#startHistoryExpl(g:Lf_WindowPosition, "cmd")
 command! -bar -nargs=0 LeaderfHistorySearch call leaderf#startHistoryExpl(g:Lf_WindowPosition, "search") | norm! n
+command! -bar -nargs=0 LeaderfSelf call leaderf#startSelfExpl(g:Lf_WindowPosition)
 
 
 try

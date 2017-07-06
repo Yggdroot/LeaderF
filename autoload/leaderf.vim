@@ -155,6 +155,16 @@ function! leaderf#historyExplMaps()
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "historyExplManager.toggleHelp()"<CR>
 endfunction
 
+function! leaderf#selfExplMaps()
+    nmapclear <buffer>
+    nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "selfExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> o             :exec g:Lf_py "selfExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "selfExplManager.accept()"<CR>
+    nnoremap <buffer> <silent> q             :exec g:Lf_py "selfExplManager.quit()"<CR>
+    nnoremap <buffer> <silent> i             :exec g:Lf_py "selfExplManager.input()"<CR>
+    nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "selfExplManager.toggleHelp()"<CR>
+endfunction
+
 function! leaderf#LfPy(cmd)
     exec g:Lf_py . a:cmd
 endfunction
@@ -248,4 +258,11 @@ function! leaderf#startHistoryExpl(win_pos, type)
         return
     endif
     call leaderf#LfPy("historyExplManager.startExplorer('".a:win_pos."', '".a:type."')")
+endfunction
+
+function! leaderf#startSelfExpl(win_pos, ...)
+    if s:ImportOnce("s:Lf_selfExpl_loaded", "from leaderf.selfExpl import *") == 0
+        return
+    endif
+    call leaderf#LfPy("selfExplManager.startExplorer('".a:win_pos."')")
 endfunction

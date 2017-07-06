@@ -62,6 +62,20 @@ class LfCli(object):
             self._is_fuzzy = False
             self._is_full_path = True
 
+    def setCurrentMode(self, mode):
+        if mode == 'NameOnly':       # nameOnly mode
+            self._is_fuzzy = True
+            self._is_full_path = False
+        elif mode == 'FullPath':     # fullPath mode
+            self._is_fuzzy = True
+            self._is_full_path = True
+        elif mode == 'Fuzzy':     # fuzzy mode
+            self._is_fuzzy = True
+            self._is_full_path = False
+        else:               # regex mode
+            self._is_fuzzy = False
+            self._is_full_path = True
+
     def _insert(self, ch):
         self._cmdline.insert(self._cursor_pos, ch)
         self._cursor_pos += 1

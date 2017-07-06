@@ -199,6 +199,7 @@ class BufTagExplManager(Manager):
         super(BufTagExplManager, self).__init__()
         self._match_ids = []
         self._supports_preview = int(lfEval("g:Lf_PreviewCode"))
+        self._orig_line = ''
 
     def _getExplClass(self):
         return BufTagExplorer
@@ -383,10 +384,15 @@ class BufTagExplManager(Manager):
         if self._getInstance().empty() or vim.current.buffer != self._getInstance().buffer:
             return
 
+        line = self._getInstance().currentLine
+        if self._orig_line == line:
+            return
+
+        self._orig_line = line
+
         orig_pos = self._getInstance().getOriginalPos()
         cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
 
-        line = self._getInstance().currentLine
         line_nr = self._getInstance().window.cursor[0]
 
         saved_eventignore = vim.options['eventignore']
