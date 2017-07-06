@@ -454,6 +454,9 @@ USAGE                                           *leaderf-usage*
 :LeaderfHistorySearch                           *LeaderfHistorySearch*
     Launch LeaderF to execute the search command in the history.
 
+:LeaderfSelf                                    *LeaderfSelf*
+    Launch LeaderF to execute the commands of itself.
+
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.

@@ -70,6 +70,9 @@ Usage
  - `:LeaderfHistorySearch`<br>
  Launch LeaderF to execute the search command in the history.
 
+ - `:LeaderfSelf`<br>
+ Launch LeaderF to execute the commands of itself.
+
 Once LeaderF is launched:
 
  - `<C-C>` : quit from LeaderF.
