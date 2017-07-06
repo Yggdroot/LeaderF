@@ -380,7 +380,7 @@ class BufTagExplManager(Manager):
         if lfEval("g:Lf_PreviewResult['BufTag']") == '0':
             return
 
-        if self._getInstance().empty():
+        if self._getInstance().empty() or vim.current.buffer != self._getInstance().buffer:
             return
 
         orig_pos = self._getInstance().getOriginalPos()
