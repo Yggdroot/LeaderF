@@ -1,5 +1,5 @@
 " ============================================================================
-" File:        leaderf.vim
+" File:        Function.vim
 " Description:
 " Author:      Yggdroot <archofortune@gmail.com>
 " Website:     https://github.com/Yggdroot

@@ -1,5 +1,5 @@
 " ============================================================================
-" File:        mru.vim
+" File:        lfMru.vim
 " Description:
 " Author:      Yggdroot <archofortune@gmail.com>
 " Website:     https://github.com/Yggdroot
