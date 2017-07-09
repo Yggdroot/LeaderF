@@ -7,7 +7,7 @@ This plugin is mainly used for locating files, buffers, mrus, tags in large proj
  - Support fuzzy and regex searching.
  - Manage buffers and mrus.
  - Open multiple files at once.
- - Extensible.
+ - [Extensible](https://github.com/Yggdroot/LeaderF-marks).
 
 Screenshots
 -----------
