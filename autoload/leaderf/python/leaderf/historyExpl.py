@@ -4,9 +4,9 @@
 import vim
 import os
 import os.path
-from leaderf.utils import *
-from leaderf.explorer import *
-from leaderf.manager import *
+from .utils import *
+from .explorer import *
+from .manager import *
 
 
 #*****************************************************
@@ -64,7 +64,7 @@ class HistoryExplManager(Manager):
         return HistoryExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#historyExplMaps()")
+        lfCmd("call leaderf#History#Maps()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -77,7 +77,7 @@ class HistoryExplManager(Manager):
             try:
                 lfCmd("/%s" % cmd)
             except vim.error as e:
-                print(e)
+                lfPrintError(e)
 
     def _getDigest(self, line, mode):
         """

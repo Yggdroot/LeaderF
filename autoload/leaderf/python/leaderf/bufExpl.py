@@ -6,10 +6,10 @@ import re
 import os
 import os.path
 from functools import wraps
-from leaderf.utils import *
-from leaderf.explorer import *
-from leaderf.manager import *
-from leaderf.mru import *
+from .utils import *
+from .explorer import *
+from .manager import *
+from .mru import *
 
 
 #*****************************************************
@@ -95,7 +95,7 @@ class BufExplManager(Manager):
         return BufferExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#bufExplMaps()")
+        lfCmd("call leaderf#Buffer#Maps()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:

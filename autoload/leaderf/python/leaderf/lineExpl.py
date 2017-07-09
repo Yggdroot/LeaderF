@@ -4,9 +4,9 @@
 import vim
 import os
 import os.path
-from leaderf.utils import *
-from leaderf.explorer import *
-from leaderf.manager import *
+from .utils import *
+from .explorer import *
+from .manager import *
 
 
 #*****************************************************
@@ -58,7 +58,7 @@ class LineExplManager(Manager):
         return LineExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#lineExplMaps()")
+        lfCmd("call leaderf#Line#Maps()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:

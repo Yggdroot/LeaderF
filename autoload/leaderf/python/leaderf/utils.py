@@ -132,3 +132,6 @@ def lfRelpath(path, start=os.curdir):
         return lfEncode(os.path.relpath(lfDecode(path), start))
     except ValueError:
         return path
+
+def lfPrintError(error):
+    lfCmd("echohl Error | redraw | echo '%s' | echohl None" % escQuote(str(error)))

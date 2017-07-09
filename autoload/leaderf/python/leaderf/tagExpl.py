@@ -5,9 +5,9 @@ import vim
 import re
 import os
 import os.path
-from leaderf.utils import *
-from leaderf.explorer import *
-from leaderf.manager import *
+from .utils import *
+from .explorer import *
+from .manager import *
 
 
 #*****************************************************
@@ -53,7 +53,7 @@ class TagExplManager(Manager):
         return TagExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#tagExplMaps()")
+        lfCmd("call leaderf#Tag#Maps()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -66,7 +66,8 @@ class TagExplManager(Manager):
         try:
             lfCmd("hide edit %s" % escSpecial(tagfile))
         except vim.error as e: # E37
-            print(e)
+            lfPrintError(e)
+
         if tagaddress[0] not in '/?':
             lfCmd(tagaddress)
         else:

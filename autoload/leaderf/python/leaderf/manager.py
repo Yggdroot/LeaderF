@@ -7,10 +7,10 @@ import operator
 import itertools
 from functools import partial
 from functools import wraps
-from leaderf.instance import LfInstance
-from leaderf.cli import LfCli
-from leaderf.utils import *
-from leaderf.fuzzyMatch import FuzzyMatch
+from .instance import LfInstance
+from .cli import LfCli
+from .utils import *
+from .fuzzyMatch import FuzzyMatch
 
 
 def modifiableController(func):
@@ -74,7 +74,7 @@ class Manager(object):
         try:
             lfCmd("hide edit %s" % escSpecial(file))
         except vim.error as e: # E37
-            print(e)
+            lfPrintError(e)
 
     def _getDigest(self, line, mode):
         """

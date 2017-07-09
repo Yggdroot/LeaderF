@@ -4,10 +4,10 @@
 import vim
 import os
 import os.path
-from leaderf.utils import *
-from leaderf.explorer import *
-from leaderf.manager import *
-from leaderf.mru import *
+from .utils import *
+from .explorer import *
+from .manager import *
+from .mru import *
 
 
 #*****************************************************
@@ -89,7 +89,7 @@ class MruExplManager(Manager):
         return MruExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#mruExplMaps()")
+        lfCmd("call leaderf#Mru#Maps()")
 
     def _argaddFiles(self, files):
         # It will raise E480 without 'silent!'
@@ -108,7 +108,7 @@ class MruExplManager(Manager):
         try:
             lfCmd("hide edit %s" % escSpecial(dirname + basename))
         except vim.error as e: # E37
-            print(e)
+            lfPrintError(e)
 
     def _getDigest(self, line, mode):
         """

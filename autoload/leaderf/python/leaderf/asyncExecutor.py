@@ -4,7 +4,7 @@ import shlex
 import signal
 import threading
 import subprocess
-from leaderf.utils import *
+from .utils import *
 
 if sys.version_info >= (3, 0):
     from queue import Queue

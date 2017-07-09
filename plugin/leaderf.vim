@@ -88,6 +88,11 @@ function! g:LfNoErrMsgCmd(cmd)
     endtry
 endfunction
 
+function! g:LfRegisterSelf(cmd, description)
+    call s:InitVar('g:Lf_SelfContent', {})
+    let g:Lf_SelfContent[a:cmd] = a:description
+endfunction
+
 call s:InitVar('g:Lf_ShortcutF', '<Leader>f')
 call s:InitVar('g:Lf_ShortcutB', '<Leader>b')
 call s:InitVar('g:Lf_WindowPosition', 'bottom')
@@ -206,41 +211,48 @@ autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
 
 autocmd BufWipeout * call leaderf#removeCache(expand('<abuf>'))
 
-nnoremap <silent> <Plug>LeaderfFileTop :<C-U>call leaderf#startFileExpl('top')<CR>
-nnoremap <silent> <Plug>LeaderfFileBottom :<C-U>call leaderf#startFileExpl('bottom')<CR>
-nnoremap <silent> <Plug>LeaderfFileLeft :<C-U>call leaderf#startFileExpl('left')<CR>
-nnoremap <silent> <Plug>LeaderfFileRight :<C-U>call leaderf#startFileExpl('right')<CR>
-nnoremap <silent> <Plug>LeaderfFileFullScreen :<C-U>call leaderf#startFileExpl('fullScreen')<CR>
+nnoremap <silent> <Plug>LeaderfFileTop :<C-U>call leaderf#File#startExpl('top')<CR>
+nnoremap <silent> <Plug>LeaderfFileBottom :<C-U>call leaderf#File#startExpl('bottom')<CR>
+nnoremap <silent> <Plug>LeaderfFileLeft :<C-U>call leaderf#File#startExpl('left')<CR>
+nnoremap <silent> <Plug>LeaderfFileRight :<C-U>call leaderf#File#startExpl('right')<CR>
+nnoremap <silent> <Plug>LeaderfFileFullScreen :<C-U>call leaderf#File#startExpl('fullScreen')<CR>
 
-nnoremap <silent> <Plug>LeaderfBufferTop :<C-U>call leaderf#startBufExpl('top')<CR>
-nnoremap <silent> <Plug>LeaderfBufferBottom :<C-U>call leaderf#startBufExpl('bottom')<CR>
-nnoremap <silent> <Plug>LeaderfBufferLeft :<C-U>call leaderf#startBufExpl('left')<CR>
-nnoremap <silent> <Plug>LeaderfBufferRight :<C-U>call leaderf#startBufExpl('right')<CR>
-nnoremap <silent> <Plug>LeaderfBufferFullScreen :<C-U>call leaderf#startBufExpl('fullScreen')<CR>
+nnoremap <silent> <Plug>LeaderfBufferTop :<C-U>call leaderf#Buffer#startExpl('top')<CR>
+nnoremap <silent> <Plug>LeaderfBufferBottom :<C-U>call leaderf#Buffer#startExpl('bottom')<CR>
+nnoremap <silent> <Plug>LeaderfBufferLeft :<C-U>call leaderf#Buffer#startExpl('left')<CR>
+nnoremap <silent> <Plug>LeaderfBufferRight :<C-U>call leaderf#Buffer#startExpl('right')<CR>
+nnoremap <silent> <Plug>LeaderfBufferFullScreen :<C-U>call leaderf#Buffer#startExpl('fullScreen')<CR>
 
-nnoremap <silent> <Plug>LeaderfMruCwdTop :<C-U>call leaderf#startMruExpl('top')<CR>
-nnoremap <silent> <Plug>LeaderfMruCwdBottom :<C-U>call leaderf#startMruExpl('bottom')<CR>
-nnoremap <silent> <Plug>LeaderfMruCwdLeft :<C-U>call leaderf#startMruExpl('left')<CR>
-nnoremap <silent> <Plug>LeaderfMruCwdRight :<C-U>call leaderf#startMruExpl('right')<CR>
-nnoremap <silent> <Plug>LeaderfMruCwdFullScreen :<C-U>call leaderf#startMruExpl('fullScreen')<CR>
+nnoremap <silent> <Plug>LeaderfMruCwdTop :<C-U>call leaderf#Mru#startExpl('top')<CR>
+nnoremap <silent> <Plug>LeaderfMruCwdBottom :<C-U>call leaderf#Mru#startExpl('bottom')<CR>
+nnoremap <silent> <Plug>LeaderfMruCwdLeft :<C-U>call leaderf#Mru#startExpl('left')<CR>
+nnoremap <silent> <Plug>LeaderfMruCwdRight :<C-U>call leaderf#Mru#startExpl('right')<CR>
+nnoremap <silent> <Plug>LeaderfMruCwdFullScreen :<C-U>call leaderf#Mru#startExpl('fullScreen')<CR>
 
-command! -bar -nargs=? -complete=dir LeaderfFile call leaderf#startFileExpl(g:Lf_WindowPosition, <f-args>)
-command! -bar -nargs=? -complete=dir LeaderfFileFullScreen call leaderf#startFileExpl('fullScreen', <f-args>)
+command! -bar -nargs=? -complete=dir LeaderfFile call leaderf#File#startExpl(g:Lf_WindowPosition, <f-args>)
+command! -bar -nargs=? -complete=dir LeaderfFileFullScreen call leaderf#File#startExpl('fullScreen', <f-args>)
 
-command! -bar -nargs=0 LeaderfBuffer call leaderf#startBufExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfBufferAll call leaderf#startBufExpl(g:Lf_WindowPosition, 1)
-command! -bar -nargs=0 LeaderfMru call leaderf#startMruExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfMruCwd call leaderf#startMruExpl(g:Lf_WindowPosition, 1)
-command! -bar -nargs=0 LeaderfTag call leaderf#startTagExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfBufTag call leaderf#startBufTagExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfBufTagAll call leaderf#startBufTagExpl(g:Lf_WindowPosition, 1)
-command! -bar -nargs=0 LeaderfFunction call leaderf#startFunctionExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfFunctionAll call leaderf#startFunctionExpl(g:Lf_WindowPosition, 1)
-command! -bar -nargs=0 LeaderfLine call leaderf#startLineExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfLineAll call leaderf#startLineExpl(g:Lf_WindowPosition, 1)
-command! -bar -nargs=0 LeaderfHistoryCmd call leaderf#startHistoryExpl(g:Lf_WindowPosition, "cmd")
-command! -bar -nargs=0 LeaderfHistorySearch call leaderf#startHistoryExpl(g:Lf_WindowPosition, "search") | norm! n
-command! -bar -nargs=0 LeaderfSelf call leaderf#startSelfExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfBuffer call leaderf#Buffer#startExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfBufferAll call leaderf#Buffer#startExpl(g:Lf_WindowPosition, 1)
+
+command! -bar -nargs=0 LeaderfMru call leaderf#Mru#startExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfMruCwd call leaderf#Mru#startExpl(g:Lf_WindowPosition, 1)
+
+command! -bar -nargs=0 LeaderfTag call leaderf#Tag#startExpl(g:Lf_WindowPosition)
+
+command! -bar -nargs=0 LeaderfBufTag call leaderf#BufTag#startExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfBufTagAll call leaderf#BufTag#startExpl(g:Lf_WindowPosition, 1)
+
+command! -bar -nargs=0 LeaderfFunction call leaderf#Function#startExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfFunctionAll call leaderf#Function#startExpl(g:Lf_WindowPosition, 1)
+
+command! -bar -nargs=0 LeaderfLine call leaderf#Line#startExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfLineAll call leaderf#Line#startExpl(g:Lf_WindowPosition, 1)
+
+command! -bar -nargs=0 LeaderfHistoryCmd call leaderf#History#startExpl(g:Lf_WindowPosition, "cmd")
+command! -bar -nargs=0 LeaderfHistorySearch call leaderf#History#startExpl(g:Lf_WindowPosition, "search") | silent! norm! n
+
+command! -bar -nargs=0 LeaderfSelf call leaderf#Self#startExpl(g:Lf_WindowPosition)
 
 
 try

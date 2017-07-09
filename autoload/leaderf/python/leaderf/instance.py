@@ -7,7 +7,7 @@ import os
 import os.path
 import time
 import itertools
-from leaderf.utils import *
+from .utils import *
 
 
 #*****************************************************

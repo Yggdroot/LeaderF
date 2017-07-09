@@ -5,7 +5,7 @@ import vim
 import os
 import os.path
 import fnmatch
-from leaderf.utils import *
+from .utils import *
 
 
 #*****************************************************

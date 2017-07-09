@@ -4,9 +4,9 @@
 import vim
 import os
 import os.path
-from leaderf.utils import *
-from leaderf.explorer import *
-from leaderf.manager import *
+from .utils import *
+from .explorer import *
+from .manager import *
 
 
 #*****************************************************
@@ -17,23 +17,29 @@ class SelfExplorer(Explorer):
         self._self_type = "Self"
         self._content = [
             '0  LeaderfFile             "search files"',
-            '1  LeaderfBuffer           "search listed buffers"',
-            '2  LeaderfBufferAll        "search all buffers"',
-            '3  LeaderfMru              "search most recently used files"',
-            '4  LeaderfMruCwd           "search MRU in current working directory"',
-            '5  LeaderfTag              "navigate tags using the tags file"',
-            '6  LeaderfBufTag           "navigate tags in current buffer"',
-            '7  LeaderfBufTagAll        "navigate tags in all listed buffers"',
-            '8  LeaderfFunction         "navigate functions or methods in current buffer"',
-            '9  LeaderfFunctionAll      "navigate functions or methods in all listed buffers"',
-            '10 LeaderfLine             "search a line in current buffer"',
-            '11 LeaderfLineAll          "search a line in all listed buffers"',
-            '12 LeaderfHistoryCmd       "execute the command in the history"',
-            '13 LeaderfHistorySearch    "execute the search command in the history"'
+            '1  LeaderfFileFullScreen   "search files, LeaderF window take up full screen"',
+            '2  LeaderfBuffer           "search listed buffers"',
+            '3  LeaderfBufferAll        "search all buffers"',
+            '4  LeaderfMru              "search most recently used files"',
+            '5  LeaderfMruCwd           "search MRU in current working directory"',
+            '6  LeaderfTag              "navigate tags using the tags file"',
+            '7  LeaderfBufTag           "navigate tags in current buffer"',
+            '8  LeaderfBufTagAll        "navigate tags in all listed buffers"',
+            '9  LeaderfFunction         "navigate functions or methods in current buffer"',
+            '10 LeaderfFunctionAll      "navigate functions or methods in all listed buffers"',
+            '11 LeaderfLine             "search a line in current buffer"',
+            '12 LeaderfLineAll          "search a line in all listed buffers"',
+            '13 LeaderfHistoryCmd       "execute the command in the history"',
+            '14 LeaderfHistorySearch    "execute the search command in the history"'
             ] 
 
     def getContent(self, *args, **kwargs):
-        return self._content
+        extra_content = lfEval("g:Lf_SelfContent")
+        length = len(self._content)
+        content = self._content[:]
+        for i, (key, value) in enumerate(extra_content.items()):
+            content.append('{:<3d}{:<24s}"{}"'.format(length + i, key, value))
+        return content
 
     def getStlCategory(self):
         return "Self"
@@ -57,14 +63,17 @@ class SelfExplManager(Manager):
         return SelfExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#selfExplMaps()")
+        lfCmd("call leaderf#Self#Maps()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
         line = args[0]
-        cmd = line.split(maxsplit=2)[1]
-        lfCmd(cmd)
+        cmd = line.split(None, 2)[1]
+        try:
+            lfCmd(cmd)
+        except vim.error as e:
+            lfPrintError(e)
 
     def _getDigest(self, line, mode):
         """

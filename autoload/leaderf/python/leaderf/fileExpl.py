@@ -9,10 +9,10 @@ import fnmatch
 import time
 import locale
 from functools import wraps
-from leaderf.utils import *
-from leaderf.explorer import *
-from leaderf.manager import *
-from leaderf.asyncExecutor import AsyncExecutor
+from .utils import *
+from .explorer import *
+from .manager import *
+from .asyncExecutor import AsyncExecutor
 
 def showRelativePath(func):
     @wraps(func)
@@ -365,7 +365,7 @@ class FileExplManager(Manager):
         return FileExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#fileExplMaps()")
+        lfCmd("call leaderf#File#Maps()")
 
     def _createHelp(self):
         help = []

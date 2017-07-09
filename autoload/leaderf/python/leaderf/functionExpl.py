@@ -9,10 +9,10 @@ import subprocess
 import tempfile
 import itertools
 import multiprocessing
-from leaderf.utils import *
-from leaderf.explorer import *
-from leaderf.manager import *
-from leaderf.asyncExecutor import AsyncExecutor
+from .utils import *
+from .explorer import *
+from .manager import *
+from .asyncExecutor import AsyncExecutor
 
 
 #*****************************************************
@@ -191,7 +191,7 @@ class FunctionExplManager(Manager):
         return FunctionExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#functionExplMaps()")
+        lfCmd("call leaderf#Function#Maps()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
