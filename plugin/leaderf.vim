@@ -88,8 +88,9 @@ function! g:LfNoErrMsgCmd(cmd)
     endtry
 endfunction
 
+call s:InitVar('g:Lf_SelfContent', {})
+
 function! g:LfRegisterSelf(cmd, description)
-    call s:InitVar('g:Lf_SelfContent', {})
     let g:Lf_SelfContent[a:cmd] = a:description
 endfunction
 

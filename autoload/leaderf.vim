@@ -37,10 +37,10 @@ endfunction
 
 function! leaderf#removeCache(bufNum)
     if exists("g:Lf_bufTagExpl_loaded")
-        call leaderf#BufTag#removeCache(bufNum)
+        call leaderf#BufTag#removeCache(a:bufNum)
     endif
 
     if exists("g:Lf_functionExpl_loaded")
-        call leaderf#Function#removeCache(bufNum)
+        call leaderf#Function#removeCache(a:bufNum)
     endif
 endfunction
