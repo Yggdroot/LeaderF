@@ -11,6 +11,8 @@ if leaderf#versionCheck() == 0  " this check is necessary
     finish
 endif
 
+let g:Lf_fileExpl_loaded = 1
+
 exec g:Lf_py "from leaderf.fileExpl import *"
 
 function! leaderf#File#Maps()
@@ -39,3 +41,6 @@ function! leaderf#File#startExpl(win_pos, ...)
     endif
 endfunction
 
+function! leaderf#File#cleanup()
+    call leaderf#LfPy("fileExplManager._beforeExit()")
+endfunction

@@ -44,3 +44,17 @@ function! leaderf#removeCache(bufNum)
         call leaderf#Function#removeCache(a:bufNum)
     endif
 endfunction
+
+function! leaderf#cleanup()
+    if exists("g:Lf_fileExpl_loaded")
+        call leaderf#File#cleanup()
+    endif
+
+    if exists("g:Lf_bufTagExpl_loaded")
+        call leaderf#BufTag#cleanup()
+    endif
+
+    if exists("g:Lf_functionExpl_loaded")
+        call leaderf#Function#cleanup()
+    endif
+endfunction

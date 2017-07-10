@@ -212,6 +212,8 @@ autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
 
 autocmd BufWipeout * call leaderf#removeCache(expand('<abuf>'))
 
+autocmd VimLeave * call leaderf#cleanup()
+
 nnoremap <silent> <Plug>LeaderfFileTop :<C-U>call leaderf#File#startExpl('top')<CR>
 nnoremap <silent> <Plug>LeaderfFileBottom :<C-U>call leaderf#File#startExpl('bottom')<CR>
 nnoremap <silent> <Plug>LeaderfFileLeft :<C-U>call leaderf#File#startExpl('left')<CR>

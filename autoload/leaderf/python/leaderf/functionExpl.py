@@ -134,7 +134,7 @@ class FunctionExplorer(Explorer):
             return []
 
         # a list of [tag, file, line, kind]
-        output = [line.split('\t') for line in result]
+        output = [line.split('\t') for line in result if line is not None]
         if not output:
             return []
         if len(output[0]) < 4:

@@ -533,6 +533,7 @@ class Manager(object):
         self._setAutochdir()
 
     def refresh(self, normal_mode=True):
+        self._getExplorer().cleanup()
         content = self._getExplorer().getFreshContent()
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
@@ -651,9 +652,11 @@ class Manager(object):
 
         i = -1
         for i, line in enumerate(itertools.islice(content, 10)):
+            if line is None:
+                continue
             self._content.append(line)
             if self._index == 0:
-                if i == 0 and len(self._getInstance().buffer[0]) == 0: # the buffer is empty
+                if self._getInstance().empty():
                     self._getInstance().buffer[0] = line
                 else:
                     self._getInstance().appendLine(line)

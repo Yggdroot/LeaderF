@@ -226,17 +226,18 @@ class LfInstance(object):
 
         try:
             start = time.time()
-            i = 0
-            for i, line in enumerate(content):
-                if i == 0:
-                    self._buffer_object[i] = line
+            for line in content:
+                if line is None:
+                    continue
+                if self.empty():
+                    self._buffer_object[0] = line
                 else:
                     self._buffer_object.append(line)
                 if time.time() - start > 0.1:
                     start = time.time()
-                    self.setStlTotal((i+1)//unit)
+                    self.setStlTotal(len(self._buffer_object)//unit)
                     lfCmd("redrawstatus")
-            self.setStlTotal((i+1)//unit)
+            self.setStlTotal(len(self._buffer_object)//unit)
             lfCmd("redrawstatus")
             set_content(self.buffer[:])
         except vim.error: # neovim <C-C>

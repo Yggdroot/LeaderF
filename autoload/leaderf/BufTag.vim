@@ -44,3 +44,7 @@ endfunction
 function! leaderf#BufTag#removeCache(bufNum)
     call leaderf#LfPy("bufTagExplManager.removeCache(".a:bufNum.")")
 endfunction
+
+function! leaderf#BufTag#cleanup()
+    call leaderf#LfPy("bufTagExplManager._beforeExit()")
+endfunction

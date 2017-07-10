@@ -44,3 +44,7 @@ endfunction
 function! leaderf#Function#removeCache(bufNum)
     call leaderf#LfPy("functionExplManager.removeCache(".a:bufNum.")")
 endfunction
+
+function! leaderf#Function#cleanup()
+    call leaderf#LfPy("functionExplManager._beforeExit()")
+endfunction

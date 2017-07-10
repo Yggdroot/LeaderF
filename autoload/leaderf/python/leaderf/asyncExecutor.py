@@ -7,9 +7,9 @@ import subprocess
 from .utils import *
 
 if sys.version_info >= (3, 0):
-    from queue import Queue
+    import queue as Queue
 else:
-    from Queue import Queue
+    import Queue
 
 
 class AsyncExecutor(object):
@@ -18,8 +18,8 @@ class AsyncExecutor(object):
     read the output asynchronously.
     """
     def __init__(self):
-        self._outQueue = Queue()
-        self._errQueue = Queue()
+        self._outQueue = Queue.Queue()
+        self._errQueue = Queue.Queue()
         self._process = None
 
     def _readerThread(self, fd, queue):
@@ -57,11 +57,23 @@ class AsyncExecutor(object):
         def read(outQueue, errQueue, encoding, cleanup):
             try:
                 if encoding:
-                    for line in iter(outQueue.get, None):
-                        yield lfBytes2Str(line.rstrip(b"\r\n"), encoding)
+                    while True:
+                        try:
+                            line = outQueue.get(True, 0.01)
+                            if line is None:
+                                break
+                            yield lfBytes2Str(line.rstrip(b"\r\n"), encoding)
+                        except Queue.Empty:
+                            yield None
                 else:
-                    for line in iter(outQueue.get, None):
-                        yield lfEncode(lfBytes2Str((line.rstrip(b"\r\n"))))
+                    while True:
+                        try:
+                            line = outQueue.get(True, 0.10)
+                            if line is None:
+                                break
+                            yield lfEncode(lfBytes2Str((line.rstrip(b"\r\n"))))
+                        except Queue.Empty:
+                            yield None
 
                 err = b"".join(iter(errQueue.get, None))
                 if err:
