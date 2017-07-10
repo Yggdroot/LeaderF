@@ -198,7 +198,7 @@ class FileExplorer(Explorer):
 
         if lfEval("g:Lf_UseVersionControlTool") == '1':
             if self._exists(dir, ".git"):
-                cmd = "git ls-files"
+                cmd = "git ls-files && git ls-files --others --exclude-standard"
                 self._external_cmd = cmd
                 return cmd
             elif self._exists(dir, ".hg"):
