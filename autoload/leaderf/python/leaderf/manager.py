@@ -334,6 +334,11 @@ class Manager(object):
                 filter_method = partial(self._fuzzyFilter,
                                         self._cli.isFullPath,
                                         fuzzy_match.getWeight2)
+            elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
+                    "Function", "History", "Cmd_History", "Search_History"]:
+                filter_method = partial(self._fuzzyFilter,
+                                        self._cli.isFullPath,
+                                        fuzzy_match.getWeight3)
             else:
                 filter_method = partial(self._fuzzyFilter,
                                         self._cli.isFullPath,
