@@ -237,7 +237,7 @@ class FileExplorer(Explorer):
             else:
                 followlinks = ""
 
-            cmd = 'rg --files %s %s %s "%s"' % (color, ignore, followlinks, dir)
+            cmd = 'rg --no-messages --files %s %s %s "%s"' % (color, ignore, followlinks, dir)
         elif default_tool["pt"] and lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
