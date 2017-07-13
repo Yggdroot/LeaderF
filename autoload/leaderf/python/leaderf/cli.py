@@ -20,10 +20,13 @@ def cursorController(func):
             lfCmd("let g:lf_t_ve_stack = []")
         lfCmd("call add(g:lf_t_ve_stack, &t_ve)")
         lfCmd("set t_ve=")
+        lfCmd("let g:Lf_ttimeoutlen_orig = &ttimeoutlen")
+        lfCmd("set ttimeoutlen=0")
         try:
             for i in func(*args, **kwargs):
                 yield i
         finally:
+            lfCmd("let &ttimeoutlen = g:Lf_ttimeoutlen_orig")
             lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
             lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
     return deco
