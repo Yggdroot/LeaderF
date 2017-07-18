@@ -102,27 +102,37 @@ Input formats:
 
  - In **NameOnly** mode (*fuzzy*)
 
- `'abc'` is interpreted as vim's regexp `'a.\{-}b.\{-}c'`.<br>
- If the first character you input is `';'`, then the searching will be the same as in **FullPath** mode.<br>
- If you input string as `'abc;def'`, then `'abc'` will match the file name and `'def'` will match the directory name.
+ &emsp;&emsp;`'abc'` is interpreted as vim's regexp `'a.\{-}b.\{-}c'`.<br>
+ &emsp;&emsp;If the first character you input is `';'`, then the searching will be the same as in **FullPath** mode.<br>
+ &emsp;&emsp;If you input string as `'abc;def'`, then `'abc'` will match the file name and `'def'` will match the directory name.
 
  - In **FullPath** mode (*fuzzy*)
 
- Same as in **NameOnly** mode except that the pattern will match the full path but not the file name only.
+ &emsp;&emsp;Same as in **NameOnly** mode except that the pattern will match the full path but not the file name only.
 
  - In **Regexp** mode
 
- The input string is the same as the Vim's regexp.
+ &emsp;&emsp;The input string is the same as the Vim's regexp.
 
-Related works
+Customization
 -------------
 
- - [ctrlp][4] is a great plugin. Some ideas of my plugin come from it.
+ 1. Change key bindings
 
-Advantages over ctrlp
----------------------
+ &emsp;&emsp;By default, `<ESC>` is the shortcut key to switch to normal mode, if you want to change it to be 'Quit from LeaderF':
 
-The only advantage over ctrlp is performance. If you are smart enough, perhaps you can find more.
+ &emsp;&emsp;`let g:Lf_CommandMap = {'<C-C>': ['<Esc>', '<C-C>']}`
+
+ 2. Customize the statusline
+
+ &emsp;&emsp;Please refer to [here][4].
+
+ 3. Change the highlight of matched string
+
+```vim
+ highlight Lf_hl_match gui=bold guifg=Blue cterm=bold ctermfg=21
+ highlight Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
+```
 
 
 License
@@ -134,4 +144,4 @@ This plugin is released under the Apache License, Version 2.0 (the "License").
   [1]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_1.gif
   [2]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_2.gif
   [3]: https://github.com/gmarik/Vundle.vim
-  [4]: https://github.com/kien/ctrlp.vim
+  [4]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L193-L340
