@@ -4,7 +4,7 @@
 " Author:      Yggdroot <archofortune@gmail.com>
 " Website:     https://github.com/Yggdroot
 " Note:
-" License:     This script is released under the Vim License.
+" License:     Apache License, Version 2.0
 " ============================================================================
 
 exec g:Lf_py "import vim, sys, os.path"

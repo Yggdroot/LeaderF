@@ -73,6 +73,9 @@ Usage
  - `:LeaderfSelf`<br>
  Launch LeaderF to execute the commands of itself.
 
+ - `:LeaderfHelp`<br>
+ Launch LeaderF to navigate the help tags.
+
 Once LeaderF is launched:
 
  - `<C-C>` : quit from LeaderF.

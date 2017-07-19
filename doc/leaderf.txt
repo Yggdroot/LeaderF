@@ -457,6 +457,9 @@ USAGE                                           *leaderf-usage*
 :LeaderfSelf                                    *LeaderfSelf*
     Launch LeaderF to execute the commands of itself.
 
+:LeaderfHelp                                    *LeaderfHelp*
+    Launch LeaderF to navigate the help tags.
+
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.

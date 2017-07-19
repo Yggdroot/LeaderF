@@ -4,7 +4,7 @@
 " Author:      Yggdroot <archofortune@gmail.com>
 " Website:     https://github.com/Yggdroot
 " Note:
-" License:     This script is released under the Vim License.
+" License:     Apache License, Version 2.0
 " ============================================================================
 
 if exists('g:leaderf_loaded') || &compatible
@@ -257,6 +257,7 @@ command! -bar -nargs=0 LeaderfHistorySearch call leaderf#History#startExpl(g:Lf_
 
 command! -bar -nargs=0 LeaderfSelf call leaderf#Self#startExpl(g:Lf_WindowPosition)
 
+command! -bar -nargs=0 LeaderfHelp call leaderf#Help#startExpl(g:Lf_WindowPosition)
 
 try
     exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'

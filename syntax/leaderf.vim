@@ -4,7 +4,7 @@
 " Author:      Yggdroot <archofortune@gmail.com>
 " Website:     https://github.com/Yggdroot
 " Note:
-" License:     This script is released under the Vim License.
+" License:     Apache License, Version 2.0
 " ============================================================================
 
 scriptencoding utf-8
@@ -55,6 +55,7 @@ if has("syntax")
     highlight def link Lf_hl_historyIndex       Constant
     highlight def link Lf_hl_selfIndex          Constant
     highlight def link Lf_hl_selfDescription    Comment
+    highlight def link Lf_hl_helpTagfile        Comment
 endif
 
 let b:current_syntax = "leaderf"
