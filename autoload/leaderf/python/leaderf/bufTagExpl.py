@@ -377,19 +377,11 @@ class BufTagExplManager(Manager):
     def removeCache(self, buf_number):
         self._getExplorer().removeCache(buf_number)
 
-    def _previewResult(self):
-        if lfEval("g:Lf_PreviewResult['BufTag']") == '0':
-            return
-
-        if self._getInstance().empty() or vim.current.buffer != self._getInstance().buffer:
+    def _previewResult(self, preview):
+        if not self._needPreview(preview):
             return
 
         line = self._getInstance().currentLine
-        if self._orig_line == line:
-            return
-
-        self._orig_line = line
-
         orig_pos = self._getInstance().getOriginalPos()
         cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
 

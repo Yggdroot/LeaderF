@@ -26,11 +26,11 @@ function! leaderf#Function#Maps()
     nnoremap <buffer> <silent> q             :exec g:Lf_py "functionExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "functionExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "functionExplManager.toggleHelp()"<CR>
-    nnoremap <buffer> <silent> j             j:exec g:Lf_py "functionExplManager._previewResult()"<CR>
-    nnoremap <buffer> <silent> k             k:exec g:Lf_py "functionExplManager._previewResult()"<CR>
-    nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "functionExplManager._previewResult()"<CR>
-    nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "functionExplManager._previewResult()"<CR>
-    nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "functionExplManager._previewResult()"<CR>
+    nnoremap <buffer> <silent> j             j:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> k             k:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
 endfunction
 
 function! leaderf#Function#startExpl(win_pos, ...)

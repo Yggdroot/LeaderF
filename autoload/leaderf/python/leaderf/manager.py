@@ -38,6 +38,7 @@ class Manager(object):
         self._highlight_pos = []
         self._highlight_refine_pos = []
         self._highlight_ids = []
+        self._orig_line = ''
         self._getExplClass()
 
     #**************************************************************
@@ -155,10 +156,35 @@ class Manager(object):
     def _supportsRefine(self):
         return False
 
-    def _previewResult(self):
+    def _previewResult(self, preview):
         pass
 
     #**************************************************************
+
+    def _needPreview(self, preview):
+        """
+        Args:
+            preview:
+                if True, always preview the result no matter what `g:Lf_PreviewResult` is.
+        """
+        preview_dict = lfEval("g:Lf_PreviewResult")
+        category = self._getExplorer().getStlCategory()
+        if not preview and int(preview_dict.get(category, 0)) == 0:
+            return False
+
+        if self._getInstance().window.cursor[0] <= self._help_length:
+            return False
+
+        if self._getInstance().empty() or vim.current.buffer != self._getInstance().buffer:
+            return False
+
+        line = self._getInstance().currentLine
+        if self._orig_line == line:
+            return False
+
+        self._orig_line = line
+
+        return True
 
     def _getInstance(self):
         if self._instance is None:
@@ -233,7 +259,7 @@ class Manager(object):
         else:
             self._regexSearch(content, is_continue, step)
 
-        self._previewResult()
+        self._previewResult(False)
 
     def _filter(self, step, filter_method, content, is_continue):
         """ Construct a list from result of filter_method(content).
@@ -704,14 +730,14 @@ class Manager(object):
                     self._search(self._content)
             elif equal(cmd, '<Up>'):
                 self._toUp()
-                self._previewResult()
+                self._previewResult(False)
             elif equal(cmd, '<Down>'):
                 self._toDown()
-                self._previewResult()
+                self._previewResult(False)
             elif equal(cmd, '<LeftMouse>'):
                 if self._leftClick():
                     break
-                self._previewResult()
+                self._previewResult(False)
             elif equal(cmd, '<2-LeftMouse>'):
                 self._leftClick()
                 self.accept()
@@ -751,6 +777,8 @@ class Manager(object):
                     self.selectAll()
             elif equal(cmd, '<C-L>'):
                 self.clearSelections()
+            elif equal(cmd, '<C-P>'):
+                self._previewResult(True)
             else:
                 if self._cmdExtension(cmd):
                     break

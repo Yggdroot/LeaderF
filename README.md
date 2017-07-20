@@ -31,112 +31,97 @@ For [Vundle][3] user, just add `Plugin 'Yggdroot/LeaderF'` to your `.vimrc`.
 Usage
 -----
 
- - `:LeaderfFile` or `:LeaderfFile [directory]` or `<leader>f`<br>
- Launch LeaderF to search files.
+| Command                    | Description
+| -------                    | -----------
+| `:LeaderfFile`<br> `<leader>f`| search files
+| `:LeaderfFile [directory]` | search files under the `directory` specified
+| `:LeaderfFileFullScreen`   | search files, LeaderF window take up full screen
+| `:LeaderfBuffer`<br> `<leader>b`| search listed buffers
+| `:LeaderfBufferAll`        | search all buffers
+| `:LeaderfMru`              | search most recently used files
+| `:LeaderfMruCwd`           | search MRU in current working directory
+| `:LeaderfTag`              | navigate tags using the tags file
+| `:LeaderfBufTag`           | navigate tags in current buffer
+| `:LeaderfBufTagAll`        | navigate tags in all listed buffers
+| `:LeaderfFunction`         | navigate functions or methods in current buffer
+| `:LeaderfFunctionAll`      | navigate functions or methods in all listed buffers
+| `:LeaderfLine`             | search a line in current buffer
+| `:LeaderfLineAll`          | search a line in all listed buffers
+| `:LeaderfHistoryCmd`       | execute the command in the history
+| `:LeaderfHistorySearch`    | execute the search command in the history
+| `:LeaderfSelf`             | execute the commands of itself
+| `:LeaderfHelp`             | navigate the help tags
+| `:LeaderfColorscheme`      | switch between colorschemes
 
- - `:LeaderfBuffer` or `<leader>b`<br>
- Launch LeaderF to search buffers.
-
- - `:LeaderfMru`<br>
- Launch LeaderF to search Mru.
-
- - `:LeaderfMruCwd`<br>
- Launch LeaderF to search Mru in current working directory.
-
- - `:LeaderfTag`<br>
- Launch LeaderF to navigate tags.
-
- - `:LeaderfBufTag`<br>
- Launch LeaderF to navigate tags in current buffer.
-
- - `:LeaderfBufTagAll`<br>
- Launch LeaderF to navigate tags in all listed buffers.
-
- - `:LeaderfFunction`<br>
- Launch LeaderF to navigate functions or methods in current buffer.
-
- - `:LeaderfFunctionAll`<br>
- Launch LeaderF to navigate functions or methods in all listed buffers.
-
- - `:LeaderfLine`<br>
- Launch LeaderF to search a line in current buffer.
-
- - `:LeaderfLineAll`<br>
- Launch LeaderF to search a line in all listed buffers.
-
- - `:LeaderfHistoryCmd`<br>
- Launch LeaderF to execute the command in the history.
-
- - `:LeaderfHistorySearch`<br>
- Launch LeaderF to execute the search command in the history.
-
- - `:LeaderfSelf`<br>
- Launch LeaderF to execute the commands of itself.
-
- - `:LeaderfHelp`<br>
- Launch LeaderF to navigate the help tags.
 
 Once LeaderF is launched:
 
- - `<C-C>` : quit from LeaderF.
- - `<C-R>` : switch between fuzzy search mode and regex mode.
- - `<C-F>` : switch between full path search mode and name only search mode.
- - `<ESC>` : switch to normal mode.
- - `<C-V>`, `<S-Insert>` : paste from clipboard.
- - `<C-U>` : clear the prompt.
- - `<C-J>`, `<Down>`, `<C-K>`, `<Up>` : navigate the result list.
- - `<2-LeftMouse>` or `<CR>` : open the file under cursor or selected(when multiple files are selected).
- - `<C-X>` : open in horizontal split window.
- - `<C-]>` : open in vertical split window.
- - `<C-T>` : open in new tabpage.
- - `<F5>`  : refresh the cache.
- - `<C-LeftMouse>` or `<C-S>` : select multiple files.
- - `<S-LeftMouse>` : select consecutive multiple files.
- - `<C-A>` : select all files.
- - `<C-L>` : clear all selections.
- - `<BS>`  : delete the preceding character in the prompt.
- - `<Del>` : delete the current character in the prompt.
- - `<Home>`: move the cursor to the begin of the prompt.
- - `<End>` : move the cursor to the end of the prompt.
- - `<Left>`: move the cursor one character to the left.
- - `<Right>` : move the cursor one character to the right.
+| Command                    | Description
+| -------                    | -----------
+| `<C-C>`                    | quit from LeaderF
+| `<C-R>`                    | switch between fuzzy search mode and regex mode
+| `<C-F>`                    | switch between full path search mode and name only search mode
+| `<ESC>`                    | switch to normal mode
+| `<C-V>`<br>`<S-Insert>`    | paste from clipboard
+| `<C-U>`                    | clear the prompt
+| `<C-J>`<br>`<Down>`        | move the cursor downward in the result window
+| `<C-K>`<br>`<Up>`          | move the cursor upward in the result window
+| `<2-LeftMouse>`<br>`<CR>`  | open the file under cursor or selected(when multiple files are selected)
+| `<C-X>`                    | open in horizontal split window
+| `<C-]>`                    | open in vertical split window
+| `<C-T>`                    | open in new tabpage
+| `<F5>`                     | refresh the cache
+| `<C-LeftMouse>`<br>`<C-S>` | select multiple files
+| `<S-LeftMouse>`            | select consecutive multiple files
+| `<C-A>`                    | select all files
+| `<C-L>`                    | clear all selections
+| `<BS>`                     | delete the preceding character in the prompt
+| `<Del>`                    | delete the current character in the prompt
+| `<Home>`                   | move the cursor to the begin of the prompt
+| `<End>`                    | move the cursor to the end of the prompt
+| `<Left>`                   | move the cursor one character to the left in the prompt
+| `<Right>`                  | move the cursor one character to the right in the prompt
+| `<C-P>`                    | preview the result
 
 Input formats:
 
- - In **NameOnly** mode (*fuzzy*)
+ * In **NameOnly** mode (*fuzzy*)
 
- &emsp;&emsp;`'abc'` is interpreted as vim's regexp `'a.\{-}b.\{-}c'`.<br>
- &emsp;&emsp;If the first character you input is `';'`, then the searching will be the same as in **FullPath** mode.<br>
- &emsp;&emsp;If you input string as `'abc;def'`, then `'abc'` will match the file name and `'def'` will match the directory name.
+    `'abc'` is interpreted as vim's regexp `'a.\{-}b.\{-}c'`.<br>
+    If the first character you input is `';'`, then the searching will be the same as in **FullPath** mode.<br>
+    If you input string as `'abc;def'`, then `'abc'` will match the file name and `'def'` will match the directory name.
 
- - In **FullPath** mode (*fuzzy*)
+ * In **FullPath** mode (*fuzzy*)
 
- &emsp;&emsp;Same as in **NameOnly** mode except that the pattern will match the full path but not the file name only.
+    Same as in **NameOnly** mode except that the pattern will match the full path but not the file name only.
 
- - In **Regexp** mode
+ * In **Regexp** mode
 
- &emsp;&emsp;The input string is the same as the Vim's regexp.
+    The input string is the same as the Vim's regexp.
 
 Customization
 -------------
 
- 1. Change key bindings
+ * Change key bindings
 
- &emsp;&emsp;By default, `<ESC>` is the shortcut key to switch to normal mode, if you want to change it to be 'Quit from LeaderF':
+    By default, `<ESC>` is the shortcut key to switch to normal mode, if you want to change it to be 'Quit from LeaderF':
 
- &emsp;&emsp;`let g:Lf_CommandMap = {'<C-C>': ['<Esc>', '<C-C>']}`
+    `let g:Lf_CommandMap = {'<C-C>': ['<Esc>', '<C-C>']}`
 
- 2. Customize the statusline
+ * Customize the statusline
 
- &emsp;&emsp;Please refer to [here][4].
+    Please refer to [here][4].
 
- 3. Change the highlight of matched string
+ * Change the highlight of matched string
 
-```vim
- highlight Lf_hl_match gui=bold guifg=Blue cterm=bold ctermfg=21
- highlight Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
-```
+    ```vim
+    highlight Lf_hl_match gui=bold guifg=Blue cterm=bold ctermfg=21
+    highlight Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
+    ```
 
+ * Change the default mapping of searching files command
+
+    e.g. `let g:Lf_ShortcutF = '<C-P>'`
 
 License
 -------

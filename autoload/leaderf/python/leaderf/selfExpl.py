@@ -31,7 +31,8 @@ class SelfExplorer(Explorer):
             '12 LeaderfLineAll          "search a line in all listed buffers"',
             '13 LeaderfHistoryCmd       "execute the command in the history"',
             '14 LeaderfHistorySearch    "execute the search command in the history"',
-            '15 LeaderfHelp             "navigate the help tags"'
+            '15 LeaderfHelp             "navigate the help tags"',
+            '16 LeaderfColorscheme      "switch between colorschemes"'
             ] 
 
     def getContent(self, *args, **kwargs):

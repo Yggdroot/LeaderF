@@ -396,7 +396,8 @@ g:Lf_PreviewResult                              *g:Lf_PreviewResult*
             \ 'Tag': 0,
             \ 'BufTag': 1,
             \ 'Function': 1,
-            \ 'Line': 0
+            \ 'Line': 0,
+            \ 'Colorscheme': 0
             \}
 <
     e.g., if you want to disable the preview of BufTag explorer: >
@@ -460,6 +461,9 @@ USAGE                                           *leaderf-usage*
 :LeaderfHelp                                    *LeaderfHelp*
     Launch LeaderF to navigate the help tags.
 
+:LeaderfColorscheme                             *LeaderfColorscheme*
+    Launch LeaderF to switch between colorschemes.
+
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.
@@ -484,6 +488,7 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <End> : move the cursor to the end of the prompt.
     <Left>: move the cursor one character to the left.
     <Right> : move the cursor one character to the right.
+    <C-P> : preview the result.
 ==============================================================================
 FAQ                                             *leaderf-faq*
 

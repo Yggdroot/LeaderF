@@ -132,7 +132,8 @@ call s:InitDict('g:Lf_PreviewResult', {
             \ 'Tag': 0,
             \ 'BufTag': 1,
             \ 'Function': 1,
-            \ 'Line': 0
+            \ 'Line': 0,
+            \ 'Colorscheme': 0
             \})
 
 let s:Lf_CommandMap = {
@@ -258,6 +259,8 @@ command! -bar -nargs=0 LeaderfHistorySearch call leaderf#History#startExpl(g:Lf_
 command! -bar -nargs=0 LeaderfSelf call leaderf#Self#startExpl(g:Lf_WindowPosition)
 
 command! -bar -nargs=0 LeaderfHelp call leaderf#Help#startExpl(g:Lf_WindowPosition)
+
+command! -bar -nargs=0 LeaderfColorscheme call leaderf#Colors#startExpl(g:Lf_WindowPosition)
 
 try
     exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
