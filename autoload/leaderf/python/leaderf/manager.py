@@ -375,7 +375,7 @@ class Manager(object):
                                        fuzzy_match.getHighlights)
 
         if self._getExplorer().isFilePath() and self._cli.isFullPath and step == 30000:
-            step = 8000
+            step = 5000
 
         pairs = self._filter(step, filter_method, content, is_continue)
         pairs.sort(key=operator.itemgetter(0), reverse=True)

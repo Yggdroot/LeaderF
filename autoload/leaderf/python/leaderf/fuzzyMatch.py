@@ -89,7 +89,10 @@ class FuzzyMatch(object):
                         end_pos = j + i
                 else:
                     prefix_score = n*n + special
-                    if prefix_score > max_prefix_score:
+                    # e.g., text = 'AbcxxAbcyyde', pattern = 'abcde'
+                    # prefer matching 'Abcyyde'
+                    if prefix_score > max_prefix_score or \
+                            special and prefix_score == max_prefix_score:
                         max_prefix_score = prefix_score
                         res = FuzzyMatch.evaluate(text[i:],
                                                   pattern[n:],
@@ -102,7 +105,7 @@ class FuzzyMatch(object):
                         end_pos = res[2]
                     else:
                         score = 0
-                if score > max_score:
+                if score > max_score or special and score == max_score:
                     max_score = score
                     beg = i - n
                     end = end_pos
@@ -526,7 +529,10 @@ class FuzzyMatch(object):
                         return val[key]
                 else:
                     prefix_score = n*n + special
-                    if prefix_score > max_prefix_score:
+                    # e.g., text = 'AbcxxAbcyyde', pattern = 'abcde'
+                    # prefer matching 'Abcyyde'
+                    if prefix_score > max_prefix_score or \
+                            special and prefix_score == max_prefix_score:
                         max_prefix_score = prefix_score
                         res = FuzzyMatch.evaluateHighlights(text[i:],
                                                             pattern[n:],
@@ -539,7 +545,7 @@ class FuzzyMatch(object):
                         cur_highlights = [[i-n+j+1, n]] + res[1] if res[1] else []
                     else:
                         score = 0
-                if score > max_score:
+                if score > max_score or special and score == max_score:
                     max_score = score
                     highlights = cur_highlights
             # e.g., text = 'a~c~~~~ab~c', pattern = 'abc',
