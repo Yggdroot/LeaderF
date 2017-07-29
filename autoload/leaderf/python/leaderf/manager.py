@@ -16,6 +16,8 @@ from .fuzzyMatch import FuzzyMatch
 def modifiableController(func):
     @wraps(func)
     def deco(self, *args, **kwargs):
+        if self._getExplorer().getStlCategory() in ("Search_History", "Cmd_History"):
+            return func(self, *args, **kwargs)
         self._getInstance().buffer.options['modifiable'] = True
         func(self, *args, **kwargs)
         self._getInstance().buffer.options['modifiable'] = False
@@ -196,6 +198,8 @@ class Manager(object):
         return self._instance
 
     def _createHelpHint(self):
+        if self._getExplorer().getStlCategory() in ("Search_History", "Cmd_History"):
+            return
         help = []
         if not self._show_help:
             help.append('" Press <F1> for help')

@@ -33,11 +33,10 @@ class HistoryExplorer(Explorer):
             result = lfEval("@x")
             lfCmd("let @x = '%s'" % escQuote(tmp))
             lfCmd("redir END")
-            result_list = result.splitlines()
-            start = len(result_list[-1]) - len(result_list[-1][1:].lstrip())
-            result_list = [line[start:] for line in result_list]
+            result_list = result.splitlines()[2:]
+            result_list = [line[1:].split(None, 1)[1] for line in result_list]
 
-        return result_list[2:][::-1]
+        return result_list[::-1]
 
     def getStlCategory(self):
         return self._history_type
@@ -58,7 +57,6 @@ class HistoryExplorer(Explorer):
 class HistoryExplManager(Manager):
     def __init__(self):
         super(HistoryExplManager, self).__init__()
-        self._match_ids = []
 
     def _getExplClass(self):
         return HistoryExplorer
@@ -69,10 +67,13 @@ class HistoryExplManager(Manager):
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
-        line = args[0]
-        cmd = line.lstrip().split(None, 1)[1]
+        cmd = args[0]
         if self._getExplorer().getHistoryType() == "Cmd_History":
-            lfCmd(cmd)
+            try:
+                lfCmd(cmd)
+            except vim.error as e:
+                lfPrintError(e)
+            lfCmd("call histadd(':', '%s')" % escQuote(cmd))
         elif self._getExplorer().getHistoryType() == "Search_History":
             try:
                 lfCmd("/%s" % cmd)
@@ -98,29 +99,6 @@ class HistoryExplManager(Manager):
                   2, return the start position of the whole line
         """
         return 0
-
-    def _createHelp(self):
-        help = []
-        help.append('" <CR>/<double-click>/o : open file under cursor')
-        help.append('" x : open file under cursor in a horizontally split window')
-        help.append('" v : open file under cursor in a vertically split window')
-        help.append('" t : open file under cursor in a new tabpage')
-        help.append('" i : switch to input mode')
-        help.append('" q : quit')
-        help.append('" <F1> : toggle this help')
-        help.append('" ---------------------------------------------------------')
-        return help
-
-    def _afterEnter(self):
-        super(HistoryExplManager, self)._afterEnter()
-        id = int(lfEval('''matchadd('Lf_hl_historyIndex', '^\s*\d\+')'''))
-        self._match_ids.append(id)
-
-    def _beforeExit(self):
-        super(HistoryExplManager, self)._beforeExit()
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
 
 
 #*****************************************************
