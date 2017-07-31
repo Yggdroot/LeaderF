@@ -22,6 +22,7 @@ function! leaderf#Mru#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "mruExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "mruExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "mruExplManager.quit()"<CR>
+    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "mruExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "mruExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "mruExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "mruExplManager.deleteMru()"<CR>

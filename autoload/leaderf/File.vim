@@ -24,6 +24,7 @@ function! leaderf#File#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "fileExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "fileExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "fileExplManager.quit()"<CR>
+    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "fileExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "fileExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "fileExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> <F5>          :exec g:Lf_py "fileExplManager.refresh()"<CR>

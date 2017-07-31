@@ -24,6 +24,7 @@ function! leaderf#Function#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "functionExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "functionExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "functionExplManager.quit()"<CR>
+    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "functionExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "functionExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "functionExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> j             j:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
