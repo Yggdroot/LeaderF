@@ -22,7 +22,7 @@ class ColorschemeExplorer(Explorer):
             try:
                 colors = os.listdir(os.path.join(dir, "colors"))
                 content.extend([c[:-4] for c in colors if c.endswith(".vim")])
-            except FileNotFoundError:
+            except:
                 pass
 
         return content
