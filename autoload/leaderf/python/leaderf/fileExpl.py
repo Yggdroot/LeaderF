@@ -187,6 +187,23 @@ class FileExplorer(Explorer):
 
         return False
 
+    def _expandGlob(self, type, glob):
+        # is absolute path
+        if os.name == 'nt' and re.match(r"^[a-zA-Z]:[/\\]", glob) or glob.startswith('/'):
+            if type == "file":
+                return glob
+            elif type == "dir":
+                return os.path.join(glob, '*')
+            else:
+                return glob
+        else:
+            if type == "file":
+                return "**/" + glob
+            elif type == "dir":
+                return "**/" + os.path.join(glob, '*')
+            else:
+                return glob
+
     def _buildCmd(self, dir):
         if lfEval("g:Lf_ShowRelativePath") == '1':
             dir = os.path.relpath(dir)
@@ -202,7 +219,18 @@ class FileExplorer(Explorer):
                 self._external_cmd = cmd
                 return cmd
             elif self._exists(dir, ".hg"):
-                cmd = 'hg files "%s"' % dir
+                wildignore = lfEval("g:Lf_WildIgnore")
+                if ".hg" in wildignore["dir"]:
+                    wildignore["dir"].remove(".hg")
+                if ".hg" in wildignore["file"]:
+                    wildignore["file"].remove(".hg")
+                ignore = ""
+                for i in wildignore["dir"]:
+                    ignore += ' -X "%s"' % self._expandGlob("dir", i)
+                for i in wildignore["file"]:
+                    ignore += ' -X "%s"' % self._expandGlob("file", i)
+
+                cmd = 'hg files %s "%s"' % (ignore, dir)
                 self._external_cmd = cmd
                 return cmd
 
