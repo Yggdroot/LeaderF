@@ -138,16 +138,22 @@ call s:InitDict('g:Lf_PreviewResult', {
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
+            \ '<C-B>':         ['<C-B>'],
             \ '<C-C>':         ['<C-C>'],
             \ '<C-D>':         ['<C-D>'],
+            \ '<C-E>':         ['<C-E>'],
             \ '<C-F>':         ['<C-F>'],
             \ '<C-G>':         ['<C-G>'],
+            \ '<C-H>':         ['<C-H>'],
+            \ '<C-J>':         ['<C-J>'],
+            \ '<C-K>':         ['<C-K>'],
             \ '<C-L>':         ['<C-L>'],
             \ '<C-N>':         ['<C-N>'],
             \ '<C-O>':         ['<C-O>'],
             \ '<C-P>':         ['<C-P>'],
             \ '<C-Q>':         ['<C-Q>'],
             \ '<C-R>':         ['<C-R>'],
+            \ '<C-S>':         ['<C-S>'],
             \ '<C-T>':         ['<C-T>'],
             \ '<C-U>':         ['<C-U>'],
             \ '<C-V>':         ['<C-V>', '<S-Insert>'],
@@ -169,23 +175,23 @@ let s:Lf_CommandMap = {
             \ '<F11>':         ['<F11>'],
             \ '<F12>':         ['<F12>'],
             \ '<CR>':          ['<CR>'],
-            \ '<BS>':          ['<BS>', '<C-H>'],
-            \ '<Tab>':         ['<Tab>'],
+            \ '<BS>':          ['<BS>'],
+            \ '<Tab>':         ['<Tab>', '<C-I>'],
             \ '<Del>':         ['<Del>'],
             \ '<Esc>':         ['<Esc>'],
-            \ '<Up>':          ['<Up>', '<C-K>'],
-            \ '<Down>':        ['<Down>', '<C-J>'],
+            \ '<Up>':          ['<Up>'],
+            \ '<Down>':        ['<Down>'],
             \ '<Left>':        ['<Left>'],
             \ '<Right>':       ['<Right>'],
             \ '<Home>':        ['<Home>', '<C-B>'],
-            \ '<End>':         ['<End>', '<C-E>'],
+            \ '<End>':         ['<End>'],
             \ '<S-Left>':      ['<S-Left>'],
             \ '<S-Right>':     ['<S-Right>'],
             \ '<LeftMouse>':   ['<LeftMouse>'],
             \ '<RightMouse>':  ['<RightMouse>'],
             \ '<MiddleMouse>': ['<MiddleMouse>'],
             \ '<2-LeftMouse>': ['<2-LeftMouse>'],
-            \ '<C-LeftMouse>': ['<C-LeftMouse>', '<C-S>'],
+            \ '<C-LeftMouse>': ['<C-LeftMouse>'],
             \ '<S-LeftMouse>': ['<S-LeftMouse>']
             \}
 
@@ -197,6 +203,9 @@ function! s:InitCommandMap(var, dict)
         for [key, value] in items(eval(a:var))
             call filter(tmp, 'v:key !=? key')
             for i in value
+                if index(['<TAB>', '<C-I>'], toupper(i)) >= 0
+                    call filter(tmp, "v:key != '<Tab>'")
+                endif
                 call filter(tmp, '!empty(filter(tmp[v:key], "v:val !=? i"))')
             endfor
             let tmp[toupper(key)] = map(value, 'toupper(v:val)')

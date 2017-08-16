@@ -732,10 +732,10 @@ class Manager(object):
                 self._index = 0 # search from beginning
                 if self._cli.pattern:
                     self._search(self._content)
-            elif equal(cmd, '<Up>'):
+            elif equal(cmd, '<Up>') or equal(cmd, '<C-K>'):
                 self._toUp()
                 self._previewResult(False)
-            elif equal(cmd, '<Down>'):
+            elif equal(cmd, '<Down>') or equal(cmd, '<C-J>'):
                 self._toDown()
                 self._previewResult(False)
             elif equal(cmd, '<LeftMouse>'):
@@ -770,7 +770,7 @@ class Manager(object):
                 break
             elif equal(cmd, '<F5>'):
                 self.refresh(False)
-            elif equal(cmd, '<C-LeftMouse>'):
+            elif equal(cmd, '<C-LeftMouse>') or equal(cmd, '<C-S>'):
                 if self._getExplorer().supportsMulti():
                     self.addSelections()
             elif equal(cmd, '<S-LeftMouse>'):

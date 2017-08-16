@@ -367,7 +367,7 @@ class LfCli(object):
                         self._is_fuzzy = not self._is_fuzzy
                         self._buildPattern()
                         yield '<Mode>'
-                    elif equal(cmd, '<BS>'):
+                    elif equal(cmd, '<BS>') or equal(cmd, '<C-H>'):
                         self._backspace()
                         self._buildPattern()
                         yield '<Shorten>'
@@ -379,13 +379,13 @@ class LfCli(object):
                         self._delete()
                         self._buildPattern()
                         yield '<Shorten>'
-                    elif equal(cmd, '<C-V>'):
+                    elif equal(cmd, '<C-V>') or equal(cmd, '<S-Insert>'):
                         self._paste()
                         self._buildPattern()
                         yield '<Update>'
-                    elif equal(cmd, '<Home>'):
+                    elif equal(cmd, '<Home>') or equal(cmd, '<C-B>'):
                         self._toBegin()
-                    elif equal(cmd, '<End>'):
+                    elif equal(cmd, '<End>') or equal(cmd, '<C-E>'):
                         self._toEnd()
                     elif equal(cmd, '<Left>'):
                         self._toLeft()
