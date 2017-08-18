@@ -24,13 +24,17 @@ function! leaderf#File#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "fileExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "fileExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "fileExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "fileExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "fileExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "fileExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> <F5>          :exec g:Lf_py "fileExplManager.refresh()"<CR>
     nnoremap <buffer> <silent> s             :exec g:Lf_py "fileExplManager.addSelections()"<CR>
     nnoremap <buffer> <silent> a             :exec g:Lf_py "fileExplManager.selectAll()"<CR>
     nnoremap <buffer> <silent> c             :exec g:Lf_py "fileExplManager.clearSelections()"<CR>
+    if has_key(g:Lf_NormalMap, "File")
+        for i in g:Lf_NormalMap["File"]
+            exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
+        endfor
+    endif
 endfunction
 
 function! leaderf#File#startExpl(win_pos, ...)

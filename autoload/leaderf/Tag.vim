@@ -22,10 +22,14 @@ function! leaderf#Tag#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "tagExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "tagExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "tagExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "tagExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "tagExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "tagExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> <F5>          :exec g:Lf_py "tagExplManager.refresh()"<CR>
+    if has_key(g:Lf_NormalMap, "Tag")
+        for i in g:Lf_NormalMap["Tag"]
+            exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
+        endfor
+    endif
 endfunction
 
 function! leaderf#Tag#startExpl(win_pos, ...)

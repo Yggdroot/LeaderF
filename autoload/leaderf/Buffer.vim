@@ -22,11 +22,15 @@ function! leaderf#Buffer#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "bufExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "bufExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "bufExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "bufExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "bufExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "bufExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "bufExplManager.deleteBuffer(1)"<CR>
     nnoremap <buffer> <silent> D             :exec g:Lf_py "bufExplManager.deleteBuffer()"<CR>
+    if has_key(g:Lf_NormalMap, "Buffer")
+        for i in g:Lf_NormalMap["Buffer"]
+            exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
+        endfor
+    endif
 endfunction
 
 function! leaderf#Buffer#startExpl(win_pos, ...)

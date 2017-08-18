@@ -135,6 +135,7 @@ call s:InitDict('g:Lf_PreviewResult', {
             \ 'Line': 0,
             \ 'Colorscheme': 0
             \})
+call s:InitDict('g:Lf_NormalMap', {})
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],

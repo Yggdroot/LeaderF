@@ -403,6 +403,27 @@ g:Lf_PreviewResult                              *g:Lf_PreviewResult*
     e.g., if you want to disable the preview of BufTag explorer: >
     let g:Lf_PreviewResult = { 'BufTag': 0 }
 <
+g:Lf_NormalMap                                  *g:Lf_NormalMap*
+    Use this option to customize the mappings in normal mode.
+    e.g., >
+    let g:Lf_NormalMap = {
+        \ "File":   [["<ESC>", ':exec g:Lf_py "fileExplManager.quit()"<CR>'],
+        \            ["<F6>", ':exec g:Lf_py "fileExplManager.quit()"<CR>']
+        \           ],
+        \ "Buffer": [["<ESC>", ':exec g:Lf_py "bufExplManager.quit()"<CR>'],
+        \            ["<F6>", ':exec g:Lf_py "bufExplManager.quit()"<CR>']
+        \           ],
+        \ "Mru":    [["<ESC>", ':exec g:Lf_py "mruExplManager.quit()"<CR>']],
+        \ "Tag":    [],
+        \ "BufTag": [],
+        \ "Function": [],
+        \ "Line":   [],
+        \ "History":[],
+        \ "Help":   [],
+        \ "Self":   [],
+        \ "Colorscheme": []
+        \}
+<
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
     prompt(|leaderf-prompt|).

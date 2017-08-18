@@ -22,13 +22,17 @@ function! leaderf#Mru#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "mruExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "mruExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "mruExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "mruExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "mruExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "mruExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "mruExplManager.deleteMru()"<CR>
     nnoremap <buffer> <silent> s             :exec g:Lf_py "mruExplManager.addSelections()"<CR>
     nnoremap <buffer> <silent> a             :exec g:Lf_py "mruExplManager.selectAll()"<CR>
     nnoremap <buffer> <silent> c             :exec g:Lf_py "mruExplManager.clearSelections()"<CR>
+    if has_key(g:Lf_NormalMap, "Mru")
+        for i in g:Lf_NormalMap["Mru"]
+            exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
+        endfor
+    endif
 endfunction
 
 function! leaderf#Mru#startExpl(win_pos, ...)

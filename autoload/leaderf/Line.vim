@@ -22,9 +22,13 @@ function! leaderf#Line#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "lineExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "lineExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "lineExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "lineExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "lineExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "lineExplManager.toggleHelp()"<CR>
+    if has_key(g:Lf_NormalMap, "Line")
+        for i in g:Lf_NormalMap["Line"]
+            exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
+        endfor
+    endif
 endfunction
 
 function! leaderf#Line#startExpl(win_pos, ...)

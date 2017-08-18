@@ -17,8 +17,12 @@ function! leaderf#History#Maps()
     nmapclear <buffer>
     nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "historyExplManager.accept()"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "historyExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "historyExplManager.quit()"<CR>
     nnoremap <buffer> <silent> <C-I>         :exec g:Lf_py "historyExplManager.input()"<CR>
+    if has_key(g:Lf_NormalMap, "History")
+        for i in g:Lf_NormalMap["History"]
+            exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
+        endfor
+    endif
 endfunction
 
 function! leaderf#History#startExpl(win_pos, type)

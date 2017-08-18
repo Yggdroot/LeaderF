@@ -24,7 +24,6 @@ function! leaderf#Function#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "functionExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "functionExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "functionExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "functionExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "functionExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "functionExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> j             j:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
@@ -32,6 +31,11 @@ function! leaderf#Function#Maps()
     nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
+    if has_key(g:Lf_NormalMap, "Function")
+        for i in g:Lf_NormalMap["Function"]
+            exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
+        endfor
+    endif
 endfunction
 
 function! leaderf#Function#startExpl(win_pos, ...)

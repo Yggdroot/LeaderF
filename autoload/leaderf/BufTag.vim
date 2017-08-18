@@ -24,7 +24,6 @@ function! leaderf#BufTag#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "bufTagExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "bufTagExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "bufTagExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <ESC>         :exec g:Lf_py "bufTagExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "bufTagExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "bufTagExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> j             j:exec g:Lf_py "bufTagExplManager._previewResult(False)"<CR>
@@ -32,6 +31,11 @@ function! leaderf#BufTag#Maps()
     nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "bufTagExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "bufTagExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "bufTagExplManager._previewResult(False)"<CR>
+    if has_key(g:Lf_NormalMap, "BufTag")
+        for i in g:Lf_NormalMap["BufTag"]
+            exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
+        endfor
+    endif
 endfunction
 
 function! leaderf#BufTag#startExpl(win_pos, ...)
