@@ -34,7 +34,7 @@ class HistoryExplorer(Explorer):
             lfCmd("let @x = '%s'" % escQuote(tmp))
             lfCmd("redir END")
             result_list = result.splitlines()[2:]
-            result_list = [line[1:].split(None, 1)[1] for line in result_list]
+            result_list = [line[1:].lstrip().split(' ', 1)[1] for line in result_list]
 
         return result_list[::-1]
 
