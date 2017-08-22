@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import vim
+import sys
 import time
 import operator
 import itertools
@@ -11,6 +12,30 @@ from .instance import LfInstance
 from .cli import LfCli
 from .utils import *
 from .fuzzyMatch import FuzzyMatch
+
+
+is_fuzzyMatch_C = False
+try:
+    import fuzzyMatchC
+    is_fuzzyMatch_C = True
+    lfCmd("let g:Lf_fuzzyMatch_C = 1")
+except ImportError:
+    lfCmd("let g:Lf_fuzzyMatch_C = 0")
+
+if sys.version_info >= (3, 0):
+    def isAscii(str):
+        try:
+            str.encode("ascii")
+            return True
+        except UnicodeEncodeError:
+            return False
+else:
+    def isAscii(str):
+        try:
+            str.decode("ascii")
+            return True
+        except UnicodeDecodeError:
+            return False
 
 
 def modifiableController(func):
@@ -332,54 +357,95 @@ class Manager(object):
 
     def _fuzzySearch(self, content, is_continue, step):
         encoding = lfEval("&encoding")
+        is_ascii = False
         if self._cli.isRefinement:
             if self._cli.pattern[1] == '':      # e.g. abc;
-                fuzzy_match = FuzzyMatch(self._cli.pattern[0], encoding)
-                filter_method = partial(self._fuzzyFilter,
-                                        False,
-                                        fuzzy_match.getWeight)
-                highlight_method = partial(self._highlight,
-                                           False,
-                                           fuzzy_match.getHighlights)
+                if is_fuzzyMatch_C and isAscii(self._cli.pattern[0]):
+                    is_ascii = True
+                    pattern = fuzzyMatchC.initPattern(self._cli.pattern[0])
+                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern)
+                    getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern)
+                else:
+                    fuzzy_match = FuzzyMatch(self._cli.pattern[0], encoding)
+                    getWeight = fuzzy_match.getWeight
+                    getHighlights = fuzzy_match.getHighlights
+
+                filter_method = partial(self._fuzzyFilter, False, getWeight)
+                highlight_method = partial(self._highlight, False, getHighlights)
             elif self._cli.pattern[0] == '':    # e.g. ;abc
-                fuzzy_match = FuzzyMatch(self._cli.pattern[1], encoding)
-                filter_method = partial(self._fuzzyFilter,
-                                        True,
-                                        fuzzy_match.getWeight)
-                highlight_method = partial(self._highlight,
-                                           True,
-                                           fuzzy_match.getHighlights)
+                if is_fuzzyMatch_C and isAscii(self._cli.pattern[1]):
+                    is_ascii = True
+                    pattern = fuzzyMatchC.initPattern(self._cli.pattern[1])
+                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern)
+                    getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern)
+                else:
+                    fuzzy_match = FuzzyMatch(self._cli.pattern[1], encoding)
+                    getWeight = fuzzy_match.getWeight
+                    getHighlights = fuzzy_match.getHighlights
+
+                filter_method = partial(self._fuzzyFilter, True, getWeight)
+                highlight_method = partial(self._highlight, True, getHighlights)
             else:
-                fuzzy_match0 = FuzzyMatch(self._cli.pattern[0], encoding)
-                fuzzy_match1 = FuzzyMatch(self._cli.pattern[1], encoding)
-                filter_method = partial(self._refineFilter,
-                                        fuzzy_match0.getWeight,
-                                        fuzzy_match1.getWeight)
-                highlight_method = partial(self._highlightRefine,
-                                           fuzzy_match0.getHighlights,
-                                           fuzzy_match1.getHighlights)
+                if is_fuzzyMatch_C and isAscii(self._cli.pattern[0]):
+                    is_ascii_0 = True
+                    pattern_0 = fuzzyMatchC.initPattern(self._cli.pattern[0])
+                    getWeight_0 = partial(fuzzyMatchC.getWeight, pattern=pattern_0)
+                    getHighlights_0 = partial(fuzzyMatchC.getHighlights, pattern=pattern_0)
+                else:
+                    is_ascii_0 = False
+                    fuzzy_match_0 = FuzzyMatch(self._cli.pattern[0], encoding)
+                    getWeight_0 = fuzzy_match_0.getWeight
+                    getHighlights_0 = fuzzy_match_0.getHighlights
+
+                if is_fuzzyMatch_C and isAscii(self._cli.pattern[1]):
+                    is_ascii_1 = True
+                    pattern_1 = fuzzyMatchC.initPattern(self._cli.pattern[1])
+                    getWeight_1 = partial(fuzzyMatchC.getWeight, pattern=pattern_1)
+                    getHighlights_1 = partial(fuzzyMatchC.getHighlights, pattern=pattern_1)
+                else:
+                    is_ascii_1 = False
+                    fuzzy_match_1 = FuzzyMatch(self._cli.pattern[1], encoding)
+                    getWeight_1 = fuzzy_match_1.getWeight
+                    getHighlights_1 = fuzzy_match_1.getHighlights
+
+                    is_ascii = is_ascii_0 and is_ascii_1
+
+                filter_method = partial(self._refineFilter, getWeight_0, getWeight_1)
+                highlight_method = partial(self._highlightRefine, getHighlights_0, getHighlights_1)
         else:
-            fuzzy_match = FuzzyMatch(self._cli.pattern, encoding)
-            if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
-                filter_method = partial(self._fuzzyFilter,
-                                        self._cli.isFullPath,
-                                        fuzzy_match.getWeight2)
-            elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
-                    "Function", "History", "Cmd_History", "Search_History"]:
-                filter_method = partial(self._fuzzyFilter,
-                                        self._cli.isFullPath,
-                                        fuzzy_match.getWeight3)
+            if is_fuzzyMatch_C and isAscii(self._cli.pattern):
+                is_ascii = True
+                pattern = fuzzyMatchC.initPattern(self._cli.pattern)
+                getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern)
+                getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern)
+
+                filter_method = partial(self._fuzzyFilter, self._cli.isFullPath, getWeight)
+                highlight_method = partial(self._highlight, self._cli.isFullPath, getHighlights)
             else:
-                filter_method = partial(self._fuzzyFilter,
-                                        self._cli.isFullPath,
-                                        fuzzy_match.getWeight)
+                fuzzy_match = FuzzyMatch(self._cli.pattern, encoding)
+                if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                    filter_method = partial(self._fuzzyFilter,
+                                            self._cli.isFullPath,
+                                            fuzzy_match.getWeight2)
+                elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
+                        "Function", "History", "Cmd_History", "Search_History"]:
+                    filter_method = partial(self._fuzzyFilter,
+                                            self._cli.isFullPath,
+                                            fuzzy_match.getWeight3)
+                else:
+                    filter_method = partial(self._fuzzyFilter,
+                                            self._cli.isFullPath,
+                                            fuzzy_match.getWeight)
 
-            highlight_method = partial(self._highlight,
-                                       self._cli.isFullPath,
-                                       fuzzy_match.getHighlights)
+                highlight_method = partial(self._highlight,
+                                           self._cli.isFullPath,
+                                           fuzzy_match.getHighlights)
 
-        if self._getExplorer().isFilePath() and self._cli.isFullPath and step == 30000:
-            step = 5000
+        if step == 30000:
+            if is_fuzzyMatch_C and is_ascii:
+                step = 50000
+            elif self._getExplorer().isFilePath() and self._cli.isFullPath:
+                step = 5000
 
         pairs = self._filter(step, filter_method, content, is_continue)
         pairs.sort(key=operator.itemgetter(0), reverse=True)

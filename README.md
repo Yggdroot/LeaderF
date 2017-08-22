@@ -28,6 +28,50 @@ Installation
 To install this plugin just put the plugin files in your `~/.vim` (Linux) or `~/vimfiles` (Windows).<br>
 For [Vundle][3] user, just add `Plugin 'Yggdroot/LeaderF'` to your `.vimrc`.
 
+Performance
+-----------
+
+LeaderF is already very fast. If you want better performance, install the C extension of the fuzzy match algorithm, which is more than 10 times faster.  
+To install the C extension, follow the below:
+
+ - On Linux/Unix/MacOS:
+
+    First, make sure `python` and/or `python3` commands are available.  
+    Then run the installation script:
+
+    ```sh
+    cd ~/.vim/bundle/LeaderF
+    ./install.sh
+    ```
+    Uninstall the C extension:
+
+        ./install.sh --reverse
+
+    If you are using [vim-plug][5]:
+
+        Plug 'Yggdroot/LeaderF', { 'do': './install.sh' }
+
+ - On Windows:
+
+    First, make sure `py` and/or `py -3` commands are available.  
+    Then run the installation script:
+
+    ```sh
+    cd ~/.vim/bundle/LeaderF
+    ./install.bat
+    ```
+    There may be some error during the installation, please google the error messages to resolve it.
+
+    Uninstall the C extension:
+
+        .\install.bat --reverse
+
+    If you are using [vim-plug][5]:
+
+        Plug 'Yggdroot/LeaderF', { 'do': '.\install.bat' }
+
+After running any command of LeaderF, check the value of `echo g:Lf_fuzzyMatch_C`, if the value is 1, it means the C extension is loaded sucessfully.
+
 Usage
 -----
 
@@ -133,3 +177,4 @@ This plugin is released under the Apache License, Version 2.0 (the "License").
   [2]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_2.gif
   [3]: https://github.com/gmarik/Vundle.vim
   [4]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L193-L340
+  [5]: https://github.com/junegunn/vim-plug
