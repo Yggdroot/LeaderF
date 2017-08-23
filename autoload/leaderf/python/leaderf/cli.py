@@ -315,7 +315,7 @@ class LfCli(object):
                 self._idle = False
 
                 if callback() == False:
-                    time.sleep(0.001)
+                    time.sleep(0.002)
 
                 if lfEval("g:Lf_CursorBlink") == '1':
                     lfCmd("let nr = getchar(1)")

@@ -404,7 +404,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
     return val + k;
 }
 
-float getWeight(char* text, uint16_t text_len, PatternContext* pPattern_ctxt)
+float getWeight(char* text, uint16_t text_len, PatternContext* pPattern_ctxt, uint8_t is_name_only)
 {
     if ( !text || !pPattern_ctxt )
         return 0;
@@ -627,7 +627,10 @@ float getWeight(char* text, uint16_t text_len, PatternContext* pPattern_ctxt)
 
     free(text_mask);
 
-    return score + 0.4f/(end - beg) + 1.0f/text_len;
+    if ( is_name_only )
+        return score + (1 >> beg) + 0.4f/(end - beg) + 1.0f/(beg + end) + 1.0f/text_len;
+    else
+        return score + 0.4f/(end - beg) + 1.0f/text_len;
 }
 
 
@@ -1113,16 +1116,18 @@ static PyObject* fuzzyMatchC_getWeight(PyObject* self, PyObject* args, PyObject*
     char* text;
     Py_ssize_t text_len;
     PyObject* py_patternCtxt;
-    static char* kwlist[] = {"text", "pattern", NULL};
+    uint8_t is_name_only;
+    static char* kwlist[] = {"text", "pattern", "is_name_only", NULL};
 
-    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "s#O:getWeight", kwlist, &text, &text_len, &py_patternCtxt) )
+    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "s#Ob:getWeight", kwlist, &text,
+                                      &text_len, &py_patternCtxt, &is_name_only) )
         return NULL;
 
     PatternContext* pCtxt = (PatternContext*)PyCapsule_GetPointer(py_patternCtxt, NULL);
     if ( !pCtxt )
         return NULL;
 
-    return Py_BuildValue("f", getWeight(text, text_len, pCtxt));
+    return Py_BuildValue("f", getWeight(text, text_len, pCtxt, is_name_only));
 }
 
 static PyObject* fuzzyMatchC_getHighlights(PyObject* self, PyObject* args, PyObject* kwargs)

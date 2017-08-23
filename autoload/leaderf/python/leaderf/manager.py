@@ -365,7 +365,7 @@ class Manager(object):
                 if is_fuzzyMatch_C and isAscii(self._cli.pattern[0]):
                     is_ascii = True
                     pattern = fuzzyMatchC.initPattern(self._cli.pattern[0])
-                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern)
+                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=True)
                     getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern)
                 else:
                     fuzzy_match = FuzzyMatch(self._cli.pattern[0], encoding)
@@ -378,7 +378,7 @@ class Manager(object):
                 if is_fuzzyMatch_C and isAscii(self._cli.pattern[1]):
                     is_ascii = True
                     pattern = fuzzyMatchC.initPattern(self._cli.pattern[1])
-                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern)
+                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=False)
                     getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern)
                 else:
                     fuzzy_match = FuzzyMatch(self._cli.pattern[1], encoding)
@@ -391,7 +391,7 @@ class Manager(object):
                 if is_fuzzyMatch_C and isAscii(self._cli.pattern[0]):
                     is_ascii_0 = True
                     pattern_0 = fuzzyMatchC.initPattern(self._cli.pattern[0])
-                    getWeight_0 = partial(fuzzyMatchC.getWeight, pattern=pattern_0)
+                    getWeight_0 = partial(fuzzyMatchC.getWeight, pattern=pattern_0, is_name_only=True)
                     getHighlights_0 = partial(fuzzyMatchC.getHighlights, pattern=pattern_0)
                 else:
                     is_ascii_0 = False
@@ -402,7 +402,7 @@ class Manager(object):
                 if is_fuzzyMatch_C and isAscii(self._cli.pattern[1]):
                     is_ascii_1 = True
                     pattern_1 = fuzzyMatchC.initPattern(self._cli.pattern[1])
-                    getWeight_1 = partial(fuzzyMatchC.getWeight, pattern=pattern_1)
+                    getWeight_1 = partial(fuzzyMatchC.getWeight, pattern=pattern_1, is_name_only=False)
                     getHighlights_1 = partial(fuzzyMatchC.getHighlights, pattern=pattern_1)
                 else:
                     is_ascii_1 = False
@@ -418,7 +418,11 @@ class Manager(object):
             if is_fuzzyMatch_C and isAscii(self._cli.pattern):
                 is_ascii = True
                 pattern = fuzzyMatchC.initPattern(self._cli.pattern)
-                getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern)
+                if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=False)
+                else:
+                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=True)
+
                 getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern)
 
                 filter_method = partial(self._fuzzyFilter, self._cli.isFullPath, getWeight)
