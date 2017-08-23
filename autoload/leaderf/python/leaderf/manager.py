@@ -307,6 +307,8 @@ class Manager(object):
         if self._index == 0:
             self._previous_result = []
             self._cb_content = []
+            if step == 50000:
+                step = 30000
             self._index = min(step, length)
             result.extend(filter_method(content[:self._index]))
         elif is_continue:

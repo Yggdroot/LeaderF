@@ -57,8 +57,8 @@ To install the C extension, follow the below:
     Then run the installation script:
 
     ```sh
-    cd ~/.vim/bundle/LeaderF
-    ./install.bat
+    cd ~\.vim\bundle\LeaderF
+    .\install.bat
     ```
     There may be some error during the installation, please google the error messages to resolve it.
 
