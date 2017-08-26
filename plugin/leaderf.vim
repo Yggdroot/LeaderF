@@ -125,6 +125,7 @@ call s:InitVar('g:Lf_StlPalette', {})
 call s:InitVar('g:Lf_Ctags', 'ctags')
 call s:InitVar('g:Lf_PreviewCode', 0)
 call s:InitVar('g:Lf_UseVersionControlTool', 1)
+call s:InitVar('g:Lf_RememberLastSearch', 0)
 call s:InitDict('g:Lf_PreviewResult', {
             \ 'File': 0,
             \ 'Buffer': 0,

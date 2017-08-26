@@ -403,6 +403,13 @@ g:Lf_PreviewResult                              *g:Lf_PreviewResult*
     e.g., if you want to disable the preview of BufTag explorer: >
     let g:Lf_PreviewResult = { 'BufTag': 0 }
 <
+g:Lf_RememberLastSearch                         *g:Lf_RememberLastSearch*
+    This option specifies whether to remember the last search. If the value is
+    1, the search string you typed during last search is still there when
+    LeaderF is launched again. (Introduced in issue #62)
+
+    Default value is 0.
+
 g:Lf_NormalMap                                  *g:Lf_NormalMap*
     Use this option to customize the mappings in normal mode.
     e.g., >

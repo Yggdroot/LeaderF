@@ -579,7 +579,8 @@ class Manager(object):
         self._selections.clear()
 
     def _cleanup(self):
-        self._cli.clear()
+        if lfEval("g:Lf_RememberLastSearch") == '0':
+            self._cli.clear()
         self.clearSelections()
         self._clearHighlights()
         self._clearHighlightsPos()
@@ -792,6 +793,9 @@ class Manager(object):
 
         if self._iteration_end == False and self._backup:
             content = self._backup
+
+        if lfEval("g:Lf_RememberLastSearch") == '1':
+            self._search(self._content)
 
         for cmd in self._cli.input(partial(self.setContent, content)):
             if equal(cmd, '<Update>'):
