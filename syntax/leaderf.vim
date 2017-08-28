@@ -29,8 +29,13 @@ if has("syntax")
     highlight def Lf_hl_selection guibg=#A5EB84 guifg=Black ctermbg=156 ctermfg=Black
     highlight def link Lf_hl_help               comment
     highlight def link Lf_hl_helpCmd            Identifier
-    highlight def Lf_hl_match gui=bold guifg=SpringGreen cterm=bold ctermfg=49
-    highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
+    if &background ==? "dark"
+        highlight def Lf_hl_match gui=bold guifg=SpringGreen cterm=bold ctermfg=49
+        highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
+    else
+        highlight def Lf_hl_match gui=bold guifg=#BB47F5 cterm=bold ctermfg=165
+        highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
+    endif
     highlight def link Lf_hl_bufNumber          Constant
     highlight def link Lf_hl_bufIndicators      Statement
     highlight def link Lf_hl_bufModified        String
