@@ -31,7 +31,7 @@ For [Vundle][3] user, just add `Plugin 'Yggdroot/LeaderF'` to your `.vimrc`.
 Performance
 -----------
 
-LeaderF is already very fast. If you want better performance, install the C extension of the fuzzy match algorithm, which is more than 10 times faster.  
+LeaderF is already very fast. If you want better performance, install the C extension of the fuzzy matching algorithm, which is more than 10 times faster.  
 To install the C extension, follow the below:
 
  - On Linux/Unix/MacOS:
