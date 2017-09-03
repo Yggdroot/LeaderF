@@ -751,11 +751,9 @@ class Manager(object):
 
     def setContent(self, content):
         if not content or self._iteration_end == True:
-            if time.time() - self._start_time > 0.1:
-                self._start_time = time.time()
-                if self._cli.pattern and self._index < len(self._content):
-                    self._search(self._content, True, 1000)
-                    return True
+            if self._cli.pattern and self._index < len(self._content):
+                self._search(self._content, True, 5000 if is_fuzzyMatch_C else 1000)
+                return True
             return False
 
         i = -1
@@ -775,7 +773,7 @@ class Manager(object):
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
             lfCmd("redrawstatus")
             if self._index < len(self._content):
-                self._search(self._content, True, 1000)
+                self._search(self._content, True, 5000 if is_fuzzyMatch_C else 1000)
             return False
         else:
             if time.time() - self._start_time > 0.1:
@@ -783,7 +781,7 @@ class Manager(object):
                 self._getInstance().setStlTotal(len(self._content)//self._getUnit())
                 lfCmd("redrawstatus")
                 if self._index < len(self._content):
-                    self._search(self._content, True, 1000)
+                    self._search(self._content, True, 5000 if is_fuzzyMatch_C else 1000)
             return True
 
     @modifiableController
