@@ -773,7 +773,7 @@ class Manager(object):
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
             lfCmd("redrawstatus")
             if self._index < len(self._content):
-                self._search(self._content, True, 5000 if is_fuzzyMatch_C else 1000)
+                self._search(self._content, True, 1000)
             return False
         else:
             if time.time() - self._start_time > 0.1:
@@ -781,7 +781,7 @@ class Manager(object):
                 self._getInstance().setStlTotal(len(self._content)//self._getUnit())
                 lfCmd("redrawstatus")
                 if self._index < len(self._content):
-                    self._search(self._content, True, 5000 if is_fuzzyMatch_C else 1000)
+                    self._search(self._content, True, 1000)
             return True
 
     @modifiableController
