@@ -460,7 +460,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
 
     float special = 0.0f;
     if ( i == 0 )
-        special = 2.0f;
+        special = 2.1f;
     else if ( text[i-1] == '/' || text[i-1] == '\\' )
         special = k == 0 ? 2.1f : 2.0f;
     else if ( isupper(text[i]) )
@@ -1125,7 +1125,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
 
     float special = 0.0f;
     if ( i == 0 )
-        special = 2.0f;
+        special = 2.1f;
     else if ( text[i-1] == '/' || text[i-1] == '\\' )
         special = k == 0 ? 2.1f : 2.0f;
     else if ( isupper(text[i]) )
