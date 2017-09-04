@@ -307,7 +307,7 @@ class Manager(object):
         if self._index == 0:
             self._previous_result = []
             self._cb_content = []
-            if step == 50000:
+            if step > 30000:
                 step = 30000
             self._index = min(step, length)
             result.extend(filter_method(content[:self._index]))
@@ -449,7 +449,7 @@ class Manager(object):
 
         if step == 30000:
             if is_fuzzyMatch_C and is_ascii:
-                step = 50000
+                step = 35000
             elif self._getExplorer().isFilePath() and self._cli.isFullPath:
                 step = 5000
 
