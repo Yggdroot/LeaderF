@@ -164,8 +164,9 @@ typedef struct HighlightPos
 typedef struct HighlightGroup
 {
     float score;
+    uint16_t beg;
     HighlightPos positions[64];
-    uint16_t end;
+    uint16_t end_index;
 }HighlightGroup;
 
 PatternContext* initPattern(char* pattern, uint16_t pattern_len)
@@ -184,9 +185,9 @@ PatternContext* initPattern(char* pattern, uint16_t pattern_len)
     for ( i = 0; i < pattern_len; ++i )
     {
         pPattern_ctxt->pattern_mask[(uint8_t)pattern[i]] ^= (1LL << i);
-        if ( islower(pattern[i]) && pPattern_ctxt->pattern_mask[toupper(pattern[i])] != -1 )
+        if ( islower(pattern[i]) && pPattern_ctxt->pattern_mask[(uint8_t)toupper(pattern[i])] != -1 )
         {
-            pPattern_ctxt->pattern_mask[toupper(pattern[i])] ^= (1LL << i);
+            pPattern_ctxt->pattern_mask[(uint8_t)toupper(pattern[i])] ^= (1LL << i);
         }
     }
     pPattern_ctxt->is_lower = 1;
@@ -288,9 +289,9 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
          * NOT text = 'xxABCd', pattern = 'abc'; text[i] == 'C'
          * 'Cd' is considered as a word
          */
-        else if ( isupper(text[i-1]) && pattern_mask[tolower(c)] != -1
+        else if ( isupper(text[i-1]) && pattern_mask[(uint8_t)tolower(c)] != -1
                   && (i+1 == text_len || !islower(text[i+1])) )
-            d = (d << 1) | (pattern_mask[tolower(c)] >> k);
+            d = (d << 1) | (pattern_mask[(uint8_t)tolower(c)] >> k);
         else
             d = ~0;
 
@@ -489,9 +490,9 @@ ValueElements* evaluate(TextContext* pText_ctxt,
          * NOT text = 'xxABCd', pattern = 'abc'; text[i] == 'C'
          * 'Cd' is considered as a word
          */
-        else if ( isupper(text[i-1]) && pattern_mask[tolower(c)] != -1
+        else if ( isupper(text[i-1]) && pattern_mask[(uint8_t)tolower(c)] != -1
                   && (i+1 == text_len || !islower(text[i+1])) )
-            d = (d << 1) | (pattern_mask[tolower(c)] >> k);
+            d = (d << 1) | (pattern_mask[(uint8_t)tolower(c)] >> k);
         else
             d = ~0;
 
@@ -712,7 +713,7 @@ float getWeight(char* text, uint16_t text_len,
             /* c in pattern */
             if ( pattern_mask[(uint8_t)c] != -1 )
             {
-                text_mask[c * col_num + (i >> 6)] |= 1ULL << (i & 63);
+                text_mask[(uint8_t)c * col_num + (i >> 6)] |= 1ULL << (i & 63);
                 if ( j < pattern_len && c == pattern[j] )
                     ++j;
             }
@@ -795,9 +796,9 @@ float getWeight(char* text, uint16_t text_len,
             {
                 /* c in pattern */
                 if ( pattern_mask[(uint8_t)c] != -1 )
-                    text_mask[c * col_num + (i >> 6)] |= 1ULL << (i & 63);
-                if ( pattern_mask[tolower(c)] != -1 )
-                    text_mask[tolower(c) * col_num + (i >> 6)] |= 1ULL << (i & 63);
+                    text_mask[(uint8_t)c * col_num + (i >> 6)] |= 1ULL << (i & 63);
+                if ( pattern_mask[(uint8_t)tolower(c)] != -1 )
+                    text_mask[(uint8_t)tolower(c) * col_num + (i >> 6)] |= 1ULL << (i & 63);
                 if ( j < pattern_len && c == toupper(pattern[j]) )
                     ++j;
             }
@@ -806,7 +807,7 @@ float getWeight(char* text, uint16_t text_len,
                 /* c in pattern */
                 if ( pattern_mask[(uint8_t)c] != -1 )
                 {
-                    text_mask[c * col_num + (i >> 6)] |= 1ULL << (i & 63);
+                    text_mask[(uint8_t)c * col_num + (i >> 6)] |= 1ULL << (i & 63);
                     if ( j < pattern_len && c == pattern[j] )
                         ++j;
                 }
@@ -860,10 +861,9 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
                                             HighlightGroup* groups[])
 {
     uint16_t j = pText_ctxt->offset;
-    uint16_t index = j * pPattern_ctxt->pattern_len + k;
 
-    if ( groups[index] )
-        return groups[index];
+    if ( groups[k] && groups[k]->beg >= j )
+        return groups[k];
 
     uint64_t* text_mask = pText_ctxt->text_mask;
     uint16_t col_num = pText_ctxt->col_num;
@@ -898,13 +898,17 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
 
     float max_prefix_score = 0.0f;
     float max_score = 0.0f;
-    groups[index] = (HighlightGroup*)malloc(sizeof(HighlightGroup));
-    if ( !groups[index] )
+
+    if ( !groups[k] )
     {
-        fprintf(stderr, "Out of memory in evaluateHighlights_nameOnly()!\n");
-        return NULL;
+        groups[k] = (HighlightGroup*)malloc(sizeof(HighlightGroup));
+        if ( !groups[k] )
+        {
+            fprintf(stderr, "Out of memory in evaluateHighlights_nameOnly()!\n");
+            return NULL;
+        }
     }
-    memset(groups[index], 0, sizeof(HighlightGroup));
+    memset(groups[k], 0, sizeof(HighlightGroup));
 
     HighlightGroup cur_highlights;
     memset(&cur_highlights, 0, sizeof(HighlightGroup));
@@ -943,9 +947,9 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
          * NOT text = 'xxABCd', pattern = 'abc'; text[i] == 'C'
          * 'Cd' is considered as a word
          */
-        else if ( isupper(text[i-1]) && pattern_mask[tolower(c)] != -1
+        else if ( isupper(text[i-1]) && pattern_mask[(uint8_t)tolower(c)] != -1
                   && (i+1 == text_len || !islower(text[i+1])) )
-            d = (d << 1) | (pattern_mask[tolower(c)] >> k);
+            d = (d << 1) | (pattern_mask[(uint8_t)tolower(c)] >> k);
         else
             d = ~0;
 
@@ -958,13 +962,14 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
             {
                 score = n*n + special;
                 cur_highlights.score = score;
-                cur_highlights.end = 1;
+                cur_highlights.beg = i - n;
+                cur_highlights.end_index = 1;
                 cur_highlights.positions[0].col = i - n + 1;
                 cur_highlights.positions[0].len = n;
                 if ( special > 0.0f )
                 {
-                    memcpy(groups[index], &cur_highlights, sizeof(HighlightGroup));
-                    return groups[index];
+                    memcpy(groups[k], &cur_highlights, sizeof(HighlightGroup));
+                    return groups[k];
                 }
             }
             else
@@ -978,13 +983,14 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
                     if ( pGroup )
                     {
                         score = pGroup->score ? prefix_score + pGroup->score : 0.0f;
-                        if ( pGroup->end )
+                        if ( pGroup->end_index )
                         {
                             cur_highlights.score = score;
+                            cur_highlights.beg = i - n;
                             cur_highlights.positions[0].col = i - n + 1;
                             cur_highlights.positions[0].len = n;
-                            memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end * sizeof(HighlightPos));
-                            cur_highlights.end = pGroup->end + 1;
+                            memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end_index * sizeof(HighlightPos));
+                            cur_highlights.end_index = pGroup->end_index + 1;
                         }
                     }
                 }
@@ -992,7 +998,7 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
             if ( score > max_score )
             {
                 max_score = score;
-                memcpy(groups[index], &cur_highlights, sizeof(HighlightGroup));
+                memcpy(groups[k], &cur_highlights, sizeof(HighlightGroup));
             }
             /* e.g., text = '~_ababc~~~~', pattern = 'abc' */
             special = 0.0f;
@@ -1051,15 +1057,16 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
             float score = 0.0f;
             if ( (score = pattern_len*pattern_len + special) > max_score )
             {
-                groups[index]->score = score;
-                groups[index]->positions[0].col = i - pattern_len + 1;
-                groups[index]->positions[0].len = pattern_len;
-                groups[index]->end = 1;
+                groups[k]->score = score;
+                groups[k]->beg = i - pattern_len;
+                groups[k]->positions[0].col = i - pattern_len + 1;
+                groups[k]->positions[0].len = pattern_len;
+                groups[k]->end_index = 1;
             }
         }
     }
 
-    return groups[index];
+    return groups[k];
 }
 
 
@@ -1069,10 +1076,9 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
                                    HighlightGroup* groups[])
 {
     uint16_t j = pText_ctxt->offset;
-    uint16_t index = j * pPattern_ctxt->pattern_len + k;
 
-    if ( groups[index] )
-        return groups[index];
+    if ( groups[k] && groups[k]->beg >= j )
+        return groups[k];
 
     uint64_t* text_mask = pText_ctxt->text_mask;
     uint16_t col_num = pText_ctxt->col_num;
@@ -1107,13 +1113,17 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
 
     float max_prefix_score = 0.0f;
     float max_score = 0.0f;
-    groups[index] = (HighlightGroup*)malloc(sizeof(HighlightGroup));
-    if ( !groups[index] )
+
+    if ( !groups[k] )
     {
-        fprintf(stderr, "Out of memory in evaluateHighlights()!\n");
-        return NULL;
+        groups[k] = (HighlightGroup*)malloc(sizeof(HighlightGroup));
+        if ( !groups[k] )
+        {
+            fprintf(stderr, "Out of memory in evaluateHighlights()!\n");
+            return NULL;
+        }
     }
-    memset(groups[index], 0, sizeof(HighlightGroup));
+    memset(groups[k], 0, sizeof(HighlightGroup));
 
     HighlightGroup cur_highlights;
     memset(&cur_highlights, 0, sizeof(HighlightGroup));
@@ -1154,9 +1164,9 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
          * NOT text = 'xxABCd', pattern = 'abc'; text[i] == 'C'
          * 'Cd' is considered as a word
          */
-        else if ( isupper(text[i-1]) && pattern_mask[tolower(c)] != -1
+        else if ( isupper(text[i-1]) && pattern_mask[(uint8_t)tolower(c)] != -1
                   && (i+1 == text_len || !islower(text[i+1])) )
-            d = (d << 1) | (pattern_mask[tolower(c)] >> k);
+            d = (d << 1) | (pattern_mask[(uint8_t)tolower(c)] >> k);
         else
             d = ~0;
 
@@ -1170,13 +1180,14 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
             {
                 score = (n*n << (1 >> k)) + special;
                 cur_highlights.score = score;
-                cur_highlights.end = 1;
+                cur_highlights.beg = i - n;
+                cur_highlights.end_index = 1;
                 cur_highlights.positions[0].col = i - n + 1;
                 cur_highlights.positions[0].len = n;
                 if ( (k == 0 && FLOAT_EQUAL(special, 2.1f)) || (k > 0 && special > 0.0f) )
                 {
-                    memcpy(groups[index], &cur_highlights, sizeof(HighlightGroup));
-                    return groups[index];
+                    memcpy(groups[k], &cur_highlights, sizeof(HighlightGroup));
+                    return groups[k];
                 }
             }
             else
@@ -1195,13 +1206,14 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
                     if ( pGroup )
                     {
                         score = pGroup->score ? prefix_score + pGroup->score : 0.0f;
-                        if ( pGroup->end )
+                        if ( pGroup->end_index )
                         {
                             cur_highlights.score = score;
+                            cur_highlights.beg = i - n;
                             cur_highlights.positions[0].col = i - n + 1;
                             cur_highlights.positions[0].len = n;
-                            memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end * sizeof(HighlightPos));
-                            cur_highlights.end = pGroup->end + 1;
+                            memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end_index * sizeof(HighlightPos));
+                            cur_highlights.end_index = pGroup->end_index + 1;
                         }
                     }
                 }
@@ -1209,7 +1221,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
             if ( score > max_score || (prefer_short && FLOAT_EQUAL(score, max_score)) )
             {
                 max_score = score;
-                memcpy(groups[index], &cur_highlights, sizeof(HighlightGroup));
+                memcpy(groups[k], &cur_highlights, sizeof(HighlightGroup));
             }
             /* e.g., text = '~_ababc~~~~', pattern = 'abc' */
             special = 0.0f;
@@ -1270,15 +1282,16 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
             float score = 0.0f;
             if ( (score = (pattern_len*pattern_len << (1 >> k)) + special) > max_score )
             {
-                groups[index]->score = score;
-                groups[index]->positions[0].col = i - pattern_len + 1;
-                groups[index]->positions[0].len = pattern_len;
-                groups[index]->end = 1;
+                groups[k]->score = score;
+                groups[k]->beg = i - pattern_len;
+                groups[k]->positions[0].col = i - pattern_len + 1;
+                groups[k]->positions[0].len = pattern_len;
+                groups[k]->end_index = 1;
             }
         }
     }
 
-    return groups[index];
+    return groups[k];
 }
 
 /**
@@ -1329,7 +1342,7 @@ HighlightGroup* getHighlights(char* text,
                 }
                 pGroup->positions[0].col = first_char_pos + 1;
                 pGroup->positions[0].len = 1;
-                pGroup->end = 1;
+                pGroup->end_index = 1;
 
                 return pGroup;
             }
@@ -1364,7 +1377,7 @@ HighlightGroup* getHighlights(char* text,
                 }
                 pGroup->positions[0].col = first_char_pos + 1;
                 pGroup->positions[0].len = 1;
-                pGroup->end = 1;
+                pGroup->end_index = 1;
 
                 return pGroup;
             }
@@ -1410,7 +1423,7 @@ HighlightGroup* getHighlights(char* text,
             c = tolower(text[i]);
             /* c in pattern */
             if ( pattern_mask[(uint8_t)c] != -1 )
-                text_mask[c * col_num + (i >> 6)] |= 1ULL << (i & 63);
+                text_mask[(uint8_t)c * col_num + (i >> 6)] |= 1ULL << (i & 63);
         }
     }
     else
@@ -1487,15 +1500,15 @@ HighlightGroup* getHighlights(char* text,
             {
                 /* c in pattern */
                 if ( pattern_mask[(uint8_t)c] != -1 )
-                    text_mask[c * col_num + (i >> 6)] |= 1ULL << (i & 63);
-                if ( pattern_mask[tolower(c)] != -1 )
-                    text_mask[tolower(c) * col_num + (i >> 6)] |= 1ULL << (i & 63);
+                    text_mask[(uint8_t)c * col_num + (i >> 6)] |= 1ULL << (i & 63);
+                if ( pattern_mask[(uint8_t)tolower(c)] != -1 )
+                    text_mask[(uint8_t)tolower(c) * col_num + (i >> 6)] |= 1ULL << (i & 63);
             }
             else
             {
                 /* c in pattern */
                 if ( pattern_mask[(uint8_t)c] != -1 )
-                    text_mask[c * col_num + (i >> 6)] |= 1ULL << (i & 63);
+                    text_mask[(uint8_t)c * col_num + (i >> 6)] |= 1ULL << (i & 63);
             }
         }
     }
@@ -1507,8 +1520,8 @@ HighlightGroup* getHighlights(char* text,
     text_ctxt.col_num = col_num;
     text_ctxt.offset = 0;
 
-    /* HighlightGroup* groups[text_len][pattern_len] */
-    uint16_t size = text_len * pattern_len * sizeof(HighlightGroup*);
+    /* HighlightGroup* groups[pattern_len] */
+    uint16_t size = pattern_len * sizeof(HighlightGroup*);
     HighlightGroup** groups = (HighlightGroup**)malloc(size);
     if ( !groups )
     {
@@ -1526,7 +1539,7 @@ HighlightGroup* getHighlights(char* text,
 
     free(text_mask);
     uint16_t i;
-    for ( i = 0; i < text_len * pattern_len; ++i )
+    for ( i = 0; i < pattern_len; ++i )
     {
         if ( groups[i] && groups[i] != pGroup )
             free(groups[i]);
@@ -1593,9 +1606,9 @@ static PyObject* fuzzyMatchC_getHighlights(PyObject* self, PyObject* args, PyObj
     if ( !pGroup )
         return NULL;
 
-    PyObject* list = PyList_New(pGroup->end);
+    PyObject* list = PyList_New(pGroup->end_index);
     uint16_t i;
-    for ( i = 0; i < pGroup->end; ++i )
+    for ( i = 0; i < pGroup->end_index; ++i )
     {
         PyList_SetItem(list, i, Py_BuildValue("[H,H]", pGroup->positions[i].col, pGroup->positions[i].len));
     }
