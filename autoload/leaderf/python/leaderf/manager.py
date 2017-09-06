@@ -66,6 +66,7 @@ class Manager(object):
         self._highlight_refine_pos = []
         self._highlight_ids = []
         self._orig_line = ''
+        self._launched = False
         self._getExplClass()
 
     #**************************************************************
@@ -581,10 +582,10 @@ class Manager(object):
     def _cleanup(self):
         if lfEval("g:Lf_RememberLastSearch") == '0':
             self._cli.clear()
+            self._clearHighlights()
+            self._clearHighlightsPos()
+            self._help_length = 0
         self.clearSelections()
-        self._clearHighlights()
-        self._clearHighlightsPos()
-        self._help_length = 0
 
     @modifiableController
     def toggleHelp(self):
@@ -727,15 +728,22 @@ class Manager(object):
         self._setStlMode()
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
-        lfCmd("normal! gg")
-        self._index = 0
+        if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched:
+            pass
+        else:
+            lfCmd("normal! gg")
+            self._index = 0
+
         self._start_time = time.time()
 
         if isinstance(content, list):
             self._content = content
             self._iteration_end = True
             self._getInstance().setStlTotal(len(content)//self._getUnit())
-            self._getInstance().setBuffer(content)
+            if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched:
+                pass
+            else:
+                self._getInstance().setBuffer(content)
             self.input()
         else:
             if lfEval("g:Lf_CursorBlink") == '0':
@@ -748,6 +756,8 @@ class Manager(object):
                 self._iteration_end = False
                 self._backup = None
                 self.input(content)
+
+        self._launched = True
 
     def setContent(self, content):
         if not content or self._iteration_end == True:
@@ -792,17 +802,16 @@ class Manager(object):
         if self._iteration_end == False and self._backup:
             content = self._backup
 
-        if lfEval("g:Lf_RememberLastSearch") == '1':
-            self._search(self._content)
-
         for cmd in self._cli.input(partial(self.setContent, content)):
             if equal(cmd, '<Update>'):
                 self._search(self._content)
             elif equal(cmd, '<Shorten>'):
+                lfCmd("normal! gg")
                 self._index = 0 # search from beginning
                 self._search(self._content)
             elif equal(cmd, '<Mode>'):
                 self._setStlMode()
+                lfCmd("normal! gg")
                 self._index = 0 # search from beginning
                 if self._cli.pattern:
                     self._search(self._content)

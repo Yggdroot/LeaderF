@@ -102,7 +102,7 @@ class LfInstance(object):
         https://github.com/vim/vim/issues/1738
         """
         # clear the buffer first to avoid a flash
-        if self._buffer_object:
+        if self._buffer_object and lfEval("g:Lf_RememberLastSearch") == '0':
             self.buffer.options['modifiable'] = True
             del self._buffer_object[:]
 
