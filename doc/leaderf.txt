@@ -410,6 +410,12 @@ g:Lf_RememberLastSearch                         *g:Lf_RememberLastSearch*
 
     Default value is 0.
 
+g:Lf_UseCache                                   *g:Lf_UseCache*
+    This option specifies whether to cache the files list. If the value is 1,
+    LeaderF won't reindex the files when reopen vim.(Introduced in issue #64)
+
+    Default value is 1.
+
 g:Lf_NormalMap                                  *g:Lf_NormalMap*
     Use this option to customize the mappings in normal mode.
     e.g., >

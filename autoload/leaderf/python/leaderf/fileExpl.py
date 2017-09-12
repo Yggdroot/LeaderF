@@ -327,8 +327,105 @@ class FileExplorer(Explorer):
 
         return cmd
 
+    def _writeCache(self, content):
+        dir = self._cur_dir if self._cur_dir.endswith(os.sep) else self._cur_dir + os.sep
+        with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
+            lines = f.readlines()
+            target = -1
+            for i, line in enumerate(lines):
+                if dir == line.split(None, 2)[2].strip():
+                    target = i
+                    break
+
+            if target != -1:    # already cached
+                # update the time
+                lines[target] = re.sub('^\S*',
+                                       '%.3f' % time.time(),
+                                       lines[target])
+                f.seek(0)
+                f.truncate(0)
+                f.writelines(lines)
+                with lfOpen(os.path.join(self._cache_dir,
+                                         lines[target].split(None, 2)[1]),
+                            'w', errors='ignore') as cache_file:
+                    for line in content:
+                        cache_file.write(line + '\n')
+            else:
+                cache_file_name = ''
+                if len(lines) < int(lfEval("g:Lf_NumberOfCache")):
+                    f.seek(0, 2)
+                    ts = time.time()
+                    # e.g., line = "1496669495.329 cache_1496669495.329 /foo/bar"
+                    line = '%.3f cache_%.3f %s\n' % (ts, ts, dir)
+                    f.write(line)
+                    cache_file_name = 'cache_%.3f' % ts
+                else:
+                    timestamp = lines[0].split(None, 2)[0]
+                    oldest = 0
+                    for i, line in enumerate(lines):
+                        if line.split(None, 2)[0] < timestamp:
+                            timestamp = line.split(None, 2)[0]
+                            oldest = i
+                    cache_file_name = lines[oldest].split(None, 2)[1].strip()
+                    lines[oldest] = '%.3f %s %s\n' % (time.time(), cache_file_name, dir)
+
+                    f.seek(0)
+                    f.truncate(0)
+                    f.writelines(lines)
+
+                with lfOpen(os.path.join(self._cache_dir, cache_file_name),
+                            'w', errors='ignore') as cache_file:
+                    for line in content:
+                        cache_file.write(line + '\n')
+
+    def _getFilesFromCache(self):
+        dir = self._cur_dir if self._cur_dir.endswith(os.sep) else self._cur_dir + os.sep
+        with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
+            lines = f.readlines()
+            target = -1
+            for i, line in enumerate(lines):
+                if dir == line.split(None, 2)[2].strip():
+                    target = i
+                    break
+
+            if target != -1:    # already cached
+                # update the time
+                lines[target] = re.sub('^\S*',
+                                       '%.3f' % time.time(),
+                                       lines[target])
+                f.seek(0)
+                f.truncate(0)
+                f.writelines(lines)
+                with lfOpen(os.path.join(self._cache_dir,
+                                         lines[target].split(None, 2)[1]),
+                            'r', errors='ignore') as cache_file:
+                    file_list = cache_file.readlines()
+                    if not file_list: # empty
+                        return None
+
+                    if lfEval("g:Lf_ShowRelativePath") == '1':
+                        if os.path.isabs(file_list[0]):
+                            # os.path.relpath() is too slow!
+                            cwd_length = len(lfEncode(dir))
+                            if not dir.endswith(os.sep):
+                                cwd_length += 1
+                            return [line[cwd_length:] for line in file_list]
+                        else:
+                            return file_list
+                    else:
+                        if os.path.isabs(file_list[0]):
+                            return file_list
+                        else:
+                            return [os.path.join(lfEncode(dir), file) for file in file_list]
+            else:
+                return None
+
+
     def setContent(self, content):
         self._content = content
+        if lfEval("g:Lf_UseCache") == '1' and \
+                time.time() - self._cmd_start_time > float(lfEval("g:Lf_NeedCacheTime")):
+            self._writeCache(content)
 
     def getContent(self, *args, **kwargs):
         if len(args) > 0:
@@ -344,7 +441,14 @@ class FileExplorer(Explorer):
         if lfEval("g:Lf_UseMemoryCache") == '0' or dir != self._cur_dir or \
                 not self._content:
             self._cur_dir = dir
+
             cmd = self._buildCmd(dir)
+
+            if lfEval("g:Lf_UseCache") == '1' and kwargs.get("refresh", False) == False:
+                self._content = self._getFilesFromCache()
+                if self._content:
+                    return self._content
+
             if cmd:
                 executor = AsyncExecutor()
                 self._executor.append(executor)
@@ -352,6 +456,7 @@ class FileExplorer(Explorer):
                     content = executor.execute(cmd)
                 else:
                     content = executor.execute(cmd, encoding=lfEval("&encoding"))
+                self._cmd_start_time = time.time()
                 return content
             else:
                 self._content = self._getFileList(dir)
@@ -361,6 +466,7 @@ class FileExplorer(Explorer):
     def getFreshContent(self, *args, **kwargs):
         if self._external_cmd:
             self._content = []
+            kwargs["refresh"] = True
             return self.getContent(*args, **kwargs)
 
         self._refresh()
