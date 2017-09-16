@@ -112,6 +112,18 @@ class LfInstance(object):
                 lfCmd("resize %d" % self._win_height)
             elif self._win_height > 0:
                 lfCmd("resize %d" % (int(lfEval("&lines")) * self._win_height))
+        elif win_pos == 'belowright':
+            lfCmd("silent! noa keepa keepj bel sp %s" % self._buffer_name)
+            if self._win_height >= 1:
+                lfCmd("resize %d" % self._win_height)
+            elif self._win_height > 0:
+                lfCmd("resize %d" % (int(lfEval("&lines")) * self._win_height))
+        elif win_pos == 'aboveleft':
+            lfCmd("silent! noa keepa keepj abo sp %s" % self._buffer_name)
+            if self._win_height >= 1:
+                lfCmd("resize %d" % self._win_height)
+            elif self._win_height > 0:
+                lfCmd("resize %d" % (int(lfEval("&lines")) * self._win_height))
         elif win_pos == 'top':
             lfCmd("silent! noa keepa keepj to sp %s" % self._buffer_name)
             if self._win_height >= 1:
