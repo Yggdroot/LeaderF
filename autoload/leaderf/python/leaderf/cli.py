@@ -27,7 +27,9 @@ def cursorController(func):
                 yield i
         finally:
             lfCmd("let &ttimeoutlen = g:Lf_ttimeoutlen_orig")
+            lfCmd("set gcr&")
             lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
+            lfCmd("set t_ve&")
             lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
     return deco
 
