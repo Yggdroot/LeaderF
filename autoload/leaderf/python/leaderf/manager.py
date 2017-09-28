@@ -277,11 +277,11 @@ class Manager(object):
 
     def _search(self, content, is_continue=False, step=30000):
         self.clearSelections()
+        self._clearHighlights()
+        self._clearHighlightsPos()
         self._cli.highlightMatches()
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
             self._getInstance().setBuffer(content)
-            self._clearHighlights()
-            self._clearHighlightsPos()
             return
 
         if self._cli.isFuzzy:
