@@ -131,6 +131,8 @@ static uint8_t MultiplyDeBruijnBitPosition[64] =
 #define EPSILON 1e-6
 #define FLOAT_EQUAL(a, b) (((a) - (b) > -EPSILON) && ((a) - (b) < EPSILON))
 
+#define MIN_FLOAT (-10000.0f)
+
 typedef struct TextContext
 {
     char* text;
@@ -165,6 +167,7 @@ typedef struct HighlightGroup
 {
     float score;
     uint16_t beg;
+    uint16_t end;
     HighlightPos positions[64];
     uint16_t end_index;
 }HighlightGroup;
@@ -252,8 +255,8 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
     uint16_t beg = 0;
     uint16_t end = 0;
 
-    float max_prefix_score = 0.0f;
-    float max_score = 0.0f;
+    float max_prefix_score = MIN_FLOAT;
+    float max_score = MIN_FLOAT;
 
     char* text = pText_ctxt->text;
     uint16_t text_len = pText_ctxt->text_len;
@@ -297,13 +300,13 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
 
         if ( d >= last )
         {
-            float score = 0.0f;
+            float score = MIN_FLOAT;
             uint16_t end_pos = 0;
             uint16_t n = FM_BIT_LENGTH(~last);
             /* e.g., text = '~~abcd~~~~', pattern = 'abcd' */
             if ( n == pattern_len )
             {
-                score = n*n + special;
+                score = special > 0.0f ? (n*n << (1 >> k)) + special : n * n;
                 if ( special > 0.0f )
                 {
                     val[k].score = score;
@@ -316,14 +319,19 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
             }
             else
             {
-                float prefix_score = n*n + special;
+                float prefix_score = special > 0.0f ? (n*n << (1 >> k)) + special : n * n;
                 if ( prefix_score > max_prefix_score )
                 {
                     max_prefix_score = prefix_score;
                     pText_ctxt->offset = i;
                     ValueElements* pVal = evaluate_nameOnly(pText_ctxt, pPattern_ctxt, k + n, val);
-                    score = pVal->score ? prefix_score + pVal->score : 0.0f;
-                    end_pos = pVal->end;
+                    if ( pVal->end )
+                    {
+                        score = prefix_score + pVal->score;
+                        end_pos = pVal->end;
+                        if ( k == 0 )
+                            score -= 0.2f * (end_pos - i + n - pattern_len);
+                    }
                 }
             }
             if ( score > max_score )
@@ -386,8 +394,12 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
     {
         if ( ~d >> (pattern_len - 1) )
         {
-            float score = 0.0f;
-            if ( (score = pattern_len*pattern_len + special) > max_score )
+            float score = MIN_FLOAT;
+            if ( special > 0.0f )
+                score = (pattern_len * pattern_len << (1 >> k)) + special;
+            else
+                score = (float)pattern_len * pattern_len;
+            if ( score > max_score )
             {
                 max_score = score;
                 beg = i - pattern_len;
@@ -451,8 +463,8 @@ ValueElements* evaluate(TextContext* pText_ctxt,
     uint16_t beg = 0;
     uint16_t end = 0;
 
-    float max_prefix_score = 0.0f;
-    float max_score = 0.0f;
+    float max_prefix_score = MIN_FLOAT;
+    float max_score = MIN_FLOAT;
 
     char* text = pText_ctxt->text;
     uint16_t text_len = pText_ctxt->text_len;
@@ -461,9 +473,9 @@ ValueElements* evaluate(TextContext* pText_ctxt,
 
     float special = 0.0f;
     if ( i == 0 )
-        special = 2.1f;
+        special = 2.6f;
     else if ( text[i-1] == '/' || text[i-1] == '\\' )
-        special = k == 0 ? 2.1f : 2.0f;
+        special = k == 0 ? 2.6f : 2.0f;
     else if ( isupper(text[i]) )
         special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2.0f : 0.0f;
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
@@ -498,15 +510,14 @@ ValueElements* evaluate(TextContext* pText_ctxt,
 
         if ( d >= last )
         {
-            float score = 0.0f;
-            uint8_t prefer_short = 0;
+            float score = MIN_FLOAT;
             uint16_t end_pos = 0;
             uint16_t n = FM_BIT_LENGTH(~last);
             /* e.g., text = '~~abcd~~~~', pattern = 'abcd' */
             if ( n == pattern_len )
             {
-                score = (n*n << (1 >> k)) + special;
-                if ( (k == 0 && FLOAT_EQUAL(special, 2.1f)) || (k > 0 && special > 0.0f) )
+                score = special > 0.0f ? (n*n << (1 >> k)) + special : n * n;
+                if ( (k == 0 && FLOAT_EQUAL(special, 2.6f)) || (k > 0 && special > 0.0f) )
                 {
                     val[k].score = score;
                     val[k].beg = i - n;
@@ -518,22 +529,27 @@ ValueElements* evaluate(TextContext* pText_ctxt,
             }
             else
             {
-                float prefix_score = (n*n << (1 >> k)) + special;
+                float prefix_score = special > 0.0f ? (n*n << (1 >> k)) + special : n * n;
                 /**
                  * e.g., text = 'AbcxxAbcyyde', pattern = 'abcde'
                  * prefer matching 'Abcyyde'
                  */
                 if ( prefix_score > max_prefix_score
-                     || (prefer_short = (uint8_t)(special > 0.0f && FLOAT_EQUAL(prefix_score, max_prefix_score))) )
+                     || (special > 0.0f && FLOAT_EQUAL(prefix_score, max_prefix_score)) )
                 {
                     max_prefix_score = prefix_score;
                     pText_ctxt->offset = i;
                     ValueElements* pVal = evaluate(pText_ctxt, pPattern_ctxt, k + n, val);
-                    score = pVal->score ? prefix_score + pVal->score : 0.0f;
-                    end_pos = pVal->end;
+                    if ( pVal->end )
+                    {
+                        score = prefix_score + pVal->score;
+                        end_pos = pVal->end;
+                        if ( k == 0 )
+                            score -= 0.2f * (end_pos - i + n - pattern_len);
+                    }
                 }
             }
-            if ( score > max_score || (prefer_short && FLOAT_EQUAL(score, max_score)) )
+            if ( score > max_score )
             {
                 max_score = score;
                 beg = i - n;
@@ -572,7 +588,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
             }
 
             if ( text[i-1] == '/' || text[i-1] == '\\' )
-                special = k == 0 ? 2.1f : 2.0f;
+                special = k == 0 ? 2.6f : 2.0f;
             else if ( isupper(text[i]) )
                 special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2.0f : 0.0f;
             /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
@@ -595,8 +611,12 @@ ValueElements* evaluate(TextContext* pText_ctxt,
     {
         if ( ~d >> (pattern_len - 1) )
         {
-            float score = 0.0f;
-            if ( (score = (pattern_len*pattern_len << (1 >> k)) + special) > max_score )
+            float score = MIN_FLOAT;
+            if ( special > 0.0f )
+                score = (pattern_len * pattern_len << (1 >> k)) + special;
+            else
+                score = (float)pattern_len * pattern_len;
+            if ( score > max_score )
             {
                 max_score = score;
                 beg = i - pattern_len;
@@ -839,18 +859,17 @@ float getWeight(char* text, uint16_t text_len,
 
         free(text_mask);
 
-        return score + (1 >> beg) + 0.4f/(end - beg) + 1.0f/(beg + end) + 1.0f/text_len;
+        return score + (1 >> beg) + 1.0f/(beg + end) + 1.0f/text_len;
     }
     else
     {
         ValueElements* pVal = evaluate(&text_ctxt, pPattern_ctxt, 0, val);
         float score = pVal->score;
         uint16_t beg = pVal->beg;
-        uint16_t end = pVal->end;
 
         free(text_mask);
 
-        return score + 1.0f/(end - beg) + 1.0f/text_len + 0.2f/(text_len - beg);
+        return score + 1.0f/text_len + 0.1f/(text_len - beg);
     }
 }
 
@@ -896,8 +915,8 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
         i = j + FM_CTZ(x);
     }
 
-    float max_prefix_score = 0.0f;
-    float max_score = 0.0f;
+    float max_prefix_score = MIN_FLOAT;
+    float max_score = MIN_FLOAT;
 
     if ( !groups[k] )
     {
@@ -955,14 +974,15 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
 
         if ( d >= last )
         {
-            float score = 0.0f;
+            float score = MIN_FLOAT;
             uint16_t n = FM_BIT_LENGTH(~last);
             /* e.g., text = '~~abcd~~~~', pattern = 'abcd' */
             if ( n == pattern_len )
             {
-                score = n*n + special;
+                score = special > 0.0f ? (n*n << (1 >> k)) + special : n * n;
                 cur_highlights.score = score;
                 cur_highlights.beg = i - n;
+                cur_highlights.end = i;
                 cur_highlights.end_index = 1;
                 cur_highlights.positions[0].col = i - n + 1;
                 cur_highlights.positions[0].len = n;
@@ -974,7 +994,7 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
             }
             else
             {
-                float prefix_score = n*n + special;
+                float prefix_score = special > 0.0f ? (n*n << (1 >> k)) + special : n * n;
                 if ( prefix_score > max_prefix_score )
                 {
                     max_prefix_score = prefix_score;
@@ -982,11 +1002,16 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
                     HighlightGroup* pGroup = evaluateHighlights_nameOnly(pText_ctxt, pPattern_ctxt, k + n, groups);
                     if ( pGroup )
                     {
-                        score = pGroup->score ? prefix_score + pGroup->score : 0.0f;
-                        if ( pGroup->end_index )
+                        if ( pGroup->end )
                         {
+                            score = prefix_score + pGroup->score;
+                            if ( k == 0 )
+                            {
+                                score -= 0.2f * (pGroup->end - i + n - pattern_len);
+                            }
                             cur_highlights.score = score;
                             cur_highlights.beg = i - n;
+                            cur_highlights.end = pGroup->end;
                             cur_highlights.positions[0].col = i - n + 1;
                             cur_highlights.positions[0].len = n;
                             memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end_index * sizeof(HighlightPos));
@@ -1054,11 +1079,16 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
     {
         if ( ~d >> (pattern_len - 1) )
         {
-            float score = 0.0f;
-            if ( (score = pattern_len*pattern_len + special) > max_score )
+            float score = MIN_FLOAT;
+            if ( special > 0.0f )
+                score = (pattern_len * pattern_len << (1 >> k)) + special;
+            else
+                score = (float)pattern_len * pattern_len;
+            if ( score > max_score )
             {
                 groups[k]->score = score;
                 groups[k]->beg = i - pattern_len;
+                groups[k]->end = i;
                 groups[k]->positions[0].col = i - pattern_len + 1;
                 groups[k]->positions[0].len = pattern_len;
                 groups[k]->end_index = 1;
@@ -1111,8 +1141,8 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
         i = j + FM_CTZ(x);
     }
 
-    float max_prefix_score = 0.0f;
-    float max_score = 0.0f;
+    float max_prefix_score = MIN_FLOAT;
+    float max_score = MIN_FLOAT;
 
     if ( !groups[k] )
     {
@@ -1135,9 +1165,9 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
 
     float special = 0.0f;
     if ( i == 0 )
-        special = 2.1f;
+        special = 2.6f;
     else if ( text[i-1] == '/' || text[i-1] == '\\' )
-        special = k == 0 ? 2.1f : 2.0f;
+        special = k == 0 ? 2.6f : 2.0f;
     else if ( isupper(text[i]) )
         special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2.0f : 0.0f;
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
@@ -1172,19 +1202,19 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
 
         if ( d >= last )
         {
-            float score = 0.0f;
-            uint8_t prefer_short = 0;
+            float score = MIN_FLOAT;
             uint16_t n = FM_BIT_LENGTH(~last);
             /* e.g., text = '~~abcd~~~~', pattern = 'abcd' */
             if ( n == pattern_len )
             {
-                score = (n*n << (1 >> k)) + special;
+                score = special > 0.0f ? (n*n << (1 >> k)) + special : n * n;
                 cur_highlights.score = score;
                 cur_highlights.beg = i - n;
+                cur_highlights.end = i;
                 cur_highlights.end_index = 1;
                 cur_highlights.positions[0].col = i - n + 1;
                 cur_highlights.positions[0].len = n;
-                if ( (k == 0 && FLOAT_EQUAL(special, 2.1f)) || (k > 0 && special > 0.0f) )
+                if ( (k == 0 && FLOAT_EQUAL(special, 2.6f)) || (k > 0 && special > 0.0f) )
                 {
                     memcpy(groups[k], &cur_highlights, sizeof(HighlightGroup));
                     return groups[k];
@@ -1192,24 +1222,29 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
             }
             else
             {
-                float prefix_score = (n*n << (1 >> k)) + special;
+                float prefix_score = special > 0.0f ? (n*n << (1 >> k)) + special : n * n;
                 /**
                  * e.g., text = 'AbcxxAbcyyde', pattern = 'abcde'
                  * prefer matching 'Abcyyde'
                  */
                 if ( prefix_score > max_prefix_score
-                     || (prefer_short = (uint8_t)(special > 0.0f && FLOAT_EQUAL(prefix_score, max_prefix_score))) )
+                     || (special > 0.0f && FLOAT_EQUAL(prefix_score, max_prefix_score)) )
                 {
                     max_prefix_score = prefix_score;
                     pText_ctxt->offset = i;
                     HighlightGroup* pGroup = evaluateHighlights(pText_ctxt, pPattern_ctxt, k + n, groups);
                     if ( pGroup )
                     {
-                        score = pGroup->score ? prefix_score + pGroup->score : 0.0f;
-                        if ( pGroup->end_index )
+                        if ( pGroup->end )
                         {
+                            score = prefix_score + pGroup->score;
+                            if ( k == 0 )
+                            {
+                                score -= 0.2f * (pGroup->end - i + n - pattern_len);
+                            }
                             cur_highlights.score = score;
                             cur_highlights.beg = i - n;
+                            cur_highlights.end = pGroup->end;
                             cur_highlights.positions[0].col = i - n + 1;
                             cur_highlights.positions[0].len = n;
                             memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end_index * sizeof(HighlightPos));
@@ -1218,7 +1253,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
                     }
                 }
             }
-            if ( score > max_score || (prefer_short && FLOAT_EQUAL(score, max_score)) )
+            if ( score > max_score )
             {
                 max_score = score;
                 memcpy(groups[k], &cur_highlights, sizeof(HighlightGroup));
@@ -1256,7 +1291,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
             }
 
             if ( text[i-1] == '/' || text[i-1] == '\\' )
-                special = k == 0 ? 2.1f : 2.0f;
+                special = k == 0 ? 2.6f : 2.0f;
             else if ( isupper(text[i]) )
                 special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2.0f : 0.0f;
             /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
@@ -1279,11 +1314,16 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
     {
         if ( ~d >> (pattern_len - 1) )
         {
-            float score = 0.0f;
-            if ( (score = (pattern_len*pattern_len << (1 >> k)) + special) > max_score )
+            float score = MIN_FLOAT;
+            if ( special > 0.0f )
+                score = (pattern_len * pattern_len << (1 >> k)) + special;
+            else
+                score = (float)pattern_len * pattern_len;
+            if ( score > max_score )
             {
                 groups[k]->score = score;
                 groups[k]->beg = i - pattern_len;
+                groups[k]->end = i;
                 groups[k]->positions[0].col = i - pattern_len + 1;
                 groups[k]->positions[0].len = pattern_len;
                 groups[k]->end_index = 1;
