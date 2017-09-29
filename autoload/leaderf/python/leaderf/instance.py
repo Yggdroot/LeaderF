@@ -151,7 +151,8 @@ class LfInstance(object):
 
     def _enterOpeningBuffer(self):
         if (self._tabpage_object and self._tabpage_object.valid
-            and self._window_object and self._window_object.valid):
+            and self._window_object and self._window_object.valid
+            and self._window_object.buffer == self._buffer_object):
             vim.current.tabpage = self._tabpage_object
             vim.current.window = self._window_object
             self._after_enter()
