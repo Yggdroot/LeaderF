@@ -79,7 +79,6 @@ class LfCli(object):
             self._is_full_path = False
         else:               # regex mode
             self._is_fuzzy = False
-            self._is_full_path = True
 
     def _insert(self, ch):
         self._cmdline.insert(self._cursor_pos, ch)
@@ -140,11 +139,11 @@ class LfCli(object):
 
         if self._is_fuzzy:
             if self._is_full_path:
-                lfCmd("echohl Constant | redraw | echon '>F> ' | echohl NONE")
+                lfCmd("echohl Constant | echon '>F> ' | echohl NONE")
             else:
-                lfCmd("echohl Constant | redraw | echon '>>> ' | echohl NONE")
+                lfCmd("echohl Constant | echon '>>> ' | echohl NONE")
         else:
-            lfCmd("echohl Constant | redraw | echon 'R>> ' | echohl NONE")
+            lfCmd("echohl Constant | echon 'R>> ' | echohl NONE")
 
         lfCmd("echohl Normal | echon '%s' | echohl NONE" %
               escQuote(''.join(self._cmdline[:self._cursor_pos])))
@@ -155,6 +154,7 @@ class LfCli(object):
                   escQuote(''.join(self._cmdline[self._cursor_pos+1:])))
         else:
             lfCmd("echohl Lf_hl_cursor | echon ' ' | echohl NONE")
+        lfCmd("redraw")
 
     def _buildPattern(self):
         if self._is_fuzzy:
