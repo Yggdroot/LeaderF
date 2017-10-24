@@ -89,6 +89,8 @@ class BufTagExplorer(Explorer):
             extra_options = "--c++-kinds=+p"
         elif lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "c":
             extra_options = "--c-kinds=+p"
+        elif lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "python":
+            extra_options = "--language-force=Python"
         else:
             extra_options = ""
 
