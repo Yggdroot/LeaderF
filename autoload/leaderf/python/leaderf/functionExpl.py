@@ -39,7 +39,7 @@ class FunctionExplorer(Explorer):
                 "matla": "--matlab-kinds=f",
                 "pascal": "--pascal-kinds=f",
                 "php": "--php-kinds=f",
-                "python": "--python-kinds=fm",
+                "python": "--python-kinds=fm --language-force=Python",
                 "ruby": "--ruby-kinds=fF",
                 "scheme": "--scheme-kinds=f",
                 "sh": "--sh-kinds=f",
