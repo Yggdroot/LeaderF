@@ -321,8 +321,11 @@ class Manager(object):
                 result.extend(filter_method(cb[:step]))
                 self._cb_content += cb[step:]
             else:
-                result.extend(filter_method(cb[:]))
-                left = step - len(cb)
+                if not self._getInstance().empty():
+                    result.extend(filter_method(cb[:]))
+                    left = step - len(cb)
+                else:
+                    left = step
                 if len(self._cb_content) >= left:
                     result.extend(filter_method(self._cb_content[:left]))
                     self._cb_content = self._cb_content[left:]
@@ -490,7 +493,7 @@ class Manager(object):
                 lfEval("g:Lf_HighlightIndividual") == '0'):
             return
         cb = self._getInstance().buffer
-        if len(cb) == 1 and cb[0] == '': # buffer is empty.
+        if self._getInstance().empty(): # buffer is empty.
             return
 
         highlight_number = int(lfEval("g:Lf_NumberOfHighlight"))
@@ -522,7 +525,7 @@ class Manager(object):
                 lfEval("g:Lf_HighlightIndividual") == '0'):
             return
         cb = self._getInstance().buffer
-        if len(cb) == 1 and cb[0] == '': # buffer is empty.
+        if self._getInstance().empty(): # buffer is empty.
             return
 
         highlight_number = int(lfEval("g:Lf_NumberOfHighlight"))
