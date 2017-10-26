@@ -101,6 +101,8 @@ class Manager(object):
             return
         file = args[0]
         try:
+            if file.startswith('+'):
+                file = os.path.abspath(file)
             lfCmd("hide edit %s" % escSpecial(file))
         except vim.error as e: # E37
             lfPrintError(e)
