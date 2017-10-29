@@ -46,6 +46,14 @@ function! leaderf#Function#startExpl(win_pos, ...)
     endif
 endfunction
 
+function! leaderf#Function#startExplPattern(win_pos, all, pattern)
+    if a:all == 0
+        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
+    else
+        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', 1, pattern='".a:pattern."')")
+    endif
+endfunction
+
 function! leaderf#Function#removeCache(bufNum)
     call leaderf#LfPy("functionExplManager.removeCache(".a:bufNum.")")
 endfunction

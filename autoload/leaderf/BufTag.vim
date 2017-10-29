@@ -46,6 +46,14 @@ function! leaderf#BufTag#startExpl(win_pos, ...)
     endif
 endfunction
 
+function! leaderf#BufTag#startExplPattern(win_pos, all, pattern)
+    if a:all == 0
+        call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
+    else
+        call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."', 1, pattern='".a:pattern."')")
+    endif
+endfunction
+
 function! leaderf#BufTag#removeCache(bufNum)
     call leaderf#LfPy("bufTagExplManager.removeCache(".a:bufNum.")")
 endfunction

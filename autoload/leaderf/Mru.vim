@@ -39,6 +39,14 @@ function! leaderf#Mru#startExpl(win_pos, ...)
     if a:0 == 0
         call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name)")
     else
-        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name, f='cwd')")
+        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name, mru_cwd=True)")
+    endif
+endfunction
+
+function! leaderf#Mru#startExplPattern(win_pos, cwd, pattern)
+    if a:cwd == 0
+        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name, pattern='".a:pattern."')")
+    else
+        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name, mru_cwd=True, pattern='".a:pattern."')")
     endif
 endfunction

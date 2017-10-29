@@ -247,23 +247,45 @@ nnoremap <silent> <Plug>LeaderfMruCwdFullScreen :<C-U>call leaderf#Mru#startExpl
 
 command! -bar -nargs=? -complete=dir LeaderfFile call leaderf#File#startExpl(g:Lf_WindowPosition, <f-args>)
 command! -bar -nargs=? -complete=dir LeaderfFileFullScreen call leaderf#File#startExpl('fullScreen', <f-args>)
+command! -bar -nargs=1 LeaderfFilePattern call leaderf#File#startExplPattern(g:Lf_WindowPosition, <q-args>)
+command! -bar -nargs=0 LeaderfFileCword call leaderf#File#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
 
 command! -bar -nargs=0 LeaderfBuffer call leaderf#Buffer#startExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfBufferAll call leaderf#Buffer#startExpl(g:Lf_WindowPosition, 1)
+command! -bar -nargs=1 LeaderfBufferPattern call leaderf#Buffer#startExplPattern(g:Lf_WindowPosition, <q-args>)
+command! -bar -nargs=0 LeaderfBufferCword call leaderf#Buffer#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
 
 command! -bar -nargs=0 LeaderfMru call leaderf#Mru#startExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfMruCwd call leaderf#Mru#startExpl(g:Lf_WindowPosition, 1)
+command! -bar -nargs=1 LeaderfMruPattern call leaderf#Mru#startExplPattern(g:Lf_WindowPosition, 0, <q-args>)
+command! -bar -nargs=0 LeaderfMruCword call leaderf#Mru#startExplPattern(g:Lf_WindowPosition, 0, expand('<cword>'))
+command! -bar -nargs=1 LeaderfMruCwdPattern call leaderf#Mru#startExplPattern(g:Lf_WindowPosition, 1, <q-args>)
+command! -bar -nargs=0 LeaderfMruCwdCword call leaderf#Mru#startExplPattern(g:Lf_WindowPosition, 1, expand('<cword>'))
 
 command! -bar -nargs=0 LeaderfTag call leaderf#Tag#startExpl(g:Lf_WindowPosition)
+command! -bar -nargs=1 LeaderfTagPattern call leaderf#Tag#startExplPattern(g:Lf_WindowPosition, <q-args>)
+command! -bar -nargs=0 LeaderfTagCword call leaderf#Tag#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
 
 command! -bar -nargs=0 LeaderfBufTag call leaderf#BufTag#startExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfBufTagAll call leaderf#BufTag#startExpl(g:Lf_WindowPosition, 1)
+command! -bar -nargs=1 LeaderfBufTagPattern call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, 0, <q-args>)
+command! -bar -nargs=0 LeaderfBufTagCword call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, 0, expand('<cword>'))
+command! -bar -nargs=1 LeaderfBufTagAllPattern call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, 1, <q-args>)
+command! -bar -nargs=0 LeaderfBufTagAllCword call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, 1, expand('<cword>'))
 
 command! -bar -nargs=0 LeaderfFunction call leaderf#Function#startExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfFunctionAll call leaderf#Function#startExpl(g:Lf_WindowPosition, 1)
+command! -bar -nargs=1 LeaderfFunctionPattern call leaderf#Function#startExplPattern(g:Lf_WindowPosition, 0, <q-args>)
+command! -bar -nargs=0 LeaderfFunctionCword call leaderf#Function#startExplPattern(g:Lf_WindowPosition, 0, expand('<cword>'))
+command! -bar -nargs=1 LeaderfFunctionAllPattern call leaderf#Function#startExplPattern(g:Lf_WindowPosition, 1, <q-args>)
+command! -bar -nargs=0 LeaderfFunctionAllCword call leaderf#Function#startExplPattern(g:Lf_WindowPosition, 1, expand('<cword>'))
 
 command! -bar -nargs=0 LeaderfLine call leaderf#Line#startExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfLineAll call leaderf#Line#startExpl(g:Lf_WindowPosition, 1)
+command! -bar -nargs=1 LeaderfLinePattern call leaderf#Line#startExplPattern(g:Lf_WindowPosition, 0, <q-args>)
+command! -bar -nargs=0 LeaderfLineCword call leaderf#Line#startExplPattern(g:Lf_WindowPosition, 0, expand('<cword>'))
+command! -bar -nargs=1 LeaderfLineAllPattern call leaderf#Line#startExplPattern(g:Lf_WindowPosition, 1, <q-args>)
+command! -bar -nargs=0 LeaderfLineAllCword call leaderf#Line#startExplPattern(g:Lf_WindowPosition, 1, expand('<cword>'))
 
 command! -bar -nargs=0 LeaderfHistoryCmd call leaderf#History#startExpl(g:Lf_WindowPosition, "cmd")
 command! -bar -nargs=0 LeaderfHistorySearch call leaderf#History#startExpl(g:Lf_WindowPosition, "search") | silent! norm! n
@@ -271,6 +293,8 @@ command! -bar -nargs=0 LeaderfHistorySearch call leaderf#History#startExpl(g:Lf_
 command! -bar -nargs=0 LeaderfSelf call leaderf#Self#startExpl(g:Lf_WindowPosition)
 
 command! -bar -nargs=0 LeaderfHelp call leaderf#Help#startExpl(g:Lf_WindowPosition)
+command! -bar -nargs=1 LeaderfHelpPattern call leaderf#Help#startExplPattern(g:Lf_WindowPosition, <q-args>)
+command! -bar -nargs=0 LeaderfHelpCword call leaderf#Help#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
 
 command! -bar -nargs=0 LeaderfColorscheme call leaderf#Colors#startExpl(g:Lf_WindowPosition)
 

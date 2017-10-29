@@ -38,3 +38,11 @@ function! leaderf#Line#startExpl(win_pos, ...)
         call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."',"."1)")
     endif
 endfunction
+
+function! leaderf#Line#startExplPattern(win_pos, all, pattern)
+    if a:all == 0
+        call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
+    else
+        call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."', 1, pattern='".a:pattern."')")
+    endif
+endfunction

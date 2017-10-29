@@ -80,21 +80,45 @@ Usage
 | `:LeaderfFile`<br> `<leader>f`| search files
 | `:LeaderfFile [directory]` | search files under the `directory` specified
 | `:LeaderfFileFullScreen`   | search files, LeaderF window take up full screen
+| `:LeaderfFilePattern <pattern>` | like `LeaderfFile`, with `pattern` inputted in advance
+| `:LeaderfFileCword`        | like `LeaderfFile`, with word under the cursor as pattern inputted in advance
 | `:LeaderfBuffer`<br> `<leader>b`| search listed buffers
 | `:LeaderfBufferAll`        | search all buffers
+| `:LeaderfBufferPattern <pattern>` | like `LeaderfBuffer`, with `pattern` inputted in advance
+| `:LeaderfBufferCword`      | like `LeaderfBuffer`, with word under the cursor as pattern inputted in advance
 | `:LeaderfMru`              | search most recently used files
 | `:LeaderfMruCwd`           | search MRU in current working directory
+| `:LeaderfMruPattern <pattern>` | like `LeaderfMru`, with `pattern` inputted in advance
+| `:LeaderfMruCword`         | like `LeaderfMru`, with word under the cursor as pattern inputted in advance
+| `:LeaderfMruCwdPattern <pattern>` | like `LeaderfMruCwd`, with `pattern` inputted in advance
+| `:LeaderfMruCwdCword`      | like `LeaderfMruCwd`, with word under the cursor as pattern inputted in advance
 | `:LeaderfTag`              | navigate tags using the tags file
+| `:LeaderfTagPattern <pattern>` | like `LeaderfTag`, with `pattern` inputted in advance
+| `:LeaderfTagCword`         | like `LeaderfTag`, with word under the cursor as pattern inputted in advance
 | `:LeaderfBufTag`           | navigate tags in current buffer
 | `:LeaderfBufTagAll`        | navigate tags in all listed buffers
+| `:LeaderfBufTagPattern <pattern>` | like `LeaderfBufTag`, with `pattern` inputted in advance
+| `:LeaderfBufTagCword`      | like `LeaderfBufTag`, with word under the cursor as pattern inputted in advance
+| `:LeaderfBufTagAllPattern <pattern>` | like `LeaderfBufTagAll`, with `pattern` inputted in advance
+| `:LeaderfBufTagAllCword`   | like `LeaderfBufTagAll`, with word under the cursor as pattern inputted in advance
 | `:LeaderfFunction`         | navigate functions or methods in current buffer
 | `:LeaderfFunctionAll`      | navigate functions or methods in all listed buffers
+| `:LeaderfFunctionPattern <pattern>` | like `LeaderfFunction`, with `pattern` inputted in advance
+| `:LeaderfFunctionCword`    | like `LeaderfFunction`, with word under the cursor as pattern inputted in advance
+| `:LeaderfFunctionAllPattern <pattern>` | like `LeaderfFunctionAll`, with `pattern` inputted in advance
+| `:LeaderfFunctionAllCword` | like `LeaderfFunctionAll`, with word under the cursor as pattern inputted in advance
 | `:LeaderfLine`             | search a line in current buffer
 | `:LeaderfLineAll`          | search a line in all listed buffers
+| `:LeaderfLinePattern <pattern>` | like `LeaderfLine`, with `pattern` inputted in advance
+| `:LeaderfLineCword`        | like `LeaderfLine`, with word under the cursor as pattern inputted in advance
+| `:LeaderfLineAllPattern <pattern>` | like `LeaderfLineAll`, with `pattern` inputted in advance
+| `:LeaderfLineAllCword`     | like `LeaderfLineAll`, with word under the cursor as pattern inputted in advance
 | `:LeaderfHistoryCmd`       | execute the command in the history
 | `:LeaderfHistorySearch`    | execute the search command in the history
 | `:LeaderfSelf`             | execute the commands of itself
 | `:LeaderfHelp`             | navigate the help tags
+| `:LeaderfHelpPattern <pattern>` | like `LeaderfHelp`, with `pattern` inputted in advance
+| `:LeaderfHelpCword`        | like `LeaderfHelp`, with word under the cursor as pattern inputted in advance
 | `:LeaderfColorscheme`      | switch between colorschemes
 
 
@@ -142,6 +166,24 @@ Input formats:
  * In **Regexp** mode
 
     The input string is the same as the Vim's regexp.
+
+Smart Case:
+
+ * If the characters in search pattern are all lowercase, the matching is case-insensitive. If the search pattern contains uppercase characters, all lowercase characters still are matched case-insensitively, the uppercase characters can only match upper case. So uppercase characters can speed up the narrowing down of the searching result.  
+
+    e.g., input `abcDef`，it can match the following string:
+    ```
+    abcDef
+    AbcDef
+    abcDEf
+    aBcDeF
+    ```
+    but can not match the string such as:
+    ```
+    abcdef
+    Abcdef
+    ```
+    Note: `abc` and `ef` are still case-insensitive.
 
 Customization
 -------------

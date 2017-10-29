@@ -34,3 +34,7 @@ endfunction
 function! leaderf#Help#startExpl(win_pos, ...)
     call leaderf#LfPy("helpExplManager.startExplorer('".a:win_pos."')")
 endfunction
+
+function! leaderf#Help#startExplPattern(win_pos, pattern)
+    call leaderf#LfPy("helpExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
+endfunction

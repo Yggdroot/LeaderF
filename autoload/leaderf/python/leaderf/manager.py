@@ -741,6 +741,9 @@ class Manager(object):
 
         self._start_time = time.time()
 
+        self._pattern = kwargs.get("pattern", "")
+        self._cli.setPattern(self._pattern)
+
         if isinstance(content, list):
             self._content = content
             self._iteration_end = True
@@ -806,6 +809,9 @@ class Manager(object):
 
         if self._iteration_end == False and self._backup:
             content = self._backup
+
+        if self._pattern:
+            self._search(self._content)
 
         for cmd in self._cli.input(partial(self.setContent, content)):
             if equal(cmd, '<Update>'):

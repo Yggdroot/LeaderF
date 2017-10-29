@@ -41,3 +41,7 @@ function! leaderf#Buffer#startExpl(win_pos, ...)
         call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."',".arg.")")
     endif
 endfunction
+
+function! leaderf#Buffer#startExplPattern(win_pos, pattern)
+    call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
+endfunction

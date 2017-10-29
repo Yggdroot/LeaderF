@@ -122,6 +122,13 @@ class LfCli(object):
     def _toEnd(self):
         self._cursor_pos = len(self._cmdline)
 
+    def setPattern(self, pattern):
+        if pattern:
+            self.clear()
+        for ch in pattern:
+            self._insert(ch)
+        self._buildPattern()
+
     def _buildPrompt(self):
         delta_time = datetime.now() - self._start_time
         delta_ms = delta_time.microseconds + (delta_time.seconds +

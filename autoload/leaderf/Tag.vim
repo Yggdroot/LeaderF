@@ -35,3 +35,7 @@ endfunction
 function! leaderf#Tag#startExpl(win_pos, ...)
     call leaderf#LfPy("tagExplManager.startExplorer('".a:win_pos."')")
 endfunction
+
+function! leaderf#Tag#startExplPattern(win_pos, pattern)
+    call leaderf#LfPy("tagExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
+endfunction

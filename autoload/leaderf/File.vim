@@ -46,6 +46,10 @@ function! leaderf#File#startExpl(win_pos, ...)
     endif
 endfunction
 
+function! leaderf#File#startExplPattern(win_pos, pattern)
+    call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
+endfunction
+
 function! leaderf#File#cleanup()
     call leaderf#LfPy("fileExplManager._beforeExit()")
 endfunction
