@@ -293,7 +293,7 @@ class FileExplorer(Explorer):
             else:
                 followlinks = ""
 
-            cmd = 'ag --nocolor %s %s -g "" "%s"' % (ignore, followlinks, dir)
+            cmd = 'ag --nocolor --silent %s %s -g "" "%s"' % (ignore, followlinks, dir)
         elif default_tool["find"] and lfEval("executable('find')") == '1' \
                 and lfEval("executable('sed')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")
@@ -315,11 +315,17 @@ class FileExplorer(Explorer):
             else:
                 strip = ""
 
-            cmd = 'find %s "%s" -name . -o %s %s -type f -print %s' % (followlinks,
-                                                                       dir,
-                                                                       ignore_dir,
-                                                                       ignore_file,
-                                                                       strip)
+            if os.name == 'nt':
+                redir_err = ""
+            else:
+                redir_err = " 2>/dev/null"
+
+            cmd = 'find %s "%s" -name . -o %s %s -type f -print %s %s' % (followlinks,
+                                                                          dir,
+                                                                          ignore_dir,
+                                                                          ignore_file,
+                                                                          redir_err,
+                                                                          strip)
         else:
             cmd = None
 
