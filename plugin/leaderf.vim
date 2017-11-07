@@ -115,7 +115,7 @@ call s:InitVar('g:Lf_HighlightIndividual', 1)
 call s:InitVar('g:Lf_NumberOfHighlight', 100)
 call s:InitVar('g:Lf_WildIgnore', {
             \ 'dir': ['.svn','.git','.hg'],
-            \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']
+            \ 'file': []
             \})
 call s:InitVar('g:Lf_StlSeparator', {
             \ 'left': '►',

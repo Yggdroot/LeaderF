@@ -249,14 +249,16 @@ class FileExplorer(Explorer):
                 color = ""
                 ignore = ""
                 for i in wildignore["dir"]:
-                    ignore += ' -g "!%s"' % i
+                    if not i.startswith('.'): # rg does not show hidden files by default
+                        ignore += ' -g "!%s"' % i
                 for i in wildignore["file"]:
                     ignore += ' -g "!%s"' % i
             else:
                 color = "--color never"
                 ignore = ""
                 for i in wildignore["dir"]:
-                    ignore += " -g '!%s'" % i
+                    if not i.startswith('.'): # rg does not show hidden files by default
+                        ignore += " -g '!%s'" % i
                 for i in wildignore["file"]:
                     ignore += " -g '!%s'" % i
 
@@ -270,7 +272,8 @@ class FileExplorer(Explorer):
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
             for i in wildignore["dir"]:
-                ignore += " --ignore=%s" % i
+                if not i.startswith('.'): # pt does not show hidden files by default
+                    ignore += " --ignore=%s" % i
             for i in wildignore["file"]:
                 ignore += " --ignore=%s" % i
 
@@ -284,7 +287,8 @@ class FileExplorer(Explorer):
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
             for i in wildignore["dir"]:
-                ignore += ' --ignore "%s"' % i
+                if not i.startswith('.'): # ag does not show hidden files by default
+                    ignore += ' --ignore "%s"' % i
             for i in wildignore["file"]:
                 ignore += ' --ignore "%s"' % i
 

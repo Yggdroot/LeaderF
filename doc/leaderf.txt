@@ -140,7 +140,7 @@ g:Lf_WildIgnore                                 *g:Lf_WildIgnore*
     Default value is: >
     let g:Lf_WildIgnore = {
             \ 'dir': ['.svn','.git','.hg'],
-            \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']
+            \ 'file': []
             \}
 <
     Here uses the Unix shell-style wildcards, which are not the same as
@@ -153,6 +153,12 @@ g:Lf_WildIgnore                                 *g:Lf_WildIgnore*
     [seq]    | matches any character in seq
     [!seq]   | matches any character not in seq
     -------------------------------------------
+<
+    For example, you can set as below: >
+    let g:Lf_WildIgnore = {
+            \ 'dir': ['.svn','.git','.hg'],
+            \ 'file': ['*.sw?','~$*','*.bak','*.exe','*.o','*.so','*.py[co]']
+            \}
 <
 g:Lf_DelimiterChar                              *g:Lf_DelimiterChar*
     In NameOnly mode, if you want to refine the result by typing extra
