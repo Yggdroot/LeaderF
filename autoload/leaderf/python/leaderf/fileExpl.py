@@ -527,6 +527,77 @@ class FileExplManager(Manager):
         help.append('" ---------------------------------------------------------')
         return help
 
+    def _nearestAncestor(self, markers, path):
+        """
+        return the nearest ancestor path(including itself) of `path` that contains
+        one of files or directories in `markers`.
+        `markers` is a list of file or directory names.
+        """
+        if os.name == 'nt':
+            # e.g. C:\\
+            root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
+        else:
+            root = '/'
+
+        path = os.path.abspath(path)
+        while path != root:
+            for name in markers:
+                if os.path.exists(os.path.join(path, name)):
+                    return path
+            path = os.path.abspath(os.path.join(path, ".."))
+
+        for name in markers:
+            if os.path.exists(os.path.join(path, name)):
+                return path
+
+        return ""
+
+    def startExplorer(self, win_pos, *args, **kwargs):
+        if len(args) > 0: # behavior no change for `LeaderfFile <directory>`
+            super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
+            return
+
+        orig_cwd = os.getcwd()
+        root_markers = lfEval("g:Lf_RootMarkers")
+        mode = lfEval("g:Lf_WorkingDirectoryMode")
+
+        fall_back = False
+        if 'a' in mode:
+            working_dir = self._nearestAncestor(root_markers, orig_cwd)
+            if working_dir: # there exists a root marker in nearest ancestor path
+                os.chdir(working_dir)
+            else:
+                fall_back = True
+        elif 'A' in mode:
+            if vim.current.buffer.name:
+                working_dir = self._nearestAncestor(root_markers, os.path.dirname(vim.current.buffer.name))
+            else:
+                working_dir = ""
+            if working_dir: # there exists a root marker in nearest ancestor path
+                os.chdir(working_dir)
+            else:
+                fall_back = True
+        else:
+            fall_back = True
+
+        if fall_back:
+            if 'f' in mode:
+                if vim.current.buffer.name:
+                    os.chdir(os.path.dirname(vim.current.buffer.name))
+            elif 'F' in mode:
+                if vim.current.buffer.name and \
+                        not os.path.dirname(vim.current.buffer.name).startswith(orig_cwd):
+                    os.chdir(os.path.dirname(vim.current.buffer.name))
+
+        try:
+            super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
+
+            if int(lfEval("&autochdir")) == 0:
+                os.chdir(orig_cwd)
+        except:
+            os.chdir(orig_cwd)
+
+
 #*****************************************************
 # fileExplManager is a singleton
 #*****************************************************

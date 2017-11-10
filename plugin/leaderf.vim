@@ -127,6 +127,8 @@ call s:InitVar('g:Lf_PreviewCode', 0)
 call s:InitVar('g:Lf_UseVersionControlTool', 1)
 call s:InitVar('g:Lf_RememberLastSearch', 0)
 call s:InitVar('g:Lf_UseCache', 1)
+call s:InitVar('g:Lf_RootMarkers', ['.git', '.hg', '.svn'])
+call s:InitVar('g:Lf_WorkingDirectoryMode', 'c')
 call s:InitDict('g:Lf_PreviewResult', {
             \ 'File': 0,
             \ 'Buffer': 0,
