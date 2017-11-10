@@ -733,7 +733,7 @@ class Manager(object):
         self._setStlMode()
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
-        if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched:
+        if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
             pass
         else:
             lfCmd("normal! gg")
@@ -748,7 +748,7 @@ class Manager(object):
             self._content = content
             self._iteration_end = True
             self._getInstance().setStlTotal(len(content)//self._getUnit())
-            if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched:
+            if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
                 pass
             else:
                 self._getInstance().setBuffer(content)
