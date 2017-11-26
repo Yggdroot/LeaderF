@@ -19,7 +19,7 @@ class HistoryExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         result_list = []
         if len(args) > 0:
-            tmp = lfEval("@x")
+            lfCmd("let tmp = @x")
             lfCmd("redir @x")
             if args[0] == "cmd":
                 self._history_type = "Cmd_History"
@@ -31,7 +31,7 @@ class HistoryExplorer(Explorer):
                 self._history_type = "History"
                 lfCmd("let @x = ''")
             result = lfEval("@x")
-            lfCmd("let @x = '%s'" % escQuote(tmp))
+            lfCmd("let @x = tmp")
             lfCmd("redir END")
             result_list = result.splitlines()[2:]
             result_list = [line[1:].lstrip().split(' ', 1)[1] for line in result_list]
