@@ -225,10 +225,6 @@ call s:InitCommandMap('g:Lf_CommandMap', s:Lf_CommandMap)
 autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
             \ call lfMru#recordBuffer(expand('<abuf>'))
 
-autocmd BufWipeout * call leaderf#removeCache(expand('<abuf>'))
-
-autocmd VimLeave * call leaderf#cleanup()
-
 nnoremap <silent> <Plug>LeaderfFileTop :<C-U>call leaderf#File#startExpl('top')<CR>
 nnoremap <silent> <Plug>LeaderfFileBottom :<C-U>call leaderf#File#startExpl('bottom')<CR>
 nnoremap <silent> <Plug>LeaderfFileLeft :<C-U>call leaderf#File#startExpl('left')<CR>

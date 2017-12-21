@@ -192,6 +192,8 @@ class FunctionExplManager(Manager):
 
     def _defineMaps(self):
         lfCmd("call leaderf#Function#Maps()")
+        lfCmd("autocmd BufWipeout * call leaderf#Function#removeCache(expand('<abuf>'))")
+        lfCmd("autocmd VimLeave * call leaderf#Function#cleanup()")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
