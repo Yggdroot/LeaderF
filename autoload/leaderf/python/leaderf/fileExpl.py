@@ -592,10 +592,11 @@ class FileExplManager(Manager):
         try:
             super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
-            if int(lfEval("&autochdir")) == 0:
+            if int(lfEval("&autochdir")) == 0 and os.getcwd() != orig_cwd:
                 os.chdir(orig_cwd)
         except:
-            os.chdir(orig_cwd)
+            if os.getcwd() != orig_cwd:
+                os.chdir(orig_cwd)
 
 
 #*****************************************************
