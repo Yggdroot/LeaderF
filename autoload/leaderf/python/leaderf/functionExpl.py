@@ -283,7 +283,7 @@ class FunctionExplManager(Manager):
         cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
 
         saved_eventignore = vim.options['eventignore']
-        vim.options['eventignore'] = 'all'
+        vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
         try:
             vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
             self._acceptSelection(line)

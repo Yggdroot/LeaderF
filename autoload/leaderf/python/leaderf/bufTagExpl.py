@@ -390,7 +390,7 @@ class BufTagExplManager(Manager):
         line_nr = self._getInstance().window.cursor[0]
 
         saved_eventignore = vim.options['eventignore']
-        vim.options['eventignore'] = 'all'
+        vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
         try:
             vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
             self._acceptSelection(line, self._getInstance().buffer, line_nr, preview=True)
