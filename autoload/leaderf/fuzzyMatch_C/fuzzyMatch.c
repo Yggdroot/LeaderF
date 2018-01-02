@@ -859,7 +859,7 @@ float getWeight(char* text, uint16_t text_len,
 
         free(text_mask);
 
-        return score + (1 >> beg) + 1.0f/(beg + end) + 1.0f/text_len;
+        return 10000.0f + score + (1 >> beg) + 1.0f/(beg + end) + 1.0f/text_len;
     }
     else
     {
@@ -869,7 +869,7 @@ float getWeight(char* text, uint16_t text_len,
 
         free(text_mask);
 
-        return score + 1.0f/text_len + 0.1f/(text_len - beg);
+        return 10000.0f + score + 1.0f/text_len + 0.1f/(text_len - beg);
     }
 }
 
