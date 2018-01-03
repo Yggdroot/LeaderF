@@ -9,7 +9,7 @@ if /i "%1" equ "--reverse" (
 )
 echo Begin to compile C extension of Python2 ...
 cd autoload\leaderf\fuzzyMatch_C
-py setup.py build --compiler=mingw32
+py -2 setup.py build --compiler=mingw32
 if %errorlevel% neq 0 goto second
 pushd build\lib*2.?
 xcopy /y fuzzyMatchC*.pyd ..\..\..\python\
