@@ -348,6 +348,14 @@ class FileExplorer(Explorer):
                     break
 
             if target != -1:    # already cached
+                if time.time() - self._cmd_start_time <= float(lfEval("g:Lf_NeedCacheTime")):
+                    os.remove(os.path.join(self._cache_dir, lines[target].split(None, 2)[1]))
+                    del lines[target]
+                    f.seek(0)
+                    f.truncate(0)
+                    f.writelines(lines)
+                    return
+
                 # update the time
                 lines[target] = re.sub('^\S*',
                                        '%.3f' % time.time(),
@@ -361,6 +369,9 @@ class FileExplorer(Explorer):
                     for line in content:
                         cache_file.write(line + '\n')
             else:
+                if time.time() - self._cmd_start_time <= float(lfEval("g:Lf_NeedCacheTime")):
+                    return
+
                 cache_file_name = ''
                 if len(lines) < int(lfEval("g:Lf_NumberOfCache")):
                     f.seek(0, 2)
@@ -433,8 +444,7 @@ class FileExplorer(Explorer):
 
     def setContent(self, content):
         self._content = content
-        if lfEval("g:Lf_UseCache") == '1' and \
-                time.time() - self._cmd_start_time > float(lfEval("g:Lf_NeedCacheTime")):
+        if lfEval("g:Lf_UseCache") == '1':
             self._writeCache(content)
 
     def getContent(self, *args, **kwargs):
