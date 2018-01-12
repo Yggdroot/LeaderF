@@ -53,14 +53,15 @@ To install the C extension, follow the below:
 
  - On Windows:
 
-    First, make sure `py` and/or `py -3` commands are available.  
+    First, make sure `py -2` and/or `py -3` commands are available.  
     Then run the installation script:
 
     ```sh
     cd ~\.vim\bundle\LeaderF
     .\install.bat
     ```
-    There may be some error during the installation, please google the error messages to resolve it.
+    There may be some error during the installation, please google the error messages to resolve it.  
+    For example, `"error: Unable to find vcvarsall.bat"`, you can turn to [here][6] for help.
 
     Uninstall the C extension:
 
@@ -220,3 +221,4 @@ This plugin is released under the Apache License, Version 2.0 (the "License").
   [3]: https://github.com/gmarik/Vundle.vim
   [4]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L193-L340
   [5]: https://github.com/junegunn/vim-plug
+  [6]: https://stackoverflow.com/questions/2817869/error-unable-to-find-vcvarsall-bat
