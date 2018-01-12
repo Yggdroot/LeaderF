@@ -323,7 +323,7 @@ class LfCli(object):
                 self._buildPrompt()
                 self._idle = False
 
-                if callback() == False:
+                if lfEval("g:Lf_CursorBlink") == '1' and callback() == False:
                     time.sleep(0.002)
 
                 if lfEval("g:Lf_CursorBlink") == '1':
