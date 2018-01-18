@@ -117,10 +117,17 @@ call s:InitVar('g:Lf_WildIgnore', {
             \ 'dir': ['.svn','.git','.hg'],
             \ 'file': []
             \})
-call s:InitVar('g:Lf_StlSeparator', {
-            \ 'left': '►',
-            \ 'right': '◄'
-            \})
+if &encoding ==? "utf-8"
+    call s:InitVar('g:Lf_StlSeparator', {
+                \ 'left': '►',
+                \ 'right': '◄'
+                \})
+else
+    call s:InitVar('g:Lf_StlSeparator', {
+                \ 'left': '',
+                \ 'right': ''
+                \})
+endif
 call s:InitVar('g:Lf_StlPalette', {})
 call s:InitVar('g:Lf_Ctags', 'ctags')
 call s:InitVar('g:Lf_PreviewCode', 0)
