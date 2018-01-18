@@ -210,7 +210,12 @@ class LfInstance(object):
                 lfCmd("silent! hide")
                 # 'silent!' is used to skip error E16.
                 lfCmd("silent! exec '%d wincmd w'" % self._orig_win_nr)
-                lfCmd(self._restore_sizes)
+                lfCmd(self._restore_sizes) # why this line does not take effect?
+                                           # it's weird. repeat 4 times
+                lfCmd(self._restore_sizes) # fix issue #102
+                lfCmd(self._restore_sizes) # fix issue #102
+                lfCmd(self._restore_sizes) # fix issue #102
+                lfCmd(self._restore_sizes) # fix issue #102
             else:
                 lfCmd("bd")
 
