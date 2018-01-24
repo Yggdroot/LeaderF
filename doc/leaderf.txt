@@ -199,7 +199,7 @@ g:Lf_StlColorscheme                             *g:Lf_StlColorscheme*
 g:Lf_StlSeparator                               *g:Lf_StlSeparator*
     A Dictionary to store separators.
     The default value is >
-    let g:Lf_StlSeparator = { 'left': '►', 'right': '◄' }
+    let g:Lf_StlSeparator = { 'left': '►', 'right': '◄', 'font': '' }
 <
     If you don't like using separators, you can set the value as below: >
     let g:Lf_StlSeparator = { 'left': '', 'right': '' }

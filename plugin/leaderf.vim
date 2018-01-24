@@ -120,13 +120,18 @@ call s:InitVar('g:Lf_WildIgnore', {
 if &encoding ==? "utf-8"
     call s:InitVar('g:Lf_StlSeparator', {
                 \ 'left': '►',
-                \ 'right': '◄'
+                \ 'right': '◄',
+                \ 'font': ''
                 \})
 else
     call s:InitVar('g:Lf_StlSeparator', {
                 \ 'left': '',
-                \ 'right': ''
+                \ 'right': '',
+                \ 'font': ''
                 \})
+endif
+if !has_key(g:Lf_StlSeparator, 'font')
+    let g:Lf_StlSeparator['font'] = ""
 endif
 call s:InitVar('g:Lf_StlPalette', {})
 call s:InitVar('g:Lf_Ctags', 'ctags')
