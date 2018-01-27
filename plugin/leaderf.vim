@@ -262,6 +262,8 @@ command! -bar -nargs=0 LeaderfFileCword call leaderf#File#startExplPattern(g:Lf_
 
 command! -bar -nargs=0 LeaderfBuffer call leaderf#Buffer#startExpl(g:Lf_WindowPosition)
 command! -bar -nargs=0 LeaderfBufferAll call leaderf#Buffer#startExpl(g:Lf_WindowPosition, 1)
+command! -bar -nargs=0 LeaderfTabBuffer call leaderf#Buffer#startExpl(g:Lf_WindowPosition, 2)
+command! -bar -nargs=0 LeaderfTabBufferAll call leaderf#Buffer#startExpl(g:Lf_WindowPosition, 3)
 command! -bar -nargs=1 LeaderfBufferPattern call leaderf#Buffer#startExplPattern(g:Lf_WindowPosition, <q-args>)
 command! -bar -nargs=0 LeaderfBufferCword call leaderf#Buffer#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
 

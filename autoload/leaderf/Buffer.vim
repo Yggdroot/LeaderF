@@ -37,8 +37,7 @@ function! leaderf#Buffer#startExpl(win_pos, ...)
     if a:0 == 0
         call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."')")
     else
-        let arg = a:1 == 0 ? 'False' : 'True'
-        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."',".arg.")")
+        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."',".a:1.")")
     endif
 endfunction
 

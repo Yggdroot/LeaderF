@@ -21,13 +21,19 @@ class BufferExplorer(Explorer):
         self._max_bufname_len = 0
 
     def getContent(self, *args, **kwargs):
-        show_unlisted = False if len(args) == 0 else args[0]
-        if show_unlisted:
-            buffers = {b.number: b for b in vim.buffers
-                       if os.path.basename(b.name) != "LeaderF"}
-        else:
+        if len(args) == 0:
             buffers = {b.number: b for b in vim.buffers
                        if lfEval("buflisted(%d)" % b.number) == '1'}
+        elif args[0] == 1:
+            buffers = {b.number: b for b in vim.buffers
+                       if os.path.basename(b.name) != "LeaderF"}
+        elif args[0] == 2:
+            buffers = {w.buffer.number: w.buffer for w in vim.current.tabpage.windows
+                       if lfEval("buflisted(%d)" % w.buffer.number) == '1'}
+        else:
+            buffers = {w.buffer.number: w.buffer for w in vim.current.tabpage.windows
+                       if os.path.basename(w.buffer.name) != "LeaderF"}
+
 
         # e.g., 12 u %a+- aaa.txt
         bufnr_len = len(str(len(vim.buffers)))

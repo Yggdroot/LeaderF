@@ -85,6 +85,8 @@ Usage
 | `:LeaderfFileCword`        | like `LeaderfFile`, with word under the cursor as pattern inputted in advance
 | `:LeaderfBuffer`<br> `<leader>b`| search listed buffers
 | `:LeaderfBufferAll`        | search all buffers
+| `:LeaderfTabBuffer`        | search listed buffers in current tabpage
+| `:LeaderfTabBufferAll`     | search all buffers in current tabpage
 | `:LeaderfBufferPattern <pattern>` | like `LeaderfBuffer`, with `pattern` inputted in advance
 | `:LeaderfBufferCword`      | like `LeaderfBuffer`, with word under the cursor as pattern inputted in advance
 | `:LeaderfMru`              | search most recently used files
