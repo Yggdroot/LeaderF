@@ -73,7 +73,7 @@ class LfInstance(object):
         lfCmd("setlocal number")
         lfCmd("setlocal norelativenumber")
         lfCmd("setlocal nospell")
-        lfCmd("setlocal nowrap")
+        lfCmd("setlocal wrap")
         lfCmd("setlocal nofoldenable")
         lfCmd("setlocal foldcolumn=0")
         lfCmd("setlocal foldmethod=manual")
