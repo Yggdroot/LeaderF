@@ -46,10 +46,10 @@ class Mru(object):
         return name
 
     def saveToCache(self, buf_name):
+        buf_name = self.normalize(buf_name)
         if True in (fnmatch.fnmatch(buf_name, i)
                     for i in lfEval("g:Lf_MruFileExclude")):
             return
-        buf_name = self.normalize(buf_name)
         compare = buf_name
         if sys.platform[:3] == 'win' or sys.platform in ('cygwin', 'msys'):
             nocase = True
