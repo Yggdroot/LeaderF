@@ -3,6 +3,7 @@
 
 import vim
 import os
+import sys
 import os.path
 import fnmatch
 from .utils import *
@@ -32,18 +33,37 @@ class Mru(object):
     def getCacheFileName(self):
         return self._cache_file
 
+    def normalize(self, name):
+        if '~' in name:
+            name = os.path.expanduser(name)
+        name = os.path.abspath(name)
+        if sys.platform[:3] == 'win':
+            if name[1:3] == ':\\':
+                name = name[:1].upper() + name[1:]
+        elif sys.platform == 'cygwin':
+            if name.startswith('/cygdrive/'):
+                name = name[:11].lower() + name[11:]
+        return name
+
     def saveToCache(self, buf_name):
         if True in (fnmatch.fnmatch(buf_name, i)
                     for i in lfEval("g:Lf_MruFileExclude")):
             return
+        buf_name = self.normalize(buf_name)
+        compare = buf_name
+        if sys.platform[:3] == 'win' or sys.platform in ('cygwin', 'msys'):
+            nocase = True
+            compare = buf_name.lower()
         with lfOpen(self._cache_file, 'r+', errors='ignore') as f:
             lines = f.readlines()
             for i, line in enumerate(lines):
-                if buf_name == line.rstrip():
+                text = line.rstrip()
+                if (compare == text) or (nocase and compare == text.lower()):
                     if i == 0:
                         return
                     del lines[i]
                     break
+
             lines.insert(0, buf_name + '\n')
             if len(lines) > int(lfEval("g:Lf_MruMaxFiles")):
                 del lines[-1]
@@ -69,3 +89,6 @@ class Mru(object):
 mru = Mru()
 
 __all__ = ['mru']
+
+#  vim: set ts=4 sw=4 tw=0 et :
+
