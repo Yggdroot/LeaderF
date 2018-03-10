@@ -50,6 +50,7 @@ class Mru(object):
         if True in (fnmatch.fnmatch(buf_name, i)
                     for i in lfEval("g:Lf_MruFileExclude")):
             return
+        nocase = False
         compare = buf_name
         if sys.platform[:3] == 'win' or sys.platform in ('cygwin', 'msys'):
             nocase = True
