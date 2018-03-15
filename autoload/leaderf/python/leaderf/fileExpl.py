@@ -449,7 +449,7 @@ class FileExplorer(Explorer):
 
     def getContent(self, *args, **kwargs):
         if len(args) > 0:
-            if os.path.exists(lfDecode(args[0])):
+            if os.path.exists(os.path.expanduser(lfDecode(args[0]))):
                 lfCmd("silent cd %s" % args[0])
             else:
                 lfCmd("echohl ErrorMsg | redraw | echon "
