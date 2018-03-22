@@ -36,7 +36,7 @@ class BufferExplorer(Explorer):
 
 
         # e.g., 12 u %a+- aaa.txt
-        bufnr_len = len(str(len(vim.buffers)))
+        bufnr_len = len(lfEval("bufnr('$')"))
         self._prefix_length = bufnr_len + 8
 
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
