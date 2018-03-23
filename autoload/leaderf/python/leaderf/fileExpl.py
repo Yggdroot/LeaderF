@@ -600,9 +600,8 @@ class FileExplManager(Manager):
                         not os.path.dirname(vim.current.buffer.name).startswith(orig_cwd):
                     os.chdir(os.path.dirname(vim.current.buffer.name))
 
+        super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
         try:
-            super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
-
             if int(lfEval("&autochdir")) == 0 and os.getcwd() != orig_cwd:
                 os.chdir(orig_cwd)
         except:
