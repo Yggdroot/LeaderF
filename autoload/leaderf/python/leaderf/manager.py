@@ -855,7 +855,7 @@ class Manager(object):
             elif equal(cmd, '<Quit>'):
                 self.quit()
                 break
-            elif equal(cmd, '<Esc>'):   # switch to Normal mode
+            elif equal(cmd, '<Tab>'):   # switch to Normal mode
                 self.clearSelections()
                 self._cli.hideCursor()
                 self._createHelpHint()

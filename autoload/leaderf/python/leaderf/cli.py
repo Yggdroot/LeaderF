@@ -365,7 +365,7 @@ class LfCli(object):
                     elif equal(cmd, '<2-LeftMouse>'):
                         yield '<2-LeftMouse>'
                     elif equal(cmd, '<Esc>'):
-                        yield '<Esc>'
+                        yield '<Quit>'
                     elif equal(cmd, '<C-F>'):
                         if self._supports_nameonly:
                             self._is_fuzzy = True

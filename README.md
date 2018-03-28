@@ -129,10 +129,10 @@ Once LeaderF is launched:
 
 | Command                    | Description
 | -------                    | -----------
-| `<C-C>`                    | quit from LeaderF
+| `<C-C>`<br>`<ESC>`         | quit from LeaderF
 | `<C-R>`                    | switch between fuzzy search mode and regex mode
 | `<C-F>`                    | switch between full path search mode and name only search mode
-| `<ESC>`                    | switch to normal mode
+| `<Tab>`                    | switch to normal mode
 | `<C-V>`<br>`<S-Insert>`    | paste from clipboard
 | `<C-U>`                    | clear the prompt
 | `<C-J>`<br>`<Down>`        | move the cursor downward in the result window
@@ -193,9 +193,11 @@ Customization
 
  * Change key bindings
 
-    By default, `<ESC>` is the shortcut key to switch to normal mode, if you want to change it to be 'Quit from LeaderF':
+    By default, `<Tab>` is the shortcut key to switch to normal mode, if you want to change the key into `<ESC>`:
 
-    `let g:Lf_CommandMap = {'<C-C>': ['<Esc>', '<C-C>']}`
+    `let g:Lf_CommandMap = {'<Tab>': ['<ESC>']}`
+
+    for more detail, please refer to [here][7].
 
  * Customize the statusline
 
@@ -221,6 +223,7 @@ This plugin is released under the Apache License, Version 2.0 (the "License").
   [1]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_1.gif
   [2]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_2.gif
   [3]: https://github.com/gmarik/Vundle.vim
-  [4]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L193-L340
+  [4]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L189-L346
   [5]: https://github.com/junegunn/vim-plug
   [6]: https://stackoverflow.com/questions/2817869/error-unable-to-find-vcvarsall-bat
+  [7]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L472-L478

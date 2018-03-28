@@ -473,8 +473,8 @@ g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
     prompt(|leaderf-prompt|).
     for example, if you want to change the default command <C-F> to <C-D> and
-    change the default command <C-Q> to <Esc>: >
-    let g:Lf_CommandMap = {'<C-F>': ['<C-D>'], '<C-Q>': ['<Esc>']}
+    change the default command <ESC> to <C-A> and <C-B>: >
+    let g:Lf_CommandMap = {'<C-F>': ['<C-D>'], '<ESC>': ['<C-A>', '<C-B>']}
 <
 ==============================================================================
 USAGE                                           *leaderf-usage*
@@ -531,10 +531,10 @@ USAGE                                           *leaderf-usage*
     Launch LeaderF to switch between colorschemes.
 
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
-    <C-C> : quit from LeaderF.
+    <C-C>, <ESC> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.
     <C-F> : switch between full path search mode and name only search mode.
-    <ESC> : switch to normal mode.
+    <Tab> : switch to normal mode.
     <C-V>, <S-Insert> : paste from clipboard.
     <C-U> : clear the prompt.
     <C-J>, <Down>, <C-K>, <Up> : navigate the result list.
