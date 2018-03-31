@@ -102,10 +102,10 @@ g:Lf_CursorBlink                                *g:Lf_CursorBlink*
     Set this option to 1 to let the cursor in the prompt blink, if you don't
     want the cursor to blink, set the value to 0.
 
-g:Lf_CacheDiretory                              *g:Lf_CacheDiretory*
+g:Lf_CacheDirectory                              *g:Lf_CacheDirectory*
     Set this option to change the location of the cache directory.
     e.g. >
-    let g:Lf_CacheDiretory = '/root'
+    let g:Lf_CacheDirectory = '/root'
 <
     Default value is $HOME.
 

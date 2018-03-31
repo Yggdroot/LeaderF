@@ -36,7 +36,7 @@ class FileExplorer(Explorer):
     def __init__(self):
         self._cur_dir = ''
         self._content = []
-        self._cache_dir = os.path.join(lfEval("g:Lf_CacheDiretory"),
+        self._cache_dir = os.path.join(lfEval("g:Lf_CacheDirectory"),
                                        '.LfCache',
                                        'python' + lfEval("g:Lf_PythonVersion"),
                                        'file')
