@@ -230,8 +230,9 @@ class Manager(object):
             return
         help = []
         if not self._show_help:
-            help.append('" Press <F1> for help')
-            help.append('" ---------------------------------------------------------')
+			if lfEval("get(g:, 'Lf_HideHelp', 0)") == '0':
+				help.append('" Press <F1> for help')
+				help.append('" ---------------------------------------------------------')
         else:
             help += self._createHelp()
         self._help_length = len(help)
