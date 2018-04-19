@@ -217,7 +217,7 @@ class Manager(object):
         return True
 
     def _getInstance(self):
-        if self._instance is None:
+        if self._instance is None or self._instance.buffer not in vim.buffers:
             self._instance = LfInstance(self._getExplorer().getStlCategory(),
                                         self._beforeEnter,
                                         self._afterEnter,
