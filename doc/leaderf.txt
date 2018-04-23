@@ -228,6 +228,10 @@ g:Lf_StlSeparator                               *g:Lf_StlSeparator*
     For |vim-powerline| font users: >
     let g:Lf_StlSeparator = { 'left': "\u2b80", 'right': "\u2b82" }
 <
+    If you don't have set the global option |guifont|, you can still use the patched
+    fonts, e.g., >
+    let g:Lf_StlSeparator = { 'left': "\ue0b0", 'right': "\ue0b2", 'font': "DejaVu Sans Mono for Powerline" }
+<
 g:Lf_StlPalette                                 *g:Lf_StlPalette*
     This is a dictionary, you can customize the colorscheme using this option.
     Default colorscheme is equivalent to the following setting: >
