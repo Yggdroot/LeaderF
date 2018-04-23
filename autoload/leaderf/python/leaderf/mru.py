@@ -38,6 +38,9 @@ class Mru(object):
             name = os.path.expanduser(name)
         name = os.path.abspath(name)
         if sys.platform[:3] == 'win':
+            if name[:4] == '\\\\?\\' and os.path.isabs(name):
+                if os.path.isabs(name[4:]) and name[5:6] == ':':
+                    name = name[4:]
             if name[1:3] == ':\\':
                 name = name[:1].upper() + name[1:]
         elif sys.platform == 'cygwin':
