@@ -96,7 +96,7 @@ function! leaderf#colorscheme#highlight(category)
         let highlightCmd = printf("hi def Lf_hl_%s_%s", a:category, sep)
         let highlightCmd .= printf(" guifg=%s guibg=%s", palette[dict.left].guibg, palette[dict.right].guibg)
         let highlightCmd .= printf(" ctermfg=%s ctermbg=%s", palette[dict.left].ctermbg, palette[dict.right].ctermbg)
-        if g:Lf_StlSeparator["font"] != ""
+        if get(g:Lf_StlSeparator, "font", "") != ""
             let highlightCmd .= printf(" font='%s'", g:Lf_StlSeparator["font"])
         endif
         exec highlightCmd
@@ -106,7 +106,7 @@ function! leaderf#colorscheme#highlight(category)
         let highlightCmd = printf("hi def Lf_hl_%s_%s", a:category, sep)
         let highlightCmd .= printf(" guifg=%s guibg=%s", palette[dict.right].guibg, palette[dict.left].guibg)
         let highlightCmd .= printf(" ctermfg=%s ctermbg=%s", palette[dict.right].ctermbg, palette[dict.left].ctermbg)
-        if g:Lf_StlSeparator["font"] != ""
+        if get(g:Lf_StlSeparator, "font", "") != ""
             let highlightCmd .= printf(" font='%s'", g:Lf_StlSeparator["font"])
         endif
         exec highlightCmd

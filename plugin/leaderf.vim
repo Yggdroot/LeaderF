@@ -130,9 +130,6 @@ else
                 \ 'font': ''
                 \})
 endif
-if !has_key(g:Lf_StlSeparator, 'font')
-    let g:Lf_StlSeparator['font'] = ""
-endif
 call s:InitVar('g:Lf_StlPalette', {})
 call s:InitVar('g:Lf_Ctags', 'ctags')
 call s:InitVar('g:Lf_PreviewCode', 0)
