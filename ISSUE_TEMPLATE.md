@@ -21,6 +21,7 @@ Make sure that you have the latest version of LeaderF.
     - [ ] Etc.
 - Configurations related to LeaderF in vimrc: 
 
+### Describe your question, feature request, or bug.
 
 ### Steps to reproduce
 
