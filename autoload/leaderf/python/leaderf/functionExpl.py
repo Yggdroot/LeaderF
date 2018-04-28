@@ -142,16 +142,32 @@ class FunctionExplorer(Explorer):
             return []
 
         func_list = []
+        sorted = True
+        lastln = -1
+
         for _, item  in enumerate(output):
             bufname = buffer.name if vim.options["autochdir"] else lfRelpath(buffer.name)
+            try: 
+                ln = int(item[2][:-2], 0)
+            except:
+                ln = -1
+            if lastln > ln:
+                sorted = False
+            else:
+                lastln = ln
             line = "{}\t{}\t[{}:{} {}]".format(item[3],
                                                buffer[int(item[2][:-2]) - 1].strip(),
                                                bufname,        # file
                                                item[2][:-2],   # line
                                                buffer.number
                                                )
-            func_list.append(line)
 
+            func_list.append((ln, line))
+
+        if not sorted:
+            func_list.sort()
+
+        func_list = [ line for ln, line in func_list ]
         self._func_list[buffer.number] = func_list
 
         return func_list
@@ -221,6 +237,53 @@ class FunctionExplManager(Manager):
             return line.rsplit("\t", 1)[0][2:]
         else:
             return line.rsplit("\t", 1)[1][1:-1]
+
+    def startExplorer(self, win_pos, *args, **kwargs):
+        super(FunctionExplManager, self).startExplorer(win_pos, *args, **kwargs)
+        if (not self._launched) or (len(args) > 0):
+            return 
+        # a postfix bang sign, skip input() and locate cursor
+        if kwargs.get('bang', False):
+            self._relocateCursor()
+
+    def _pathEqual(self, p1, p2):
+        p1 = os.path.normcase(os.path.abspath(p1))
+        p2 = os.path.normcase(os.path.abspath(p2))
+        return (p1 == p2)
+
+    def _relocateCursor(self):
+        inst = self._getInstance()
+        orig_name = inst.getOriginalPos()[2].name
+        orig_line = inst.getOriginalCursor()[0]
+        tags = []
+        index = 0
+        for line in inst.buffer:
+            index += 1
+            pos = line.rfind('\t')
+            if pos < 0:
+                continue
+            text = line[pos + 1:].strip()
+            if text.startswith('[') and text.endswith(']'):
+                pos = text.rfind(' ')
+                if pos < 0:
+                    continue
+                text = text[1:pos].strip()
+                pos = text.rfind(':')
+                if pos < 0:
+                    continue
+                filename = text[:pos]
+                ln = int(text[pos + 1:])
+                if self._pathEqual(orig_name, filename):
+                    tags.append((index, filename, ln))
+        orig_line = int(orig_line)
+        last = len(tags) - 1
+        while last >= 0:
+            if tags[last][2] <= orig_line:
+                break
+            last -= 1
+        if last >= 0:
+            index = tags[last][0]
+            vim.command(str(index))
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -300,3 +363,5 @@ class FunctionExplManager(Manager):
 functionExplManager = FunctionExplManager()
 
 __all__ = ['functionExplManager']
+
+#  vim: set ts=4 sw=4 tw=0 et :

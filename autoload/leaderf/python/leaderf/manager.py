@@ -753,7 +753,8 @@ class Manager(object):
                 pass
             else:
                 self._getInstance().setBuffer(content)
-            self.input()
+            if not kwargs.get('bang', 0):
+                self.input()
         else:
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
@@ -882,3 +883,4 @@ class Manager(object):
                 if self._cmdExtension(cmd):
                     break
 
+#  vim: set ts=4 sw=4 tw=0 et :
