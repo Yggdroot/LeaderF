@@ -178,7 +178,7 @@ class LfInstance(object):
             return
 
         self._orig_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
-        self._orig_cursor = (lfEval('line(".")'), lfEval('col(".")'))
+        self._orig_cursor = vim.current.window.cursor
 
         self._before_enter()
 
