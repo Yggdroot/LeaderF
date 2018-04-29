@@ -147,7 +147,7 @@ class FunctionExplorer(Explorer):
 
         for _, item  in enumerate(output):
             bufname = buffer.name if vim.options["autochdir"] else lfRelpath(buffer.name)
-            try: 
+            try:
                 ln = int(item[2][:-2], 0)
             except:
                 ln = -1
@@ -241,7 +241,7 @@ class FunctionExplManager(Manager):
     def startExplorer(self, win_pos, *args, **kwargs):
         super(FunctionExplManager, self).startExplorer(win_pos, *args, **kwargs)
         if (not self._launched) or (len(args) > 0):
-            return 
+            return
         # a postfix bang sign, skip input() and locate cursor
         if kwargs.get('bang', False):
             self._relocateCursor()
@@ -273,7 +273,7 @@ class FunctionExplManager(Manager):
                     continue
                 filename = text[:pos]
                 ln = int(text[pos + 1:])
-                if self._pathEqual(orig_name, filename):
+                if self._pathEqual(lfDecode(orig_name), filename):
                     tags.append((index, filename, ln))
         orig_line = int(orig_line)
         last = len(tags) - 1
@@ -283,7 +283,7 @@ class FunctionExplManager(Manager):
             last -= 1
         if last >= 0:
             index = tags[last][0]
-            vim.command(str(index))
+            lfCmd(str(index))
 
     def _getDigestStartPos(self, line, mode):
         """
