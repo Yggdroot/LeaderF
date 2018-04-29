@@ -259,22 +259,11 @@ class FunctionExplManager(Manager):
         index = 0
         for line in inst.buffer:
             index += 1
-            pos = line.rfind('\t')
-            if pos < 0:
-                continue
-            text = line[pos + 1:].strip()
-            if text.startswith('[') and text.endswith(']'):
-                pos = text.rfind(' ')
-                if pos < 0:
-                    continue
-                text = text[1:pos].strip()
-                pos = text.rfind(':')
-                if pos < 0:
-                    continue
-                filename = text[:pos]
-                ln = int(text[pos + 1:])
-                if self._pathEqual(lfDecode(orig_name), filename):
-                    tags.append((index, filename, ln))
+            line = line.rsplit("\t", 1)[1][1:-1]
+            filename = line.rsplit(':', 1)[0]
+            line_nr = int(line.rsplit(":", 1)[1].split()[0])
+            if self._pathEqual(lfDecode(orig_name), filename):
+                tags.append((index, filename, line_nr))
         orig_line = int(orig_line)
         last = len(tags) - 1
         while last >= 0:
