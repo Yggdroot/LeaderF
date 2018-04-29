@@ -221,7 +221,7 @@ class FunctionExplManager(Manager):
         lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         lfCmd("norm! ^")
         lfCmd("norm! zz")
-        lfCmd("setlocal cursorline! | redraw | sleep 100m | setlocal cursorline!")
+        lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
 
     def _getDigest(self, line, mode):
         """
@@ -246,25 +246,18 @@ class FunctionExplManager(Manager):
         if kwargs.get('bang', False):
             self._relocateCursor()
 
-    def _pathEqual(self, p1, p2):
-        p1 = os.path.normcase(os.path.abspath(p1))
-        p2 = os.path.normcase(os.path.abspath(p2))
-        return (p1 == p2)
-
     def _relocateCursor(self):
         inst = self._getInstance()
-        orig_name = inst.getOriginalPos()[2].name
+        inst.buffer.options['modifiable'] = False
+        orig_buf_nr = inst.getOriginalPos()[2].number
         orig_line = inst.getOriginalCursor()[0]
         tags = []
-        index = 0
-        for line in inst.buffer:
-            index += 1
+        for index, line in enumerate(inst.buffer, 1):
             line = line.rsplit("\t", 1)[1][1:-1]
-            filename = line.rsplit(':', 1)[0]
-            line_nr = int(line.rsplit(":", 1)[1].split()[0])
-            if self._pathEqual(lfDecode(orig_name), filename):
-                tags.append((index, filename, line_nr))
-        orig_line = int(orig_line)
+            line_nr, buf_number = line.rsplit(":", 1)[1].split()
+            line_nr, buf_number = int(line_nr), int(buf_number)
+            if orig_buf_nr == buf_number:
+                tags.append((index, buf_number, line_nr))
         last = len(tags) - 1
         while last >= 0:
             if tags[last][2] <= orig_line:
@@ -273,6 +266,7 @@ class FunctionExplManager(Manager):
         if last >= 0:
             index = tags[last][0]
             lfCmd(str(index))
+            lfCmd("norm! zz")
 
     def _getDigestStartPos(self, line, mode):
         """
