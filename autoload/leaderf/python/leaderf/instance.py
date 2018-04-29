@@ -178,6 +178,7 @@ class LfInstance(object):
             return
 
         self._orig_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
+        self._orig_cursor = vim.current.window.cursor
 
         self._before_enter()
 
@@ -284,3 +285,8 @@ class LfInstance(object):
 
     def getOriginalPos(self):
         return self._orig_pos
+
+    def getOriginalCursor(self):
+        return self._orig_cursor
+
+#  vim: set ts=4 sw=4 tw=0 et :
