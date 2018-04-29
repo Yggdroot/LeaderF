@@ -755,6 +755,8 @@ class Manager(object):
                 self._getInstance().setBuffer(content)
             if not kwargs.get('bang', 0):
                 self.input()
+            else:
+                lfCmd("echo")
         else:
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)

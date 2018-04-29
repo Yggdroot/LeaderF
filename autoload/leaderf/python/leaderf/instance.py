@@ -290,4 +290,3 @@ class LfInstance(object):
         return self._orig_cursor
 
 #  vim: set ts=4 sw=4 tw=0 et :
-
