@@ -67,6 +67,7 @@ class Manager(object):
         self._highlight_ids = []
         self._orig_line = ''
         self._launched = False
+        self._ctrlp_pressed = False
         self._getExplClass()
 
     #**************************************************************
@@ -208,8 +209,11 @@ class Manager(object):
         if self._getInstance().empty() or vim.current.buffer != self._getInstance().buffer:
             return False
 
+        if self._ctrlp_pressed == True:
+            return True
+
         line = self._getInstance().currentLine
-        if self._orig_line == line:
+        if self._orig_line == line and self._getInstance().buffer.options['modifiable']:
             return False
 
         self._orig_line = line
@@ -880,7 +884,9 @@ class Manager(object):
             elif equal(cmd, '<C-L>'):
                 self.clearSelections()
             elif equal(cmd, '<C-P>'):
+                self._ctrlp_pressed = True
                 self._previewResult(True)
+                self._ctrlp_pressed = False
             else:
                 if self._cmdExtension(cmd):
                     break

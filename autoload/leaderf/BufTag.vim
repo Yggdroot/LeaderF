@@ -26,6 +26,7 @@ function! leaderf#BufTag#Maps()
     nnoremap <buffer> <silent> q             :exec g:Lf_py "bufTagExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "bufTagExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "bufTagExplManager.toggleHelp()"<CR>
+    nnoremap <buffer> <silent> p             :exec g:Lf_py "bufTagExplManager._previewResult(True)"<CR>
     nnoremap <buffer> <silent> j             j:exec g:Lf_py "bufTagExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> k             k:exec g:Lf_py "bufTagExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "bufTagExplManager._previewResult(False)"<CR>
