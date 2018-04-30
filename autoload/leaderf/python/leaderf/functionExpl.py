@@ -47,7 +47,9 @@ class FunctionExplorer(Explorer):
                 "tcl": "--tcl-kinds=m",
                 "verilog": "--verilog-kinds=f",
                 "vim": "--vim-kinds=f",
-                "go": "--go-kinds=f"   # universal ctags
+                "go": "--go-kinds=f",  # universal ctags
+                "rust": "--rust-kinds=fPM",  # universal ctags
+                "ocaml": "--ocaml-kinds=mf",   # universal ctags
                 }
 
     def getContent(self, *args, **kwargs):
