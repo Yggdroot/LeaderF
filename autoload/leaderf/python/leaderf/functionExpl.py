@@ -73,10 +73,13 @@ class FunctionExplorer(Explorer):
             return itertools.chain.from_iterable(self._getFunctionList())
         else:
             result = self._getFunctionResult(vim.current.buffer)
-            if isinstance(result, list):
-                return result
-            else:
-                return self._formatResult(*result)
+            if not isinstance(result, list):
+                result = self._formatResult(*result)
+            func_list = []
+            for line in result:
+                first, second = line.rsplit("\t", 1)
+                func_list.append("{}\t[:{}".format(first, second.rsplit(":", 1)[1]))
+            return func_list
 
     def _getFunctionList(self):
         buffers = [b for b in vim.buffers]
