@@ -47,10 +47,16 @@ class BufTagExplorer(Explorer):
             return itertools.chain.from_iterable(self._getTagList())
         else:
             result = self._getTagResult(vim.current.buffer)
-            if isinstance(result, list):
-                return result
-            else:
-                return self._formatResult(*result)
+            if not isinstance(result, list):
+                result = self._formatResult(*result)
+            tag_list = []
+            for i, line in enumerate(result):
+                if self._supports_preview and i & 1:
+                    tag_list.append(line)
+                else:
+                    first, second = line.rsplit(":", 1)
+                    tag_list.append("{}\t  :{}".format(first.rsplit("\t", 1)[0], second))
+            return tag_list
 
     def _getTagList(self):
         buffers = [b for b in vim.buffers]
