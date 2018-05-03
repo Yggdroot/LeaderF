@@ -407,6 +407,37 @@ class BufTagExplManager(Manager):
             vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
             vim.options['eventignore'] = saved_eventignore
 
+    def startExplorer(self, win_pos, *args, **kwargs):
+        super(BufTagExplManager, self).startExplorer(win_pos, *args, **kwargs)
+        if len(args) > 0:
+            return
+        if kwargs.get('bang', False):
+            self._relocateCursor()
+
+    def _relocateCursor(self):
+        inst = self._getInstance()
+        inst.buffer.options['modifiable'] = False
+        orig_buf_nr = inst.getOriginalPos()[2].number
+        orig_line = inst.getOriginalCursor()[0]
+        tags = []
+        for index, line in enumerate(inst.buffer, 1):
+            if self._supports_preview and index & 1 == 0:
+                continue
+            items = re.split(" *\t *", line)
+            line_nr = int(items[3].rsplit(":", 1)[1])
+            buf_number = int(items[4])
+            if orig_buf_nr == buf_number:
+                tags.append((index, buf_number, line_nr))
+        last = len(tags) - 1
+        while last >= 0:
+            if tags[last][2] <= orig_line:
+                break
+            last -= 1
+        if last >= 0:
+            index = tags[last][0]
+            lfCmd(str(index))
+            lfCmd("norm! zz")
+
 
 #*****************************************************
 # bufTagExplManager is a singleton

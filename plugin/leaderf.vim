@@ -275,12 +275,12 @@ command! -bar -nargs=0 LeaderfTag call leaderf#Tag#startExpl(g:Lf_WindowPosition
 command! -bar -nargs=1 LeaderfTagPattern call leaderf#Tag#startExplPattern(g:Lf_WindowPosition, <q-args>)
 command! -bar -nargs=0 LeaderfTagCword call leaderf#Tag#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
 
-command! -bar -nargs=0 LeaderfBufTag call leaderf#BufTag#startExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfBufTagAll call leaderf#BufTag#startExpl(g:Lf_WindowPosition, 1)
-command! -bar -nargs=1 LeaderfBufTagPattern call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, 0, <q-args>)
-command! -bar -nargs=0 LeaderfBufTagCword call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, 0, expand('<cword>'))
-command! -bar -nargs=1 LeaderfBufTagAllPattern call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, 1, <q-args>)
-command! -bar -nargs=0 LeaderfBufTagAllCword call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, 1, expand('<cword>'))
+command! -bar -nargs=0 -bang LeaderfBufTag call leaderf#BufTag#startExpl(g:Lf_WindowPosition, <bang>0)
+command! -bar -nargs=0 -bang LeaderfBufTagAll call leaderf#BufTag#startExpl(g:Lf_WindowPosition, <bang>0, 1)
+command! -bar -nargs=1 -bang LeaderfBufTagPattern call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, <bang>0, 0, <q-args>)
+command! -bar -nargs=0 -bang LeaderfBufTagCword call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, <bang>0, 0, expand('<cword>'))
+command! -bar -nargs=1 -bang LeaderfBufTagAllPattern call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, <bang>0, 1, <q-args>)
+command! -bar -nargs=0 -bang LeaderfBufTagAllCword call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, <bang>0, 1, expand('<cword>'))
 
 command! -bar -nargs=0 -bang LeaderfFunction call leaderf#Function#startExpl(g:Lf_WindowPosition, <bang>0)
 command! -bar -nargs=0 -bang LeaderfFunctionAll call leaderf#Function#startExpl(g:Lf_WindowPosition, <bang>0, 1)
