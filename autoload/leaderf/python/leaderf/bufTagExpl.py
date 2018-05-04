@@ -409,7 +409,7 @@ class BufTagExplManager(Manager):
 
     def startExplorer(self, win_pos, *args, **kwargs):
         super(BufTagExplManager, self).startExplorer(win_pos, *args, **kwargs)
-        if len(args) > 0:
+        if not self._launched or len(args) > 0:
             return
         if kwargs.get('bang', False):
             self._relocateCursor()

@@ -482,8 +482,8 @@ g:Lf_CommandMap                                 *g:Lf_CommandMap*
 <
 g:Lf_HideHelp                                   *g:Lf_HideHelp*
     To specify whether to show the hint "Press <F1> for help" in normal mode.
-    You can set the value to 0 to hide the hint.
-    Default value is 1.
+    You can set the value to 1 to hide the hint.
+    Default value is 0.
 
 ==============================================================================
 USAGE                                           *leaderf-usage*

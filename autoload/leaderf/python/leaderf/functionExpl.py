@@ -317,7 +317,7 @@ class FunctionExplManager(Manager):
 
     def startExplorer(self, win_pos, *args, **kwargs):
         super(FunctionExplManager, self).startExplorer(win_pos, *args, **kwargs)
-        if len(args) > 0:
+        if not self._launched or len(args) > 0:
             return
         # a postfix bang sign, skip input() and locate cursor
         if kwargs.get('bang', False):
