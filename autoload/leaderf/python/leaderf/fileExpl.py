@@ -249,55 +249,74 @@ class FileExplorer(Explorer):
                 color = ""
                 ignore = ""
                 for i in wildignore["dir"]:
-                    if not i.startswith('.'): # rg does not show hidden files by default
+                    if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'): # rg does not show hidden files by default
                         ignore += ' -g "!%s"' % i
                 for i in wildignore["file"]:
-                    ignore += ' -g "!%s"' % i
+                    if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
+                        ignore += ' -g "!%s"' % i
             else:
                 color = "--color never"
                 ignore = ""
                 for i in wildignore["dir"]:
-                    if not i.startswith('.'): # rg does not show hidden files by default
+                    if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                         ignore += " -g '!%s'" % i
                 for i in wildignore["file"]:
-                    ignore += " -g '!%s'" % i
+                    if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
+                        ignore += " -g '!%s'" % i
 
             if lfEval("g:Lf_FollowLinks") == '1':
                 followlinks = "-L"
             else:
                 followlinks = ""
 
-            cmd = 'rg --no-messages --files %s %s %s "%s"' % (color, ignore, followlinks, dir)
+            if lfEval("g:Lf_ShowHidden") == '0':
+                show_hidden = ""
+            else:
+                show_hidden = "--hidden"
+
+            cmd = 'rg --no-messages --files %s %s %s %s "%s"' % (color, ignore, followlinks, show_hidden, dir)
         elif default_tool["pt"] and lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
             for i in wildignore["dir"]:
-                if not i.startswith('.'): # pt does not show hidden files by default
+                if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'): # pt does not show hidden files by default
                     ignore += " --ignore=%s" % i
             for i in wildignore["file"]:
-                ignore += " --ignore=%s" % i
+                if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
+                    ignore += " --ignore=%s" % i
 
             if lfEval("g:Lf_FollowLinks") == '1':
                 followlinks = "-f"
             else:
                 followlinks = ""
 
-            cmd = 'pt --nocolor %s %s -g="" "%s"' % (ignore, followlinks, dir)
+            if lfEval("g:Lf_ShowHidden") == '0':
+                show_hidden = ""
+            else:
+                show_hidden = "--hidden"
+
+            cmd = 'pt --nocolor %s %s %s -g="" "%s"' % (ignore, followlinks, show_hidden, dir)
         elif default_tool["ag"] and lfEval("executable('ag')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
             for i in wildignore["dir"]:
-                if not i.startswith('.'): # ag does not show hidden files by default
+                if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'): # ag does not show hidden files by default
                     ignore += ' --ignore "%s"' % i
             for i in wildignore["file"]:
-                ignore += ' --ignore "%s"' % i
+                if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
+                    ignore += ' --ignore "%s"' % i
 
             if lfEval("g:Lf_FollowLinks") == '1':
                 followlinks = "-f"
             else:
                 followlinks = ""
 
-            cmd = 'ag --nocolor --silent %s %s -g "" "%s"' % (ignore, followlinks, dir)
+            if lfEval("g:Lf_ShowHidden") == '0':
+                show_hidden = ""
+            else:
+                show_hidden = "--hidden"
+
+            cmd = 'ag --nocolor --silent %s %s %s -g "" "%s"' % (ignore, followlinks, show_hidden, dir)
         elif default_tool["find"] and lfEval("executable('find')") == '1' \
                 and lfEval("executable('sed')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")

@@ -114,7 +114,7 @@ call s:InitVar('g:Lf_MruMaxFiles', 100)
 call s:InitVar('g:Lf_HighlightIndividual', 1)
 call s:InitVar('g:Lf_NumberOfHighlight', 100)
 call s:InitVar('g:Lf_WildIgnore', {
-            \ 'dir': ['.svn','.git','.hg'],
+            \ 'dir': [],
             \ 'file': []
             \})
 if &encoding ==? "utf-8"
@@ -138,6 +138,7 @@ call s:InitVar('g:Lf_RememberLastSearch', 0)
 call s:InitVar('g:Lf_UseCache', 1)
 call s:InitVar('g:Lf_RootMarkers', ['.git', '.hg', '.svn'])
 call s:InitVar('g:Lf_WorkingDirectoryMode', 'c')
+call s:InitVar('g:Lf_ShowHidden', 0)
 call s:InitDict('g:Lf_PreviewResult', {
             \ 'File': 0,
             \ 'Buffer': 0,

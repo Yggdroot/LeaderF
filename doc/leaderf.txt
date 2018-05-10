@@ -139,7 +139,7 @@ g:Lf_WildIgnore                                 *g:Lf_WildIgnore*
     Specify the files and directories you want to exclude while indexing.
     Default value is: >
     let g:Lf_WildIgnore = {
-            \ 'dir': ['.svn','.git','.hg'],
+            \ 'dir': [],
             \ 'file': []
             \}
 <
@@ -484,6 +484,10 @@ g:Lf_HideHelp                                   *g:Lf_HideHelp*
     To specify whether to show the hint "Press <F1> for help" in normal mode.
     You can set the value to 1 to hide the hint.
     Default value is 0.
+
+g:Lf_ShowHidden                                 *g:Lf_ShowHidden*
+    To Specify whether to search hidden files and directories.
+    Default value is 0.(do not search hidden files and directories)
 
 ==============================================================================
 USAGE                                           *leaderf-usage*
