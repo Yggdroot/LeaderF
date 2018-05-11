@@ -117,6 +117,10 @@ call s:InitVar('g:Lf_WildIgnore', {
             \ 'dir': [],
             \ 'file': []
             \})
+call s:InitVar('g:Lf_MruWildIgnore', {
+            \ 'dir': [],
+            \ 'file': []
+            \})
 if &encoding ==? "utf-8"
     call s:InitVar('g:Lf_StlSeparator', {
                 \ 'left': '►',

@@ -489,6 +489,17 @@ g:Lf_ShowHidden                                 *g:Lf_ShowHidden*
     To Specify whether to search hidden files and directories.
     Default value is 0.(do not search hidden files and directories)
 
+g:Lf_MruWildIgnore                              *g:Lf_MruWildIgnore*
+    This option indicates that do not display the MRU files whose file name
+    matches the patterns defined in it.
+    See |g:Lf_WildIgnore| for the usage of pattern.
+
+    Default value is: >
+    let g:Lf_MruWildIgnore = {
+            \ 'dir': [],
+            \ 'file': []
+            \}
+<
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

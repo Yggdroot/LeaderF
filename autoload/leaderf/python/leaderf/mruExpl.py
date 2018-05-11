@@ -4,6 +4,7 @@
 import vim
 import os
 import os.path
+from fnmatch import fnmatch
 from .utils import *
 from .explorer import *
 from .manager import *
@@ -30,6 +31,9 @@ class MruExplorer(Explorer):
             lines = [name for name in lines if lfDecode(name).startswith(os.getcwd())]
 
         lines = [line.rstrip() for line in lines] # remove the '\n'
+        wildignore = lfEval("g:Lf_MruWildIgnore")
+        lines = [name for name in lines if True not in (fnmatch(name, j) for j in wildignore['file'])
+                    and True not in (fnmatch(name, "*/" + j + "/*") for j in wildignore['dir'])]
 
         if len(lines) == 0:
             return lines
