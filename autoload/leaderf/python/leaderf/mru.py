@@ -20,7 +20,7 @@ class Mru(object):
                                        'mru')
         self._cache_file = os.path.join(self._cache_dir, 'mruCache')
         self._initCache()
-        self._mru_bufnrs = {}
+        self._mru_bufnrs = { b.number: 0 for b in vim.buffers }
         self._timestamp = 0
 
     def _initCache(self):
