@@ -595,6 +595,7 @@ class FileExplManager(Manager):
         root_markers = lfEval("g:Lf_RootMarkers")
         mode = lfEval("g:Lf_WorkingDirectoryMode")
 
+        cur_buf_name = lfDecode(vim.current.buffer.name)
         fall_back = False
         if 'a' in mode:
             working_dir = self._nearestAncestor(root_markers, orig_cwd)
@@ -603,8 +604,8 @@ class FileExplManager(Manager):
             else:
                 fall_back = True
         elif 'A' in mode:
-            if vim.current.buffer.name:
-                working_dir = self._nearestAncestor(root_markers, os.path.dirname(vim.current.buffer.name))
+            if cur_buf_name:
+                working_dir = self._nearestAncestor(root_markers, os.path.dirname(cur_buf_name))
             else:
                 working_dir = ""
             if working_dir: # there exists a root marker in nearest ancestor path
@@ -616,12 +617,11 @@ class FileExplManager(Manager):
 
         if fall_back:
             if 'f' in mode:
-                if vim.current.buffer.name:
-                    os.chdir(os.path.dirname(vim.current.buffer.name))
+                if cur_buf_name:
+                    os.chdir(os.path.dirname(cur_buf_name))
             elif 'F' in mode:
-                if vim.current.buffer.name and \
-                        not os.path.dirname(vim.current.buffer.name).startswith(orig_cwd):
-                    os.chdir(os.path.dirname(vim.current.buffer.name))
+                if cur_buf_name and not os.path.dirname(cur_buf_name).startswith(orig_cwd):
+                    os.chdir(os.path.dirname(cur_buf_name))
 
         super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
         try:
