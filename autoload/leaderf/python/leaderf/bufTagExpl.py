@@ -214,8 +214,11 @@ class BufTagExplManager(Manager):
 
     def _defineMaps(self):
         lfCmd("call leaderf#BufTag#Maps()")
+        lfCmd("augroup Lf_BufTag")
+        lfCmd("autocmd!")
         lfCmd("autocmd BufWipeout * call leaderf#BufTag#removeCache(expand('<abuf>'))")
         lfCmd("autocmd VimLeave * call leaderf#BufTag#cleanup()")
+        lfCmd("augroup END")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
