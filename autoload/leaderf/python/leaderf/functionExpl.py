@@ -121,20 +121,14 @@ class FunctionExplorer(Explorer):
         self._executor.append(executor)
         if buffer.options["modified"] == True:
             if sys.version_info >= (3, 0):
-                with tempfile.NamedTemporaryFile(mode='w+',
-                                                 encoding=lfEval("&encoding"),
-                                                 suffix='_'+os.path.basename(buffer.name),
-                                                 delete=False) as f:
-                    for line in buffer[:]:
-                        f.write(line + '\n')
-                    file_name = f.name
+                tmp_file = partial(tempfile.NamedTemporaryFile, encoding=lfEval("&encoding"))
             else:
-                with tempfile.NamedTemporaryFile(mode='w+',
-                                                 suffix='_'+os.path.basename(buffer.name),
-                                                 delete=False) as f:
-                    for line in buffer[:]:
-                        f.write(line + '\n')
-                    file_name = f.name
+                tmp_file = tempfile.NamedTemporaryFile
+
+            with tmp_file(mode='w+', suffix='_'+os.path.basename(buffer.name), delete=False) as f:
+                for line in buffer[:]:
+                    f.write(line + '\n')
+                file_name = f.name
             # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}
             cmd = '{} -n -u --fields=k {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(file_name))
             result = executor.execute(cmd, cleanup=partial(os.remove, file_name))
