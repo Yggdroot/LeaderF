@@ -4,6 +4,7 @@
 import vim
 import re
 import os
+import sys
 import os.path
 import subprocess
 import tempfile
@@ -119,12 +120,21 @@ class FunctionExplorer(Explorer):
         executor = AsyncExecutor()
         self._executor.append(executor)
         if buffer.options["modified"] == True:
-            with tempfile.NamedTemporaryFile(mode='w+',
-                                             suffix='_'+os.path.basename(buffer.name),
-                                             delete=False) as f:
-                for line in buffer[:]:
-                    f.write(line + '\n')
-                file_name = f.name
+            if sys.version_info >= (3, 0):
+                with tempfile.NamedTemporaryFile(mode='w+',
+                                                 encoding=lfEval("&encoding"),
+                                                 suffix='_'+os.path.basename(buffer.name),
+                                                 delete=False) as f:
+                    for line in buffer[:]:
+                        f.write(line + '\n')
+                    file_name = f.name
+            else:
+                with tempfile.NamedTemporaryFile(mode='w+',
+                                                 suffix='_'+os.path.basename(buffer.name),
+                                                 delete=False) as f:
+                    for line in buffer[:]:
+                        f.write(line + '\n')
+                    file_name = f.name
             # {tagname}<Tab>{tagfile}<Tab>{tagaddress};"<Tab>{kind}
             cmd = '{} -n -u --fields=k {} -f- "{}"'.format(self._ctags, extra_options, lfDecode(file_name))
             result = executor.execute(cmd, cleanup=partial(os.remove, file_name))
