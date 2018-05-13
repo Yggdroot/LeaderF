@@ -221,7 +221,7 @@ class BufTagExplManager(Manager):
         lfCmd("augroup Lf_BufTag")
         lfCmd("autocmd!")
         lfCmd("autocmd BufWipeout * call leaderf#BufTag#removeCache(expand('<abuf>'))")
-        lfCmd("autocmd VimLeave * call leaderf#BufTag#cleanup()")
+        lfCmd("autocmd VimLeavePre * call leaderf#BufTag#cleanup()")
         lfCmd("augroup END")
 
     def _acceptSelection(self, *args, **kwargs):

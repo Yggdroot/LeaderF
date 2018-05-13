@@ -542,7 +542,7 @@ class FileExplManager(Manager):
         lfCmd("call leaderf#File#Maps()")
         lfCmd("augroup Lf_File")
         lfCmd("autocmd!")
-        lfCmd("autocmd VimLeave * call leaderf#File#cleanup()")
+        lfCmd("autocmd VimLeavePre * call leaderf#File#cleanup()")
         lfCmd("augroup END")
 
     def _createHelp(self):

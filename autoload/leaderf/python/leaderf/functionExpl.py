@@ -220,7 +220,7 @@ class FunctionExplManager(Manager):
         lfCmd("augroup Lf_Function")
         lfCmd("autocmd!")
         lfCmd("autocmd BufWipeout * call leaderf#Function#removeCache(expand('<abuf>'))")
-        lfCmd("autocmd VimLeave * call leaderf#Function#cleanup()")
+        lfCmd("autocmd VimLeavePre * call leaderf#Function#cleanup()")
         lfCmd("augroup END")
 
     def _acceptSelection(self, *args, **kwargs):
