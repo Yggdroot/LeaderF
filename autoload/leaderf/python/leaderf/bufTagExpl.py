@@ -187,9 +187,6 @@ class BufTagExplorer(Explorer):
     def getStlCurDir(self):
         return escQuote(lfEncode(os.getcwd()))
 
-    def isFilePath(self):
-        return False
-
     def removeCache(self, buf_number):
         if buf_number in self._tag_list:
             del self._tag_list[buf_number]

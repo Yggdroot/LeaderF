@@ -44,9 +44,6 @@ class HistoryExplorer(Explorer):
     def getStlCurDir(self):
         return escQuote(lfEncode(os.getcwd()))
 
-    def isFilePath(self):
-        return False
-
     def getHistoryType(self):
         return self._history_type
 

@@ -30,9 +30,6 @@ class Explorer(object):
     def supportsNameOnly(self):
         return False
 
-    def isFilePath(self):
-        return True
-
     def setContent(self, content):
         pass
 

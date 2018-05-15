@@ -143,7 +143,7 @@ class Manager(object):
 
     def _setStlMode(self):
         if self._cli.isFuzzy:
-            if self._getExplorer().isFilePath():
+            if self._getExplorer().supportsNameOnly():
                 if self._cli.isFullPath:
                     mode = 'FullPath'
                 else:
@@ -461,7 +461,7 @@ class Manager(object):
         if step == 30000:
             if is_fuzzyMatch_C and is_ascii:
                 step = 35000
-            elif self._getExplorer().isFilePath() and self._cli.isFullPath:
+            elif self._getExplorer().supportsNameOnly() and self._cli.isFullPath:
                 step = 5000
 
         pairs = self._filter(step, filter_method, content, is_continue)
