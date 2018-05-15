@@ -241,7 +241,7 @@ class Manager(object):
             help += self._createHelp()
         self._help_length = len(help)
         self._getInstance().buffer.append(help, 0)
-        self._getInstance().window.cursor = (self._help_length + 1, 0)
+        self._getInstance().window.cursor = (self._getInstance().window.cursor[0] + self._help_length, 0)
 
     def _hideHelp(self):
         del self._getInstance().buffer[:self._help_length]
