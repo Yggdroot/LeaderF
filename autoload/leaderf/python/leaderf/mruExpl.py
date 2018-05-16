@@ -160,11 +160,11 @@ class MruExplManager(Manager):
         help.append('" v : open file under cursor in a vertically split window')
         help.append('" t : open file under cursor in a new tabpage')
         help.append('" d : remove from mru list')
-        help.append('" i : switch to input mode')
+        help.append('" i/<Tab> : switch to input mode')
         help.append('" s : select multiple files')
         help.append('" a : select all files')
         help.append('" c : clear all selections')
-        help.append('" q : quit')
+        help.append('" q/<Esc> : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
         return help

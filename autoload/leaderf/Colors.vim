@@ -19,7 +19,9 @@ function! leaderf#Colors#Maps()
     nnoremap <buffer> <silent> o             :exec g:Lf_py "colorschemeExplManager.accept()"<CR>
     nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "colorschemeExplManager.accept()"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "colorschemeExplManager.quit()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "colorschemeExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "colorschemeExplManager.input()"<CR>
+    nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "colorschemeExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "colorschemeExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "colorschemeExplManager._previewResult(True)"<CR>
     nnoremap <buffer> <silent> j             j:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
