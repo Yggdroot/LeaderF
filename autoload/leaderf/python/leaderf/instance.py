@@ -86,10 +86,12 @@ class LfInstance(object):
         lfCmd("redrawstatus")
         if not self._is_autocmd_set:
             self._is_autocmd_set = True
+            lfCmd("augroup Lf_{}_Colorscheme".format(self._category))
             lfCmd("autocmd ColorScheme * call leaderf#colorscheme#setStatusline({}, '{}')"
                   .format(self.buffer.number, self._stl))
             lfCmd("autocmd WinEnter,FileType * call leaderf#colorscheme#setStatusline({}, '{}')"
                   .format(self.buffer.number, self._stl))
+            lfCmd("augroup END")
 
     def _createBufWindow(self, win_pos):
         self._win_pos = win_pos
@@ -143,12 +145,14 @@ class LfInstance(object):
         self._window_object = vim.current.window
         if self._buffer_object is None:
             self._buffer_object = vim.current.buffer
+            lfCmd("augroup Lf_{}_Colorscheme".format(self._category))
             lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlight('{}')"
                   .format(self._category))
             lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlightMode('{0}', g:Lf_{0}_StlMode)"
                   .format(self._category))
             lfCmd("autocmd ColorScheme <buffer> doautocmd syntax")
             lfCmd("autocmd VimResized * let g:Lf_VimResized = 1")
+            lfCmd("augroup END")
 
     def _enterOpeningBuffer(self):
         if (self._tabpage_object and self._tabpage_object.valid

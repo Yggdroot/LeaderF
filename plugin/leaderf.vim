@@ -236,8 +236,10 @@ endfunction
 call s:InitCommandMap('g:Lf_CommandMap', s:Lf_CommandMap)
 
 
-autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
-            \ call lfMru#recordBuffer(expand('<abuf>'))
+augroup LeaderF_Mru
+    autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand('<afile>:p')) |
+                \ call lfMru#recordBuffer(expand('<abuf>'))
+augroup END
 
 nnoremap <silent> <Plug>LeaderfFileTop :<C-U>call leaderf#File#startExpl('top')<CR>
 nnoremap <silent> <Plug>LeaderfFileBottom :<C-U>call leaderf#File#startExpl('bottom')<CR>
