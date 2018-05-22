@@ -77,7 +77,7 @@ class AsyncExecutor(object):
 
                 err = b"".join(iter(errQueue.get, None))
                 if err:
-                    raise Exception(lfBytes2Str(err, encoding=lfEval("&encoding")))
+                    raise Exception(lfEncode(lfBytes2Str(err)))
             finally:
                 try:
                     if self._process:

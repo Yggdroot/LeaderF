@@ -492,7 +492,10 @@ class FileExplorer(Explorer):
             if cmd:
                 executor = AsyncExecutor()
                 self._executor.append(executor)
-                content = executor.execute(cmd)
+                if cmd.split(None, 1)[0] == "dir":
+                    content = executor.execute(cmd)
+                else:
+                    content = executor.execute(cmd, encoding=lfEval("&encoding"))
                 self._cmd_start_time = time.time()
                 return content
             else:
