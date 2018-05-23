@@ -138,13 +138,17 @@ class BufTagExplorer(Explorer):
 
         tag_total_len = 0
         max_kind_len = 0
+        max_tag_len = 0
         for _, item  in enumerate(output):
-            tag_total_len += len(item[0])
+            tag_len = len(item[0])
+            tag_total_len += tag_len
+            if tag_len > max_tag_len:
+                max_tag_len = tag_len
             kind_len = len(item[3])
             if kind_len > max_kind_len:
                 max_kind_len = kind_len
         ave_taglen = tag_total_len // len(output)
-        tag_len = ave_taglen * 3 // 2
+        tag_len = min(max_tag_len, ave_taglen * 2)
 
         tab_len = buffer.options["shiftwidth"]
         std_tag_kind_len = tag_len // tab_len * tab_len + tab_len + max_kind_len
