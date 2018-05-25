@@ -28,6 +28,8 @@ function! leaderf#Colors#Maps()
     nnoremap <buffer> <silent> k             k:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
     if has_key(g:Lf_NormalMap, "Colorscheme")
         for i in g:Lf_NormalMap["Colorscheme"]

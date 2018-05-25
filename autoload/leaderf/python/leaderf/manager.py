@@ -895,8 +895,10 @@ class Manager(object):
                 self._ctrlp_pressed = False
             elif equal(cmd, '<PageUp>'):
                 self._pageUp()
+                self._previewResult(False)
             elif equal(cmd, '<PageDown>'):
                 self._pageDown()
+                self._previewResult(False)
             else:
                 if self._cmdExtension(cmd):
                     break
