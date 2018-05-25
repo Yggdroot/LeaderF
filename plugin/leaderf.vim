@@ -204,6 +204,8 @@ let s:Lf_CommandMap = {
             \ '<Right>':       ['<Right>'],
             \ '<Home>':        ['<Home>', '<C-B>'],
             \ '<End>':         ['<End>'],
+            \ '<PageUp>':      ['<PageUp>'],
+            \ '<PageDown>':    ['<PageDown>'],
             \ '<S-Left>':      ['<S-Left>'],
             \ '<S-Right>':     ['<S-Right>'],
             \ '<LeftMouse>':   ['<LeftMouse>'],

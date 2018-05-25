@@ -271,6 +271,12 @@ class Manager(object):
     def _toDown(self):
         lfCmd("norm! j")
 
+    def _pageUp(self):
+        lfCmd('exec "norm! \<PageUp>"')
+
+    def _pageDown(self):
+        lfCmd('exec "norm! \<PageDown>"')
+
     def _leftClick(self):
         if self._getInstance().window.number == int(lfEval("v:mouse_win")):
             lfCmd("exec v:mouse_lnum")
@@ -887,6 +893,10 @@ class Manager(object):
                 self._ctrlp_pressed = True
                 self._previewResult(True)
                 self._ctrlp_pressed = False
+            elif equal(cmd, '<PageUp>'):
+                self._pageUp()
+            elif equal(cmd, '<PageDown>'):
+                self._pageDown()
             else:
                 if self._cmdExtension(cmd):
                     break
