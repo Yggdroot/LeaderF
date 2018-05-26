@@ -79,8 +79,6 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
         endfor
         return filter(sort(copy(options)), "v:val =~? '^".a:argLead."'")
     endif
-
-    return s:Lf_Categorys
 endfunction
 
 function! leaderf#Any#start(bang, ...)
