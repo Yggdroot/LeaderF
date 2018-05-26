@@ -27,7 +27,7 @@ class MruExplorer(Explorer):
             f.truncate(0)
             f.writelines(lines)
 
-        if kwargs.get("mru_cwd", False):
+        if "--cwd" in kwargs.get("options", []):
             lines = [name for name in lines if lfDecode(name).startswith(os.getcwd())]
 
         lines = [line.rstrip() for line in lines] # remove the '\n'
@@ -38,7 +38,7 @@ class MruExplorer(Explorer):
         if len(lines) == 0:
             return lines
 
-        if args[0] == lines[0]:
+        if kwargs["cb_name"] == lines[0]:
             lines = lines[1:] + lines[0:1]
 
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"

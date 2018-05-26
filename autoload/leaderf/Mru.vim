@@ -39,16 +39,16 @@ endfunction
 
 function! leaderf#Mru#startExpl(win_pos, ...)
     if a:0 == 0
-        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name)")
+        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."cb_name=vim.current.buffer.name)")
     else
-        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name, mru_cwd=True)")
+        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."cb_name=vim.current.buffer.name, options=['--cwd'])")
     endif
 endfunction
 
 function! leaderf#Mru#startExplPattern(win_pos, cwd, pattern)
     if a:cwd == 0
-        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name, pattern='".a:pattern."')")
+        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."cb_name=vim.current.buffer.name, pattern='".a:pattern."')")
     else
-        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."vim.current.buffer.name, mru_cwd=True, pattern='".a:pattern."')")
+        call leaderf#LfPy("mruExplManager.startExplorer('".a:win_pos."',"."cb_name=vim.current.buffer.name, options=['--cwd'], pattern='".a:pattern."')")
     endif
 endfunction

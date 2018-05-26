@@ -38,8 +38,12 @@ endfunction
 function! leaderf#Buffer#startExpl(win_pos, ...)
     if a:0 == 0
         call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."')")
+    elseif a:1 == 1
+        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."', options=['--all'])")
+    elseif a:1 == 2
+        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."', options=['--tabpage'])")
     else
-        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."',".a:1.")")
+        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."', options=['--tabpage', '--all'])")
     endif
 endfunction
 

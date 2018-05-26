@@ -28,7 +28,7 @@ class BufTagExplorer(Explorer):
         self._executor = []
 
     def getContent(self, *args, **kwargs):
-        if len(args) > 0: # all buffers
+        if "--all" in kwargs.get("options", []): # all buffers
             cur_buffer = vim.current.buffer
             for b in vim.buffers:
                 if b.options["buflisted"]:
@@ -229,7 +229,7 @@ class BufTagExplManager(Manager):
         if len(args) == 0:
             return
         line = args[0]
-        if line[0].isspace():
+        if line[0].isspace(): # if g:Lf_PreviewCode == 1
             buffer = args[1]
             line_nr = args[2]
             line = buffer[line_nr - 2]
@@ -415,16 +415,11 @@ class BufTagExplManager(Manager):
             vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
             vim.options['eventignore'] = saved_eventignore
 
-    def startExplorer(self, win_pos, *args, **kwargs):
-        super(BufTagExplManager, self).startExplorer(win_pos, *args, **kwargs)
-        if not self._launched or len(args) > 0:
-            return
-        if kwargs.get('bang', False):
-            self._relocateCursor()
+    def _bangEnter(self):
+        self._relocateCursor()
 
     def _relocateCursor(self):
         inst = self._getInstance()
-        inst.buffer.options['modifiable'] = False
         orig_buf_nr = inst.getOriginalPos()[2].number
         orig_line = inst.getOriginalCursor()[0]
         tags = []

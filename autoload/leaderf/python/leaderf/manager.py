@@ -169,6 +169,9 @@ class Manager(object):
     def _afterExit(self):
         pass
 
+    def _bangEnter(self):
+        pass
+
     def _getList(self, pairs):
         """
         this function can be overridden
@@ -649,7 +652,7 @@ class Manager(object):
             file = self._getInstance().currentLine
             line_nr = self._getInstance().window.cursor[0]
             self._getInstance().exitBuffer()
-            self._accept(file, mode, self._getInstance().buffer, line_nr) # for bugTag
+            self._accept(file, mode, self._getInstance().buffer, line_nr) # for bufTag
 
         self._setAutochdir()
 
@@ -767,6 +770,8 @@ class Manager(object):
                 self.input()
             else:
                 lfCmd("echo")
+                self._getInstance().buffer.options['modifiable'] = False
+                self._bangEnter()
         else:
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)

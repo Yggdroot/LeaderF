@@ -71,13 +71,13 @@ class AsyncExecutor(object):
                             line = outQueue.get(True, 0.01)
                             if line is None:
                                 break
-                            yield lfEncode(lfBytes2Str((line.rstrip(b"\r\n"))))
+                            yield lfEncode(lfBytes2Str(line.rstrip(b"\r\n")))
                         except Queue.Empty:
                             yield None
 
                 err = b"".join(iter(errQueue.get, None))
                 if err:
-                    raise Exception(lfEncode(lfBytes2Str(err)))
+                    raise Exception(lfBytes2Str(err, encoding))
             finally:
                 try:
                     if self._process:

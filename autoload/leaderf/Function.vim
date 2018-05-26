@@ -45,34 +45,18 @@ endfunction
 
 function! leaderf#Function#startExpl(win_pos, bang, ...)
     if a:0 == 0
-		if a:bang == 0
-			call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."')")
-		else
-			call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', bang = 1)")
-		endif
+        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', bang=".a:bang.")")
     else
-		if a:bang == 0
-			call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."',"."1)")
-		else
-			call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."',"."1, bang = 1)")
-		endif
+        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', options=['--all'], bang=".a:bang.")")
     endif
 endfunction
 
 function! leaderf#Function#startExplPattern(win_pos, bang, all, pattern)
-	if a:all == 0
-		if a:bang == 0
-			call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
-		else
-			call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."', bang = 1)")
-		endif
-	else
-		if a:bang == 0
-			call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', 1, pattern='".a:pattern."')")
-		else
-			call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', 1, pattern='".a:pattern.", bang = 1')")
-		endif
-	endif
+    if a:all == 0
+        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."', bang=".a:bang.")")
+    else
+        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', options=['--all'], pattern='".a:pattern."', bang=".a:bang.")")
+    endif
 endfunction
 
 function! leaderf#Function#removeCache(bufNum)

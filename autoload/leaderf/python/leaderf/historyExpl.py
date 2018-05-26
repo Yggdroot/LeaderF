@@ -18,13 +18,13 @@ class HistoryExplorer(Explorer):
 
     def getContent(self, *args, **kwargs):
         result_list = []
-        if len(args) > 0:
+        if "history" in kwargs:
             lfCmd("let tmp = @x")
             lfCmd("redir @x")
-            if args[0] == "cmd":
+            if kwargs.get("history") == "cmd":
                 self._history_type = "Cmd_History"
                 lfCmd("silent history :")
-            elif args[0] == "search":
+            elif kwargs.get("history") == "search":
                 self._history_type = "Search_History"
                 lfCmd("silent history /")
             else:

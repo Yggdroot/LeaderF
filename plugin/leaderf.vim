@@ -154,6 +154,7 @@ call s:InitDict('g:Lf_PreviewResult', {
             \ 'Colorscheme': 0
             \})
 call s:InitDict('g:Lf_NormalMap', {})
+call s:InitVar('g:Lf_Extensions', {})
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
@@ -326,3 +327,4 @@ try
 catch /^Vim\%((\a\+)\)\=:E227/
 endtry
 
+command! -bar -nargs=* -bang -complete=customlist,leaderf#Any#parseArguments Leaderf call leaderf#Any#start(<bang>0, <f-args>)
