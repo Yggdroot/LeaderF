@@ -161,6 +161,7 @@ class Manager(object):
     def _afterEnter(self):
         self._cleanup()
         self._defineMaps()
+        lfCmd("runtime syntax/leaderf.vim")
 
     def _beforeExit(self):
         self._cleanup()
