@@ -33,7 +33,7 @@ class LineExplorer(Explorer):
 
     def _getLineList(self, buffer):
         bufname = os.path.basename(buffer.name)
-        return ["%s\t[%s:%d %d]" % (line, bufname, i, buffer.number)
+        return ["%s\t[%s:%d %d]" % (line.encode('utf-8', "replace").decode('utf-8', "replace"), bufname, i, buffer.number)
                 for i, line in enumerate(buffer, 1) if line and not line.isspace()]
 
     def getStlCategory(self):
