@@ -21,13 +21,16 @@ class AsyncExecutor(object):
         self._outQueue = Queue.Queue()
         self._errQueue = Queue.Queue()
         self._process = None
+        self._finished = False
 
-    def _readerThread(self, fd, queue):
+    def _readerThread(self, fd, queue, is_out):
         try:
             for line in iter(fd.readline, b""):
                 queue.put(line)
         finally:
             queue.put(None)
+            if is_out:
+                self._finished = True
 
     def execute(self, cmd, encoding=None, cleanup=None):
         if os.name == 'nt':
@@ -44,13 +47,15 @@ class AsyncExecutor(object):
                                              shell=True,
                                              universal_newlines=False)
 
+        self._finished = False
+
         stdout_thread = threading.Thread(target=self._readerThread,
-                                         args=(self._process.stdout, self._outQueue))
+                                         args=(self._process.stdout, self._outQueue, True))
         stdout_thread.daemon = True
         stdout_thread.start()
 
         stderr_thread = threading.Thread(target=self._readerThread,
-                                         args=(self._process.stderr, self._errQueue))
+                                         args=(self._process.stderr, self._errQueue, False))
         stderr_thread.daemon = True
         stderr_thread.start()
 
@@ -95,7 +100,9 @@ class AsyncExecutor(object):
         return out
 
     def killProcess(self):
-        if self._process and not self._process.poll():
+        # Popen.poll always returns None, bug?
+        # if self._process and not self._process.poll():
+        if self._process and not self._finished:
             if os.name == 'nt':
                 subprocess.Popen("TASKKILL /F /PID {pid} /T".format(pid=self._process.pid), shell=True)
             else:
