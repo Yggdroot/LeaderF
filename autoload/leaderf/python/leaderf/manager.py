@@ -663,7 +663,10 @@ class Manager(object):
             files = []
             for i in sorted(self._selections.keys()):
                 files.append(self._getInstance().buffer[i-1])
-            self._getInstance().exitBuffer()
+            if "--stayOpen" in self._arguments and "--fullPath" not in self._arguments:
+                vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
+            else:
+                self._getInstance().exitBuffer()
             if mode == '':
                 self._argaddFiles(files)
                 self._accept(files[0], mode)
@@ -673,7 +676,10 @@ class Manager(object):
         else:
             file = self._getInstance().currentLine
             line_nr = self._getInstance().window.cursor[0]
-            self._getInstance().exitBuffer()
+            if "--stayOpen" in self._arguments and "--fullPath" not in self._arguments:
+                vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
+            else:
+                self._getInstance().exitBuffer()
             self._accept(file, mode, self._getInstance().buffer, line_nr) # for bufTag
 
         self._setAutochdir()
@@ -755,6 +761,7 @@ class Manager(object):
                 self._selections[i+1] = id
 
     def startExplorer(self, win_pos, *args, **kwargs):
+        self._arguments = kwargs.get("arguments", {})
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
         lfCmd("echohl WarningMsg | redraw |"

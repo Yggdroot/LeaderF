@@ -18,7 +18,7 @@ let g:Lf_Extensions = {
     \ "apple": {
     \       "source": [], "grep -r '%s' *", funcref (arguments), {"command": "ls" or funcref(arguments)}
     \       "arguments": [
-    \           { "name": ["--foo", "-f"], "nargs": n or "?" or "*" or "+", help: "hehe"},
+    \           { "name": ["--foo", "-f"], "nargs": n or "?" or "*" or "+", "help": "hehe"},
     \           { "name": ["bar"], "nargs": n or "?" or "*" or "+" }
     \       ],
     \       "format_line": funcref (line, arguments),

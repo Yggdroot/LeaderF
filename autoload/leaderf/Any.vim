@@ -62,6 +62,7 @@ let g:Lf_Arguments = {
             \}
 
 let g:Lf_CommonArguments = [
+            \ {"name": ["--stayOpen"], "nargs": 0, "help": "do not quit LeaderF after accepting an entry."},
             \ [
             \   {"name": ["--input"], "nargs": 1, "help": "specifies INPUT as the pattern inputted in advance."},
             \   {"name": ["--cword"], "nargs": 0, "help": "current word under cursor is inputted in advance."},
