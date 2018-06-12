@@ -28,7 +28,7 @@ class BufTagExplorer(Explorer):
         self._executor = []
 
     def getContent(self, *args, **kwargs):
-        if "--all" in kwargs.get("options", []): # all buffers
+        if "--all" in kwargs.get("arguments", {}): # all buffers
             cur_buffer = vim.current.buffer
             for b in vim.buffers:
                 if b.options["buflisted"]:
@@ -351,20 +351,23 @@ class BufTagExplManager(Manager):
                                                                 iterable)
 
     def _regexFilter(self, iterable):
-        try:
-            if ('-2' == lfEval("g:LfNoErrMsgMatch('', '%s')" % escQuote(self._cli.pattern))):
+        if self._supports_preview:
+            try:
+                if ('-2' == lfEval("g:LfNoErrMsgMatch('', '%s')" % escQuote(self._cli.pattern))):
+                    return iter([])
+                else:
+                    result = []
+                    for i, line in enumerate(iterable[::2]):
+                        if ('-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" %
+                            (escQuote(self._getDigest(line, 1).strip()),
+                                escQuote(self._cli.pattern)))):
+                            result.append(line)
+                            result.append(iterable[2*i+1])
+                    return result
+            except vim.error:
                 return iter([])
-            else:
-                result = []
-                for i, line in enumerate(iterable[::2]):
-                    if ('-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" %
-                        (escQuote(self._getDigest(line, 1).strip()),
-                            escQuote(self._cli.pattern)))):
-                        result.append(line)
-                        result.append(iterable[2*i+1])
-                return result
-        except vim.error:
-            return iter([])
+        else:
+            return super(BufTagExplManager, self)._regexFilter(iterable)
 
     def _getList(self, pairs):
         """

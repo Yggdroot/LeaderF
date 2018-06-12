@@ -467,12 +467,13 @@ class FileExplorer(Explorer):
             self._writeCache(content)
 
     def getContent(self, *args, **kwargs):
-        if len(args) > 0:
-            if os.path.exists(os.path.expanduser(lfDecode(args[0]))):
-                lfCmd("silent cd %s" % args[0])
+        if kwargs.get("arguments", {}).get("directory"):
+            dir = kwargs.get("arguments", {}).get("directory")[0]
+            if os.path.exists(os.path.expanduser(lfDecode(dir))):
+                lfCmd("silent cd %s" % dir)
             else:
                 lfCmd("echohl ErrorMsg | redraw | echon "
-                      "'Unknown directory `%s`' | echohl NONE" % args[0])
+                      "'Unknown directory `%s`' | echohl NONE" % dir)
                 return None
 
         dir = os.getcwd()
@@ -587,7 +588,7 @@ class FileExplManager(Manager):
         return ""
 
     def startExplorer(self, win_pos, *args, **kwargs):
-        if len(args) > 0: # behavior no change for `LeaderfFile <directory>`
+        if kwargs.get("arguments", {}).get("directory"): # behavior no change for `LeaderfFile <directory>`
             super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
             return
 

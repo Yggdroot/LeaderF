@@ -21,15 +21,15 @@ class BufferExplorer(Explorer):
         self._max_bufname_len = 0
 
     def getContent(self, *args, **kwargs):
-        if "--all" not in kwargs.get("options", []):
-            if "--tabpage" not in kwargs.get("options", []):
+        if "--all" not in kwargs.get("arguments", {}):
+            if "--tabpage" not in kwargs.get("arguments", {}):
                 buffers = {b.number: b for b in vim.buffers
                            if lfEval("buflisted(%d)" % b.number) == '1'}
             else:
                 buffers = {w.buffer.number: w.buffer for w in vim.current.tabpage.windows
                            if lfEval("buflisted(%d)" % w.buffer.number) == '1'}
         else:
-            if "--tabpage" not in kwargs.get("options", []):
+            if "--tabpage" not in kwargs.get("arguments", {}):
                 buffers = {b.number: b for b in vim.buffers
                            if os.path.basename(b.name) != "LeaderF"}
             else:

@@ -27,7 +27,7 @@ class MruExplorer(Explorer):
             f.truncate(0)
             f.writelines(lines)
 
-        if "--cwd" in kwargs.get("options", []):
+        if "--cwd" in kwargs.get("arguments", {}):
             lines = [name for name in lines if lfDecode(name).startswith(os.getcwd())]
 
         lines = [line.rstrip() for line in lines] # remove the '\n'

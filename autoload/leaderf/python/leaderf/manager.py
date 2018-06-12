@@ -141,7 +141,7 @@ class Manager(object):
     def _createHelp(self):
         return []
 
-    def _setStlMode(self):
+    def _setStlMode(self, **kwargs):
         if self._cli.isFuzzy:
             if self._getExplorer().supportsNameOnly():
                 if self._cli.isFullPath:
@@ -152,6 +152,27 @@ class Manager(object):
                 mode = 'Fuzzy'
         else:
             mode = 'Regex'
+
+        modes = {"--nameOnly", "--fullPath", "--fuzzy", "--regex"}
+        for opt in kwargs.get("arguments", {}):
+            if opt in modes:
+                if opt == "--regex":
+                    mode = 'Regex'
+                elif self._getExplorer().supportsNameOnly():
+                    if opt == "--nameOnly":
+                        mode = 'NameOnly'
+                    elif opt == "--fullPath":
+                        mode = 'FullPath'
+                    else: # "--fuzzy"
+                        if self._cli.isFullPath:
+                            mode = 'FullPath'
+                        else:
+                            mode = 'NameOnly'
+                elif opt in ("--nameOnly", "--fullPath", "--fuzzy"):
+                        mode = 'Fuzzy'
+
+                break
+
         self._getInstance().setStlMode(mode)
         self._cli.setCurrentMode(mode)
 
@@ -745,7 +766,7 @@ class Manager(object):
         self._getInstance().enterBuffer(win_pos)
 
         self._getInstance().setStlCategory(self._getExplorer().getStlCategory())
-        self._setStlMode()
+        self._setStlMode(**kwargs)
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
         if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
@@ -756,7 +777,7 @@ class Manager(object):
 
         self._start_time = time.time()
 
-        self._pattern = kwargs.get("pattern", "")
+        self._pattern = kwargs.get("pattern", "") or kwargs.get("arguments", {}).get("--input", "")
         self._cli.setPattern(self._pattern)
 
         if isinstance(content, list):

@@ -54,7 +54,7 @@ class FunctionExplorer(Explorer):
                 }
 
     def getContent(self, *args, **kwargs):
-        if "--all" in kwargs.get("options", []): # all buffers
+        if "--all" in kwargs.get("arguments", {}): # all buffers
             cur_buffer = vim.current.buffer
             for b in vim.buffers:
                 if b.options["buflisted"]:

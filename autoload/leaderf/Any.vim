@@ -34,41 +34,94 @@ function! leaderf#Any#Maps(category)
     endif
 endfunction
 
-let s:Lf_Categorys = {
-            \ "file":[],
-            \ "buffer":["--all", "--tabpage"],
-            \ "mru":["--cwd"],
+let g:Lf_Arguments = {
+            \ "file":[
+            \           {"name": ["directory"], "nargs": "?", "help": "serarch files under <directory>"},
+            \   ],
+            \ "buffer":[
+            \           {"name": ["--all"], "nargs": 0, "help": "search all buffers in addition to the listed buffers"},
+            \           {"name": ["--tabpage"], "nargs": 0, "help": "search buffers in current tabpage."},
+            \   ],
+            \ "mru":[
+            \           {"name": ["--cwd"], "nargs": 0, "help": "search MRU in current working directory."},
+            \   ],
             \ "tag":[],
-            \ "bufTag":["--all"],
-            \ "function":["--all"],
-            \ "line":["--all"],
+            \ "bufTag":[
+            \           {"name": ["--all"], "nargs": 0, "help": "search bufTag in all opening buffers."},
+            \   ],
+            \ "function":[
+            \           {"name": ["--all"], "nargs": 0, "help": "search functions in all opening buffers."},
+            \   ],
+            \ "line":[
+            \           {"name": ["--all"], "nargs": 0, "help": "search lines in all opening buffers."},
+            \   ],
             \ "cmdHistory":[],
             \ "searchHistory":[],
             \ "help":[],
             \ "colorscheme":[]
             \}
 
-let s:Lf_CommonOptions = [
-            \ ["--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen"],
-            \ "--cword"
-            \ ]
+let g:Lf_CommonArguments = [
+            \ [
+            \   {"name": ["--input"], "nargs": 1, "help": "specifies INPUT as the pattern inputted in advance."},
+            \   {"name": ["--cword"], "nargs": 0, "help": "current word under cursor is inputted in advance."},
+            \ ],
+            \ [
+            \   {"name": ["--top"],        "nargs": 0, "help": "the LeaderF window is at the top of the screen."},
+            \   {"name": ["--bottom"],     "nargs": 0, "help": "the LeaderF window is at the bottom of the screen."},
+            \   {"name": ["--left"],       "nargs": 0, "help": "the LeaderF window is at the left of the screen."},
+            \   {"name": ["--right"],      "nargs": 0, "help": "the LeaderF window is at the right of the screen."},
+            \   {"name": ["--belowright"], "nargs": 0, "help": "the LeaderF window is at the belowright of the screen."},
+            \   {"name": ["--aboveleft"],  "nargs": 0, "help": "the LeaderF window is at the aboveleft of the screen."},
+            \   {"name": ["--fullScreen"], "nargs": 0, "help": "the LeaderF window takes up the full screen."},
+            \ ],
+            \ [
+            \   {"name": ["--nameOnly"], "nargs": 0, "help": "LeaderF is in NameOnly mode by default."},
+            \   {"name": ["--fullPath"], "nargs": 0, "help": "LeaderF is in FullPath mode by default."},
+            \   {"name": ["--fuzzy"],    "nargs": 0, "help": "LeaderF is in Fuzzy mode by default."},
+            \   {"name": ["--regex"],    "nargs": 0, "help": "LeaderF is in Regex mode by default."},
+            \ ],
+            \]
+
+" arguments is something like g:Lf_CommonArguments
+" return something like
+" [
+"   ["--input", "--cword"],
+"   ["--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen"],
+"   ["--nameOnly", "--fullPath", "--fuzzy", "--regex"],
+" ]
+function! s:Lf_Refine(arguments)
+    let result = []
+    for arg in a:arguments
+        if type(arg) == type([])
+            let sublist = []
+            for i in arg
+                let sublist += i["name"]
+            endfor
+            call add(result, sublist)
+        else
+            call extend(result, arg["name"])
+        endif
+    endfor
+    return result
+endfunction
 
 function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
     let argList = split(a:cmdline, '[ \t!]\+')
     let argNum = len(argList)
     if argNum == 1  " Leaderf
-        return keys(s:Lf_Categorys) + keys(g:Lf_Extensions)
+        return keys(g:Lf_Arguments) + keys(g:Lf_Extensions)
     elseif argNum == 2 && a:cmdline[a:cursorPos-1] !~ '\s'  " 'Leaderf b'
-        return filter(keys(s:Lf_Categorys) + keys(g:Lf_Extensions), "v:val =~? '^".a:argLead."'")
+        return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions), "v:val =~? '^".a:argLead."'")
     else
         let existingOptions = a:cmdline[a:cursorPos-1] !~ '\s' ? argList[2:-2] : argList[2:]
         let options = []
         if has_key(g:Lf_Extensions, argList[1])
-            let options = filter(copy(get(g:Lf_Extensions[argList[1]], "options", [])), "index(".string(existingOptions).", v:val) == -1")
-        elseif has_key(s:Lf_Categorys, argList[1])
-            let options = filter(copy(s:Lf_Categorys[argList[1]]), "index(".string(existingOptions).", v:val) == -1")
+            let arguments = get(g:Lf_Extensions[argList[1]], "arguments", [])
+        elseif has_key(g:Lf_Arguments, argList[1])
+            let arguments = g:Lf_Arguments[argList[1]]
         endif
-        for opt in s:Lf_CommonOptions
+        for opt in s:Lf_Refine(arguments + g:Lf_CommonArguments)
             if type(opt) == type([])
                 if len(filter(copy(opt), "index(".string(existingOptions).", v:val) >= 0")) == 0
                     let options += opt
@@ -77,21 +130,22 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
                 call add(options, opt)
             endif
         endfor
-        return filter(sort(copy(options)), "v:val =~? '^".a:argLead."'")
+        return filter(filter(copy(options), "v:val =~? '^".a:argLead."'"), "v:val =~ '^-'")
     endif
 endfunction
 
-function! leaderf#Any#start(bang, ...)
-    if a:0 == 0
+function! leaderf#Any#start(bang, args)
+    if a:args == ""
 
     else
-        if !has_key(g:Lf_Extensions, a:1) && index(keys(s:Lf_Categorys), a:1) == -1
+        let category = split(a:args)[0]
+        if !has_key(g:Lf_Extensions, category) && index(keys(g:Lf_Arguments), category) == -1
             echohl Error
-            echo "Unknown argument '" . a:1 . "'!"
+            echo "Unrecognized argument '" . category . "'!"
             echohl NONE
             return
         else
-            call leaderf#LfPy("anyHub.start('".a:1."', bang=".a:bang.", options=".string(a:000[1:]).")")
+            call leaderf#LfPy("anyHub.start('".category."', '".a:args."', bang=".a:bang.")")
         endif
     endif
 endfunction

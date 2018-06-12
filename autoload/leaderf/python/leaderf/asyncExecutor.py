@@ -27,6 +27,8 @@ class AsyncExecutor(object):
         try:
             for line in iter(fd.readline, b""):
                 queue.put(line)
+        except ValueError:
+            pass
         finally:
             queue.put(None)
             if is_out:
