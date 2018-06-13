@@ -5,6 +5,7 @@ import vim
 import re
 import os
 import os.path
+import shlex
 import argparse
 from functools import partial
 from .utils import *
@@ -387,38 +388,6 @@ class AnyHub(object):
                     add_argument(*arg["name"], nargs=nargs, default=argparse.SUPPRESS,
                                  help=arg.get("help", ""))
 
-    def _arg_line_to_args(self, line):
-        """
-        e.g.,
-        `Leaderf file --foo hello --bar="hello world" --aaa "111 222" bbb` can be converted into
-        ['Leaderf', 'file', '--foo', 'hello', '--bar', 'hello world', '--aaa', '111 222', 'bbb']
-        """
-        args = []
-        start = i = 0
-        end = len(line)
-        in_quotes = False
-        while i < end:
-            if not in_quotes and line[i] in " =":
-                if start < i:
-                    args.append(line[start:i])
-                start = i + 1
-            elif not in_quotes and line[i] in ('"', "'"):
-                left_quote = line[i]
-                if i + 1 < end and left_quote in line[i+1:]:
-                    start = i + 1
-                    in_quotes = True
-            elif in_quotes and line[i] == left_quote:
-                args.append(line[start:i])
-                in_quotes = False
-                start = i + 1
-
-            i += 1
-
-        if start < end:
-            args.append(line[start:])
-
-        return args
-
     def start(self, category, arg_line, *args, **kwargs):
         parser = argparse.ArgumentParser(prog="Leaderf " + category)
         positional_args = []
@@ -485,11 +454,9 @@ class AnyHub(object):
 
         self._add_argument(parser, lfEval("g:Lf_CommonArguments"), positional_args)
 
-        arg_list = self._arg_line_to_args(arg_line)
-
         try:
             # do not produce an error when extra arguments are present
-            arguments = vars(parser.parse_known_args(arg_list[1:])[0])
+            arguments = vars(parser.parse_known_args(shlex.split(arg_line)[1:])[0])
         except SystemExit:
             return
 
