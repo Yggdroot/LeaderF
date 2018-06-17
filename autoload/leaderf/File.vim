@@ -44,7 +44,7 @@ function! leaderf#File#startExpl(win_pos, ...)
         call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."')")
     else
         let dir = fnamemodify(a:1.'/',":h:gs?\\?/?")
-        call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."', arguments={'directory': '".dir."'})")
+        call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."', arguments={'directory': ['".dir."']})")
     endif
 endfunction
 
