@@ -34,53 +34,69 @@ function! leaderf#Any#Maps(category)
     endif
 endfunction
 
+let g:Lf_Helps = {
+            \ "file":           "search files",
+            \ "buffer":         "search buffers",
+            \ "mru":            "search most recently used files",
+            \ "tag":            "navigate tags using the tags file",
+            \ "bufTag":         "navigate tags in the buffer",
+            \ "function":       "navigate functions or methods in the buffer",
+            \ "line":           "search a line in the buffer",
+            \ "cmdHistory":     "execute the command in the history",
+            \ "searchHistory":  "execute the search command in the history",
+            \ "help":           "navigate the help tags",
+            \ "colorscheme":    "switch between colorschemes",
+            \ "self":           "execute the commands of itself",
+            \ }
+
 let g:Lf_Arguments = {
             \ "file":[
             \           {"name": ["directory"], "nargs": "?", "help": "serarch files under <directory>"},
             \   ],
             \ "buffer":[
             \           {"name": ["--all"], "nargs": 0, "help": "search all buffers in addition to the listed buffers"},
-            \           {"name": ["--tabpage"], "nargs": 0, "help": "search buffers in current tabpage."},
+            \           {"name": ["--tabpage"], "nargs": 0, "help": "search buffers in current tabpage"},
             \   ],
             \ "mru":[
-            \           {"name": ["--cwd"], "nargs": 0, "help": "search MRU in current working directory."},
+            \           {"name": ["--cwd"], "nargs": 0, "help": "search MRU in current working directory"},
             \   ],
             \ "tag":[],
             \ "bufTag":[
-            \           {"name": ["--all"], "nargs": 0, "help": "search bufTag in all opening buffers."},
+            \           {"name": ["--all"], "nargs": 0, "help": "search bufTag in all opening buffers"},
             \   ],
             \ "function":[
-            \           {"name": ["--all"], "nargs": 0, "help": "search functions in all opening buffers."},
+            \           {"name": ["--all"], "nargs": 0, "help": "search functions in all opening buffers"},
             \   ],
             \ "line":[
-            \           {"name": ["--all"], "nargs": 0, "help": "search lines in all opening buffers."},
+            \           {"name": ["--all"], "nargs": 0, "help": "search lines in all opening buffers"},
             \   ],
             \ "cmdHistory":[],
             \ "searchHistory":[],
             \ "help":[],
-            \ "colorscheme":[]
+            \ "colorscheme":[],
+            \ "self":[],
             \}
 
 let g:Lf_CommonArguments = [
-            \ {"name": ["--stayOpen"], "nargs": 0, "help": "do not quit LeaderF after accepting an entry."},
+            \ {"name": ["--stayOpen"], "nargs": 0, "help": "do not quit LeaderF after accepting an entry"},
             \ [
-            \   {"name": ["--input"], "nargs": 1, "help": "specifies INPUT as the pattern inputted in advance."},
-            \   {"name": ["--cword"], "nargs": 0, "help": "current word under cursor is inputted in advance."},
+            \   {"name": ["--input"], "nargs": 1, "help": "specifies INPUT as the pattern inputted in advance"},
+            \   {"name": ["--cword"], "nargs": 0, "help": "current word under cursor is inputted in advance"},
             \ ],
             \ [
-            \   {"name": ["--top"],        "nargs": 0, "help": "the LeaderF window is at the top of the screen."},
-            \   {"name": ["--bottom"],     "nargs": 0, "help": "the LeaderF window is at the bottom of the screen."},
-            \   {"name": ["--left"],       "nargs": 0, "help": "the LeaderF window is at the left of the screen."},
-            \   {"name": ["--right"],      "nargs": 0, "help": "the LeaderF window is at the right of the screen."},
-            \   {"name": ["--belowright"], "nargs": 0, "help": "the LeaderF window is at the belowright of the screen."},
-            \   {"name": ["--aboveleft"],  "nargs": 0, "help": "the LeaderF window is at the aboveleft of the screen."},
-            \   {"name": ["--fullScreen"], "nargs": 0, "help": "the LeaderF window takes up the full screen."},
+            \   {"name": ["--top"],        "nargs": 0, "help": "the LeaderF window is at the top of the screen"},
+            \   {"name": ["--bottom"],     "nargs": 0, "help": "the LeaderF window is at the bottom of the screen"},
+            \   {"name": ["--left"],       "nargs": 0, "help": "the LeaderF window is at the left of the screen"},
+            \   {"name": ["--right"],      "nargs": 0, "help": "the LeaderF window is at the right of the screen"},
+            \   {"name": ["--belowright"], "nargs": 0, "help": "the LeaderF window is at the belowright of the screen"},
+            \   {"name": ["--aboveleft"],  "nargs": 0, "help": "the LeaderF window is at the aboveleft of the screen"},
+            \   {"name": ["--fullScreen"], "nargs": 0, "help": "the LeaderF window takes up the full screen"},
             \ ],
             \ [
-            \   {"name": ["--nameOnly"], "nargs": 0, "help": "LeaderF is in NameOnly mode by default."},
-            \   {"name": ["--fullPath"], "nargs": 0, "help": "LeaderF is in FullPath mode by default."},
-            \   {"name": ["--fuzzy"],    "nargs": 0, "help": "LeaderF is in Fuzzy mode by default."},
-            \   {"name": ["--regex"],    "nargs": 0, "help": "LeaderF is in Regex mode by default."},
+            \   {"name": ["--nameOnly"], "nargs": 0, "help": "LeaderF is in NameOnly mode by default"},
+            \   {"name": ["--fullPath"], "nargs": 0, "help": "LeaderF is in FullPath mode by default"},
+            \   {"name": ["--fuzzy"],    "nargs": 0, "help": "LeaderF is in Fuzzy mode by default"},
+            \   {"name": ["--regex"],    "nargs": 0, "help": "LeaderF is in Regex mode by default"},
             \ ],
             \]
 
@@ -108,7 +124,7 @@ function! s:Lf_Refine(arguments)
 endfunction
 
 function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
-    let argList = split(a:cmdline, '[ \t!]\+')
+    let argList = split(a:cmdline[:a:cursorPos-1], '[ \t!]\+')
     let argNum = len(argList)
     if argNum == 1  " Leaderf
         return keys(g:Lf_Arguments) + keys(g:Lf_Extensions)
@@ -121,6 +137,8 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
             let arguments = get(g:Lf_Extensions[argList[1]], "arguments", [])
         elseif has_key(g:Lf_Arguments, argList[1])
             let arguments = g:Lf_Arguments[argList[1]]
+        else
+            let arguments = []
         endif
         for opt in s:Lf_Refine(arguments + g:Lf_CommonArguments)
             if type(opt) == type([])
@@ -139,15 +157,7 @@ function! leaderf#Any#start(bang, args)
     if a:args == ""
 
     else
-        let category = split(a:args)[0]
-        if !has_key(g:Lf_Extensions, category) && index(keys(g:Lf_Arguments), category) == -1
-            echohl Error
-            echo "Unrecognized argument '" . category . "'!"
-            echohl NONE
-            return
-        else
-            call leaderf#LfPy("anyHub.start('".category."', '".a:args."', bang=".a:bang.")")
-        endif
+        call leaderf#LfPy("anyHub.start('".a:args."', bang=".a:bang.")")
     endif
 endfunction
 

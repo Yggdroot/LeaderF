@@ -76,54 +76,76 @@ After running any command of LeaderF, check the value of `echo g:Lf_fuzzyMatch_C
 Usage
 -----
 
-| Command                    | Description
-| -------                    | -----------
-| `:LeaderfFile`<br> `<leader>f`| search files
-| `:LeaderfFile [directory]` | search files under the `directory` specified
-| `:LeaderfFileFullScreen`   | search files, LeaderF window take up full screen
-| `:LeaderfFilePattern <pattern>` | like `LeaderfFile`, with `pattern` inputted in advance
-| `:LeaderfFileCword`        | like `LeaderfFile`, with word under the cursor as pattern inputted in advance
-| `:LeaderfBuffer`<br> `<leader>b`| search listed buffers
-| `:LeaderfBufferAll`        | search all buffers
-| `:LeaderfTabBuffer`        | search listed buffers in current tabpage
-| `:LeaderfTabBufferAll`     | search all buffers in current tabpage
-| `:LeaderfBufferPattern <pattern>` | like `LeaderfBuffer`, with `pattern` inputted in advance
-| `:LeaderfBufferCword`      | like `LeaderfBuffer`, with word under the cursor as pattern inputted in advance
-| `:LeaderfMru`              | search most recently used files
-| `:LeaderfMruCwd`           | search MRU in current working directory
-| `:LeaderfMruPattern <pattern>` | like `LeaderfMru`, with `pattern` inputted in advance
-| `:LeaderfMruCword`         | like `LeaderfMru`, with word under the cursor as pattern inputted in advance
-| `:LeaderfMruCwdPattern <pattern>` | like `LeaderfMruCwd`, with `pattern` inputted in advance
-| `:LeaderfMruCwdCword`      | like `LeaderfMruCwd`, with word under the cursor as pattern inputted in advance
-| `:LeaderfTag`              | navigate tags using the tags file
-| `:LeaderfTagPattern <pattern>` | like `LeaderfTag`, with `pattern` inputted in advance
-| `:LeaderfTagCword`         | like `LeaderfTag`, with word under the cursor as pattern inputted in advance
-| `:LeaderfBufTag`           | navigate tags in current buffer
-| `:LeaderfBufTagAll`        | navigate tags in all listed buffers
-| `:LeaderfBufTagPattern <pattern>` | like `LeaderfBufTag`, with `pattern` inputted in advance
-| `:LeaderfBufTagCword`      | like `LeaderfBufTag`, with word under the cursor as pattern inputted in advance
-| `:LeaderfBufTagAllPattern <pattern>` | like `LeaderfBufTagAll`, with `pattern` inputted in advance
-| `:LeaderfBufTagAllCword`   | like `LeaderfBufTagAll`, with word under the cursor as pattern inputted in advance
-| `:LeaderfFunction`         | navigate functions or methods in current buffer
-| `:LeaderfFunctionAll`      | navigate functions or methods in all listed buffers
-| `:LeaderfFunctionPattern <pattern>` | like `LeaderfFunction`, with `pattern` inputted in advance
-| `:LeaderfFunctionCword`    | like `LeaderfFunction`, with word under the cursor as pattern inputted in advance
-| `:LeaderfFunctionAllPattern <pattern>` | like `LeaderfFunctionAll`, with `pattern` inputted in advance
-| `:LeaderfFunctionAllCword` | like `LeaderfFunctionAll`, with word under the cursor as pattern inputted in advance
-| `:LeaderfLine`             | search a line in current buffer
-| `:LeaderfLineAll`          | search a line in all listed buffers
-| `:LeaderfLinePattern <pattern>` | like `LeaderfLine`, with `pattern` inputted in advance
-| `:LeaderfLineCword`        | like `LeaderfLine`, with word under the cursor as pattern inputted in advance
-| `:LeaderfLineAllPattern <pattern>` | like `LeaderfLineAll`, with `pattern` inputted in advance
-| `:LeaderfLineAllCword`     | like `LeaderfLineAll`, with word under the cursor as pattern inputted in advance
-| `:LeaderfHistoryCmd`       | execute the command in the history
-| `:LeaderfHistorySearch`    | execute the search command in the history
-| `:LeaderfSelf`             | execute the commands of itself
-| `:LeaderfHelp`             | navigate the help tags
-| `:LeaderfHelpPattern <pattern>` | like `LeaderfHelp`, with `pattern` inputted in advance
-| `:LeaderfHelpCword`        | like `LeaderfHelp`, with word under the cursor as pattern inputted in advance
-| `:LeaderfColorscheme`      | switch between colorschemes
+```
+usage: Leaderf [-h] [--stayOpen] [--input INPUT | --cword]
+               [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
+               [--nameOnly | --fullPath | --fuzzy | --regex]
+               {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer}
+               ...
 
+optional arguments:
+  -h, --help            show this help message and exit
+  --stayOpen            do not quit LeaderF after accepting an entry
+  --input INPUT         specifies INPUT as the pattern inputted in advance
+  --cword               current word under cursor is inputted in advance
+  --top                 the LeaderF window is at the top of the screen
+  --bottom              the LeaderF window is at the bottom of the screen
+  --left                the LeaderF window is at the left of the screen
+  --right               the LeaderF window is at the right of the screen
+  --belowright          the LeaderF window is at the belowright of the screen
+  --aboveleft           the LeaderF window is at the aboveleft of the screen
+  --fullScreen          the LeaderF window takes up the full screen
+  --nameOnly            LeaderF is in NameOnly mode by default
+  --fullPath            LeaderF is in FullPath mode by default
+  --fuzzy               LeaderF is in Fuzzy mode by default
+  --regex               LeaderF is in Regex mode by default
+
+subcommands:
+
+  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer}
+    file                search files
+    tag                 navigate tags using the tags file
+    function            navigate functions or methods in the buffer
+    mru                 search most recently used files
+    searchHistory       execute the search command in the history
+    cmdHistory          execute the command in the history
+    help                navigate the help tags
+    line                search a line in the buffer
+    colorscheme         switch between colorschemes
+    self                execute the commands of itself
+    bufTag              navigate tags in the buffer
+    buffer              search buffers
+```
+
+use `:Leaderf <subcommand> -h` to get specific help of subcommand, e.g., `:Leaderf mru -h`
+
+```
+usage: Leaderf mru [-h] [--cwd] [--stayOpen] [--input INPUT | --cword]
+                   [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
+                   [--nameOnly | --fullPath | --fuzzy | --regex]
+
+optional arguments:
+  -h, --help     show this help message and exit
+
+specific arguments:
+  --cwd          search MRU in current working directory
+
+common arguments:
+  --stayOpen     do not quit LeaderF after accepting an entry
+  --input INPUT  specifies INPUT as the pattern inputted in advance
+  --cword        current word under cursor is inputted in advance
+  --top          the LeaderF window is at the top of the screen
+  --bottom       the LeaderF window is at the bottom of the screen
+  --left         the LeaderF window is at the left of the screen
+  --right        the LeaderF window is at the right of the screen
+  --belowright   the LeaderF window is at the belowright of the screen
+  --aboveleft    the LeaderF window is at the aboveleft of the screen
+  --fullScreen   the LeaderF window takes up the full screen
+  --nameOnly     LeaderF is in NameOnly mode by default
+  --fullPath     LeaderF is in FullPath mode by default
+  --fuzzy        LeaderF is in Fuzzy mode by default
+  --regex        LeaderF is in Regex mode by default
+```
 
 Once LeaderF is launched:
 

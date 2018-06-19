@@ -7,6 +7,7 @@ import os
 import os.path
 import shlex
 import argparse
+import itertools
 from functools import partial
 from .utils import *
 from .explorer import *
@@ -341,6 +342,7 @@ class OptionalAction(argparse.Action):
 class AnyHub(object):
     def __init__(self):
         self._managers = {}
+        self._parser = None
 
     def _add_argument(self, parser, arg_list, positional_args):
         """
@@ -388,9 +390,7 @@ class AnyHub(object):
                     add_argument(*arg["name"], nargs=nargs, default=argparse.SUPPRESS,
                                  help=arg.get("help", ""))
 
-    def start(self, category, arg_line, *args, **kwargs):
-        parser = argparse.ArgumentParser(prog="Leaderf " + category)
-        positional_args = []
+    def _default_action(self, category, positional_args, arguments, *args, **kwargs):
         if lfEval("has_key(g:Lf_Extensions, '%s')" % category) == '1':
             if category not in self._managers:
                 # In python3, string in g:Lf_Extensions is converted to bytes by vim.bindeval(),
@@ -407,9 +407,6 @@ class AnyHub(object):
                 self._managers[category] = AnyExplManager(category, config)
 
             manager = self._managers[category]
-
-            arg_def = lfEval("get(g:Lf_Extensions['%s'], 'arguments', [])" % category)
-            self._add_argument(parser, arg_def, positional_args)
         else:
             if category == "file":
                 from .fileExpl import fileExplManager
@@ -447,18 +444,11 @@ class AnyHub(object):
             elif category == "colorscheme":
                 from .colorschemeExpl import colorschemeExplManager
                 manager = colorschemeExplManager
+            elif category == "self":
+                from .selfExpl import selfExplManager
+                manager = selfExplManager
             else:
                 raise Exception("Unrecognized argument %s!" % category)
-
-            self._add_argument(parser, lfEval("g:Lf_Arguments")[category], positional_args)
-
-        self._add_argument(parser, lfEval("g:Lf_CommonArguments"), positional_args)
-
-        try:
-            # do not produce an error when extra arguments are present
-            arguments = vars(parser.parse_known_args(shlex.split(arg_line)[1:])[0])
-        except SystemExit:
-            return
 
         positions = {"--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen"}
         win_pos = "--" + lfEval("g:Lf_WindowPosition")
@@ -474,6 +464,41 @@ class AnyHub(object):
         kwargs["positional_args"] = positional_args
 
         manager.startExplorer(win_pos[2:], *args, **kwargs)
+
+
+    def start(self, arg_line, *args, **kwargs):
+        if self._parser is None:
+            self._parser = argparse.ArgumentParser(prog="Leaderf")
+            self._add_argument(self._parser, lfEval("g:Lf_CommonArguments"), [])
+            subparsers = self._parser.add_subparsers(title="subcommands", description="", help="")
+            for category in itertools.chain(lfEval("keys(g:Lf_Extensions)"),
+                    (i for i in lfEval("keys(g:Lf_Arguments)") if i not in lfEval("keys(g:Lf_Extensions)"))):
+                positional_args = []
+                if lfEval("has_key(g:Lf_Extensions, '%s')" % category) == '1':
+                    help = lfEval("get(g:Lf_Extensions['%s'], 'help', '')" % category)
+                    arg_def = lfEval("get(g:Lf_Extensions['%s'], 'arguments', [])" % category)
+                else:
+                    help = lfEval("g:Lf_Helps['%s']" % category)
+                    arg_def = lfEval("g:Lf_Arguments['%s']" % category)
+
+                parser = subparsers.add_parser(category, help=help)
+                group = parser.add_argument_group('specific arguments')
+                self._add_argument(group, arg_def, positional_args)
+
+                group = parser.add_argument_group("common arguments")
+                self._add_argument(group, lfEval("g:Lf_CommonArguments"), positional_args)
+
+                parser.set_defaults(start=partial(self._default_action, category, positional_args))
+
+        try:
+            # do not produce an error when extra arguments are present
+            the_args = self._parser.parse_known_args(shlex.split(arg_line))[0]
+            arguments = vars(the_args)
+            arguments = arguments.copy()
+            del arguments["start"]
+            the_args.start(arguments, *args, **kwargs)
+        except SystemExit:
+            return
 
 
 #*****************************************************
