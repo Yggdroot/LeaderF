@@ -468,7 +468,7 @@ class AnyHub(object):
 
     def start(self, arg_line, *args, **kwargs):
         if self._parser is None:
-            self._parser = argparse.ArgumentParser(prog="Leaderf")
+            self._parser = argparse.ArgumentParser(prog="Leaderf[!]", epilog="If [!] is given, enter normal mode directly.")
             self._add_argument(self._parser, lfEval("g:Lf_CommonArguments"), [])
             subparsers = self._parser.add_subparsers(title="subcommands", description="", help="")
             for category in itertools.chain(lfEval("keys(g:Lf_Extensions)"),
@@ -481,7 +481,7 @@ class AnyHub(object):
                     help = lfEval("g:Lf_Helps['%s']" % category)
                     arg_def = lfEval("g:Lf_Arguments['%s']" % category)
 
-                parser = subparsers.add_parser(category, help=help)
+                parser = subparsers.add_parser(category, help=help, epilog="If [!] is given, enter normal mode directly.")
                 group = parser.add_argument_group('specific arguments')
                 self._add_argument(group, arg_def, positional_args)
 

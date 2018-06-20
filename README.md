@@ -77,11 +77,11 @@ Usage
 -----
 
 ```
-usage: Leaderf [-h] [--stayOpen] [--input INPUT | --cword]
-               [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
-               [--nameOnly | --fullPath | --fuzzy | --regex]
-               {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer}
-               ...
+usage: Leaderf[!] [-h] [--stayOpen] [--input INPUT | --cword]
+                  [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
+                  [--nameOnly | --fullPath | --fuzzy | --regex]
+                  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer}
+                  ...
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -115,14 +115,16 @@ subcommands:
     self                execute the commands of itself
     bufTag              navigate tags in the buffer
     buffer              search buffers
+
+If [!] is given, enter normal mode directly.
 ```
 
 use `:Leaderf <subcommand> -h` to get specific help of subcommand, e.g., `:Leaderf mru -h`
 
 ```
-usage: Leaderf mru [-h] [--cwd] [--stayOpen] [--input INPUT | --cword]
-                   [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
-                   [--nameOnly | --fullPath | --fuzzy | --regex]
+usage: Leaderf[!] mru [-h] [--cwd] [--stayOpen] [--input INPUT | --cword]
+                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
+                      [--nameOnly | --fullPath | --fuzzy | --regex]
 
 optional arguments:
   -h, --help     show this help message and exit
@@ -145,6 +147,8 @@ common arguments:
   --fullPath     LeaderF is in FullPath mode by default
   --fuzzy        LeaderF is in Fuzzy mode by default
   --regex        LeaderF is in Regex mode by default
+
+If [!] is given, enter normal mode directly.
 ```
 
 Once LeaderF is launched:
