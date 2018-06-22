@@ -562,6 +562,17 @@ class FileExplManager(Manager):
         help.append('" ---------------------------------------------------------')
         return help
 
+    def _restoreOrigCwd(self):
+        if self._orig_cwd is None:
+            return
+
+        try:
+            if int(lfEval("&autochdir")) == 0 and os.getcwd() != self._orig_cwd:
+                os.chdir(self._orig_cwd)
+        except:
+            if os.getcwd() != self._orig_cwd:
+                os.chdir(self._orig_cwd)
+
     def _nearestAncestor(self, markers, path):
         """
         return the nearest ancestor path(including itself) of `path` that contains
@@ -589,10 +600,11 @@ class FileExplManager(Manager):
 
     def startExplorer(self, win_pos, *args, **kwargs):
         if kwargs.get("arguments", {}).get("directory"): # behavior no change for `LeaderfFile <directory>`
+            self._orig_cwd = None
             super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
             return
 
-        orig_cwd = os.getcwd()
+        self._orig_cwd = os.getcwd()
         root_markers = lfEval("g:Lf_RootMarkers")
         mode = lfEval("g:Lf_WorkingDirectoryMode")
 
@@ -603,7 +615,7 @@ class FileExplManager(Manager):
         cur_buf_name = lfDecode(vim.current.buffer.name)
         fall_back = False
         if 'a' in mode:
-            working_dir = self._nearestAncestor(root_markers, orig_cwd)
+            working_dir = self._nearestAncestor(root_markers, self._orig_cwd)
             if working_dir: # there exists a root marker in nearest ancestor path
                 os.chdir(working_dir)
             else:
@@ -625,16 +637,10 @@ class FileExplManager(Manager):
                 if cur_buf_name:
                     os.chdir(os.path.dirname(cur_buf_name))
             elif 'F' in mode:
-                if cur_buf_name and not os.path.dirname(cur_buf_name).startswith(orig_cwd):
+                if cur_buf_name and not os.path.dirname(cur_buf_name).startswith(self._orig_cwd):
                     os.chdir(os.path.dirname(cur_buf_name))
 
         super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
-        try:
-            if int(lfEval("&autochdir")) == 0 and os.getcwd() != orig_cwd:
-                os.chdir(orig_cwd)
-        except:
-            if os.getcwd() != orig_cwd:
-                os.chdir(orig_cwd)
 
 
 #*****************************************************

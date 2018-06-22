@@ -215,6 +215,9 @@ class Manager(object):
     def _previewResult(self, preview):
         pass
 
+    def _restoreOrigCwd(self):
+        pass
+
     #**************************************************************
 
     def _needPreview(self, preview):
@@ -683,10 +686,12 @@ class Manager(object):
             self._accept(file, mode, self._getInstance().buffer, line_nr) # for bufTag
 
         self._setAutochdir()
+        self._restoreOrigCwd()
 
     def quit(self):
         self._getInstance().exitBuffer()
         self._setAutochdir()
+        self._restoreOrigCwd()
 
     def refresh(self, normal_mode=True):
         self._getExplorer().cleanup()
