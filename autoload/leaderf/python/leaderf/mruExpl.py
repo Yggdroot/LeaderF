@@ -20,6 +20,9 @@ class MruExplorer(Explorer):
         self._max_bufname_len = 0
 
     def getContent(self, *args, **kwargs):
+        mru.saveToCache(lfEval("readfile(g:Lf_MruCacheFileName)"))
+        lfCmd("call writefile([], g:Lf_MruCacheFileName)")
+
         with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore') as f:
             lines = f.readlines()
             lines = [name for name in lines if os.path.exists(lfDecode(name.rstrip()))]
@@ -80,6 +83,7 @@ class MruExplorer(Explorer):
 
     def getMaxBufnameLen(self):
         return self._max_bufname_len
+
 
 #*****************************************************
 # MruExplManager
@@ -187,12 +191,11 @@ class MruExplManager(Manager):
         line = vim.current.line
         dirname = self._getDigest(line, 2)
         basename = self._getDigest(line, 1)
-        self._explorer.delFromCache(escSpecial(dirname + basename))
+        self._explorer.delFromCache(dirname + basename)
         if len(self._content) > 0:
             self._content.remove(line)
         del vim.current.line
         lfCmd("setlocal nomodifiable")
-
 
 
 #*****************************************************

@@ -36,7 +36,6 @@ class Mru(object):
     def normalize(self, name):
         if '~' in name:
             name = os.path.expanduser(name)
-        name = os.path.abspath(name)
         if sys.platform[:3] == 'win':
             if name[:4] == '\\\\?\\' and os.path.isabs(name):
                 if os.path.isabs(name[4:]) and name[5:6] == ':':
@@ -48,29 +47,37 @@ class Mru(object):
                 name = name[:11].lower() + name[11:]
         return name
 
-    def saveToCache(self, buf_name):
-        buf_name = self.normalize(buf_name)
-        if True in (fnmatch.fnmatch(buf_name, i)
-                    for i in lfEval("g:Lf_MruFileExclude")):
+    def saveToCache(self, buf_name_list):
+        buf_names = []
+        for name in buf_name_list:
+            name = self.normalize(name)
+            if True in (fnmatch.fnmatch(name, i)
+                        for i in lfEval("g:Lf_MruFileExclude")):
+                continue
+            buf_names.append(name)
+
+        if not buf_names:
             return
-        nocase = False
-        compare = buf_name
-        if sys.platform[:3] == 'win' or sys.platform in ('cygwin', 'msys'):
-            nocase = True
-            compare = buf_name.lower()
+
         with lfOpen(self._cache_file, 'r+', errors='ignore') as f:
             lines = f.readlines()
-            for i, line in enumerate(lines):
-                text = line.rstrip()
-                if (compare == text) or (nocase and compare == text.lower()):
-                    if i == 0:
-                        return
-                    del lines[i]
-                    break
+            for name in buf_names:
+                nocase = False
+                compare = name
+                if sys.platform[:3] == 'win' or sys.platform in ('cygwin', 'msys'):
+                    nocase = True
+                    compare = name.lower()
 
-            lines.insert(0, buf_name + '\n')
-            if len(lines) > int(lfEval("g:Lf_MruMaxFiles")):
-                del lines[-1]
+                for i, line in enumerate(lines):
+                    text = line.rstrip()
+                    if (compare == text) or (nocase and compare == text.lower()):
+                        del lines[i]
+                        break
+
+            lines = [name + '\n' for name in buf_names] + lines
+            max_files = int(lfEval("g:Lf_MruMaxFiles"))
+            if len(lines) > max_files:
+                del lines[max_files:]
             f.seek(0)
             f.truncate(0)
             f.writelines(lines)

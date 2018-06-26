@@ -21,6 +21,14 @@ class BufferExplorer(Explorer):
         self._max_bufname_len = 0
 
     def getContent(self, *args, **kwargs):
+        mru_bufnrs = []
+        for num in reversed(lfEval("g:Lf_MruBufnrs")):
+            if num not in mru_bufnrs:
+                mru_bufnrs.append(int(num))
+        for num in reversed(mru_bufnrs):
+            mru.setBufferTimestamp(num)
+        lfCmd("let g:Lf_MruBufnrs = []")
+
         if "--all" not in kwargs.get("arguments", {}):
             if "--tabpage" not in kwargs.get("arguments", {}):
                 buffers = {b.number: b for b in vim.buffers

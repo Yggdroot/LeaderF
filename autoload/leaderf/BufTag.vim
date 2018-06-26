@@ -11,8 +11,6 @@ if leaderf#versionCheck() == 0  " this check is necessary
     finish
 endif
 
-let g:Lf_bufTagExpl_loaded = 1
-
 exec g:Lf_py "from leaderf.bufTagExpl import *"
 
 function! leaderf#BufTag#Maps()

@@ -11,8 +11,6 @@ if leaderf#versionCheck() == 0  " this check is necessary
     finish
 endif
 
-let g:Lf_fileExpl_loaded = 1
-
 exec g:Lf_py "from leaderf.fileExpl import *"
 
 function! leaderf#File#Maps()
