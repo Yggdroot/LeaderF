@@ -215,7 +215,17 @@ class FileExplorer(Explorer):
 
         if lfEval("g:Lf_UseVersionControlTool") == '1':
             if self._exists(dir, ".git"):
-                cmd = "git ls-files && git ls-files --others --exclude-standard"
+                wildignore = lfEval("g:Lf_WildIgnore")
+                if ".git" in wildignore["dir"]:
+                    wildignore["dir"].remove(".git")
+                if ".git" in wildignore["file"]:
+                    wildignore["file"].remove(".git")
+                ignore = ""
+                for i in wildignore["dir"]:
+                    ignore += ' -x "%s"' % i
+                for i in wildignore["file"]:
+                    ignore += ' -x "%s"' % i
+                cmd = "git ls-files && git ls-files --others --exclude-standard %s" % ignore
                 self._external_cmd = cmd
                 return cmd
             elif self._exists(dir, ".hg"):
