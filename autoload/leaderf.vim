@@ -48,6 +48,7 @@ else
     endif
 endif
 
+silent! exec g:Lf_py "pass"
 exec g:Lf_py "import vim, sys, os.path"
 exec g:Lf_py "cwd = vim.eval('expand(\"<sfile>:p:h\")')"
 exec g:Lf_py "sys.path.insert(0, os.path.join(cwd, 'leaderf', 'python'))"
