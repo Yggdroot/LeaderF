@@ -576,12 +576,18 @@ class FileExplManager(Manager):
         if self._orig_cwd is None:
             return
 
+        # https://github.com/neovim/neovim/issues/8336
+        if lfEval("has('nvim')") == '1':
+            chdir = vim.chdir
+        else:
+            chdir = os.chdir
+
         try:
             if int(lfEval("&autochdir")) == 0 and os.getcwd() != self._orig_cwd:
-                os.chdir(self._orig_cwd)
+                chdir(self._orig_cwd)
         except:
             if os.getcwd() != self._orig_cwd:
-                os.chdir(self._orig_cwd)
+                chdir(self._orig_cwd)
 
     def _nearestAncestor(self, markers, path):
         """
@@ -620,14 +626,16 @@ class FileExplManager(Manager):
 
         # https://github.com/neovim/neovim/issues/8336
         if lfEval("has('nvim')") == '1':
-            os.chdir = vim.chdir
+            chdir = vim.chdir
+        else:
+            chdir = os.chdir
 
         cur_buf_name = lfDecode(vim.current.buffer.name)
         fall_back = False
         if 'a' in mode:
             working_dir = self._nearestAncestor(root_markers, self._orig_cwd)
             if working_dir: # there exists a root marker in nearest ancestor path
-                os.chdir(working_dir)
+                chdir(working_dir)
             else:
                 fall_back = True
         elif 'A' in mode:
@@ -636,7 +644,7 @@ class FileExplManager(Manager):
             else:
                 working_dir = ""
             if working_dir: # there exists a root marker in nearest ancestor path
-                os.chdir(working_dir)
+                chdir(working_dir)
             else:
                 fall_back = True
         else:
@@ -645,10 +653,10 @@ class FileExplManager(Manager):
         if fall_back:
             if 'f' in mode:
                 if cur_buf_name:
-                    os.chdir(os.path.dirname(cur_buf_name))
+                    chdir(os.path.dirname(cur_buf_name))
             elif 'F' in mode:
                 if cur_buf_name and not os.path.dirname(cur_buf_name).startswith(self._orig_cwd):
-                    os.chdir(os.path.dirname(cur_buf_name))
+                    chdir(os.path.dirname(cur_buf_name))
 
         super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
