@@ -17,7 +17,7 @@ function! leaderf#History#Maps()
     nmapclear <buffer>
     nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "historyExplManager.accept()"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "historyExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "historyExplManager.quit()"<CR>
+    " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "historyExplManager.quit()"<CR>
     nnoremap <buffer> <silent> <C-I>         :exec g:Lf_py "historyExplManager.input()"<CR>
     if has_key(g:Lf_NormalMap, "History")
         for i in g:Lf_NormalMap["History"]

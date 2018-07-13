@@ -22,7 +22,7 @@ function! leaderf#BufTag#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "bufTagExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "bufTagExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "bufTagExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufTagExplManager.quit()"<CR>
+    " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufTagExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "bufTagExplManager.input()"<CR>
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "bufTagExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "bufTagExplManager.toggleHelp()"<CR>

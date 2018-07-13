@@ -19,7 +19,7 @@ function! leaderf#Self#Maps()
     nnoremap <buffer> <silent> o             :exec g:Lf_py "selfExplManager.accept()"<CR>
     nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "selfExplManager.accept()"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "selfExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "selfExplManager.quit()"<CR>
+    " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "selfExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "selfExplManager.input()"<CR>
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "selfExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "selfExplManager.toggleHelp()"<CR>
