@@ -7,6 +7,12 @@
 " License:     Apache License, Version 2.0
 " ============================================================================
 
+" temporary fix
+" https://github.com/vim/vim/issues/3117
+if has('python3')
+  silent! python3 1
+endif
+
 if exists('g:leaderf_loaded') || &compatible
     finish
 elseif v:version < 704 || v:version == 704 && has("patch330") == 0
