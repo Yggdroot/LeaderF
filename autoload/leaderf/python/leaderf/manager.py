@@ -354,31 +354,21 @@ class Manager(object):
                 step = 30000
             self._index = min(step, length)
             result.extend(filter_method(content[:self._index]))
-        elif is_continue:
-            end = min(self._index + step, length)
-            result.extend(filter_method(content[self._index:end]))
-            self._index = end
         else:
-            if len(cb) >= step:
-                result.extend(filter_method(cb[:step]))
-                self._cb_content += cb[step:]
+            if not is_continue and not self._getInstance().empty():
+                self._cb_content += cb[:]
+
+            if len(self._cb_content) >= step:
+                result.extend(filter_method(self._cb_content[:step]))
+                self._cb_content = self._cb_content[step:]
             else:
-                if not self._getInstance().empty():
-                    result.extend(filter_method(cb[:]))
-                    left = step - len(cb)
-                else:
-                    left = step
-                if len(self._cb_content) >= left:
-                    result.extend(filter_method(self._cb_content[:left]))
-                    self._cb_content = self._cb_content[left:]
-                else:
-                    result.extend(filter_method(self._cb_content))
-                    left -= len(self._cb_content)
-                    self._cb_content = []
-                    if self._index < length:
-                        end = min(self._index + left, length)
-                        result.extend(filter_method(content[self._index:end]))
-                        self._index = end
+                result.extend(filter_method(self._cb_content))
+                left = step - len(self._cb_content)
+                self._cb_content = []
+                if self._index < length:
+                    end = min(self._index + left, length)
+                    result.extend(filter_method(content[self._index:end]))
+                    self._index = end
 
         if is_continue:
             self._previous_result += result
@@ -794,13 +784,16 @@ class Manager(object):
         self._cli.setPattern(self._pattern)
 
         if isinstance(content, list):
-            self._content = content
+            if len(content[0]) == len(content[0].rstrip("\r\n")):
+                self._content = content
+            else:
+                self._content = [line.rstrip("\r\n") for line in content]
             self._iteration_end = True
-            self._getInstance().setStlTotal(len(content)//self._getUnit())
+            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
             if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
                 pass
             else:
-                self._getInstance().setBuffer(content)
+                self._getInstance().setBuffer(self._content)
             if not kwargs.get('bang', 0):
                 self.input()
             else:
@@ -823,7 +816,7 @@ class Manager(object):
 
     def setContent(self, content):
         if not content or self._iteration_end == True:
-            if self._cli.pattern and self._index < len(self._content):
+            if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
                 self._search(self._content, True, 5000 if is_fuzzyMatch_C else 1000)
                 return True
             return False
