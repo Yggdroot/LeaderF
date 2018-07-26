@@ -149,7 +149,7 @@ let s:Lf_CommandMap = {
             \ '<C-S>':         ['<C-S>'],
             \ '<C-T>':         ['<C-T>'],
             \ '<C-U>':         ['<C-U>'],
-            \ '<C-V>':         ['<C-V>', '<S-Insert>'],
+            \ '<C-V>':         ['<C-V>'],
             \ '<C-W>':         ['<C-W>'],
             \ '<C-X>':         ['<C-X>'],
             \ '<C-Y>':         ['<C-Y>'],
@@ -167,7 +167,7 @@ let s:Lf_CommandMap = {
             \ '<F10>':         ['<F10>'],
             \ '<F11>':         ['<F11>'],
             \ '<F12>':         ['<F12>'],
-            \ '<CR>':          ['<CR>'],
+            \ '<CR>':          ['<CR>', '<C-M>'],
             \ '<BS>':          ['<BS>'],
             \ '<Tab>':         ['<Tab>', '<C-I>'],
             \ '<Del>':         ['<Del>'],
@@ -176,12 +176,13 @@ let s:Lf_CommandMap = {
             \ '<Down>':        ['<Down>'],
             \ '<Left>':        ['<Left>'],
             \ '<Right>':       ['<Right>'],
-            \ '<Home>':        ['<Home>', '<C-B>'],
+            \ '<Home>':        ['<Home>'],
             \ '<End>':         ['<End>'],
             \ '<PageUp>':      ['<PageUp>'],
             \ '<PageDown>':    ['<PageDown>'],
             \ '<S-Left>':      ['<S-Left>'],
             \ '<S-Right>':     ['<S-Right>'],
+            \ '<S-Insert>':    ['<S-Insert>'],
             \ '<LeftMouse>':   ['<LeftMouse>'],
             \ '<RightMouse>':  ['<RightMouse>'],
             \ '<MiddleMouse>': ['<MiddleMouse>'],
@@ -199,9 +200,12 @@ function! s:InitCommandMap(var, dict)
             call filter(tmp, 'v:key !=? key')
             for i in value
                 if index(['<TAB>', '<C-I>'], toupper(i)) >= 0
-                    call filter(tmp, "v:key != '<Tab>'")
+                    call filter(tmp, '!empty(filter(tmp[v:key], "v:val !=? ''<TAB>'' && v:val !=? ''<C-I>''"))')
+                elseif index(['<CR>', '<C-M>'], toupper(i)) >= 0
+                    call filter(tmp, '!empty(filter(tmp[v:key], "v:val !=? ''<CR>'' && v:val !=? ''<C-M>''"))')
+                else
+                    call filter(tmp, '!empty(filter(tmp[v:key], "v:val !=? i"))')
                 endif
-                call filter(tmp, '!empty(filter(tmp[v:key], "v:val !=? i"))')
             endfor
             let tmp[toupper(key)] = map(value, 'toupper(v:val)')
         endfor
