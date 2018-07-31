@@ -476,9 +476,9 @@ ValueElements* evaluate(TextContext* pText_ctxt,
 
     uint16_t special = 0;
     if ( i == 0 )
-        special = 3;
+        special = 4;
     else if ( text[i-1] == '/' || text[i-1] == '\\' )
-        special = k == 0 ? 3 : 2;
+        special = k == 0 ? 4 : 2;
     else if ( isupper(text[i]) )
         special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
@@ -521,7 +521,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
             if ( n == pattern_len )
             {
                 score = (float)(special > 0 ? (n > 1 ? valTable[n+1] : valTable[n]) + special : valTable[n]);
-                if ( (k == 0 && special == 3) || (k > 0 && special > 0) )
+                if ( (k == 0 && special == 4) || (k > 0 && special > 0) )
                 {
                     val[k].score = score;
                     val[k].beg = i - n;
@@ -590,7 +590,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
             }
 
             if ( text[i-1] == '/' || text[i-1] == '\\' )
-                special = k == 0 ? 3 : 2;
+                special = k == 0 ? 4 : 2;
             else if ( isupper(text[i]) )
                 special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
             /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
@@ -1157,9 +1157,9 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
 
     uint16_t special = 0;
     if ( i == 0 )
-        special = 3;
+        special = 4;
     else if ( text[i-1] == '/' || text[i-1] == '\\' )
-        special = k == 0 ? 3 : 2;
+        special = k == 0 ? 4 : 2;
     else if ( isupper(text[i]) )
         special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
@@ -1207,7 +1207,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
                 cur_highlights.end_index = 1;
                 cur_highlights.positions[0].col = i - n + 1;
                 cur_highlights.positions[0].len = n;
-                if ( (k == 0 && special == 3) || (k > 0 && special > 0) )
+                if ( (k == 0 && special == 4) || (k > 0 && special > 0) )
                 {
                     memcpy(groups[k], &cur_highlights, sizeof(HighlightGroup));
                     return groups[k];
@@ -1280,7 +1280,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
             }
 
             if ( text[i-1] == '/' || text[i-1] == '\\' )
-                special = k == 0 ? 3 : 2;
+                special = k == 0 ? 4 : 2;
             else if ( isupper(text[i]) )
                 special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
             /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
