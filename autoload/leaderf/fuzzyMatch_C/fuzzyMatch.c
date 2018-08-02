@@ -132,13 +132,14 @@ static uint8_t MultiplyDeBruijnBitPosition[64] =
 
 static uint16_t valTable[64] =
 {
-    0,   1,   4,   9,   17,  25,  33,  41,
-    49,  57,  65,  73,  81,  89,  97,  105,
-    113, 121, 129, 137, 145, 153, 161, 169,
-    177, 185, 193, 201, 209, 217, 225, 233,
-    241, 249, 257, 265, 273, 281, 289, 297,
-    305, 313, 321, 329, 337, 345, 353, 361,
-    369, 377, 385, 393, 401, 409, 417, 425
+    0,   1,   4,   7,   13,  19,  25,  31,
+    37,  43,  49,  55,  61,  67,  73,  79,
+    85,  91,  97,  103, 109, 115, 121, 127,
+    133, 139, 145, 151, 157, 163, 169, 175,
+    181, 187, 193, 199, 205, 211, 217, 223,
+    229, 235, 241, 247, 253, 259, 265, 271,
+    277, 283, 289, 295, 301, 307, 313, 319,
+    325, 331, 337, 343, 349, 355, 361, 367
 };
 
 typedef struct TextContext
@@ -273,15 +274,15 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
 
     uint16_t special = 0;
     if ( i == 0 )
-        special = 2;
+        special = 3;
     else if ( isupper(text[i]) )
-        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
+        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
-    /*     special = 2;                                                     */
+    /*     special = 3;                                                     */
     /* else if ( text[i-1] == '.' )                                         */
-    /*     special = 2;                                                     */
+    /*     special = 3;                                                     */
     else if ( !isalnum(text[i-1]) )
-        special = 2;
+        special = 3;
     else
         special = 0;
     ++i;
@@ -379,13 +380,13 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
             }
 
             if ( isupper(text[i]) )
-                special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
+                special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
             /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
-            /*     special = 2;                                                     */
+            /*     special = 3;                                                     */
             /* else if ( text[i-1] == '.' )                                         */
-            /*     special = 2;                                                     */
+            /*     special = 3;                                                     */
             else if ( !isalnum(text[i-1]) )
-                special = 2;
+                special = 3;
             else
                 special = 0;
             d = -2;
@@ -476,17 +477,17 @@ ValueElements* evaluate(TextContext* pText_ctxt,
 
     uint16_t special = 0;
     if ( i == 0 )
-        special = 4;
+        special = 5;
     else if ( text[i-1] == '/' || text[i-1] == '\\' )
-        special = k == 0 ? 4 : 2;
+        special = k == 0 ? 5 : 3;
     else if ( isupper(text[i]) )
-        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
+        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
-    /*     special = 2;                                                     */
+    /*     special = 3;                                                     */
     /* else if ( text[i-1] == '.' )                                         */
-    /*     special = 2;                                                     */
+    /*     special = 3;                                                     */
     else if ( !isalnum(text[i-1]) )
-        special = 2;
+        special = 3;
     else
         special = 0;
     ++i;
@@ -521,7 +522,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
             if ( n == pattern_len )
             {
                 score = (float)(special > 0 ? (n > 1 ? valTable[n+1] : valTable[n]) + special : valTable[n]);
-                if ( (k == 0 && special == 4) || (k > 0 && special > 0) )
+                if ( (k == 0 && special == 5) || (k > 0 && special > 0) )
                 {
                     val[k].score = score;
                     val[k].beg = i - n;
@@ -590,15 +591,15 @@ ValueElements* evaluate(TextContext* pText_ctxt,
             }
 
             if ( text[i-1] == '/' || text[i-1] == '\\' )
-                special = k == 0 ? 4 : 2;
+                special = k == 0 ? 5 : 3;
             else if ( isupper(text[i]) )
-                special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
+                special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
             /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
-            /*     special = 2;                                                     */
+            /*     special = 3;                                                     */
             /* else if ( text[i-1] == '.' )                                         */
-            /*     special = 2;                                                     */
+            /*     special = 3;                                                     */
             else if ( !isalnum(text[i-1]) )
-                special = 2;
+                special = 3;
             else
                 special = 0;
             d = -2;
@@ -868,7 +869,7 @@ float getWeight(char* text, uint16_t text_len,
 
         free(text_mask);
 
-        return score + 1.0f/text_len + 2.0f/(text_len - beg);
+        return score + (float)pattern_len/text_len + (float)(pattern_len << 1)/(text_len - beg);
     }
 }
 
@@ -938,15 +939,15 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
 
     uint16_t special = 0;
     if ( i == 0 )
-        special = 2;
+        special = 3;
     else if ( isupper(text[i]) )
-        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
+        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
-    /*     special = 2;                                                     */
+    /*     special = 3;                                                     */
     /* else if ( text[i-1] == '.' )                                         */
-    /*     special = 2;                                                     */
+    /*     special = 3;                                                     */
     else if ( !isalnum(text[i-1]) )
-        special = 2;
+        special = 3;
     else
         special = 0;
     ++i;
@@ -1053,13 +1054,13 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
             }
 
             if ( isupper(text[i]) )
-                special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
+                special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
             /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
-            /*     special = 2;                                                     */
+            /*     special = 3;                                                     */
             /* else if ( text[i-1] == '.' )                                         */
-            /*     special = 2;                                                     */
+            /*     special = 3;                                                     */
             else if ( !isalnum(text[i-1]) )
-                special = 2;
+                special = 3;
             else
                 special = 0;
             d = -2;
@@ -1157,17 +1158,17 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
 
     uint16_t special = 0;
     if ( i == 0 )
-        special = 4;
+        special = 5;
     else if ( text[i-1] == '/' || text[i-1] == '\\' )
-        special = k == 0 ? 4 : 2;
+        special = k == 0 ? 5 : 3;
     else if ( isupper(text[i]) )
-        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
+        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
-    /*     special = 2;                                                     */
+    /*     special = 3;                                                     */
     /* else if ( text[i-1] == '.' )                                         */
-    /*     special = 2;                                                     */
+    /*     special = 3;                                                     */
     else if ( !isalnum(text[i-1]) )
-        special = 2;
+        special = 3;
     else
         special = 0;
     ++i;
@@ -1207,7 +1208,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
                 cur_highlights.end_index = 1;
                 cur_highlights.positions[0].col = i - n + 1;
                 cur_highlights.positions[0].len = n;
-                if ( (k == 0 && special == 4) || (k > 0 && special > 0) )
+                if ( (k == 0 && special == 5) || (k > 0 && special > 0) )
                 {
                     memcpy(groups[k], &cur_highlights, sizeof(HighlightGroup));
                     return groups[k];
@@ -1280,15 +1281,15 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
             }
 
             if ( text[i-1] == '/' || text[i-1] == '\\' )
-                special = k == 0 ? 4 : 2;
+                special = k == 0 ? 5 : 3;
             else if ( isupper(text[i]) )
-                special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 2 : 0;
+                special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
             /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
-            /*     special = 2;                                                     */
+            /*     special = 3;                                                     */
             /* else if ( text[i-1] == '.' )                                         */
-            /*     special = 2;                                                     */
+            /*     special = 3;                                                     */
             else if ( !isalnum(text[i-1]) )
-                special = 2;
+                special = 3;
             else
                 special = 0;
             d = -2;
