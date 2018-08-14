@@ -353,12 +353,18 @@ class FileExplorer(Explorer):
             else:
                 redir_err = " 2>/dev/null"
 
-            cmd = 'find %s "%s" -name . -o %s %s -type f -print %s %s' % (followlinks,
-                                                                          dir,
-                                                                          ignore_dir,
-                                                                          ignore_file,
-                                                                          redir_err,
-                                                                          strip)
+            if lfEval("g:Lf_ShowHidden") == '0':
+                show_hidden = '-name ".*" -prune -o'
+            else:
+                show_hidden = ""
+
+            cmd = 'find %s "%s" -name "." -o %s %s %s -type f -print %s %s' % (followlinks,
+                                                                               dir,
+                                                                               ignore_dir,
+                                                                               ignore_file,
+                                                                               show_hidden,
+                                                                               redir_err,
+                                                                               strip)
         else:
             cmd = None
 
