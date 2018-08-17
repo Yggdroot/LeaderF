@@ -306,7 +306,7 @@ class FileExplorer(Explorer):
                 show_hidden = "--hidden"
 
             cmd = 'pt --nocolor %s %s %s -g="" "%s"' % (ignore, followlinks, show_hidden, dir)
-        elif default_tool["ag"] and lfEval("executable('ag')") == '1':
+        elif default_tool["ag"] and lfEval("executable('ag')") == '1' and os.name != 'nt': # https://github.com/vim/vim/issues/3236
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
             for i in wildignore["dir"]:

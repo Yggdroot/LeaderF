@@ -365,7 +365,7 @@ g:Lf_PreviewCode                                *g:Lf_PreviewCode*
 g:Lf_DefaultExternalTool                        *g:Lf_DefaultExternalTool*
     Use this option to specify the default external tool which is used to
     index the files. Possible values are 'rg', 'pt'(not available on Windows),
-    'ag', 'find'.  If you do not want to use the external tool: >
+    'ag'(not available on Windows), 'find'.  If you do not want to use the external tool: >
     let g:Lf_DefaultExternalTool = ""
 <
     By default, use the external tool in the sequence of 'rg', 'pt', 'ag', 'find'
