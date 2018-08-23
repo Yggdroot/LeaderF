@@ -128,6 +128,7 @@ call s:InitDict('g:Lf_PreviewResult', {
             \})
 call s:InitDict('g:Lf_NormalMap', {})
 call s:InitVar('g:Lf_Extensions', {})
+call s:InitDict('g:Lf_CtagsFuncOpts', {})
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],

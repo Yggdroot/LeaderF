@@ -52,6 +52,9 @@ class FunctionExplorer(Explorer):
                 "rust": "--rust-kinds=fPM",  # universal ctags
                 "ocaml": "--ocaml-kinds=mf",   # universal ctags
                 }
+        ctags_opts = lfEval('g:Lf_CtagsFuncOpts')
+        for k, v in ctags_opts.items():
+            self._ctags_options[k] = v
 
     def getContent(self, *args, **kwargs):
         if "--all" in kwargs.get("arguments", {}): # all buffers
