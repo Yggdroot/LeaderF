@@ -252,4 +252,4 @@ This plugin is released under the Apache License, Version 2.0 (the "License").
   [4]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L189-L349
   [5]: https://github.com/junegunn/vim-plug
   [6]: https://stackoverflow.com/questions/2817869/error-unable-to-find-vcvarsall-bat
-  [7]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L476-L481
+  [7]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L484-L489
