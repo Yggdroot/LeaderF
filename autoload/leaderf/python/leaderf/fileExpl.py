@@ -225,7 +225,7 @@ class FileExplorer(Explorer):
                     ignore += ' -x "%s"' % i
                 for i in wildignore["file"]:
                     ignore += ' -x "%s"' % i
-                cmd = "git ls-files && git ls-files --others --exclude-standard %s" % ignore
+                cmd = "git ls-files --recurse-submodules && git ls-files --others --exclude-standard %s" % ignore
                 self._external_cmd = cmd
                 return cmd
             elif self._exists(dir, ".hg"):
