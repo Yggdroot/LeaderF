@@ -784,10 +784,10 @@ class Manager(object):
         self._cli.setPattern(self._pattern)
 
         if isinstance(content, list):
-            if len(content[0]) == len(content[0].rstrip("\r\n")):
+            if len(content[0]) == len(content[0].rstrip(b"\r\n")):
                 self._content = content
             else:
-                self._content = [line.rstrip("\r\n") for line in content]
+                self._content = [line.rstrip(b"\r\n") for line in content]
             self._iteration_end = True
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
             if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:

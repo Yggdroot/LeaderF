@@ -234,7 +234,7 @@ class LfInstance(object):
         self.buffer.options['modifiable'] = True
         # if lfEval("has('nvim')") == '1':
         #     # NvimError: string cannot contain newlines
-        #     content = [ line.rstrip("\r\n") for line in content ]
+        #     content = [ line.rstrip(b"\r\n") for line in content ]
         self._buffer_object[:] = content
 
     def appendLine(self, line):
