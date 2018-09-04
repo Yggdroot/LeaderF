@@ -657,8 +657,11 @@ class Manager(object):
             files = []
             for i in sorted(self._selections.keys()):
                 files.append(self._getInstance().buffer[i-1])
-            if "--stayOpen" in self._arguments and "--fullPath" not in self._arguments:
-                vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
+            if "--stayOpen" in self._arguments:
+                try:
+                    vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
+                except vim.error: # error if original buffer is an No Name buffer
+                    pass
             else:
                 self._getInstance().exitBuffer()
             if mode == '':
@@ -670,8 +673,11 @@ class Manager(object):
         else:
             file = self._getInstance().currentLine
             line_nr = self._getInstance().window.cursor[0]
-            if "--stayOpen" in self._arguments and "--fullPath" not in self._arguments:
-                vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
+            if "--stayOpen" in self._arguments:
+                try:
+                    vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
+                except vim.error: # error if original buffer is an No Name buffer
+                    pass
             else:
                 self._getInstance().exitBuffer()
             self._accept(file, mode, self._getInstance().buffer, line_nr) # for bufTag
