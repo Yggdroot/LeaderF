@@ -4,6 +4,7 @@
 import vim
 import re
 import os
+import sys
 import os.path
 import shlex
 import argparse
@@ -117,6 +118,10 @@ class AnyExplorer(Explorer):
                 result = list(format_list(list(result), kwargs["arguments"]))
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(format_list), err))
+
+        if sys.version_info >= (3, 0):
+            if isinstance(result, list) and result and isinstance(result[0], bytes):
+                result = [lfBytes2Str(i) for i in result]
 
         return result
 
