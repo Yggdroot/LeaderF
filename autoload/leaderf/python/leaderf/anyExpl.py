@@ -26,6 +26,7 @@ let g:Lf_Extensions = {
     \       ],
     \       "format_line": funcref (line, arguments),
     \       "format_list": funcref ([], arguments),
+    \       "need_exit": funcref (line, arguments),
     \       "accept": funcref (line, arguments),
     \       "preview": funcref (orig_buf_nr, orig_cursor, arguments),
     \       "supports_name_only": 0,
@@ -154,6 +155,17 @@ class AnyExplManager(Manager):
 
     def _defineMaps(self):
         lfCmd("call leaderf#Any#Maps('%s')" % self._category)
+
+    def _needExit(self, line, arguments):
+        need_exit = self._config.get("need_exit")
+        if need_exit:
+            try:
+                ret = need_exit(line, arguments)
+                return False if ret == 0 else True
+            except vim.error as err:
+                raise Exception("Error occurred in user defined %s: %s" % (str(need_exit), err))
+        else:
+            return True
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:

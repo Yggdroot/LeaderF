@@ -218,6 +218,9 @@ class Manager(object):
     def _restoreOrigCwd(self):
         pass
 
+    def _needExit(self, line, arguments):
+        return True
+
     #**************************************************************
 
     def _needPreview(self, preview):
@@ -670,20 +673,29 @@ class Manager(object):
             else:
                 for file in files:
                     self._accept(file, mode)
+            need_exit = True
         else:
             file = self._getInstance().currentLine
             line_nr = self._getInstance().window.cursor[0]
-            if "--stayOpen" in self._arguments:
-                try:
-                    vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
-                except vim.error: # error if original buffer is an No Name buffer
-                    pass
-            else:
-                self._getInstance().exitBuffer()
+            need_exit = self._needExit(file, self._arguments)
+            if need_exit:
+                if "--stayOpen" in self._arguments:
+                    try:
+                        vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
+                    except vim.error: # error if original buffer is an No Name buffer
+                        pass
+                else:
+                    self._getInstance().exitBuffer()
             self._accept(file, mode, self._getInstance().buffer, line_nr) # for bufTag
 
-        self._setAutochdir()
-        self._restoreOrigCwd()
+        if need_exit:
+            self._setAutochdir()
+            self._restoreOrigCwd()
+            return None
+        else:
+            self._beforeExit()
+            self._content = vim.current.buffer[:]
+            return False
 
     def quit(self):
         self._getInstance().exitBuffer()
@@ -891,20 +903,20 @@ class Manager(object):
                 self._previewResult(False)
             elif equal(cmd, '<2-LeftMouse>'):
                 self._leftClick()
-                self.accept()
-                break
+                if self.accept() is None:
+                    break
             elif equal(cmd, '<CR>'):
-                self.accept()
-                break
+                if self.accept() is None:
+                    break
             elif equal(cmd, '<C-X>'):
-                self.accept('h')
-                break
+                if self.accept('h') is None:
+                    break
             elif equal(cmd, '<C-]>'):
-                self.accept('v')
-                break
+                if self.accept('v') is None:
+                    break
             elif equal(cmd, '<C-T>'):
-                self.accept('t')
-                break
+                if self.accept('t') is None:
+                    break
             elif equal(cmd, '<Quit>'):
                 self.quit()
                 break
