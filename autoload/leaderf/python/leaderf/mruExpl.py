@@ -20,8 +20,8 @@ class MruExplorer(Explorer):
         self._max_bufname_len = 0
 
     def getContent(self, *args, **kwargs):
-        mru.saveToCache(lfEval("readfile(g:Lf_MruCacheFileName)"))
-        lfCmd("call writefile([], g:Lf_MruCacheFileName)")
+        mru.saveToCache(lfEval("readfile(lfMru#CacheFileName())"))
+        lfCmd("call writefile([], lfMru#CacheFileName())")
 
         with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore') as f:
             lines = f.readlines()

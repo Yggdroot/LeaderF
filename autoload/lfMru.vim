@@ -23,6 +23,10 @@ if !filereadable(g:Lf_MruCacheFileName)
     call writefile([], g:Lf_MruCacheFileName)
 endif
 
+function! lfMru#CacheFileName()
+    return g:Lf_MruCacheFileName
+endfunction
+
 function! lfMru#record(name)
     if a:name == '' || !filereadable(a:name)
         return
