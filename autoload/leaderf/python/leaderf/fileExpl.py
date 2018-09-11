@@ -44,6 +44,7 @@ class FileExplorer(Explorer):
         self._external_cmd = None
         self._initCache()
         self._executor = []
+        self._no_ignore = None
 
     def _initCache(self):
         if not os.path.exists(self._cache_dir):
@@ -204,7 +205,7 @@ class FileExplorer(Explorer):
             else:
                 return glob
 
-    def _buildCmd(self, dir):
+    def _buildCmd(self, dir, **kwargs):
         if lfEval("g:Lf_ShowRelativePath") == '1':
             dir = os.path.relpath(dir)
 
@@ -225,7 +226,13 @@ class FileExplorer(Explorer):
                     ignore += ' -x "%s"' % i
                 for i in wildignore["file"]:
                     ignore += ' -x "%s"' % i
-                cmd = "git ls-files --recurse-submodules && git ls-files --others --exclude-standard %s" % ignore
+
+                if "--no-ignore" in kwargs.get("arguments", {}):
+                    no_ignore = ""
+                else:
+                    no_ignore = "--exclude-standard"
+
+                cmd = "git ls-files --recurse-submodules && git ls-files --others %s %s" % (no_ignore, ignore)
                 self._external_cmd = cmd
                 return cmd
             elif self._exists(dir, ".hg"):
@@ -284,7 +291,12 @@ class FileExplorer(Explorer):
             else:
                 show_hidden = "--hidden"
 
-            cmd = 'rg --no-messages --files %s %s %s %s "%s"' % (color, ignore, followlinks, show_hidden, dir)
+            if "--no-ignore" in kwargs.get("arguments", {}):
+                no_ignore = "--no-ignore"
+            else:
+                no_ignore = ""
+
+            cmd = 'rg --no-messages --files %s %s %s %s %s "%s"' % (color, ignore, followlinks, show_hidden, no_ignore, dir)
         elif default_tool["pt"] and lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
@@ -305,7 +317,12 @@ class FileExplorer(Explorer):
             else:
                 show_hidden = "--hidden"
 
-            cmd = 'pt --nocolor %s %s %s -g="" "%s"' % (ignore, followlinks, show_hidden, dir)
+            if "--no-ignore" in kwargs.get("arguments", {}):
+                no_ignore = "-U"
+            else:
+                no_ignore = ""
+
+            cmd = 'pt --nocolor %s %s %s %s -g="" "%s"' % (ignore, followlinks, show_hidden, no_ignore, dir)
         elif default_tool["ag"] and lfEval("executable('ag')") == '1' and os.name != 'nt': # https://github.com/vim/vim/issues/3236
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
@@ -326,7 +343,12 @@ class FileExplorer(Explorer):
             else:
                 show_hidden = "--hidden"
 
-            cmd = 'ag --nocolor --silent %s %s %s -g "" "%s"' % (ignore, followlinks, show_hidden, dir)
+            if "--no-ignore" in kwargs.get("arguments", {}):
+                no_ignore = "-U"
+            else:
+                no_ignore = ""
+
+            cmd = 'ag --nocolor --silent %s %s %s %s -g "" "%s"' % (ignore, followlinks, show_hidden, no_ignore, dir)
         elif default_tool["find"] and lfEval("executable('find')") == '1' \
                 and lfEval("executable('sed')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")
@@ -494,11 +516,18 @@ class FileExplorer(Explorer):
 
         dir = os.getcwd()
 
-        if lfEval("g:Lf_UseMemoryCache") == '0' or dir != self._cur_dir or \
+        no_ignore = kwargs.get("arguments", {}).get("--no-ignore")
+        if no_ignore != self._no_ignore:
+            self._no_ignore = no_ignore
+            arg_changes = True
+        else:
+            arg_changes = False
+
+        if arg_changes or lfEval("g:Lf_UseMemoryCache") == '0' or dir != self._cur_dir or \
                 not self._content:
             self._cur_dir = dir
 
-            cmd = self._buildCmd(dir)
+            cmd = self._buildCmd(dir, **kwargs)
             lfCmd("let g:Lf_Debug_Cmd = '%s'" % escQuote(cmd))
 
             if lfEval("g:Lf_UseCache") == '1' and kwargs.get("refresh", False) == False:

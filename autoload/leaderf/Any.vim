@@ -52,6 +52,7 @@ let g:Lf_Helps = {
 let g:Lf_Arguments = {
             \ "file":[
             \           {"name": ["directory"], "nargs": "?", "help": "serarch files under <directory>"},
+            \           {"name": ["--no-ignore"], "nargs": 0, "help": "don't respect ignore files (.gitignore, .ignore, etc.)."},
             \   ],
             \ "buffer":[
             \           {"name": ["--all"], "nargs": 0, "help": "search all buffers in addition to the listed buffers"},
@@ -78,7 +79,7 @@ let g:Lf_Arguments = {
             \}
 
 let g:Lf_CommonArguments = [
-            \ {"name": ["--stayOpen"], "nargs": 0, "help": "do not quit LeaderF after accepting an entry"},
+            \ {"name": ["--stayOpen"], "nargs": 0, "help": "don't quit LeaderF after accepting an entry"},
             \ [
             \   {"name": ["--input"], "nargs": 1, "help": "specifies INPUT as the pattern inputted in advance"},
             \   {"name": ["--cword"], "nargs": 0, "help": "current word under cursor is inputted in advance"},

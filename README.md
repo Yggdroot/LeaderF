@@ -85,7 +85,7 @@ usage: Leaderf[!] [-h] [--stayOpen] [--input INPUT | --cword]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --stayOpen            do not quit LeaderF after accepting an entry
+  --stayOpen            don't quit LeaderF after accepting an entry
   --input INPUT         specifies INPUT as the pattern inputted in advance
   --cword               current word under cursor is inputted in advance
   --top                 the LeaderF window is at the top of the screen
@@ -133,7 +133,7 @@ specific arguments:
   --cwd          search MRU in current working directory
 
 common arguments:
-  --stayOpen     do not quit LeaderF after accepting an entry
+  --stayOpen     don't quit LeaderF after accepting an entry
   --input INPUT  specifies INPUT as the pattern inputted in advance
   --cword        current word under cursor is inputted in advance
   --top          the LeaderF window is at the top of the screen
