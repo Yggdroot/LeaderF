@@ -11,7 +11,7 @@ fi
 
 cd autoload/leaderf/fuzzyMatch_C
 echo "Begin to compile C extension of Python2 ..."
-python setup.py build
+python2 setup.py build
 if [ $? -eq 0 ]
 then
     cp build/lib*2.?/fuzzyMatchC*.so ../python
