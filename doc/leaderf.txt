@@ -508,6 +508,13 @@ g:Lf_MruWildIgnore                              *g:Lf_MruWildIgnore*
             \ 'file': []
             \}
 <
+g:Lf_RecurseSubmodules                          *g:Lf_RecurseSubmodules*
+    This option indicates whether to show the files in submodules of git
+    repository. If the value is 1, it means git command has '--recurse-submodules'
+    option. Because '--recurse-submodules' was first introduced by git version
+    2.11+ and there will be an error if git version is lower than 2.11, this
+    option is off with value 0 by default.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

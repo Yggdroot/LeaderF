@@ -232,7 +232,12 @@ class FileExplorer(Explorer):
                 else:
                     no_ignore = "--exclude-standard"
 
-                cmd = "git ls-files --recurse-submodules && git ls-files --others %s %s" % (no_ignore, ignore)
+                if lfEval("get(g:, 'Lf_RecurseSubmodules', 0)") == '1':
+                    recurse_submodules = "--recurse-submodules"
+                else:
+                    recurse_submodules = ""
+
+                cmd = "git ls-files %s && git ls-files --others %s %s" % (recurse_submodules, no_ignore, ignore)
                 self._external_cmd = cmd
                 return cmd
             elif self._exists(dir, ".hg"):
