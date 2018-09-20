@@ -4,18 +4,22 @@ if /i "%1" equ "--reverse" (
     rd /s /q build
     cd ..\python
     del *.pyd
-    echo C extension uninstalled sucessfully!
+    echo ======================================
+    echo  C extension uninstalled sucessfully!
+    echo ======================================
     goto end
 )
 echo Begin to compile C extension of Python2 ...
 cd autoload\leaderf\fuzzyMatch_C
-py -2 setup.py build --compiler=mingw32
+py -2 setup.py build
 if %errorlevel% neq 0 goto second
 pushd build\lib*2.?
-xcopy /y fuzzyMatchC*.pyd ..\..\..\python\
+xcopy /y *.pyd ..\..\..\python\
 if %errorlevel% equ 0 (
     echo=
-    echo C extension of Python2 installed sucessfully!
+    echo ===============================================
+    echo  C extension of Python2 installed sucessfully!
+    echo ===============================================
 )
 popd
 
@@ -25,10 +29,12 @@ echo Begin to compile C extension of Python3 ...
 py -3 setup.py build
 if %errorlevel% neq 0 goto end
 pushd build\lib*3.?
-xcopy /y fuzzyMatchC*.pyd ..\..\..\python\
+xcopy /y *.pyd ..\..\..\python\
 if %errorlevel% equ 0 (
     echo=
-    echo C extension of Python3 installed sucessfully!
+    echo ===============================================
+    echo  C extension of Python3 installed sucessfully!
+    echo ===============================================
 )
 popd
 

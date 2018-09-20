@@ -96,7 +96,7 @@ g:Lf_DefaultMode                                *g:Lf_DefaultMode*
     'FullPath' - fuzzy mode, match full path when searching
     'Fuzzy' - fuzzy mode, when lines in the result are not file path
     'Regex' - regex mode
-    Default value is 'NameOnly'
+    Default value is 'FullPath'
 
 g:Lf_CursorBlink                                *g:Lf_CursorBlink*
     Set this option to 1 to let the cursor in the prompt blink, if you don't

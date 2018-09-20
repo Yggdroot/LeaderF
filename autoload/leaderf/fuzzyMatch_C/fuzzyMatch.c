@@ -17,9 +17,9 @@
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
+#include "fuzzyMatch.h"
 
 
 #if defined(_MSC_VER) && \
@@ -128,8 +128,6 @@ static uint8_t MultiplyDeBruijnBitPosition[64] =
 
 #define FM_CTZ(x) MultiplyDeBruijnBitPosition[((uint64_t)((x) & -(int64_t)(x)) * deBruijn) >> 58]
 
-#define MIN_FLOAT (-10000.0f)
-
 static uint16_t valTable[64] =
 {
     0,   1,   4,   7,   13,  19,  25,  31,
@@ -151,35 +149,12 @@ typedef struct TextContext
     uint16_t offset;
 }TextContext;
 
-typedef struct PatternContext
-{
-    char* pattern;
-    int64_t pattern_mask[256];
-    uint16_t pattern_len;
-    uint8_t is_lower;
-}PatternContext;
-
 typedef struct ValueElements
 {
     float score;
     uint16_t beg;
     uint16_t end;
 }ValueElements;
-
-typedef struct HighlightPos
-{
-    uint16_t col;
-    uint16_t len;
-}HighlightPos;
-
-typedef struct HighlightGroup
-{
-    float score;
-    uint16_t beg;
-    uint16_t end;
-    HighlightPos positions[64];
-    uint16_t end_index;
-}HighlightGroup;
 
 PatternContext* initPattern(char* pattern, uint16_t pattern_len)
 {
@@ -265,7 +240,7 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
     uint16_t end = 0;
 
     uint16_t max_prefix_score = 0;
-    float max_score = MIN_FLOAT;
+    float max_score = MIN_WEIGHT;
 
     char* text = pText_ctxt->text;
     uint16_t text_len = pText_ctxt->text_len;
@@ -309,7 +284,7 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
 
         if ( d >= last )
         {
-            float score = MIN_FLOAT;
+            float score = MIN_WEIGHT;
             uint16_t end_pos = 0;
             uint16_t n = FM_BIT_LENGTH(~last);
             /* e.g., text = '~~abcd~~~~', pattern = 'abcd' */
@@ -468,7 +443,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
     uint16_t end = 0;
 
     uint16_t max_prefix_score = 0;
-    float max_score = MIN_FLOAT;
+    float max_score = MIN_WEIGHT;
 
     char* text = pText_ctxt->text;
     uint16_t text_len = pText_ctxt->text_len;
@@ -515,7 +490,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
 
         if ( d >= last )
         {
-            float score = MIN_FLOAT;
+            float score = MIN_WEIGHT;
             uint16_t end_pos = 0;
             uint16_t n = FM_BIT_LENGTH(~last);
             /* e.g., text = '~~abcd~~~~', pattern = 'abcd' */
@@ -637,7 +612,7 @@ float getWeight(char* text, uint16_t text_len,
                 uint8_t is_name_only)
 {
     if ( !text || !pPattern_ctxt )
-        return 0;
+        return MIN_WEIGHT;
 
     uint16_t j = 0;
     uint16_t col_num = 0;
@@ -647,6 +622,11 @@ float getWeight(char* text, uint16_t text_len,
     int64_t* pattern_mask = pPattern_ctxt->pattern_mask;
     char first_char = pattern[0];
     char last_char = pattern[pattern_len - 1];
+
+    if ( pattern_len >= 64 )
+    {
+        return MIN_WEIGHT;
+    }
 
     if ( pattern_len == 1 )
     {
@@ -663,7 +643,7 @@ float getWeight(char* text, uint16_t text_len,
                 }
             }
             if ( first_char_pos == -1 )
-                return 0;
+                return MIN_WEIGHT;
             else
                 return 1.0f/(first_char_pos + 1) + 1.0f/text_len;
         }
@@ -683,7 +663,7 @@ float getWeight(char* text, uint16_t text_len,
                 }
             }
             if ( first_char_pos == -1 )
-                return 0;
+                return MIN_WEIGHT;
             else
                 return 1.0f/(first_char_pos + 1) + 1.0f/text_len;
         }
@@ -702,7 +682,7 @@ float getWeight(char* text, uint16_t text_len,
             }
         }
         if ( first_char_pos == -1 )
-            return 0;
+            return MIN_WEIGHT;
 
         int16_t last_char_pos = -1;
         for ( i = text_len - 1; i >= first_char_pos; --i )
@@ -714,18 +694,16 @@ float getWeight(char* text, uint16_t text_len,
             }
         }
         if ( last_char_pos == -1 )
-            return 0;
+            return MIN_WEIGHT;
 
         col_num = (text_len + 63) >> 6;     /* (text_len + 63)/64 */
-        size_t text_mask_size = (col_num << 8) * sizeof(uint64_t);
         /* uint64_t text_mask[256][col_num] */
-        text_mask = (uint64_t*)malloc(text_mask_size);
+        text_mask = (uint64_t*)calloc(col_num << 8, sizeof(uint64_t));
         if ( !text_mask )
         {
             fprintf(stderr, "Out of memory in getWeight()!\n");
-            return 0;
+            return MIN_WEIGHT;
         }
-        memset(text_mask, 0, text_mask_size);
         char c;
         for ( i = first_char_pos; i <= last_char_pos; ++i )
         {
@@ -767,7 +745,7 @@ float getWeight(char* text, uint16_t text_len,
             }
         }
         if ( first_char_pos == -1 )
-            return 0;
+            return MIN_WEIGHT;
 
         int16_t last_char_pos = -1;
         if ( isupper(last_char) )
@@ -795,18 +773,16 @@ float getWeight(char* text, uint16_t text_len,
             }
         }
         if ( last_char_pos == -1 )
-            return 0;
+            return MIN_WEIGHT;
 
         col_num = (text_len + 63) >> 6;
-        size_t text_mask_size = (col_num << 8) * sizeof(uint64_t);
         /* uint64_t text_mask[256][col_num] */
-        text_mask = (uint64_t*)malloc(text_mask_size);
+        text_mask = (uint64_t*)calloc(col_num << 8, sizeof(uint64_t));
         if ( !text_mask )
         {
             fprintf(stderr, "Out of memory in getWeight()!\n");
-            return 0;
+            return MIN_WEIGHT;
         }
-        memset(text_mask, 0, text_mask_size);
         char c;
         int16_t i;
         for ( i = first_char_pos; i <= last_char_pos; ++i )
@@ -838,7 +814,7 @@ float getWeight(char* text, uint16_t text_len,
     if ( j < pattern_len )
     {
         free(text_mask);
-        return 0;
+        return MIN_WEIGHT;
     }
 
     TextContext text_ctxt;
@@ -916,18 +892,21 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
     }
 
     uint16_t max_prefix_score = 0;
-    float max_score = MIN_FLOAT;
+    float max_score = MIN_WEIGHT;
 
     if ( !groups[k] )
     {
-        groups[k] = (HighlightGroup*)malloc(sizeof(HighlightGroup));
+        groups[k] = (HighlightGroup*)calloc(1, sizeof(HighlightGroup));
         if ( !groups[k] )
         {
             fprintf(stderr, "Out of memory in evaluateHighlights_nameOnly()!\n");
             return NULL;
         }
     }
-    memset(groups[k], 0, sizeof(HighlightGroup));
+    else
+    {
+        memset(groups[k], 0, sizeof(HighlightGroup));
+    }
 
     HighlightGroup cur_highlights;
     memset(&cur_highlights, 0, sizeof(HighlightGroup));
@@ -974,7 +953,7 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
 
         if ( d >= last )
         {
-            float score = MIN_FLOAT;
+            float score = MIN_WEIGHT;
             uint16_t n = FM_BIT_LENGTH(~last);
             /* e.g., text = '~~abcd~~~~', pattern = 'abcd' */
             if ( n == pattern_len )
@@ -1135,18 +1114,21 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
     }
 
     uint16_t max_prefix_score = 0;
-    float max_score = MIN_FLOAT;
+    float max_score = MIN_WEIGHT;
 
     if ( !groups[k] )
     {
-        groups[k] = (HighlightGroup*)malloc(sizeof(HighlightGroup));
+        groups[k] = (HighlightGroup*)calloc(1, sizeof(HighlightGroup));
         if ( !groups[k] )
         {
             fprintf(stderr, "Out of memory in evaluateHighlights()!\n");
             return NULL;
         }
     }
-    memset(groups[k], 0, sizeof(HighlightGroup));
+    else
+    {
+        memset(groups[k], 0, sizeof(HighlightGroup));
+    }
 
     HighlightGroup cur_highlights;
     memset(&cur_highlights, 0, sizeof(HighlightGroup));
@@ -1196,7 +1178,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
 
         if ( d >= last )
         {
-            float score = MIN_FLOAT;
+            float score = MIN_WEIGHT;
             uint16_t n = FM_BIT_LENGTH(~last);
             /* e.g., text = '~~abcd~~~~', pattern = 'abcd' */
             if ( n == pattern_len )
@@ -1435,15 +1417,13 @@ HighlightGroup* getHighlights(char* text,
         }
 
         col_num = (text_len + 63) >> 6;     /* (text_len + 63)/64 */
-        size_t text_mask_size = (col_num << 8) * sizeof(uint64_t);
         /* uint64_t text_mask[256][col_num] */
-        text_mask = (uint64_t*)malloc(text_mask_size);
+        text_mask = (uint64_t*)calloc(col_num << 8, sizeof(uint64_t));
         if ( !text_mask )
         {
             fprintf(stderr, "Out of memory in getHighlights()!\n");
             return NULL;
         }
-        memset(text_mask, 0, text_mask_size);
         char c;
         for ( i = first_char_pos; i <= last_char_pos; ++i )
         {
@@ -1508,15 +1488,13 @@ HighlightGroup* getHighlights(char* text,
         }
 
         col_num = (text_len + 63) >> 6;
-        size_t text_mask_size = (col_num << 8) * sizeof(uint64_t);
         /* uint64_t text_mask[256][col_num] */
-        text_mask = (uint64_t*)malloc(text_mask_size);
+        text_mask = (uint64_t*)calloc(col_num << 8, sizeof(uint64_t));
         if ( !text_mask )
         {
             fprintf(stderr, "Out of memory in getHighlights()!\n");
             return NULL;
         }
-        memset(text_mask, 0, text_mask_size);
 
         char c;
         int16_t i;
@@ -1548,15 +1526,13 @@ HighlightGroup* getHighlights(char* text,
     text_ctxt.offset = 0;
 
     /* HighlightGroup* groups[pattern_len] */
-    uint16_t size = pattern_len * sizeof(HighlightGroup*);
-    HighlightGroup** groups = (HighlightGroup**)malloc(size);
+    HighlightGroup** groups = (HighlightGroup**)calloc(pattern_len, sizeof(HighlightGroup*));
     if ( !groups )
     {
         fprintf(stderr, "Out of memory in getHighlights()!\n");
         free(text_mask);
         return NULL;
     }
-    memset(groups, 0, size);
 
     HighlightGroup* pGroup = NULL;
     if ( is_name_only )
@@ -1654,24 +1630,45 @@ static PyMethodDef fuzzyMatchC_Methods[] =
 
 #if PY_MAJOR_VERSION >= 3
 
-static struct PyModuleDef fuzzyMatchC_module = {
+static struct PyModuleDef fuzzyMatchC_module =
+{
     PyModuleDef_HEAD_INIT,
     "fuzzyMatchC",   /* name of module */
-    "fuzzy match algorithm written in C.",  /* module documentation, may be NULL */
+    "fuzzy match algorithm written in C.",
     -1,
     fuzzyMatchC_Methods
 };
 
 PyMODINIT_FUNC PyInit_fuzzyMatchC(void)
 {
-    return PyModule_Create(&fuzzyMatchC_module);
+    PyObject* module = NULL;
+    module = PyModule_Create(&fuzzyMatchC_module);
+    if ( !module )
+        return NULL;
+
+    if ( PyModule_AddObject(module, "MIN_WEIGHT", Py_BuildValue("f", (float)MIN_WEIGHT)) )
+    {
+        Py_DECREF(module);
+        return NULL;
+    }
+
+    return module;
 }
 
 #else
 
 PyMODINIT_FUNC initfuzzyMatchC(void)
 {
-    Py_InitModule("fuzzyMatchC", fuzzyMatchC_Methods);
+    PyObject* module = NULL;
+    module = Py_InitModule("fuzzyMatchC", fuzzyMatchC_Methods);
+    if ( !module )
+        return;
+
+    if ( PyModule_AddObject(module, "MIN_WEIGHT", Py_BuildValue("f", (float)MIN_WEIGHT)) )
+    {
+        Py_DECREF(module);
+        return;
+    }
 }
 
 #endif

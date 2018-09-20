@@ -6,6 +6,7 @@ import sys
 import time
 import operator
 import itertools
+import multiprocessing
 from functools import partial
 from functools import wraps
 from .instance import LfInstance
@@ -13,6 +14,14 @@ from .cli import LfCli
 from .utils import *
 from .fuzzyMatch import FuzzyMatch
 
+is_fuzzyEngine_C = False
+try:
+    import fuzzyEngine
+    is_fuzzyEngine_C = True
+    cpu_count = multiprocessing.cpu_count()
+    lfCmd("let g:Lf_fuzzyEngine_C = 1")
+except ImportError:
+    lfCmd("let g:Lf_fuzzyEngine_C = 0")
 
 is_fuzzyMatch_C = False
 try:
@@ -68,6 +77,8 @@ class Manager(object):
         self._orig_line = ''
         self._launched = False
         self._ctrlp_pressed = False
+        self._fuzzy_engine = None
+        self._result_content = []
         self._getExplClass()
 
     #**************************************************************
@@ -183,10 +194,15 @@ class Manager(object):
         self._cleanup()
         self._defineMaps()
         lfCmd("runtime syntax/leaderf.vim")
+        if is_fuzzyEngine_C:
+            self._fuzzy_engine = fuzzyEngine.createFuzzyEngine(cpu_count, False)
 
     def _beforeExit(self):
         self._cleanup()
         self._getExplorer().cleanup()
+        if self._fuzzy_engine:
+            fuzzyEngine.closeFuzzyEngine(self._fuzzy_engine)
+            self._fuzzy_engine = None
 
     def _afterExit(self):
         pass
@@ -301,12 +317,17 @@ class Manager(object):
         lfCmd("norm! k")
 
     def _toDown(self):
+        if self._getInstance().getCurrentPos()[0] == self._getInstance().window.height:
+            self._setResultContent()
+
         lfCmd("norm! j")
 
     def _pageUp(self):
         lfCmd('exec "norm! \<PageUp>"')
 
     def _pageDown(self):
+        self._setResultContent()
+
         lfCmd('exec "norm! \<PageDown>"')
 
     def _leftClick(self):
@@ -320,13 +341,14 @@ class Manager(object):
             exit_loop = True
         return exit_loop
 
-    def _search(self, content, is_continue=False, step=30000):
+    def _search(self, content, is_continue=False, step=40000):
         self.clearSelections()
         self._clearHighlights()
         self._clearHighlightsPos()
         self._cli.highlightMatches()
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
             self._getInstance().setBuffer(content)
+            self._getInstance().setStlResultsCount(len(content))
             return
 
         if self._cli.isFuzzy:
@@ -336,7 +358,8 @@ class Manager(object):
 
         self._previewResult(False)
 
-    def _filter(self, step, filter_method, content, is_continue):
+    def _filter(self, step, filter_method, content, is_continue,
+                use_fuzzy_engine=False, return_index=False):
         """ Construct a list from result of filter_method(content).
 
         Args:
@@ -348,36 +371,50 @@ class Manager(object):
         unit = self._getUnit()
         step = step // unit * unit
         length = len(content)
-        cb = self._getInstance().buffer
-        result = []
         if self._index == 0:
             self._previous_result = []
             self._cb_content = []
-            if step > 30000:
-                step = 30000
+            self._result_content = content
             self._index = min(step, length)
-            result.extend(filter_method(content[:self._index]))
+            cur_content = content[:self._index]
         else:
             if not is_continue and not self._getInstance().empty():
-                self._cb_content += cb[:]
+                self._cb_content += self._result_content
 
             if len(self._cb_content) >= step:
-                result.extend(filter_method(self._cb_content[:step]))
+                cur_content = self._cb_content[:step]
                 self._cb_content = self._cb_content[step:]
             else:
-                result.extend(filter_method(self._cb_content))
+                cur_content = self._cb_content
                 left = step - len(self._cb_content)
                 self._cb_content = []
                 if self._index < length:
                     end = min(self._index + left, length)
-                    result.extend(filter_method(content[self._index:end]))
+                    cur_content += content[self._index:end]
                     self._index = end
 
-        if is_continue:
-            self._previous_result += result
-            result = self._previous_result
+        if use_fuzzy_engine:
+            if return_index:
+                mode = 0 if self._cli.isFullPath else 1
+                tmp_content = [self._getDigest(line, mode) for line in cur_content]
+                result = filter_method(source=tmp_content)
+                result = (result[0], [cur_content[i] for i in result[1]])
+            else:
+                result = filter_method(source=cur_content)
+
+            if is_continue:
+                self._previous_result = (self._previous_result[0] + result[0],
+                                         self._previous_result[1] + result[1])
+                result = self._previous_result
+            else:
+                self._previous_result = result
         else:
-            self._previous_result = result
+            result = list(filter_method(cur_content))
+            if is_continue:
+                self._previous_result += result
+                result = self._previous_result
+            else:
+                self._previous_result = result
 
         return result
 
@@ -387,46 +424,46 @@ class Manager(object):
         """
         getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
         pairs = ((get_weight(getDigest(line)), line) for line in iterable)
-        return (p for p in pairs if p[0])
+        MIN_WEIGHT = fuzzyMatchC.MIN_WEIGHT if is_fuzzyMatch_C else FuzzyMatch.MIN_WEIGHT
+        return (p for p in pairs if p[0] > MIN_WEIGHT)
 
     def _refineFilter(self, first_get_weight, get_weight, iterable):
         getDigest = self._getDigest
         triples = ((first_get_weight(getDigest(line, 1)),
                     get_weight(getDigest(line, 2)), line)
                     for line in iterable)
-        return ((i[0] + i[1], i[2]) for i in triples if i[0] and i[1])
+        MIN_WEIGHT = fuzzyMatchC.MIN_WEIGHT if is_fuzzyMatch_C else FuzzyMatch.MIN_WEIGHT
+        return ((i[0] + i[1], i[2]) for i in triples if i[0] > MIN_WEIGHT and i[1] > MIN_WEIGHT)
 
     def _fuzzySearch(self, content, is_continue, step):
         encoding = lfEval("&encoding")
-        is_ascii = False
+        use_fuzzy_engine = False
+        use_fuzzy_match_c = False
         if self._cli.isRefinement:
-            if self._cli.pattern[1] == '':      # e.g. abc;
-                if is_fuzzyMatch_C and isAscii(self._cli.pattern[0]):
-                    is_ascii = True
-                    pattern = fuzzyMatchC.initPattern(self._cli.pattern[0])
-                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=True)
-                    getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern, is_name_only=True)
-                else:
-                    fuzzy_match = FuzzyMatch(self._cli.pattern[0], encoding)
-                    getWeight = fuzzy_match.getWeight
-                    getHighlights = fuzzy_match.getHighlights
-
-                filter_method = partial(self._fuzzyFilter, False, getWeight)
-                highlight_method = partial(self._highlight, False, getHighlights)
-            elif self._cli.pattern[0] == '':    # e.g. ;abc
-                if is_fuzzyMatch_C and isAscii(self._cli.pattern[1]):
-                    is_ascii = True
+            if self._cli.pattern[0] == '':    # e.g. ;abc
+                if self._fuzzy_engine and isAscii(self._cli.pattern[1]):
+                    use_fuzzy_engine = True
+                    return_index = True
+                    pattern = fuzzyEngine.initPattern(self._cli.pattern[1])
+                    filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine,
+                                            pattern=pattern, is_name_only=False, sort_results=not is_continue)
+                    getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
+                                            pattern=pattern, is_name_only=False)
+                    highlight_method = partial(self._highlight, True, getHighlights, True)
+                elif is_fuzzyMatch_C and isAscii(self._cli.pattern[1]):
+                    use_fuzzy_match_c = True
                     pattern = fuzzyMatchC.initPattern(self._cli.pattern[1])
                     getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=False)
                     getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern, is_name_only=False)
+                    filter_method = partial(self._fuzzyFilter, True, getWeight)
+                    highlight_method = partial(self._highlight, True, getHighlights)
                 else:
                     fuzzy_match = FuzzyMatch(self._cli.pattern[1], encoding)
                     getWeight = fuzzy_match.getWeight
                     getHighlights = fuzzy_match.getHighlights
-
-                filter_method = partial(self._fuzzyFilter, True, getWeight)
-                highlight_method = partial(self._highlight, True, getHighlights)
-            else:
+                    filter_method = partial(self._fuzzyFilter, True, getWeight)
+                    highlight_method = partial(self._highlight, True, getHighlights)
+            else:   # e.g. abc;def
                 if is_fuzzyMatch_C and isAscii(self._cli.pattern[0]):
                     is_ascii_0 = True
                     pattern_0 = fuzzyMatchC.initPattern(self._cli.pattern[0])
@@ -449,13 +486,33 @@ class Manager(object):
                     getWeight_1 = fuzzy_match_1.getWeight
                     getHighlights_1 = fuzzy_match_1.getHighlights
 
-                    is_ascii = is_ascii_0 and is_ascii_1
+                    use_fuzzy_match_c = is_ascii_0 and is_ascii_1
 
                 filter_method = partial(self._refineFilter, getWeight_0, getWeight_1)
                 highlight_method = partial(self._highlightRefine, getHighlights_0, getHighlights_1)
         else:
-            if is_fuzzyMatch_C and isAscii(self._cli.pattern):
-                is_ascii = True
+            if self._fuzzy_engine and isAscii(self._cli.pattern):
+                use_fuzzy_engine = True
+                pattern = fuzzyEngine.initPattern(self._cli.pattern)
+                if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                    return_index = False
+                    filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
+                                            is_name_only=False, sort_results=not is_continue)
+                elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
+                        "Function", "History", "Cmd_History", "Search_History"]:
+                    return_index = True
+                    filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
+                                            is_name_only=True, sort_results=not is_continue)
+                else:
+                    return_index = True
+                    filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
+                                            is_name_only=not self._cli.isFullPath, sort_results=not is_continue)
+
+                getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
+                                        pattern=pattern, is_name_only=not self._cli.isFullPath)
+                highlight_method = partial(self._highlight, self._cli.isFullPath, getHighlights, True)
+            elif is_fuzzyMatch_C and isAscii(self._cli.pattern):
+                use_fuzzy_match_c = True
                 pattern = fuzzyMatchC.initPattern(self._cli.pattern)
                 if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
                     getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=False)
@@ -486,15 +543,35 @@ class Manager(object):
                                            self._cli.isFullPath,
                                            fuzzy_match.getHighlights)
 
-        if step == 30000:
-            if is_fuzzyMatch_C and is_ascii:
-                step = 35000
-            elif self._getExplorer().supportsNameOnly() and self._cli.isFullPath:
-                step = 5000
+        if use_fuzzy_engine:
+            if  return_index == True:
+                step = 20000 * cpu_count
+            else:
+                step = 40000 * cpu_count
 
-        pairs = self._filter(step, filter_method, content, is_continue)
-        pairs.sort(key=operator.itemgetter(0), reverse=True)
-        self._getInstance().setBuffer(self._getList(pairs))
+            pair = self._filter(step, filter_method, content, is_continue, True, return_index)
+            if is_continue: # result is not sorted
+                pairs = sorted(zip(*pair), key=operator.itemgetter(0), reverse=True)
+                self._result_content = self._getList(pairs)
+            else:
+                self._result_content = pair[1]
+            self._getInstance().setBuffer(self._result_content[:self._getInstance().window.height + 100])
+            self._getInstance().setStlResultsCount(len(self._result_content))
+        else:
+            if step == 40000:
+                if use_fuzzy_match_c:
+                    step = 40000
+                elif self._getExplorer().supportsNameOnly() and self._cli.isFullPath:
+                    step = 6000
+                else:
+                    step = 12000
+
+            pairs = self._filter(step, filter_method, content, is_continue)
+            pairs.sort(key=operator.itemgetter(0), reverse=True)
+            self._result_content = self._getList(pairs)
+            self._getInstance().setBuffer(self._result_content[:self._getInstance().window.height + 100])
+            self._getInstance().setStlResultsCount(len(self._result_content))
+
         highlight_method()
 
     def _clearHighlights(self):
@@ -522,7 +599,7 @@ class Manager(object):
                 id = int(lfEval("matchaddpos('Lf_hl_matchRefine', %s)" % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
-    def _highlight(self, is_full_path, get_highlights):
+    def _highlight(self, is_full_path, get_highlights, use_fuzzy_engine=False):
         # matchaddpos() is introduced by Patch 7.4.330
         if (lfEval("exists('*matchaddpos')") == '0' or
                 lfEval("g:Lf_HighlightIndividual") == '0'):
@@ -535,14 +612,17 @@ class Manager(object):
         self._clearHighlights()
 
         getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
-
         unit = self._getUnit()
 
-        # e.g., self._highlight_pos = [ [ [2,3], [6,2] ], [ [1,4], [7,6], ... ], ... ]
-        # where [2, 3] indicates the highlight starts at the 2nd column with the
-        # length of 3 in bytes
-        self._highlight_pos = [get_highlights(getDigest(line))
-                               for line in cb[:][:highlight_number:unit]]
+        if use_fuzzy_engine:
+            self._highlight_pos = get_highlights(source=[getDigest(line)
+                                                         for line in cb[:][:highlight_number:unit]])
+        else:
+            # e.g., self._highlight_pos = [ [ [2,3], [6,2] ], [ [1,4], [7,6], ... ], ... ]
+            # where [2, 3] indicates the highlight starts at the 2nd column with the
+            # length of 3 in bytes
+            self._highlight_pos = [get_highlights(getDigest(line))
+                                   for line in cb[:][:highlight_number:unit]]
         for i, pos in enumerate(self._highlight_pos):
             start_pos = self._getDigestStartPos(cb[unit*i], 0 if is_full_path else 1)
             if start_pos > 0:
@@ -808,10 +888,13 @@ class Manager(object):
                 self._content = [line.rstrip("\r\n") for line in content]
             self._iteration_end = True
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+            self._result_content = self._content
+            self._getInstance().setStlResultsCount(len(self._content))
             if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
                 pass
             else:
-                self._getInstance().setBuffer(self._content)
+                self._getInstance().setBuffer(self._content[:self._getInstance().window.height + 100])
+
             if not kwargs.get('bang', 0):
                 self.input()
             else:
@@ -819,6 +902,7 @@ class Manager(object):
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
         else:
+            self._result_content = []
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
                 self._content = self._getInstance().buffer[:]
@@ -833,9 +917,13 @@ class Manager(object):
         self._launched = True
 
     def setContent(self, content):
-        if not content or self._iteration_end == True:
+        if content is None or self._iteration_end == True:
             if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
-                self._search(self._content, True, 5000 if is_fuzzyMatch_C else 1000)
+                if self._fuzzy_engine:
+                    step = 10000 * cpu_count
+                else:
+                    step = 10000
+                self._search(self._content, True, step)
                 return True
             return False
 
@@ -854,6 +942,7 @@ class Manager(object):
             self._iteration_end = True
             self._getExplorer().setContent(self._content)
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+            self._getInstance().setStlResultsCount(len(self._content))
             lfCmd("redrawstatus")
             if self._index < len(self._content):
                 self._search(self._content, True, 1000)
@@ -862,10 +951,15 @@ class Manager(object):
             if time.time() - self._start_time > 0.1:
                 self._start_time = time.time()
                 self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+                self._getInstance().setStlResultsCount(len(self._content))
                 lfCmd("redrawstatus")
                 if self._index < len(self._content):
                     self._search(self._content, True, 1000)
             return True
+
+    def _setResultContent(self):
+        if len(self._result_content) > len(self._getInstance().buffer):
+            self._getInstance().setBuffer(self._result_content)
 
     @modifiableController
     def input(self, content=None):
@@ -921,6 +1015,7 @@ class Manager(object):
                 self.quit()
                 break
             elif equal(cmd, '<Tab>'):   # switch to Normal mode
+                self._setResultContent()
                 self.clearSelections()
                 self._cli.hideCursor()
                 self._createHelpHint()

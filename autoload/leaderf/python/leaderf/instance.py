@@ -44,6 +44,7 @@ class LfInstance(object):
         lfCmd("let g:Lf_{}_StlMode = '-'".format(self._category))
         lfCmd("let g:Lf_{}_StlCwd= '-'".format(self._category))
         lfCmd("let g:Lf_{}_StlTotal = '0'".format(self._category))
+        lfCmd("let g:Lf_{}_StlResultsCount = '0'".format(self._category))
 
         stl = "%#Lf_hl_{0}_stlName# LeaderF "
         stl += "%#Lf_hl_{0}_stlSeparator0#%{{g:Lf_StlSeparator.left}}"
@@ -55,7 +56,7 @@ class LfInstance(object):
         stl += "%#Lf_hl_{0}_stlSeparator3#%{{g:Lf_StlSeparator.left}}"
         stl += "%=%#Lf_hl_{0}_stlBlank#"
         stl += "%#Lf_hl_{0}_stlSeparator4#%{{g:Lf_StlSeparator.right}}"
-        stl += "%#Lf_hl_{0}_stlLineInfo# %l/%L "
+        stl += "%#Lf_hl_{0}_stlLineInfo# %l/%{{g:Lf_{0}_StlResultsCount}} "
         stl += "%#Lf_hl_{0}_stlSeparator5#%{{g:Lf_StlSeparator.right}}"
         stl += "%#Lf_hl_{0}_stlTotal# Total: %{{g:Lf_{0}_StlTotal}} "
         self._stl = stl.format(self._category)
@@ -178,6 +179,9 @@ class LfInstance(object):
     def setStlTotal(self, total):
         lfCmd("let g:Lf_{}_StlTotal = '{}'".format(self._category, total))
 
+    def setStlResultsCount(self, count):
+        lfCmd("let g:Lf_{}_StlResultsCount = '{}'".format(self._category, count))
+
     def enterBuffer(self, win_pos):
         if self._enterOpeningBuffer():
             return
@@ -288,6 +292,9 @@ class LfInstance(object):
 
     def empty(self):
         return len(self._buffer_object) == 1 and self._buffer_object[0] == ''
+
+    def getCurrentPos(self):
+        return self._window_object.cursor
 
     def getOriginalPos(self):
         return self._orig_pos

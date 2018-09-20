@@ -29,6 +29,8 @@ else:
 
 
 class FuzzyMatch(object):
+    MIN_WEIGHT = 0.0
+
     def __init__(self, pattern, encoding):
         self._pattern = Unicode(pattern, encoding)
         self._encoding = encoding
@@ -156,11 +158,11 @@ class FuzzyMatch(object):
     def evaluateOneChar(text, pattern):
         if pattern.isupper():
             beg = text.find(pattern)
-            return 0 if beg == -1 else 1.0/(beg + 1) + 1.0/len(text)
+            return FuzzyMatch.MIN_WEIGHT if beg == -1 else 1.0/(beg + 1) + 1.0/len(text)
         text_lower = text.lower()
         beg = text_lower.find(pattern)
         if beg == -1:
-            return 0
+            return FuzzyMatch.MIN_WEIGHT
         special = 0
         if text[beg].isupper() or beg == 0 or text[beg-1] in '_.- /\\':
             special = 2
@@ -191,12 +193,12 @@ class FuzzyMatch(object):
             else:
                 beg = text_lower.find(pattern[0])
                 if beg == -1:
-                    return 0
+                    return FuzzyMatch.MIN_WEIGHT
                 if text[beg].isupper() or beg == 0 or text[beg-1] in '_.- /\\':
                     special = 2
                 end = text_lower.find(pattern[1], beg + 1)
                 if end == -1:
-                    return 0
+                    return FuzzyMatch.MIN_WEIGHT
                 if text[end].isupper() or end == 0 or text[end-1] in '_.- /\\':
                     special += 2
                 else:
@@ -215,15 +217,15 @@ class FuzzyMatch(object):
         elif pattern[0].isupper():
             beg = text.find(pattern[0])
             if beg == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             if pattern[1].isupper(): # e.g. pattern is 'AB'
                 end = text.find(pattern[1], beg + 1)
-                return 0 if end == -1 else 1.0/(beg + end) + 1.0/len(text)
+                return FuzzyMatch.MIN_WEIGHT if end == -1 else 1.0/(beg + end) + 1.0/len(text)
             else:   # e.g. pattern is 'Ab'
                 text_lower = text.lower()
                 end = text_lower.find(pattern[1], beg + 1)
                 if end == -1:
-                    return 0
+                    return FuzzyMatch.MIN_WEIGHT
                 elif end == beg + 1:
                     return 4 + (1 >> beg) + 1.0/(beg + end) + 1.0/len(text)
                 special = 0
@@ -239,10 +241,10 @@ class FuzzyMatch(object):
             text_lower = text.lower()
             beg = text_lower.find(pattern[0])
             if beg == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             end = text.find(pattern[1], beg + 1)
             if end == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             special = 0
             if text[beg].isupper() or beg == 0 or text[beg-1] in '_.- /\\':
                 special = 2
@@ -269,10 +271,10 @@ class FuzzyMatch(object):
             text_lower = text.lower()
             first_char_pos = text_lower.find(first_char)
             if first_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             last_char_pos = text_lower.rfind(last_char, first_char_pos)
             if last_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             text_mask = {}
             for c in self._pattern_mask:
                 text_mask[c] = 0
@@ -292,7 +294,7 @@ class FuzzyMatch(object):
                         first_char_pos = i
                         break
             if first_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             if last_char.isupper():
                 last_char_pos = text.rfind(last_char, first_char_pos)
             else:
@@ -302,7 +304,7 @@ class FuzzyMatch(object):
                         last_char_pos = len(text) - 1 - i
                         break
             if last_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             text_mask = {}
             for c in self._pattern_mask:
                 text_mask[c] = 0
@@ -322,7 +324,7 @@ class FuzzyMatch(object):
                         if j < pattern_len and c == self._pattern[j]:
                             j += 1
         if j < pattern_len:
-            return 0
+            return FuzzyMatch.MIN_WEIGHT
         val = {}
         score, beg, end = FuzzyMatch.evaluate(text,
                                               self._pattern,
@@ -348,10 +350,10 @@ class FuzzyMatch(object):
             text_lower = text.lower()
             first_char_pos = text_lower.find(first_char)
             if first_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             last_char_pos = text_lower.rfind(last_char, first_char_pos)
             if last_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             text_mask = {}
             for c in self._pattern_mask:
                 text_mask[c] = 0
@@ -371,7 +373,7 @@ class FuzzyMatch(object):
                         first_char_pos = i
                         break
             if first_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             if last_char.isupper():
                 last_char_pos = text.rfind(last_char, first_char_pos)
             else:
@@ -381,7 +383,7 @@ class FuzzyMatch(object):
                         last_char_pos = len(text) - 1 - i
                         break
             if last_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             text_mask = {}
             for c in self._pattern_mask:
                 text_mask[c] = 0
@@ -401,7 +403,7 @@ class FuzzyMatch(object):
                         if j < pattern_len and c == self._pattern[j]:
                             j += 1
         if j < pattern_len:
-            return 0
+            return FuzzyMatch.MIN_WEIGHT
         val = {}
         score, beg, end = FuzzyMatch.evaluate(text,
                                               self._pattern,
@@ -423,10 +425,10 @@ class FuzzyMatch(object):
             text_lower = text.lower()
             first_char_pos = text_lower.find(first_char)
             if first_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             last_char_pos = text_lower.rfind(last_char, first_char_pos)
             if last_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             text_mask = {}
             for c in self._pattern_mask:
                 text_mask[c] = 0
@@ -446,7 +448,7 @@ class FuzzyMatch(object):
                         first_char_pos = i
                         break
             if first_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             if last_char.isupper():
                 last_char_pos = text.rfind(last_char, first_char_pos)
             else:
@@ -456,7 +458,7 @@ class FuzzyMatch(object):
                         last_char_pos = len(text) - 1 - i
                         break
             if last_char_pos == -1:
-                return 0
+                return FuzzyMatch.MIN_WEIGHT
             text_mask = {}
             for c in self._pattern_mask:
                 text_mask[c] = 0
@@ -476,7 +478,7 @@ class FuzzyMatch(object):
                         if j < pattern_len and c == self._pattern[j]:
                             j += 1
         if j < pattern_len:
-            return 0
+            return FuzzyMatch.MIN_WEIGHT
         val = {}
         score, beg, end = FuzzyMatch.evaluate(text,
                                               self._pattern,
