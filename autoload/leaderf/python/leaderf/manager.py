@@ -6,6 +6,7 @@ import sys
 import time
 import operator
 import itertools
+import threading
 import multiprocessing
 from functools import partial
 from functools import wraps
@@ -13,6 +14,7 @@ from .instance import LfInstance
 from .cli import LfCli
 from .utils import *
 from .fuzzyMatch import FuzzyMatch
+from .asyncExecutor import AsyncExecutor
 
 is_fuzzyEngine_C = False
 try:
@@ -79,6 +81,8 @@ class Manager(object):
         self._ctrlp_pressed = False
         self._fuzzy_engine = None
         self._result_content = []
+        self._reader_thread = None
+        self._initial_count = 200
         self._getExplClass()
 
     #**************************************************************
@@ -203,6 +207,9 @@ class Manager(object):
         if self._fuzzy_engine:
             fuzzyEngine.closeFuzzyEngine(self._fuzzy_engine)
             self._fuzzy_engine = None
+
+        if self._reader_thread and self._reader_thread.is_alive():
+            self._stop_reader_thread = True
 
     def _afterExit(self):
         pass
@@ -341,7 +348,7 @@ class Manager(object):
             exit_loop = True
         return exit_loop
 
-    def _search(self, content, is_continue=False, step=40000):
+    def _search(self, content, is_continue=False, step=0):
         self.clearSelections()
         self._clearHighlights()
         self._clearHighlightsPos()
@@ -544,10 +551,11 @@ class Manager(object):
                                            fuzzy_match.getHighlights)
 
         if use_fuzzy_engine:
-            if  return_index == True:
-                step = 20000 * cpu_count
-            else:
-                step = 40000 * cpu_count
+            if step == 0:
+                if  return_index == True:
+                    step = 20000 * cpu_count
+                else:
+                    step = 40000 * cpu_count
 
             pair = self._filter(step, filter_method, content, is_continue, True, return_index)
             if is_continue: # result is not sorted
@@ -555,10 +563,10 @@ class Manager(object):
                 self._result_content = self._getList(pairs)
             else:
                 self._result_content = pair[1]
-            self._getInstance().setBuffer(self._result_content[:self._getInstance().window.height + 100])
+            self._getInstance().setBuffer(self._result_content[:self._initial_count])
             self._getInstance().setStlResultsCount(len(self._result_content))
         else:
-            if step == 40000:
+            if step == 0:
                 if use_fuzzy_match_c:
                     step = 40000
                 elif self._getExplorer().supportsNameOnly() and self._cli.isFullPath:
@@ -569,7 +577,7 @@ class Manager(object):
             pairs = self._filter(step, filter_method, content, is_continue)
             pairs.sort(key=operator.itemgetter(0), reverse=True)
             self._result_content = self._getList(pairs)
-            self._getInstance().setBuffer(self._result_content[:self._getInstance().window.height + 100])
+            self._getInstance().setBuffer(self._result_content[:self._initial_count])
             self._getInstance().setStlResultsCount(len(self._result_content))
 
         highlight_method()
@@ -882,109 +890,165 @@ class Manager(object):
         self._cli.setPattern(self._pattern)
 
         if isinstance(content, list):
+            self._is_content_list = True
             if len(content[0]) == len(content[0].rstrip("\r\n")):
                 self._content = content
             else:
                 self._content = [line.rstrip("\r\n") for line in content]
-            self._iteration_end = True
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
             self._result_content = self._content
             self._getInstance().setStlResultsCount(len(self._content))
             if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
                 pass
             else:
-                self._getInstance().setBuffer(self._content[:self._getInstance().window.height + 100])
+                self._getInstance().setBuffer(self._content[:self._initial_count])
 
             if not kwargs.get('bang', 0):
-                self.input()
+                self.input(self._workInIdle)
             else:
                 lfCmd("echo")
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
-        else:
+        elif isinstance(content, AsyncExecutor.Result):
+            self._is_content_list = False
             self._result_content = []
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
                 self._content = self._getInstance().buffer[:]
-                self._iteration_end = True
-                self.input()
+                self.input(self._workInIdle)
             else:
                 self._content = []
-                self._iteration_end = False
-                self._backup = None
-                self.input(content)
+                self._read_finished = 0
+
+                self._stop_reader_thread = False
+                self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
+                self._reader_thread.daemon = True
+                self._reader_thread.start()
+
+                self.input(self._workInIdle)
+        else:
+            self._is_content_list = False
+            self._result_content = []
+            if lfEval("g:Lf_CursorBlink") == '0':
+                self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
+                self._content = self._getInstance().buffer[:]
+                self.input(partial(self._workInIdle, content))
+            else:
+                self._content = []
+                self._read_finished = 0
+                self.input(partial(self._workInIdle, content))
 
         self._launched = True
 
-    def setContent(self, content):
-        if content is None or self._iteration_end == True:
-            if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
-                if self._fuzzy_engine:
-                    step = 10000 * cpu_count
-                else:
-                    step = 10000
-                self._search(self._content, True, step)
-                return True
-            return False
-
-        i = -1
-        for i, line in enumerate(itertools.islice(content, 10)):
-            if line is None:
-                continue
+    def _readContent(self, content):
+        for line in content:
             self._content.append(line)
-            if self._index == 0:
-                if self._getInstance().empty():
-                    self._getInstance().buffer[0] = line
-                else:
-                    self._getInstance().appendLine(line)
-
-        if i == -1:
-            self._iteration_end = True
-            self._getExplorer().setContent(self._content)
-            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
-            self._getInstance().setStlResultsCount(len(self._content))
-            lfCmd("redrawstatus")
-            if self._index < len(self._content):
-                self._search(self._content, True, 1000)
-            return False
+            if self._stop_reader_thread:
+                break
         else:
-            if time.time() - self._start_time > 0.1:
-                self._start_time = time.time()
-                self._getInstance().setStlTotal(len(self._content)//self._getUnit())
-                self._getInstance().setStlResultsCount(len(self._content))
-                lfCmd("redrawstatus")
-                if self._index < len(self._content):
-                    self._search(self._content, True, 1000)
-            return True
+            self._read_finished = 1
 
     def _setResultContent(self):
         if len(self._result_content) > len(self._getInstance().buffer):
             self._getInstance().setBuffer(self._result_content)
+        elif self._index == 0:
+            self._getInstance().setBuffer(self._content)
+
+    def _workInIdle(self, content=None):
+        if self._is_content_list:
+            if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
+                if self._fuzzy_engine:
+                    step = 10000 * cpu_count
+                elif is_fuzzyMatch_C:
+                    step = 10000
+                else:
+                    step = 2000
+                self._search(self._content, True, step)
+            return
+
+        if content:
+            i = -1
+            for i, line in enumerate(itertools.islice(content, 20)):
+                self._content.append(line)
+
+            if i == -1:
+                self._read_finished = 1
+
+        if self._read_finished > 0:
+            if self._read_finished == 1:
+                self._read_finished += 1
+                self._getExplorer().setContent(self._content)
+
+                if self._cli.pattern:
+                    self._getInstance().setStlResultsCount(len(self._result_content))
+                else:
+                    self._getInstance().setBuffer(self._content[:self._initial_count])
+                    self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+                    self._getInstance().setStlResultsCount(len(self._content))
+
+                lfCmd("redrawstatus")
+
+            if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
+                if self._fuzzy_engine:
+                    step = 10000 * cpu_count
+                elif is_fuzzyMatch_C:
+                    step = 10000
+                else:
+                    step = 2000
+                self._search(self._content, True, step)
+        else:
+            cur_len = len(self._content)
+            if time.time() - self._start_time > 0.1:
+                self._start_time = time.time()
+                self._getInstance().setStlTotal(cur_len//self._getUnit())
+                if self._cli.pattern:
+                    self._getInstance().setStlResultsCount(len(self._result_content))
+                else:
+                    self._getInstance().setStlResultsCount(cur_len)
+
+                lfCmd("redrawstatus")
+
+            if self._cli.pattern:
+                if self._index < cur_len or len(self._cb_content) > 0:
+                    if self._fuzzy_engine:
+                        step = 10000 * cpu_count
+                    elif is_fuzzyMatch_C:
+                        step = 10000
+                    else:
+                        step = 2000
+                    self._search(self._content[:cur_len], True, step)
+            else:
+                if len(self._getInstance().buffer) < self._initial_count:
+                    self._getInstance().setBuffer(self._content[:self._initial_count])
 
     @modifiableController
-    def input(self, content=None):
+    def input(self, callback=None):
         self._hideHelp()
         self._resetHighlights()
 
-        if self._iteration_end == False and self._backup:
-            content = self._backup
+        if callback:
+            self._callback_backup = callback
+        else:
+            callback = self._callback_backup
 
         if self._pattern:
             self._search(self._content)
 
-        for cmd in self._cli.input(partial(self.setContent, content)):
+        for cmd in self._cli.input(callback):
+            cur_len = len(self._content)
+            cur_content = self._content[:cur_len]
             if equal(cmd, '<Update>'):
-                self._search(self._content)
+                self._search(cur_content)
             elif equal(cmd, '<Shorten>'):
                 lfCmd("normal! gg")
                 self._index = 0 # search from beginning
-                self._search(self._content)
+                self._search(cur_content)
             elif equal(cmd, '<Mode>'):
                 self._setStlMode()
                 lfCmd("normal! gg")
                 self._index = 0 # search from beginning
                 if self._cli.pattern:
-                    self._search(self._content)
+                    self._search(cur_content)
             elif equal(cmd, '<Up>') or equal(cmd, '<C-K>'):
                 self._toUp()
                 self._previewResult(False)
@@ -1020,7 +1084,6 @@ class Manager(object):
                 self._cli.hideCursor()
                 self._createHelpHint()
                 self._resetHighlights()
-                self._backup = content
                 break
             elif equal(cmd, '<F5>'):
                 self.refresh(False)

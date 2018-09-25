@@ -61,45 +61,11 @@ class AsyncExecutor(object):
         stderr_thread.daemon = True
         stderr_thread.start()
 
-        def read(outQueue, errQueue, encoding, cleanup):
-            try:
-                if encoding:
-                    while True:
-                        try:
-                            line = outQueue.get(True, 0.01)
-                            if line is None:
-                                break
-                            yield lfBytes2Str(line.rstrip(b"\r\n"), encoding)
-                        except Queue.Empty:
-                            yield None
-                else:
-                    while True:
-                        try:
-                            line = outQueue.get(True, 0.01)
-                            if line is None:
-                                break
-                            yield lfEncode(lfBytes2Str(line.rstrip(b"\r\n")))
-                        except Queue.Empty:
-                            yield None
-
-                err = b"".join(iter(errQueue.get, None))
-                if err:
-                    raise Exception(lfBytes2Str(err, encoding))
-            finally:
-                try:
-                    if self._process:
-                        self._process.stdout.close()
-                except IOError:
-                    pass
-
-                if cleanup:
-                    cleanup()
-
         stdout_thread.join(0.01)
 
-        out = read(self._outQueue, self._errQueue, encoding, cleanup)
+        result = AsyncExecutor.Result(self._outQueue, self._errQueue, encoding, cleanup, self._process)
 
-        return out
+        return result
 
     def killProcess(self):
         # Popen.poll always returns None, bug?
@@ -114,6 +80,42 @@ class AsyncExecutor(object):
                     pass
 
             self._process = None
+
+    class Result(object):
+        def __init__(self, outQueue, errQueue, encoding, cleanup, process):
+            self._outQueue = outQueue
+            self._errQueue = errQueue
+            self._encoding = encoding
+            self._cleanup = cleanup
+            self._process = process
+
+        def __iter__(self):
+            try:
+                if self._encoding:
+                    while True:
+                        line = self._outQueue.get()
+                        if line is None:
+                            break
+                        yield lfBytes2Str(line.rstrip(b"\r\n"), self._encoding)
+                else:
+                    while True:
+                        line = self._outQueue.get()
+                        if line is None:
+                            break
+                        yield lfEncode(lfBytes2Str(line.rstrip(b"\r\n")))
+
+                err = b"".join(iter(self._errQueue.get, None))
+                if err:
+                    raise Exception(lfBytes2Str(err, self._encoding))
+            finally:
+                try:
+                    if self._process:
+                        self._process.stdout.close()
+                except IOError:
+                    pass
+
+                if self._cleanup:
+                    self._cleanup()
 
 
 if __name__ == "__main__":

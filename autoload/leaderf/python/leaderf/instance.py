@@ -248,6 +248,7 @@ class LfInstance(object):
         if isinstance(content, list):
             self.setBuffer(content)
             self.setStlTotal(len(content)//unit)
+            self.setStlResultsCount(len(content))
             return
 
         self.buffer.options['modifiable'] = True
@@ -265,8 +266,10 @@ class LfInstance(object):
                 if time.time() - start > 0.1:
                     start = time.time()
                     self.setStlTotal(len(self._buffer_object)//unit)
+                    self.setStlResultsCount(len(self._buffer_object))
                     lfCmd("redrawstatus")
             self.setStlTotal(len(self._buffer_object)//unit)
+            self.setStlResultsCount(len(self._buffer_object))
             lfCmd("redrawstatus")
             set_content(self.buffer[:])
         except vim.error: # neovim <C-C>
