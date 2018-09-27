@@ -29,7 +29,7 @@ else:
 
 
 class FuzzyMatch(object):
-    MIN_WEIGHT = 0.0
+    MIN_WEIGHT = -10000.0
 
     def __init__(self, pattern, encoding):
         self._pattern = Unicode(pattern, encoding)

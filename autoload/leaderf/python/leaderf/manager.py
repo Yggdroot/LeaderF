@@ -379,7 +379,6 @@ class Manager(object):
         step = step // unit * unit
         length = len(content)
         if self._index == 0:
-            self._previous_result = []
             self._cb_content = []
             self._result_content = content
             self._index = min(step, length)
@@ -447,7 +446,30 @@ class Manager(object):
         use_fuzzy_engine = False
         use_fuzzy_match_c = False
         if self._cli.isRefinement:
-            if self._cli.pattern[0] == '':    # e.g. ;abc
+            if self._cli.pattern[1] == '':      # e.g. abc;
+                if self._fuzzy_engine and isAscii(self._cli.pattern[0]):
+                    use_fuzzy_engine = True
+                    return_index = True
+                    pattern = fuzzyEngine.initPattern(self._cli.pattern[0])
+                    filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine,
+                                            pattern=pattern, is_name_only=True, sort_results=not is_continue)
+                    getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
+                                            pattern=pattern, is_name_only=True)
+                    highlight_method = partial(self._highlight, True, getHighlights, True)
+                elif is_fuzzyMatch_C and isAscii(self._cli.pattern[0]):
+                    use_fuzzy_match_c = True
+                    pattern = fuzzyMatchC.initPattern(self._cli.pattern[0])
+                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=True)
+                    getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern, is_name_only=True)
+                    filter_method = partial(self._fuzzyFilter, False, getWeight)
+                    highlight_method = partial(self._highlight, False, getHighlights)
+                else:
+                    fuzzy_match = FuzzyMatch(self._cli.pattern[0], encoding)
+                    getWeight = fuzzy_match.getWeight
+                    getHighlights = fuzzy_match.getHighlights
+                    filter_method = partial(self._fuzzyFilter, False, getWeight)
+                    highlight_method = partial(self._highlight, False, getHighlights)
+            elif self._cli.pattern[0] == '':    # e.g. ;abc
                 if self._fuzzy_engine and isAscii(self._cli.pattern[1]):
                     use_fuzzy_engine = True
                     return_index = True

@@ -351,7 +351,7 @@ class LfCli(object):
                 if lfEval("!type(nr) && nr >= 0x20") == '1':
                     self._insert(lfEval("ch"))
                     self._buildPattern()
-                    if self._refine and self._pattern[1] == '': # e.g. abc;
+                    if self._pattern is None or self._refine and self._pattern[1] == '': # e.g. abc;
                         continue
                     yield '<Update>'
                 else:
