@@ -925,8 +925,9 @@ class Manager(object):
             else:
                 self._getInstance().setBuffer(self._content[:self._initial_count])
 
+            self._callback = self._workInIdle
             if not kwargs.get('bang', 0):
-                self.input(self._workInIdle)
+                self.input()
             else:
                 lfCmd("echo")
                 self._getInstance().buffer.options['modifiable'] = False
@@ -934,10 +935,11 @@ class Manager(object):
         elif isinstance(content, AsyncExecutor.Result):
             self._is_content_list = False
             self._result_content = []
+            self._callback = self._workInIdle
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
                 self._content = self._getInstance().buffer[:]
-                self.input(self._workInIdle)
+                self.input()
             else:
                 self._content = []
                 self._read_finished = 0
@@ -947,18 +949,19 @@ class Manager(object):
                 self._reader_thread.daemon = True
                 self._reader_thread.start()
 
-                self.input(self._workInIdle)
+                self.input()
         else:
             self._is_content_list = False
             self._result_content = []
+            self._callback = partial(self._workInIdle, content)
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
                 self._content = self._getInstance().buffer[:]
-                self.input(partial(self._workInIdle, content))
+                self.input()
             else:
                 self._content = []
                 self._read_finished = 0
-                self.input(partial(self._workInIdle, content))
+                self.input()
 
         self._launched = True
 
@@ -1044,19 +1047,14 @@ class Manager(object):
                     self._getInstance().setBuffer(self._content[:self._initial_count])
 
     @modifiableController
-    def input(self, callback=None):
+    def input(self):
         self._hideHelp()
         self._resetHighlights()
-
-        if callback:
-            self._callback_backup = callback
-        else:
-            callback = self._callback_backup
 
         if self._pattern:
             self._search(self._content)
 
-        for cmd in self._cli.input(callback):
+        for cmd in self._cli.input(self._callback):
             cur_len = len(self._content)
             cur_content = self._content[:cur_len]
             if equal(cmd, '<Update>'):
