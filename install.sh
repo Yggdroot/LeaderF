@@ -4,7 +4,7 @@ if [ "$1" = "--reverse" ]
 then
     cd autoload/leaderf/fuzzyMatch_C
     rm -rf build
-    rm -f ../python/*.so
+    rm -f ../python/*.so ../python/*.dll
     echo ========================================
     echo ^_^ C extension uninstalled sucessfully!
     echo ========================================
@@ -21,7 +21,7 @@ if command -v python2 > /dev/null 2>&1; then
     python2 setup.py build
     if [ $? -eq 0 ]
     then
-        cp build/lib*2.?/*.so ../python
+        cp build/lib*2.?/* ../python
         if [ $? -eq 0 ]
         then
             echo
@@ -40,7 +40,7 @@ if command -v python3 > /dev/null 2>&1; then
     python3 setup.py build
     if [ $? -eq 0 ]
     then
-        cp build/lib*3.?/*.so ../python
+        cp build/lib*3.?/* ../python
         if [ $? -eq 0 ]
         then
             echo
