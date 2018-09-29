@@ -105,7 +105,8 @@ class LfInstance(object):
         https://github.com/vim/vim/issues/1738
         """
         # clear the buffer first to avoid a flash
-        if self._buffer_object and lfEval("g:Lf_RememberLastSearch") == '0':
+        if self._buffer_object is not None and self._buffer_object.valid \
+                and lfEval("g:Lf_RememberLastSearch") == '0':
             self.buffer.options['modifiable'] = True
             del self._buffer_object[:]
 
@@ -144,9 +145,10 @@ class LfInstance(object):
 
         self._tabpage_object = vim.current.tabpage
         self._window_object = vim.current.window
-        if self._buffer_object is None:
+        if self._buffer_object is None or not self._buffer_object.valid:
             self._buffer_object = vim.current.buffer
             lfCmd("augroup Lf_{}_Colorscheme".format(self._category))
+            lfCmd("autocmd!")
             lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlight('{}')"
                   .format(self._category))
             lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlightMode('{0}', g:Lf_{0}_StlMode)"
