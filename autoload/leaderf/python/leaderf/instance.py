@@ -35,8 +35,8 @@ class LfInstance(object):
         self._win_height = float(lfEval("g:Lf_WindowHeight"))
         self._show_tabline = int(lfEval("&showtabline"))
         self._is_autocmd_set = False
+        self._reverse_order = lfEval("get(g:, 'Lf_ReverseOrder', 0)") == '1'
         self._orig_pos = () # (tabpage, window, buffer)
-        self._initStlVar()
         self._highlightStl()
 
     def _initStlVar(self):
@@ -44,6 +44,7 @@ class LfInstance(object):
         lfCmd("let g:Lf_{}_StlMode = '-'".format(self._category))
         lfCmd("let g:Lf_{}_StlCwd= '-'".format(self._category))
         lfCmd("let g:Lf_{}_StlTotal = '0'".format(self._category))
+        lfCmd("let g:Lf_{}_StlLineNumber = '1'".format(self._category))
         lfCmd("let g:Lf_{}_StlResultsCount = '0'".format(self._category))
 
         stl = "%#Lf_hl_{0}_stlName# LeaderF "
@@ -56,7 +57,10 @@ class LfInstance(object):
         stl += "%#Lf_hl_{0}_stlSeparator3#%{{g:Lf_StlSeparator.left}}"
         stl += "%=%#Lf_hl_{0}_stlBlank#"
         stl += "%#Lf_hl_{0}_stlSeparator4#%{{g:Lf_StlSeparator.right}}"
-        stl += "%#Lf_hl_{0}_stlLineInfo# %l/%{{g:Lf_{0}_StlResultsCount}} "
+        if self._reverse_order:
+            stl += "%#Lf_hl_{0}_stlLineInfo# %{{g:Lf_{0}_StlLineNumber}}/%{{g:Lf_{0}_StlResultsCount}} "
+        else:
+            stl += "%#Lf_hl_{0}_stlLineInfo# %l/%{{g:Lf_{0}_StlResultsCount}} "
         stl += "%#Lf_hl_{0}_stlSeparator5#%{{g:Lf_StlSeparator.right}}"
         stl += "%#Lf_hl_{0}_stlTotal# Total: %{{g:Lf_{0}_StlTotal}} "
         self._stl = stl.format(self._category)
@@ -71,18 +75,25 @@ class LfInstance(object):
         lfCmd("setlocal undolevels=-1")
         lfCmd("setlocal noswapfile")
         lfCmd("setlocal nolist")
-        lfCmd("setlocal number")
         lfCmd("setlocal norelativenumber")
         lfCmd("setlocal nospell")
         lfCmd("setlocal wrap")
         lfCmd("setlocal nofoldenable")
-        lfCmd("setlocal foldcolumn=0")
         lfCmd("setlocal foldmethod=manual")
         lfCmd("setlocal shiftwidth=4")
         lfCmd("setlocal cursorline")
         lfCmd("setlocal filetype=leaderf")
+        if self._reverse_order:
+            lfCmd("setlocal nonumber")
+            lfCmd("setlocal foldcolumn=1")
+            lfCmd("setlocal winfixheight")
+        else:
+            lfCmd("setlocal number")
+            lfCmd("setlocal foldcolumn=0")
+            lfCmd("setlocal nowinfixheight")
 
     def _setStatusline(self):
+        self._initStlVar()
         self.window.options["statusline"] = self._stl
         lfCmd("redrawstatus")
         if not self._is_autocmd_set:
@@ -145,6 +156,10 @@ class LfInstance(object):
 
         self._tabpage_object = vim.current.tabpage
         self._window_object = vim.current.window
+        self._initial_win_height = self._window_object.height
+        if self._reverse_order:
+            self._window_object.height = 1
+
         if self._buffer_object is None or not self._buffer_object.valid:
             self._buffer_object = vim.current.buffer
             lfCmd("augroup Lf_{}_Colorscheme".format(self._category))
@@ -154,6 +169,8 @@ class LfInstance(object):
             lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlightMode('{0}', g:Lf_{0}_StlMode)"
                   .format(self._category))
             lfCmd("autocmd ColorScheme <buffer> doautocmd syntax")
+            lfCmd("autocmd CursorMoved <buffer> let g:Lf_{}_StlLineNumber = 1 + line('$') - line('.')"
+                  .format(self._category))
             lfCmd("autocmd VimResized * let g:Lf_VimResized = 1")
             lfCmd("augroup END")
 
@@ -166,6 +183,13 @@ class LfInstance(object):
             self._after_enter()
             return True
         return False
+
+    def setArguments(self, arguments):
+        self._arguments = arguments
+        if "--reverse" in self._arguments or lfEval("get(g:, 'Lf_ReverseOrder', 0)") == '1':
+            self._reverse_order = True
+        else:
+            self._reverse_order = False
 
     def setStlCategory(self, category):
         lfCmd("let g:Lf_{}_StlCategory = '{}'".format(self._category, category) )
@@ -188,6 +212,7 @@ class LfInstance(object):
         if self._enterOpeningBuffer():
             return
 
+        lfCmd("let g:Lf_{}_StlLineNumber = '1'".format(self._category))
         self._orig_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
         self._orig_cursor = vim.current.window.cursor
 
@@ -241,7 +266,25 @@ class LfInstance(object):
         # if lfEval("has('nvim')") == '1':
         #     # NvimError: string cannot contain newlines
         #     content = [ line.rstrip("\r\n") for line in content ]
-        self._buffer_object[:] = content
+        if self._reverse_order:
+            orig_row = self._window_object.cursor[0]
+            orig_buf_len = len(self._buffer_object)
+
+            self._buffer_object[:] = content[::-1]
+            buffer_len = len(self._buffer_object)
+            if buffer_len < self._initial_win_height:
+                self._window_object.height = buffer_len
+            elif self._window_object.height < self._initial_win_height:
+                self._window_object.height = self._initial_win_height
+
+            try:
+                self._window_object.cursor = (orig_row + buffer_len - orig_buf_len, 0)
+            except vim.error:
+                self._window_object.cursor = (buffer_len, 0)
+
+            self.setLineNumber()
+        else:
+            self._buffer_object[:] = content
 
     def appendLine(self, line):
         self._buffer_object.append(line)
@@ -250,34 +293,36 @@ class LfInstance(object):
         if isinstance(content, list):
             self.setBuffer(content)
             self.setStlTotal(len(content)//unit)
-            self.setStlResultsCount(len(content))
-            return
+            self.setStlResultsCount(len(content)//unit)
+            return content
 
         self.buffer.options['modifiable'] = True
         self._buffer_object[:] = []
 
         try:
             start = time.time()
+            cur_content = []
             for line in content:
-                if line is None:
-                    continue
-                if self.empty():
-                    self._buffer_object[0] = line
-                else:
-                    self._buffer_object.append(line)
+                cur_content.append(line)
                 if time.time() - start > 0.1:
                     start = time.time()
+                    self.setBuffer(cur_content)
+                    if self._reverse_order:
+                        lfCmd("normal! G")
                     self.setStlTotal(len(self._buffer_object)//unit)
-                    self.setStlResultsCount(len(self._buffer_object))
+                    self.setStlResultsCount(len(self._buffer_object)//unit)
                     lfCmd("redrawstatus")
+            self.setBuffer(cur_content)
             self.setStlTotal(len(self._buffer_object)//unit)
-            self.setStlResultsCount(len(self._buffer_object))
+            self.setStlResultsCount(len(self._buffer_object)//unit)
             lfCmd("redrawstatus")
-            set_content(self.buffer[:])
+            set_content(cur_content)
         except vim.error: # neovim <C-C>
             pass
         except KeyboardInterrupt: # <C-C>
             pass
+
+        return cur_content
 
     @property
     def tabpage(self):
@@ -306,5 +351,20 @@ class LfInstance(object):
 
     def getOriginalCursor(self):
         return self._orig_cursor
+
+    def getInitialWinHeight(self):
+        if self._reverse_order:
+            return self._initial_win_height
+        else:
+            return 200
+
+    def isReverseOrder(self):
+        return self._reverse_order
+
+    def setLineNumber(self):
+        if self._reverse_order:
+            line_nr = 1 + len(self._buffer_object) - self._window_object.cursor[0]
+            lfCmd("let g:Lf_{}_StlLineNumber = '{}'".format(self._category, line_nr))
+
 
 #  vim: set ts=4 sw=4 tw=0 et :

@@ -515,6 +515,10 @@ g:Lf_RecurseSubmodules                          *g:Lf_RecurseSubmodules*
     2.11+ and there will be an error if git version is lower than 2.11, this
     option is off with value 0 by default.
 
+g:Lf_ReverseOrder                               *g:Lf_ReverseOrder*
+    Show results in bottom-up order.
+    Default value is 0(top-down order).
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

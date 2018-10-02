@@ -77,7 +77,7 @@ Usage
 -----
 
 ```
-usage: Leaderf[!] [-h] [--stayOpen] [--input INPUT | --cword]
+usage: Leaderf[!] [-h] [--reverse] [--stayOpen] [--input INPUT | --cword]
                   [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
                   [--nameOnly | --fullPath | --fuzzy | --regex]
                   {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer}
@@ -85,6 +85,7 @@ usage: Leaderf[!] [-h] [--stayOpen] [--input INPUT | --cword]
 
 optional arguments:
   -h, --help            show this help message and exit
+  --reverse             show results in bottom-up order
   --stayOpen            don't quit LeaderF after accepting an entry
   --input INPUT         specifies INPUT as the pattern inputted in advance
   --cword               current word under cursor is inputted in advance
@@ -122,7 +123,8 @@ If [!] is given, enter normal mode directly.
 use `:Leaderf <subcommand> -h` to get specific help of subcommand, e.g., `:Leaderf mru -h`
 
 ```
-usage: Leaderf[!] mru [-h] [--cwd] [--stayOpen] [--input INPUT | --cword]
+usage: Leaderf[!] mru [-h] [--cwd] [--reverse] [--stayOpen]
+                      [--input INPUT | --cword]
                       [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
                       [--nameOnly | --fullPath | --fuzzy | --regex]
 
@@ -133,6 +135,7 @@ specific arguments:
   --cwd          search MRU in current working directory
 
 common arguments:
+  --reverse      show results in bottom-up order
   --stayOpen     don't quit LeaderF after accepting an entry
   --input INPUT  specifies INPUT as the pattern inputted in advance
   --cword        current word under cursor is inputted in advance

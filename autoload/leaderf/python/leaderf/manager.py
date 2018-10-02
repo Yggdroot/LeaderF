@@ -82,7 +82,7 @@ class Manager(object):
         self._fuzzy_engine = None
         self._result_content = []
         self._reader_thread = None
-        self._initial_count = 200
+        self._highlight_method = lambda : None
         self._getExplClass()
 
     #**************************************************************
@@ -294,12 +294,33 @@ class Manager(object):
         else:
             help += self._createHelp()
         self._help_length = len(help)
-        cursor_line = self._getInstance().window.cursor[0]
-        self._getInstance().buffer.append(help, 0)
-        self._getInstance().window.cursor = (cursor_line + self._help_length, 0)
+        orig_row = self._getInstance().window.cursor[0]
+        if self._getInstance().isReverseOrder():
+            self._getInstance().buffer.append(help[::-1])
+            lfCmd("normal! Gzb")
+            self._getInstance().window.cursor = (orig_row, 0)
+        else:
+            self._getInstance().buffer.append(help, 0)
+            self._getInstance().window.cursor = (orig_row + self._help_length, 0)
 
     def _hideHelp(self):
-        del self._getInstance().buffer[:self._help_length]
+        if self._getInstance().isReverseOrder():
+            orig_row = self._getInstance().window.cursor[0]
+            countdown = len(self._getInstance().buffer) - orig_row - self._help_length
+            if self._help_length > 0:
+                del self._getInstance().buffer[-self._help_length:]
+
+            self._getInstance().buffer[:] = self._getInstance().buffer[-self._initial_count:]
+            lfCmd("normal! Gzb")
+
+            if 0 < countdown < self._initial_count:
+                self._getInstance().window.cursor = (len(self._getInstance().buffer) - countdown, 0)
+            else:
+                self._getInstance().window.cursor = (len(self._getInstance().buffer), 0)
+
+            self._getInstance().setLineNumber()
+        else:
+            del self._getInstance().buffer[:self._help_length]
         self._help_length = 0
 
     def _getExplorer(self):
@@ -321,26 +342,59 @@ class Manager(object):
             lfCmd("set autochdir")
 
     def _toUp(self):
+        adjust = False
+        if self._getInstance().isReverseOrder() and self._getInstance().getCurrentPos()[0] == 1:
+            adjust = True
+            self._setResultContent()
+            if self._cli.pattern \
+                    and len(self._highlight_pos) < (len(self._getInstance().buffer) - self._help_length) // self._getUnit() \
+                    and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
+                self._highlight_method()
+
         lfCmd("norm! k")
 
+        if adjust:
+            lfCmd("norm! zt")
+
+        self._getInstance().setLineNumber()
+        lfCmd("setlocal cursorline!")   # these two help to redraw the statusline,
+        lfCmd("setlocal cursorline!")   # also fix a weird bug of vim
+
     def _toDown(self):
-        if self._getInstance().getCurrentPos()[0] == self._getInstance().window.height:
+        if not self._getInstance().isReverseOrder() \
+                and self._getInstance().getCurrentPos()[0] == self._getInstance().window.height:
             self._setResultContent()
 
         lfCmd("norm! j")
+        self._getInstance().setLineNumber()
+        lfCmd("setlocal cursorline!")   # these two help to redraw the statusline,
+        lfCmd("setlocal cursorline!")   # also fix a weird bug of vim
 
     def _pageUp(self):
+        if self._getInstance().isReverseOrder():
+            self._setResultContent()
+            if self._cli.pattern \
+                    and len(self._highlight_pos) < (len(self._getInstance().buffer) - self._help_length) // self._getUnit() \
+                    and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
+                self._highlight_method()
+
         lfCmd('exec "norm! \<PageUp>"')
 
+        self._getInstance().setLineNumber()
+
     def _pageDown(self):
-        self._setResultContent()
+        if not self._getInstance().isReverseOrder():
+            self._setResultContent()
 
         lfCmd('exec "norm! \<PageDown>"')
+
+        self._getInstance().setLineNumber()
 
     def _leftClick(self):
         if self._getInstance().window.number == int(lfEval("v:mouse_win")):
             lfCmd("exec v:mouse_lnum")
             lfCmd("exec 'norm!'.v:mouse_col.'|'")
+            self._getInstance().setLineNumber()
             self.clearSelections()
             exit_loop = False
         else:
@@ -354,8 +408,9 @@ class Manager(object):
         self._clearHighlightsPos()
         self._cli.highlightMatches()
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
-            self._getInstance().setBuffer(content)
+            self._getInstance().setBuffer(content[:self._initial_count])
             self._getInstance().setStlResultsCount(len(content))
+            self._result_content = []
             return
 
         if self._cli.isFuzzy:
@@ -603,6 +658,7 @@ class Manager(object):
             self._getInstance().setStlResultsCount(len(self._result_content))
 
         highlight_method()
+        self._highlight_method = highlight_method
 
     def _clearHighlights(self):
         for i in self._highlight_ids:
@@ -615,15 +671,24 @@ class Manager(object):
 
     def _resetHighlights(self):
         self._clearHighlights()
-        for i, pos in enumerate(self._highlight_pos, self._help_length + 1):
-            pos = [[i] + p for p in pos]
+
+        unit = self._getUnit()
+        bottom = len(self._getInstance().buffer) - self._help_length
+        for i, pos in enumerate(self._highlight_pos):
+            if self._getInstance().isReverseOrder():
+                pos = [[bottom - unit*i] + p for p in pos]
+            else:
+                pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
                 id = int(lfEval("matchaddpos('Lf_hl_match', %s)" % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
-        for i, pos in enumerate(self._highlight_refine_pos, self._help_length + 1):
-            pos = [[i] + p for p in pos]
+        for i, pos in enumerate(self._highlight_refine_pos):
+            if self._getInstance().isReverseOrder():
+                pos = [[bottom - unit*i] + p for p in pos]
+            else:
+                pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
                 id = int(lfEval("matchaddpos('Lf_hl_matchRefine', %s)" % str(pos[j:j+8])))
@@ -644,21 +709,34 @@ class Manager(object):
         getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
         unit = self._getUnit()
 
+        if self._getInstance().isReverseOrder():
+            if self._help_length > 0:
+                content = cb[:-self._help_length][::-1]
+            else:
+                content = cb[:][::-1]
+        else:
+            content = cb[self._help_length:]
+
         if use_fuzzy_engine:
             self._highlight_pos = get_highlights(source=[getDigest(line)
-                                                         for line in cb[:][:highlight_number:unit]])
+                                                         for line in content[:highlight_number:unit]])
         else:
             # e.g., self._highlight_pos = [ [ [2,3], [6,2] ], [ [1,4], [7,6], ... ], ... ]
             # where [2, 3] indicates the highlight starts at the 2nd column with the
             # length of 3 in bytes
             self._highlight_pos = [get_highlights(getDigest(line))
-                                   for line in cb[:][:highlight_number:unit]]
+                                   for line in content[:highlight_number:unit]]
+
+        bottom = len(content)
         for i, pos in enumerate(self._highlight_pos):
-            start_pos = self._getDigestStartPos(cb[unit*i], 0 if is_full_path else 1)
+            start_pos = self._getDigestStartPos(content[unit*i], 0 if is_full_path else 1)
             if start_pos > 0:
                 for j in range(len(pos)):
                     pos[j][0] += start_pos
-            pos = [[unit*i+1] + p for p in pos]
+            if self._getInstance().isReverseOrder():
+                pos = [[bottom - unit*i] + p for p in pos]
+            else:
+                pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
                 id = int(lfEval("matchaddpos('Lf_hl_match', %s)" % str(pos[j:j+8])))
@@ -678,27 +756,44 @@ class Manager(object):
 
         getDigest = self._getDigest
         unit = self._getUnit()
+
+        if self._getInstance().isReverseOrder():
+            if self._help_length > 0:
+                content = cb[:-self._help_length][::-1]
+            else:
+                content = cb[:][::-1]
+        else:
+            content = cb[self._help_length:]
+
+        bottom = len(content)
+
         self._highlight_pos = [first_get_highlights(getDigest(line, 1))
-                               for line in cb[:][:highlight_number:unit]]
+                               for line in content[:highlight_number:unit]]
         for i, pos in enumerate(self._highlight_pos):
-            start_pos = self._getDigestStartPos(cb[unit*i], 1)
+            start_pos = self._getDigestStartPos(content[unit*i], 1)
             if start_pos > 0:
                 for j in range(len(pos)):
                     pos[j][0] += start_pos
-            pos = [[unit*i+1] + p for p in pos]
+            if self._getInstance().isReverseOrder():
+                pos = [[bottom - unit*i] + p for p in pos]
+            else:
+                pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
                 id = int(lfEval("matchaddpos('Lf_hl_match', %s)" % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
         self._highlight_refine_pos = [get_highlights(getDigest(line, 2))
-                                      for line in cb[:][:highlight_number:unit]]
+                                      for line in content[:highlight_number:unit]]
         for i, pos in enumerate(self._highlight_refine_pos):
-            start_pos = self._getDigestStartPos(cb[unit*i], 2)
+            start_pos = self._getDigestStartPos(content[unit*i], 2)
             if start_pos > 0:
                 for j in range(len(pos)):
                     pos[j][0] += start_pos
-            pos = [[unit*i+1] + p for p in pos]
+            if self._getInstance().isReverseOrder():
+                pos = [[bottom - unit*i] + p for p in pos]
+            else:
+                pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
                 id = int(lfEval("matchaddpos('Lf_hl_matchRefine', %s)" % str(pos[j:j+8])))
@@ -738,7 +833,11 @@ class Manager(object):
     @modifiableController
     def toggleHelp(self):
         self._show_help = not self._show_help
-        del self._getInstance().buffer[:self._help_length]
+        if self._getInstance().isReverseOrder():
+            if self._help_length > 0:
+                del self._getInstance().buffer[-self._help_length:]
+        else:
+            del self._getInstance().buffer[:self._help_length]
         self._createHelpHint()
         self.clearSelections()
         self._resetHighlights()
@@ -763,9 +862,14 @@ class Manager(object):
             self._acceptSelection(file, *args, **kwargs)
 
     def accept(self, mode=''):
-        if self._getInstance().window.cursor[0] <= self._help_length:
-            lfCmd("norm! j")
-            return
+        if self._getInstance().isReverseOrder():
+            if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
+                lfCmd("norm! k")
+                return
+        else:
+            if self._getInstance().window.cursor[0] <= self._help_length:
+                lfCmd("norm! j")
+                return
         if len(self._selections) > 0:
             files = []
             for i in sorted(self._selections.keys()):
@@ -826,8 +930,7 @@ class Manager(object):
         self._clearHighlightsPos()
         self.clearSelections()
 
-        self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
-        self._content = self._getInstance().buffer[:]
+        self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
         self._iteration_end = True
 
         if self._cli.pattern:
@@ -894,7 +997,10 @@ class Manager(object):
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
+
+        self._getInstance().setArguments(self._arguments)
         self._getInstance().enterBuffer(win_pos)
+        self._initial_count = self._getInstance().getInitialWinHeight()
 
         self._getInstance().setStlCategory(self._getExplorer().getStlCategory())
         self._setStlMode(**kwargs)
@@ -937,8 +1043,7 @@ class Manager(object):
             self._result_content = []
             self._callback = self._workInIdle
             if lfEval("g:Lf_CursorBlink") == '0':
-                self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
-                self._content = self._getInstance().buffer[:]
+                self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
                 self.input()
             else:
                 self._content = []
@@ -955,8 +1060,7 @@ class Manager(object):
             self._result_content = []
             self._callback = partial(self._workInIdle, content)
             if lfEval("g:Lf_CursorBlink") == '0':
-                self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
-                self._content = self._getInstance().buffer[:]
+                self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
                 self.input()
             else:
                 self._content = []
@@ -1043,7 +1147,7 @@ class Manager(object):
                         step = 2000
                     self._search(self._content[:cur_len], True, step)
             else:
-                if len(self._getInstance().buffer) < self._initial_count:
+                if len(self._getInstance().buffer) < min(cur_len, self._initial_count):
                     self._getInstance().setBuffer(self._content[:self._initial_count])
 
     @modifiableController
@@ -1060,12 +1164,18 @@ class Manager(object):
             if equal(cmd, '<Update>'):
                 self._search(cur_content)
             elif equal(cmd, '<Shorten>'):
-                lfCmd("normal! gg")
+                if self._getInstance().isReverseOrder():
+                    lfCmd("normal! G")
+                else:
+                    lfCmd("normal! gg")
                 self._index = 0 # search from beginning
                 self._search(cur_content)
             elif equal(cmd, '<Mode>'):
                 self._setStlMode()
-                lfCmd("normal! gg")
+                if self._getInstance().isReverseOrder():
+                    lfCmd("normal! G")
+                else:
+                    lfCmd("normal! gg")
                 self._index = 0 # search from beginning
                 if self._cli.pattern:
                     self._search(cur_content)
@@ -1104,6 +1214,10 @@ class Manager(object):
                 self._cli.hideCursor()
                 self._createHelpHint()
                 self._resetHighlights()
+                if self._getInstance().isReverseOrder() and self._cli.pattern \
+                        and len(self._highlight_pos) < (len(self._getInstance().buffer) - self._help_length) // self._getUnit() \
+                        and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
+                    self._highlight_method()
                 break
             elif equal(cmd, '<F5>'):
                 self.refresh(False)

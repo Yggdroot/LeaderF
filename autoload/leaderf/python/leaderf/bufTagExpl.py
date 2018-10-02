@@ -232,7 +232,10 @@ class BufTagExplManager(Manager):
         if line[0].isspace(): # if g:Lf_PreviewCode == 1
             buffer = args[1]
             line_nr = args[2]
-            line = buffer[line_nr - 2]
+            if self._getInstance().isReverseOrder():
+                line = buffer[line_nr]
+            else:
+                line = buffer[line_nr - 2]
         # {tag} {kind} {scope} {file}:{line} {buf_number}
         items = re.split(" *\t *", line)
         tagname = items[0]
@@ -388,15 +391,35 @@ class BufTagExplManager(Manager):
 
     def _toUp(self):
         if self._supports_preview:
-            lfCmd("norm! 2k")
+            if self._getInstance().isReverseOrder() and self._getInstance().getCurrentPos()[0] <= 3:
+                self._setResultContent()
+                if self._cli.pattern and len(self._highlight_pos) < len(self._getInstance().buffer) // 2 \
+                        and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
+                    self._highlight_method()
+
+            if self._getInstance().isReverseOrder():
+                lfCmd("norm! 3kj")
+                self._getInstance().setLineNumber()
+            else:
+                lfCmd("norm! 2k")
         else:
             super(BufTagExplManager, self)._toUp()
 
+        lfCmd("setlocal cursorline!")   # these two help to redraw the statusline,
+        lfCmd("setlocal cursorline!")   # also fix a weird bug of vim
+
     def _toDown(self):
         if self._supports_preview:
-            lfCmd("norm! 3jk")
+            if self._getInstance().isReverseOrder():
+                lfCmd("norm! 2j")
+                self._getInstance().setLineNumber()
+            else:
+                lfCmd("norm! 3jk")
         else:
             super(BufTagExplManager, self)._toDown()
+
+        lfCmd("setlocal cursorline!")   # these two help to redraw the statusline,
+        lfCmd("setlocal cursorline!")   # also fix a weird bug of vim
 
     def removeCache(self, buf_number):
         self._getExplorer().removeCache(buf_number)

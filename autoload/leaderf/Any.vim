@@ -79,6 +79,7 @@ let g:Lf_Arguments = {
             \}
 
 let g:Lf_CommonArguments = [
+            \ {"name": ["--reverse"], "nargs": 0, "help": "show results in bottom-up order"},
             \ {"name": ["--stayOpen"], "nargs": 0, "help": "don't quit LeaderF after accepting an entry"},
             \ [
             \   {"name": ["--input"], "nargs": 1, "help": "specifies INPUT as the pattern inputted in advance"},
