@@ -36,7 +36,7 @@ To install the C extension, follow the below:
 
  - On Linux/Unix/MacOS:
 
-    First, make sure `python` and/or `python3` commands are available.  
+    First, make sure `python2` and/or `python3` commands are available.  
     Then run the installation script:
 
     ```sh
@@ -185,13 +185,12 @@ Once LeaderF is launched:
 
 Input formats:
 
- * In **NameOnly** mode (*fuzzy*)
+ * In **NameOnly** mode (*fuzzy mode*)
 
-    `'abc'` is interpreted as vim's regexp `'a.\{-}b.\{-}c'`.<br>
     If the first character you input is `';'`, then the searching will be the same as in **FullPath** mode.<br>
     If you input string as `'abc;def'`, then `'abc'` will match the file name and `'def'` will match the directory name.
 
- * In **FullPath** mode (*fuzzy*)
+ * In **FullPath** mode (*fuzzy mode*)
 
     Same as in **NameOnly** mode except that the pattern will match the full path but not the file name only.
 
@@ -203,19 +202,31 @@ Smart Case:
 
  * If the characters in search pattern are all lowercase, the matching is case-insensitive. If the search pattern contains uppercase characters, all lowercase characters still are matched case-insensitively, the uppercase characters can only match upper case. So uppercase characters can speed up the narrowing down of the searching result.  
 
-    e.g., input `abcDef`，it can match the following string:
+    e.g., input `abcDef`，it can match the following strings:
     ```
     abcDef
     AbcDef
     abcDEf
     aBcDeF
     ```
-    but can not match the string such as:
+    but can not match the strings such as:
     ```
     abcdef
     Abcdef
     ```
     Note: `abc` and `ef` are still case-insensitive.
+
+And operator:
+
+ * In fuzzy mode, using `' '`(space) as the **and** operator, the candidate lines should fuzzily match all the substrings separated by space.
+
+    e.g., input `abc def gh`，it can match the following strings:
+    ```
+    ...a.b.c...d.e.f...g.h...
+    ...a.b.c...g.h...d.e.f...
+    ...a.d..e.g.b.c...h..f...
+    ...gh...def...abc...
+    ```
 
 Customization
 -------------

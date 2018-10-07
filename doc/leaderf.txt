@@ -519,6 +519,9 @@ g:Lf_ReverseOrder                               *g:Lf_ReverseOrder*
     Show results in bottom-up order.
     Default value is 0(top-down order).
 
+g:Lf_AndDelimiter                               *g:Lf_AndDelimiter*
+    The And operator character, default value is ' '(space).
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

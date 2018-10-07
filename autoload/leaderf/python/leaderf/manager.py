@@ -74,6 +74,7 @@ class Manager(object):
         self._show_help = False
         self._selections = {}
         self._highlight_pos = []
+        self._highlight_pos_list = []
         self._highlight_refine_pos = []
         self._highlight_ids = []
         self._orig_line = ''
@@ -454,7 +455,16 @@ class Manager(object):
                     cur_content += content[self._index:end]
                     self._index = end
 
-        if use_fuzzy_engine:
+        if self._cli.isAndMode:
+            result, highlight_methods = filter_method(cur_content)
+            if is_continue:
+                self._previous_result = (self._previous_result[0] + result[0],
+                                         self._previous_result[1] + result[1])
+                result = self._previous_result
+            else:
+                self._previous_result = result
+            return (result, highlight_methods)
+        elif use_fuzzy_engine:
             if return_index:
                 mode = 0 if self._cli.isFullPath else 1
                 tmp_content = [self._getDigest(line, mode) for line in cur_content]
@@ -488,6 +498,17 @@ class Manager(object):
         MIN_WEIGHT = fuzzyMatchC.MIN_WEIGHT if is_fuzzyMatch_C else FuzzyMatch.MIN_WEIGHT
         return (p for p in pairs if p[0] > MIN_WEIGHT)
 
+    def _fuzzyFilterEx(self, is_full_path, get_weight, iterable):
+        """
+        return a tuple, (weights, indices)
+        """
+        getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
+        pairs = ((get_weight(getDigest(line)), i) for i, line in enumerate(iterable))
+        MIN_WEIGHT = fuzzyMatchC.MIN_WEIGHT if is_fuzzyMatch_C else FuzzyMatch.MIN_WEIGHT
+        result = (p for p in pairs if p[0] > MIN_WEIGHT)
+        weights, indices = zip(*result)
+        return (list(weights), list(indices))
+
     def _refineFilter(self, first_get_weight, get_weight, iterable):
         getDigest = self._getDigest
         triples = ((first_get_weight(getDigest(line, 1)),
@@ -496,11 +517,87 @@ class Manager(object):
         MIN_WEIGHT = fuzzyMatchC.MIN_WEIGHT if is_fuzzyMatch_C else FuzzyMatch.MIN_WEIGHT
         return ((i[0] + i[1], i[2]) for i in triples if i[0] > MIN_WEIGHT and i[1] > MIN_WEIGHT)
 
+    def _andModeFilter(self, iterable):
+        encoding = lfEval("&encoding")
+        use_fuzzy_engine = False
+        cur_content = iterable
+        weight_lists = []
+        highlight_methods = []
+        for p in self._cli.pattern:
+            if self._fuzzy_engine and isAscii(p):
+                use_fuzzy_engine = True
+                pattern = fuzzyEngine.initPattern(p)
+                if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                    filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
+                                            is_name_only=False, sort_results=False)
+                elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
+                        "Function", "History", "Cmd_History", "Search_History"]:
+                    filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
+                                            is_name_only=True, sort_results=False)
+                else:
+                    filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
+                                            is_name_only=not self._cli.isFullPath, sort_results=False)
+
+                getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
+                                        pattern=pattern, is_name_only=not self._cli.isFullPath)
+                highlight_method = partial(self._highlight, self._cli.isFullPath, getHighlights, True, clear=False)
+            elif is_fuzzyMatch_C and isAscii(p):
+                pattern = fuzzyMatchC.initPattern(p)
+                if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=False)
+                    getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern, is_name_only=False)
+                else:
+                    getWeight = partial(fuzzyMatchC.getWeight, pattern=pattern, is_name_only=True)
+                    getHighlights = partial(fuzzyMatchC.getHighlights, pattern=pattern, is_name_only=True)
+
+                filter_method = partial(self._fuzzyFilterEx, self._cli.isFullPath, getWeight)
+                highlight_method = partial(self._highlight, self._cli.isFullPath, getHighlights, clear=False)
+            else:
+                fuzzy_match = FuzzyMatch(p, encoding)
+                if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                    filter_method = partial(self._fuzzyFilterEx,
+                                            self._cli.isFullPath,
+                                            fuzzy_match.getWeight2)
+                elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
+                        "Function", "History", "Cmd_History", "Search_History"]:
+                    filter_method = partial(self._fuzzyFilterEx,
+                                            self._cli.isFullPath,
+                                            fuzzy_match.getWeight3)
+                else:
+                    filter_method = partial(self._fuzzyFilterEx,
+                                            self._cli.isFullPath,
+                                            fuzzy_match.getWeight)
+
+                highlight_method = partial(self._highlight,
+                                           self._cli.isFullPath,
+                                           fuzzy_match.getHighlights,
+                                           clear=False)
+
+            if use_fuzzy_engine:
+                mode = 0 if self._cli.isFullPath else 1
+                tmp_content = [self._getDigest(line, mode) for line in cur_content]
+                result = filter_method(source=tmp_content)
+            else:
+                result = filter_method(cur_content)
+
+            for i, wl in enumerate(weight_lists):
+                weight_lists[i] = [wl[j] for j in result[1]]
+
+            weight_lists.append(result[0])
+            cur_content = [cur_content[i] for i in result[1]]
+            highlight_methods.append(highlight_method)
+
+        weights = [sum(i) for i in zip(*weight_lists)]
+
+        return ((weights, cur_content), highlight_methods)
+
     def _fuzzySearch(self, content, is_continue, step):
         encoding = lfEval("&encoding")
         use_fuzzy_engine = False
         use_fuzzy_match_c = False
-        if self._cli.isRefinement:
+        if self._cli.isAndMode:
+            filter_method = self._andModeFilter
+        elif self._cli.isRefinement:
             if self._cli.pattern[1] == '':      # e.g. abc;
                 if self._fuzzy_engine and isAscii(self._cli.pattern[0]):
                     use_fuzzy_engine = True
@@ -627,9 +724,18 @@ class Manager(object):
                                            self._cli.isFullPath,
                                            fuzzy_match.getHighlights)
 
-        if use_fuzzy_engine:
+        if self._cli.isAndMode:
+            if self._fuzzy_engine and isAscii(''.join(self._cli.pattern)):
+                step = 20000 * cpu_count
+            else:
+                step = 20000
+            pair, highlight_methods = self._filter(step, filter_method, content, is_continue)
+
+            pairs = sorted(zip(*pair), key=operator.itemgetter(0), reverse=True)
+            self._result_content = self._getList(pairs)
+        elif use_fuzzy_engine:
             if step == 0:
-                if  return_index == True:
+                if return_index == True:
                     step = 20000 * cpu_count
                 else:
                     step = 40000 * cpu_count
@@ -640,8 +746,6 @@ class Manager(object):
                 self._result_content = self._getList(pairs)
             else:
                 self._result_content = pair[1]
-            self._getInstance().setBuffer(self._result_content[:self._initial_count])
-            self._getInstance().setStlResultsCount(len(self._result_content))
         else:
             if step == 0:
                 if use_fuzzy_match_c:
@@ -654,11 +758,21 @@ class Manager(object):
             pairs = self._filter(step, filter_method, content, is_continue)
             pairs.sort(key=operator.itemgetter(0), reverse=True)
             self._result_content = self._getList(pairs)
-            self._getInstance().setBuffer(self._result_content[:self._initial_count])
-            self._getInstance().setStlResultsCount(len(self._result_content))
 
-        highlight_method()
-        self._highlight_method = highlight_method
+        self._getInstance().setBuffer(self._result_content[:self._initial_count])
+        self._getInstance().setStlResultsCount(len(self._result_content))
+
+        if self._cli.isAndMode:
+            self._highlight_method = partial(self._highlight_and_mode, highlight_methods)
+            self._highlight_method()
+        else:
+            self._highlight_method = highlight_method
+            self._highlight_method()
+
+    def _highlight_and_mode(self, highlight_methods):
+        self._clearHighlights()
+        for i, highlight_method in enumerate(highlight_methods):
+            highlight_method(hl_group='Lf_hl_match' + str(i % 5))
 
     def _clearHighlights(self):
         for i in self._highlight_ids:
@@ -667,6 +781,7 @@ class Manager(object):
 
     def _clearHighlightsPos(self):
         self._highlight_pos = []
+        self._highlight_pos_list = []
         self._highlight_refine_pos = []
 
     def _resetHighlights(self):
@@ -674,15 +789,22 @@ class Manager(object):
 
         unit = self._getUnit()
         bottom = len(self._getInstance().buffer) - self._help_length
-        for i, pos in enumerate(self._highlight_pos):
-            if self._getInstance().isReverseOrder():
-                pos = [[bottom - unit*i] + p for p in pos]
-            else:
-                pos = [[unit*i + 1 + self._help_length] + p for p in pos]
-            # The maximum number of positions is 8 in matchaddpos().
-            for j in range(0, len(pos), 8):
-                id = int(lfEval("matchaddpos('Lf_hl_match', %s)" % str(pos[j:j+8])))
-                self._highlight_ids.append(id)
+        if self._cli.isAndMode:
+            highlight_pos_list = self._highlight_pos_list
+        else:
+            highlight_pos_list = [self._highlight_pos]
+
+        for n, highlight_pos in enumerate(highlight_pos_list):
+            hl_group = 'Lf_hl_match' + str(n % 5)
+            for i, pos in enumerate(highlight_pos):
+                if self._getInstance().isReverseOrder():
+                    pos = [[bottom - unit*i] + p for p in pos]
+                else:
+                    pos = [[unit*i + 1 + self._help_length] + p for p in pos]
+                # The maximum number of positions is 8 in matchaddpos().
+                for j in range(0, len(pos), 8):
+                    id = int(lfEval("matchaddpos('%s', %s)" % (hl_group, str(pos[j:j+8]))))
+                    self._highlight_ids.append(id)
 
         for i, pos in enumerate(self._highlight_refine_pos):
             if self._getInstance().isReverseOrder():
@@ -694,7 +816,7 @@ class Manager(object):
                 id = int(lfEval("matchaddpos('Lf_hl_matchRefine', %s)" % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
-    def _highlight(self, is_full_path, get_highlights, use_fuzzy_engine=False):
+    def _highlight(self, is_full_path, get_highlights, use_fuzzy_engine=False, clear=True, hl_group='Lf_hl_match'):
         # matchaddpos() is introduced by Patch 7.4.330
         if (lfEval("exists('*matchaddpos')") == '0' or
                 lfEval("g:Lf_HighlightIndividual") == '0'):
@@ -704,7 +826,8 @@ class Manager(object):
             return
 
         highlight_number = int(lfEval("g:Lf_NumberOfHighlight"))
-        self._clearHighlights()
+        if clear:
+            self._clearHighlights()
 
         getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
         unit = self._getUnit()
@@ -726,6 +849,8 @@ class Manager(object):
             # length of 3 in bytes
             self._highlight_pos = [get_highlights(getDigest(line))
                                    for line in content[:highlight_number:unit]]
+        if self._cli.isAndMode:
+            self._highlight_pos_list.append(self._highlight_pos)
 
         bottom = len(content)
         for i, pos in enumerate(self._highlight_pos):
@@ -739,7 +864,7 @@ class Manager(object):
                 pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
-                id = int(lfEval("matchaddpos('Lf_hl_match', %s)" % str(pos[j:j+8])))
+                id = int(lfEval("matchaddpos('%s', %s)" % (hl_group, str(pos[j:j+8]))))
                 self._highlight_ids.append(id)
 
     def _highlightRefine(self, first_get_highlights, get_highlights):

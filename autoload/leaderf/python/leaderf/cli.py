@@ -6,6 +6,7 @@ import re
 import time
 from datetime import datetime
 from functools import wraps
+from collections import OrderedDict
 from .utils import *
 
 
@@ -48,6 +49,7 @@ class LfCli(object):
         self._cmd_map = lfEval("g:Lf_CommandMap")
         self._refine = False
         self._delimiter = lfEval("g:Lf_DelimiterChar")
+        self._and_delimiter = lfEval("get(g:, 'Lf_AndDelimiter', ' ')")
         self._supports_nameonly = False
         self._supports_refine = False
         self._setDefaultMode()
@@ -165,18 +167,33 @@ class LfCli(object):
 
     def _buildPattern(self):
         if self._is_fuzzy:
-            # supports refinement only in nameOnly mode
-            if (((self._supports_nameonly and not self._is_full_path) or
-                    self._supports_refine) and self._delimiter in self._cmdline):
-                self._refine = True
-                idx = self._cmdline.index(self._delimiter)
-                self._pattern = (''.join(self._cmdline[:idx]),
-                                 ''.join(self._cmdline[idx+1:]))
-                if self._pattern == ('', ''):
+            if self._and_delimiter in self._cmdline:
+                self._is_and_mode = True
+                patterns = re.split(r'['+self._and_delimiter+']+', ''.join(self._cmdline).strip())
+                pattern_dict = OrderedDict([])
+                for p in patterns:
+                    if p in pattern_dict:
+                        pattern_dict[p] += 1
+                    else:
+                        pattern_dict[p] = 1
+                self._pattern = tuple([i * pattern_dict[i] for i in pattern_dict])
+                if self._pattern == ('',):
                     self._pattern = None
             else:
-                self._refine = False
-                self._pattern = ''.join(self._cmdline)
+                self._is_and_mode = False
+
+                # supports refinement only in nameOnly mode
+                if (((self._supports_nameonly and not self._is_full_path) or
+                        self._supports_refine) and self._delimiter in self._cmdline):
+                    self._refine = True
+                    idx = self._cmdline.index(self._delimiter)
+                    self._pattern = (''.join(self._cmdline[:idx]),
+                                     ''.join(self._cmdline[idx+1:]))
+                    if self._pattern == ('', ''):
+                        self._pattern = None
+                else:
+                    self._refine = False
+                    self._pattern = ''.join(self._cmdline)
         else:
             self._pattern = ''.join(self._cmdline)
 
@@ -312,6 +329,10 @@ class LfCli(object):
         return self._refine
 
     @property
+    def isAndMode(self):
+        return self._is_and_mode
+
+    @property
     def isFuzzy(self):
         return self._is_fuzzy
 
@@ -351,7 +372,7 @@ class LfCli(object):
                 if lfEval("!type(nr) && nr >= 0x20") == '1':
                     self._insert(lfEval("ch"))
                     self._buildPattern()
-                    if self._pattern is None or self._refine and self._pattern[1] == '': # e.g. abc;
+                    if self._pattern is None or (self._refine and self._pattern[1] == ''): # e.g. abc;
                         continue
                     yield '<Update>'
                 else:
