@@ -82,7 +82,6 @@ class LfInstance(object):
         lfCmd("setlocal foldmethod=manual")
         lfCmd("setlocal shiftwidth=4")
         lfCmd("setlocal cursorline")
-        lfCmd("setlocal filetype=leaderf")
         if self._reverse_order:
             lfCmd("setlocal nonumber")
             lfCmd("setlocal foldcolumn=1")
@@ -91,6 +90,7 @@ class LfInstance(object):
             lfCmd("setlocal number")
             lfCmd("setlocal foldcolumn=0")
             lfCmd("setlocal nowinfixheight")
+        lfCmd("setlocal filetype=leaderf")
 
     def _setStatusline(self):
         self._initStlVar()
