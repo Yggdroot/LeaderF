@@ -522,6 +522,10 @@ g:Lf_ReverseOrder                               *g:Lf_ReverseOrder*
 g:Lf_AndDelimiter                               *g:Lf_AndDelimiter*
     The And operator character, default value is ' '(space).
 
+g:Lf_HistoryNumber                              *g:Lf_HistoryNumber*
+    Specify the number of records in history.
+    Default value is 100.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
@@ -583,7 +587,8 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <Tab> : switch to normal mode.
     <C-V>, <S-Insert> : paste from clipboard.
     <C-U> : clear the prompt.
-    <C-J>, <Down>, <C-K>, <Up> : navigate the result list.
+    <C-J>, <C-K> : navigate the result list.
+    <Up>, <Down> : recall last/next input pattern from history.
     <2-LeftMouse> or <CR> : open the file under cursor or selected(when
                             multiple files are selected).
     <C-X> : open in horizontal split window.

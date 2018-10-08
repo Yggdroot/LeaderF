@@ -127,8 +127,8 @@ class LfCli(object):
     def setPattern(self, pattern):
         if pattern:
             self.clear()
-        for ch in pattern:
-            self._insert(ch)
+        self._cmdline = list(pattern)
+        self._cursor_pos = len(self._cmdline)
         self._buildPattern()
 
     def _buildPrompt(self):
@@ -299,6 +299,92 @@ class LfCli(object):
     def setRefineFeature(self, state):
         self._supports_refine = state
 
+    def writeHistory(self, category):
+        if self._is_and_mode:
+            pattern = self._and_delimiter.join(self._pattern)
+        elif self._refine:
+            pattern = self._delimiter.join(self._pattern)
+        else:
+            pattern = self._pattern
+
+        if not pattern:
+            return
+
+        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
+        if self._is_fuzzy:
+            history_file = os.path.join(history_dir, 'fuzzy.txt')
+        else:
+            history_file = os.path.join(history_dir, 'regex.txt')
+
+        if not os.path.exists(history_dir):
+            os.makedirs(history_dir)
+
+        if not os.path.exists(history_file):
+            with lfOpen(history_file, 'w', errors='ignore'):
+                pass
+
+        with lfOpen(history_file, 'r+', errors='ignore') as f:
+            lines = f.readlines()
+
+            pattern += '\n'
+            if pattern in lines:
+                lines.remove(pattern)
+
+            if len(lines) >= int(lfEval("get(g:, 'Lf_HistoryNumber', '100')")):
+                del lines[0]
+
+            lines.append(pattern)
+
+            f.seek(0)
+            f.truncate(0)
+            f.writelines(lines)
+
+    def previousHistory(self, category):
+        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
+        if self._is_fuzzy:
+            history_file = os.path.join(history_dir, 'fuzzy.txt')
+        else:
+            history_file = os.path.join(history_dir, 'regex.txt')
+
+        if not os.path.exists(history_file):
+            return False
+
+        with lfOpen(history_file, 'r', errors='ignore') as f:
+            lines = f.readlines()
+            if self._history_index == 0:
+                self._pattern_backup = self._pattern
+
+            if -self._history_index < len(lines):
+                self._history_index -= 1
+                self.setPattern(lines[self._history_index].rstrip())
+            else:
+                return False
+
+        return True
+
+    def nextHistory(self, category):
+        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
+        if self._is_fuzzy:
+            history_file = os.path.join(history_dir, 'fuzzy.txt')
+        else:
+            history_file = os.path.join(history_dir, 'regex.txt')
+
+        if not os.path.exists(history_file):
+            return False
+
+        with lfOpen(history_file, 'r', errors='ignore') as f:
+            lines = f.readlines()
+            if self._history_index < 0:
+                self._history_index += 1
+                if self._history_index == 0:
+                    self.setPattern(self._pattern_backup)
+                else:
+                    self.setPattern(lines[self._history_index].rstrip())
+            else:
+                return False
+
+        return True
+
     @property
     def isPrefix(self): #assume that there are no \%23l, \%23c, \%23v, \%...
         pos = self._cursor_pos
@@ -339,6 +425,7 @@ class LfCli(object):
     @cursorController
     def input(self, callback):
         try:
+            self._history_index = 0
             self._blinkon = True
             while 1:
                 self._buildPrompt()

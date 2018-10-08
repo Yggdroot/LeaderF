@@ -998,6 +998,9 @@ class Manager(object):
             if self._getInstance().window.cursor[0] <= self._help_length:
                 lfCmd("norm! j")
                 return
+
+        self._cli.writeHistory(self._getExplorer().getStlCategory())
+
         if len(self._selections) > 0:
             files = []
             for i in sorted(self._selections.keys()):
@@ -1307,12 +1310,28 @@ class Manager(object):
                 self._index = 0 # search from beginning
                 if self._cli.pattern:
                     self._search(cur_content)
-            elif equal(cmd, '<Up>') or equal(cmd, '<C-K>'):
+            elif equal(cmd, '<C-K>'):
                 self._toUp()
                 self._previewResult(False)
-            elif equal(cmd, '<Down>') or equal(cmd, '<C-J>'):
+            elif equal(cmd, '<C-J>'):
                 self._toDown()
                 self._previewResult(False)
+            elif equal(cmd, '<Up>'):
+                if self._cli.previousHistory(self._getExplorer().getStlCategory()):
+                    if self._getInstance().isReverseOrder():
+                        lfCmd("normal! G")
+                    else:
+                        lfCmd("normal! gg")
+                    self._index = 0 # search from beginning
+                    self._search(cur_content)
+            elif equal(cmd, '<Down>'):
+                if self._cli.nextHistory(self._getExplorer().getStlCategory()):
+                    if self._getInstance().isReverseOrder():
+                        lfCmd("normal! G")
+                    else:
+                        lfCmd("normal! gg")
+                    self._index = 0 # search from beginning
+                    self._search(cur_content)
             elif equal(cmd, '<LeftMouse>'):
                 if self._leftClick():
                     break
@@ -1334,6 +1353,7 @@ class Manager(object):
                 if self.accept('t') is None:
                     break
             elif equal(cmd, '<Quit>'):
+                self._cli.writeHistory(self._getExplorer().getStlCategory())
                 self.quit()
                 break
             elif equal(cmd, '<Tab>'):   # switch to Normal mode

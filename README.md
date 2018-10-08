@@ -164,8 +164,9 @@ Once LeaderF is launched:
 | `<Tab>`                    | switch to normal mode
 | `<C-V>`<br>`<S-Insert>`    | paste from clipboard
 | `<C-U>`                    | clear the prompt
-| `<C-J>`<br>`<Down>`        | move the cursor downward in the result window
-| `<C-K>`<br>`<Up>`          | move the cursor upward in the result window
+| `<C-J>`                    | move the cursor downward in the result window
+| `<C-K>`                    | move the cursor upward in the result window
+| `<Up>`/`<Down>`            | recall last/next input pattern from history
 | `<2-LeftMouse>`<br>`<CR>`  | open the file under cursor or selected(when multiple files are selected)
 | `<C-X>`                    | open in horizontal split window
 | `<C-]>`                    | open in vertical split window
