@@ -505,8 +505,11 @@ class Manager(object):
         getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
         pairs = ((get_weight(getDigest(line)), i) for i, line in enumerate(iterable))
         MIN_WEIGHT = fuzzyMatchC.MIN_WEIGHT if is_fuzzyMatch_C else FuzzyMatch.MIN_WEIGHT
-        result = (p for p in pairs if p[0] > MIN_WEIGHT)
-        weights, indices = zip(*result)
+        result = [p for p in pairs if p[0] > MIN_WEIGHT]
+        if len(result) == 0:
+            weights, indices = [], []
+        else:
+            weights, indices = zip(*result)
         return (list(weights), list(indices))
 
     def _refineFilter(self, first_get_weight, get_weight, iterable):
@@ -728,7 +731,7 @@ class Manager(object):
             if self._fuzzy_engine and isAscii(''.join(self._cli.pattern)):
                 step = 20000 * cpu_count
             else:
-                step = 20000
+                step = 10000
             pair, highlight_methods = self._filter(step, filter_method, content, is_continue)
 
             pairs = sorted(zip(*pair), key=operator.itemgetter(0), reverse=True)
