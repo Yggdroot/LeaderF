@@ -28,7 +28,7 @@ function! lfMru#CacheFileName()
 endfunction
 
 function! lfMru#record(name)
-    if a:name == '' || !filereadable(a:name)
+    if a:name == '' || !filereadable(a:name) || strpart(a:name, 0, 2) == '\\'
         return
     endif
     let file_list = readfile(g:Lf_MruCacheFileName)
