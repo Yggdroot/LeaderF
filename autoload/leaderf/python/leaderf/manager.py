@@ -1145,7 +1145,7 @@ class Manager(object):
 
         self._start_time = time.time()
 
-        self._pattern = kwargs.get("pattern", "") or kwargs.get("arguments", {}).get("--input", "")
+        self._pattern = kwargs.get("pattern", "") or kwargs.get("arguments", {}).get("--input", [""])[0]
         self._cli.setPattern(self._pattern)
 
         if isinstance(content, list):

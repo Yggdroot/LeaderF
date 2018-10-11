@@ -52,6 +52,7 @@ let g:Lf_Helps = {
 let g:Lf_Arguments = {
             \ "file":[
             \           {"name": ["directory"], "nargs": "?", "help": "serarch files under <directory>"},
+            \           {"name": ["--file"], "nargs": 1, "help": "read file list from the specified file."},
             \           {"name": ["--no-ignore"], "nargs": 0, "help": "don't respect ignore files (.gitignore, .ignore, etc.)."},
             \   ],
             \ "buffer":[

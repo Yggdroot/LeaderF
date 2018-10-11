@@ -510,6 +510,11 @@ class FileExplorer(Explorer):
             self._writeCache(content)
 
     def getContent(self, *args, **kwargs):
+        file = kwargs.get("arguments", {}).get("--file", [""])[0]
+        if file:
+            with lfOpen(file, 'r', errors='ignore') as f:
+                return f.readlines()
+
         if kwargs.get("arguments", {}).get("directory"):
             dir = kwargs.get("arguments", {}).get("directory")[0]
             if os.path.exists(os.path.expanduser(lfDecode(dir))):
