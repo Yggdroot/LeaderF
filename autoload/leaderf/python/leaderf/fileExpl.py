@@ -510,10 +510,13 @@ class FileExplorer(Explorer):
             self._writeCache(content)
 
     def getContent(self, *args, **kwargs):
-        file = kwargs.get("arguments", {}).get("--file", [""])[0]
-        if file:
-            with lfOpen(file, 'r', errors='ignore') as f:
-                return f.readlines()
+        files = kwargs.get("arguments", {}).get("--file", [])
+        if files:
+            result = []
+            for file in files:
+                with lfOpen(file, 'r', errors='ignore') as f:
+                    result += f.readlines()
+            return result
 
         if kwargs.get("arguments", {}).get("directory"):
             dir = kwargs.get("arguments", {}).get("directory")[0]
