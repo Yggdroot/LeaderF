@@ -503,6 +503,8 @@ class Manager(object):
         return a tuple, (weights, indices)
         """
         getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
+        if self._getUnit() > 1: # currently, only BufTag's _getUnit() is 2
+            iterable = itertools.islice(iterable, 0, None, self._getUnit())
         pairs = ((get_weight(getDigest(line)), i) for i, line in enumerate(iterable))
         MIN_WEIGHT = fuzzyMatchC.MIN_WEIGHT if is_fuzzyMatch_C else FuzzyMatch.MIN_WEIGHT
         result = [p for p in pairs if p[0] > MIN_WEIGHT]
@@ -527,7 +529,7 @@ class Manager(object):
         weight_lists = []
         highlight_methods = []
         for p in self._cli.pattern:
-            if self._fuzzy_engine and isAscii(p):
+            if self._fuzzy_engine and isAscii(p) and self._getUnit() == 1: # currently, only BufTag's _getUnit() is 2
                 use_fuzzy_engine = True
                 pattern = fuzzyEngine.initPattern(p)
                 if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
@@ -587,12 +589,19 @@ class Manager(object):
                 weight_lists[i] = [wl[j] for j in result[1]]
 
             weight_lists.append(result[0])
-            cur_content = [cur_content[i] for i in result[1]]
+            if self._getUnit() > 1: # currently, only BufTag's _getUnit() is 2
+                unit = self._getUnit()
+                result_content = [cur_content[i*unit:i*unit + unit] for i in result[1]]
+                cur_content = list(itertools.chain.from_iterable(result_content))
+            else:
+                cur_content = [cur_content[i] for i in result[1]]
+                result_content = cur_content
+
             highlight_methods.append(highlight_method)
 
         weights = [sum(i) for i in zip(*weight_lists)]
 
-        return ((weights, cur_content), highlight_methods)
+        return ((weights, result_content), highlight_methods)
 
     def _fuzzySearch(self, content, is_continue, step):
         encoding = lfEval("&encoding")
@@ -675,7 +684,7 @@ class Manager(object):
                 filter_method = partial(self._refineFilter, getWeight_0, getWeight_1)
                 highlight_method = partial(self._highlightRefine, getHighlights_0, getHighlights_1)
         else:
-            if self._fuzzy_engine and isAscii(self._cli.pattern):
+            if self._fuzzy_engine and isAscii(self._cli.pattern) and self._getUnit() == 1: # currently, only BufTag's _getUnit() is 2
                 use_fuzzy_engine = True
                 pattern = fuzzyEngine.initPattern(self._cli.pattern)
                 if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:

@@ -326,16 +326,16 @@ class BufTagExplManager(Manager):
 
     def _fuzzyFilter(self, is_full_path, get_weight, iterable):
         """
-        return a list, each item is a triple (weight, line1, line2)
+        return a list, each item is a pair (weight, (line1, line2))
         """
         if self._supports_preview:
             if len(iterable) < 2:
                 return []
             getDigest = partial(self._getDigest, mode=0 if is_full_path else 1)
-            triples = ((get_weight(getDigest(line)), line, iterable[2*i+1])
+            pairs = ((get_weight(getDigest(line)), (line, iterable[2*i+1]))
                        for i, line in enumerate(iterable[::2]))
             MIN_WEIGHT = fuzzyMatchC.MIN_WEIGHT if is_fuzzyMatch_C else FuzzyMatch.MIN_WEIGHT
-            return (t for t in triples if t[0] > MIN_WEIGHT)
+            return (t for t in pairs if t[0] > MIN_WEIGHT)
         else:
             return super(BufTagExplManager, self)._fuzzyFilter(is_full_path,
                                                                get_weight,
@@ -349,7 +349,7 @@ class BufTagExplManager(Manager):
             tuples = ((first_get_weight(getDigest(line, 1)), get_weight(getDigest(line, 2)),
                        line, iterable[2*i+1]) for i, line in enumerate(iterable[::2]))
             MIN_WEIGHT = fuzzyMatchC.MIN_WEIGHT if is_fuzzyMatch_C else FuzzyMatch.MIN_WEIGHT
-            return ((i[0] + i[1], i[2], i[3]) for i in tuples if i[0] > MIN_WEIGHT and i[1] > MIN_WEIGHT)
+            return ((i[0] + i[1], (i[2], i[3])) for i in tuples if i[0] > MIN_WEIGHT and i[1] > MIN_WEIGHT)
         else:
             return super(BufTagExplManager, self)._refineFilter(first_get_weight,
                                                                 get_weight,
@@ -376,15 +376,14 @@ class BufTagExplManager(Manager):
 
     def _getList(self, pairs):
         """
-        return a list constructed from pairs
+        return a list constructed from `pairs`
         Args:
-            pairs: a list of tuple(weight, line, ...)
+            pairs: a list of tuple(weight, (line1, line2))
         """
         if self._supports_preview:
             result = []
             for _, p in enumerate(pairs):
-                result.append(p[1])
-                result.append(p[2])
+                result.extend(p[1])
             return result
         else:
             return super(BufTagExplManager, self)._getList(pairs)
