@@ -300,15 +300,15 @@ class LfCli(object):
         self._supports_refine = state
 
     def writeHistory(self, category):
+        if not self._pattern:
+            return
+
         if self._is_and_mode:
             pattern = self._and_delimiter.join(self._pattern)
         elif self._refine:
             pattern = self._delimiter.join(self._pattern)
         else:
             pattern = self._pattern
-
-        if not pattern:
-            return
 
         history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
         if self._is_fuzzy:
