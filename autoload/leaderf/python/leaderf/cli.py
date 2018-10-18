@@ -52,6 +52,7 @@ class LfCli(object):
         self._and_delimiter = lfEval("get(g:, 'Lf_AndDelimiter', ' ')")
         self._supports_nameonly = False
         self._supports_refine = False
+        self._is_and_mode = False
         self._setDefaultMode()
 
     def _setDefaultMode(self):
