@@ -301,7 +301,12 @@ class FileExplorer(Explorer):
             else:
                 no_ignore = ""
 
-            cmd = 'rg --no-messages --files %s %s %s %s %s "%s"' % (color, ignore, followlinks, show_hidden, no_ignore, dir)
+            if dir == '.':
+                cur_dir = ''
+            else:
+                cur_dir = '"%s"' % dir
+
+            cmd = 'rg --no-messages --files %s %s %s %s %s %s' % (color, ignore, followlinks, show_hidden, no_ignore, cur_dir)
         elif default_tool["pt"] and lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
