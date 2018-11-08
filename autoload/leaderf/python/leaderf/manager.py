@@ -1133,7 +1133,12 @@ class Manager(object):
         self._cli.setRefineFeature(self._supportsRefine())
         lfCmd("echohl WarningMsg | redraw |"
               "echo ' searching ...' | echohl NONE")
-        content = self._getExplorer().getContent(*args, **kwargs)
+        try:
+            content = self._getExplorer().getContent(*args, **kwargs)
+        except Exception as e:
+            lfPrintError(e)
+            return
+
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
