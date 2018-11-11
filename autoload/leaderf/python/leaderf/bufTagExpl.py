@@ -6,7 +6,6 @@ import re
 import os
 import sys
 import os.path
-import subprocess
 import tempfile
 import itertools
 import multiprocessing
