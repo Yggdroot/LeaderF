@@ -433,8 +433,12 @@ class LfCli(object):
                 self._idle = False
 
                 if lfEval("g:Lf_CursorBlink") == '1':
-                    callback()
-                    time.sleep(0.001) # cpu usage 100% without sleep
+                    try:
+                        callback()
+                        time.sleep(0.001) # cpu usage 100% without sleep
+                    except Exception as e:
+                        lfPrintError(e)
+                        break
 
                 if lfEval("g:Lf_CursorBlink") == '1':
                     lfCmd("let nr = getchar(1)")
