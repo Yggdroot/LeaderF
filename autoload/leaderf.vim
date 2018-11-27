@@ -7,12 +7,6 @@
 " License:     Apache License, Version 2.0
 " ============================================================================
 
-if exists('g:leaderf#loaded')
-    finish
-else
-    let g:leaderf#loaded = 1
-endif
-
 if !exists("g:Lf_PythonVersion")
     if has("python3")
         let g:Lf_PythonVersion = 3
@@ -21,9 +15,7 @@ if !exists("g:Lf_PythonVersion")
         let g:Lf_PythonVersion = 2
         let g:Lf_py = "py "
     else
-        echohl Error
-        echo "Error: LeaderF requires vim compiled with +python or +python3"
-        echohl None
+        echoe "Error: LeaderF requires vim compiled with +python or +python3"
         finish
     endif
 else
@@ -31,21 +23,23 @@ else
         if has("python")
             let g:Lf_py = "py "
         else
-            echohl Error
-            echo 'LeaderF Error: has("python") == 0'
-            echohl None
+            echoe 'LeaderF Error: has("python") == 0'
             finish
         endif
     else
         if has("python3")
             let g:Lf_py = "py3 "
         else
-            echohl Error
-            echo 'LeaderF Error: has("python3") == 0'
-            echohl None
+            echoe 'LeaderF Error: has("python3") == 0'
             finish
         endif
     endif
+endif
+
+if exists('g:leaderf#loaded')
+    finish
+else
+    let g:leaderf#loaded = 1
 endif
 
 silent! exec g:Lf_py "pass"
