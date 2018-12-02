@@ -58,23 +58,49 @@ augroup LeaderF_Mru
                 \ call lfMru#recordBuffer(expand('<abuf>'))
 augroup END
 
-nnoremap <silent> <Plug>LeaderfFileTop :<C-U>call leaderf#File#startExpl('top')<CR>
-nnoremap <silent> <Plug>LeaderfFileBottom :<C-U>call leaderf#File#startExpl('bottom')<CR>
-nnoremap <silent> <Plug>LeaderfFileLeft :<C-U>call leaderf#File#startExpl('left')<CR>
-nnoremap <silent> <Plug>LeaderfFileRight :<C-U>call leaderf#File#startExpl('right')<CR>
-nnoremap <silent> <Plug>LeaderfFileFullScreen :<C-U>call leaderf#File#startExpl('fullScreen')<CR>
+noremap <silent> <Plug>LeaderfFileTop        :<C-U>call leaderf#File#startExpl('top')<CR>
+noremap <silent> <Plug>LeaderfFileBottom     :<C-U>call leaderf#File#startExpl('bottom')<CR>
+noremap <silent> <Plug>LeaderfFileLeft       :<C-U>call leaderf#File#startExpl('left')<CR>
+noremap <silent> <Plug>LeaderfFileRight      :<C-U>call leaderf#File#startExpl('right')<CR>
+noremap <silent> <Plug>LeaderfFileFullScreen :<C-U>call leaderf#File#startExpl('fullScreen')<CR>
 
-nnoremap <silent> <Plug>LeaderfBufferTop :<C-U>call leaderf#Buffer#startExpl('top')<CR>
-nnoremap <silent> <Plug>LeaderfBufferBottom :<C-U>call leaderf#Buffer#startExpl('bottom')<CR>
-nnoremap <silent> <Plug>LeaderfBufferLeft :<C-U>call leaderf#Buffer#startExpl('left')<CR>
-nnoremap <silent> <Plug>LeaderfBufferRight :<C-U>call leaderf#Buffer#startExpl('right')<CR>
-nnoremap <silent> <Plug>LeaderfBufferFullScreen :<C-U>call leaderf#Buffer#startExpl('fullScreen')<CR>
+noremap <silent> <Plug>LeaderfBufferTop        :<C-U>call leaderf#Buffer#startExpl('top')<CR>
+noremap <silent> <Plug>LeaderfBufferBottom     :<C-U>call leaderf#Buffer#startExpl('bottom')<CR>
+noremap <silent> <Plug>LeaderfBufferLeft       :<C-U>call leaderf#Buffer#startExpl('left')<CR>
+noremap <silent> <Plug>LeaderfBufferRight      :<C-U>call leaderf#Buffer#startExpl('right')<CR>
+noremap <silent> <Plug>LeaderfBufferFullScreen :<C-U>call leaderf#Buffer#startExpl('fullScreen')<CR>
 
-nnoremap <silent> <Plug>LeaderfMruCwdTop :<C-U>call leaderf#Mru#startExpl('top')<CR>
-nnoremap <silent> <Plug>LeaderfMruCwdBottom :<C-U>call leaderf#Mru#startExpl('bottom')<CR>
-nnoremap <silent> <Plug>LeaderfMruCwdLeft :<C-U>call leaderf#Mru#startExpl('left')<CR>
-nnoremap <silent> <Plug>LeaderfMruCwdRight :<C-U>call leaderf#Mru#startExpl('right')<CR>
-nnoremap <silent> <Plug>LeaderfMruCwdFullScreen :<C-U>call leaderf#Mru#startExpl('fullScreen')<CR>
+noremap <silent> <Plug>LeaderfMruCwdTop        :<C-U>call leaderf#Mru#startExpl('top')<CR>
+noremap <silent> <Plug>LeaderfMruCwdBottom     :<C-U>call leaderf#Mru#startExpl('bottom')<CR>
+noremap <silent> <Plug>LeaderfMruCwdLeft       :<C-U>call leaderf#Mru#startExpl('left')<CR>
+noremap <silent> <Plug>LeaderfMruCwdRight      :<C-U>call leaderf#Mru#startExpl('right')<CR>
+noremap <silent> <Plug>LeaderfMruCwdFullScreen :<C-U>call leaderf#Mru#startExpl('fullScreen')<CR>
+
+noremap <Plug>LeaderfRgPrompt :<C-U>Leaderf rg -e<Space>
+noremap <Plug>LeaderfRgCwordLiteralNoBoundary :<C-U><C-R>=leaderf#Rg#startCmdline(0, 0, 0, 0)<CR>
+noremap <Plug>LeaderfRgCwordLiteralBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(0, 0, 0, 1)<CR>
+noremap <Plug>LeaderfRgCwordRegexNoBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(0, 0, 1, 0)<CR>
+noremap <Plug>LeaderfRgCwordRegexBoundary     :<C-U><C-R>=leaderf#Rg#startCmdline(0, 0, 1, 1)<CR>
+
+noremap <Plug>LeaderfRgBangCwordLiteralNoBoundary :<C-U><C-R>=leaderf#Rg#startCmdline(0, 1, 0, 0)<CR>
+noremap <Plug>LeaderfRgBangCwordLiteralBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(0, 1, 0, 1)<CR>
+noremap <Plug>LeaderfRgBangCwordRegexNoBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(0, 1, 1, 0)<CR>
+noremap <Plug>LeaderfRgBangCwordRegexBoundary     :<C-U><C-R>=leaderf#Rg#startCmdline(0, 1, 1, 1)<CR>
+
+noremap <Plug>LeaderfRgWORDLiteralNoBoundary :<C-U><C-R>=leaderf#Rg#startCmdline(1, 0, 0, 0)<CR>
+noremap <Plug>LeaderfRgWORDLiteralBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(1, 0, 0, 1)<CR>
+noremap <Plug>LeaderfRgWORDRegexNoBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(1, 0, 1, 0)<CR>
+noremap <Plug>LeaderfRgWORDRegexBoundary     :<C-U><C-R>=leaderf#Rg#startCmdline(1, 0, 1, 1)<CR>
+
+vnoremap <silent> <Plug>LeaderfRgVisualLiteralNoBoundary :<C-U><C-R>=leaderf#Rg#startCmdline(2, 0, 0, 0)<CR>
+vnoremap <silent> <Plug>LeaderfRgVisualLiteralBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(2, 0, 0, 1)<CR>
+vnoremap <silent> <Plug>LeaderfRgVisualRegexNoBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(2, 0, 1, 0)<CR>
+vnoremap <silent> <Plug>LeaderfRgVisualRegexBoundary     :<C-U><C-R>=leaderf#Rg#startCmdline(2, 0, 1, 1)<CR>
+
+vnoremap <silent> <Plug>LeaderfRgBangVisualLiteralNoBoundary :<C-U><C-R>=leaderf#Rg#startCmdline(2, 1, 0, 0)<CR>
+vnoremap <silent> <Plug>LeaderfRgBangVisualLiteralBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(2, 1, 0, 1)<CR>
+vnoremap <silent> <Plug>LeaderfRgBangVisualRegexNoBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(2, 1, 1, 0)<CR>
+vnoremap <silent> <Plug>LeaderfRgBangVisualRegexBoundary     :<C-U><C-R>=leaderf#Rg#startCmdline(2, 1, 1, 1)<CR>
 
 command! -bar -nargs=? -complete=dir LeaderfFile call leaderf#File#startExpl(g:Lf_WindowPosition, <f-args>)
 command! -bar -nargs=? -complete=dir LeaderfFileFullScreen call leaderf#File#startExpl('fullScreen', <f-args>)
@@ -130,6 +156,8 @@ command! -bar -nargs=1 LeaderfHelpPattern call leaderf#Help#startExplPattern(g:L
 command! -bar -nargs=0 LeaderfHelpCword call leaderf#Help#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
 
 command! -bar -nargs=0 LeaderfColorscheme call leaderf#Colors#startExpl(g:Lf_WindowPosition)
+
+command! -bar -nargs=0 LeaderfRgInteractive call leaderf#Rg#Interactive()
 
 try
     exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'

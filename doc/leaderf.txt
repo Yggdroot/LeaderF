@@ -580,6 +580,9 @@ USAGE                                           *leaderf-usage*
 :LeaderfColorscheme                             *LeaderfColorscheme*
     Launch LeaderF to switch between colorschemes.
 
+:LeaderfRgInteractive                           *LeaderfRgInteractive*
+    Launch LeaderF to use rg interactively.
+
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C>, <ESC> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.

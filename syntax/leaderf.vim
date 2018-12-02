@@ -33,16 +33,16 @@ if has("syntax")
         highlight def Lf_hl_match  gui=bold guifg=SpringGreen cterm=bold ctermfg=48
         highlight def Lf_hl_match0 gui=bold guifg=SpringGreen cterm=bold ctermfg=48
         highlight def Lf_hl_match1 gui=bold guifg=#FE8019 cterm=bold ctermfg=208
-        highlight def Lf_hl_match2 gui=bold guifg=#FF7272 cterm=bold ctermfg=203
-        highlight def Lf_hl_match3 gui=bold guifg=#3FF5D1 cterm=bold ctermfg=50
+        highlight def Lf_hl_match2 gui=bold guifg=#3FF5D1 cterm=bold ctermfg=50
+        highlight def Lf_hl_match3 gui=bold guifg=#FF7272 cterm=bold ctermfg=203
         highlight def Lf_hl_match4 gui=bold guifg=#43B9F0 cterm=bold ctermfg=74
         highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
     else
         highlight def Lf_hl_match  gui=bold guifg=#1540AD cterm=bold ctermfg=26
         highlight def Lf_hl_match0 gui=bold guifg=#1540AD cterm=bold ctermfg=26
         highlight def Lf_hl_match1 gui=bold guifg=#A52A2A cterm=bold ctermfg=124
-        highlight def Lf_hl_match2 gui=bold guifg=#02781A cterm=bold ctermfg=28
-        highlight def Lf_hl_match3 gui=bold guifg=#B52BB0 cterm=bold ctermfg=127
+        highlight def Lf_hl_match2 gui=bold guifg=#B52BB0 cterm=bold ctermfg=127
+        highlight def Lf_hl_match3 gui=bold guifg=#02781A cterm=bold ctermfg=28
         highlight def Lf_hl_match4 gui=bold guifg=#F70505 cterm=bold ctermfg=196
         highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
     endif
@@ -71,6 +71,9 @@ if has("syntax")
     highlight def link Lf_hl_selfIndex          Constant
     highlight def link Lf_hl_selfDescription    Comment
     highlight def link Lf_hl_helpTagfile        Comment
+    highlight def link Lf_hl_rgFileName         Directory
+    highlight def link Lf_hl_rgLineNumber       Constant
+    highlight def Lf_hl_rgHighlight guifg=#000000 guibg=#CCCC66 ctermfg=16 ctermbg=185
 endif
 
 let b:current_syntax = "leaderf"

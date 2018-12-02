@@ -83,6 +83,7 @@ class Manager(object):
         self._fuzzy_engine = None
         self._result_content = []
         self._reader_thread = None
+        self._timer_id = None
         self._highlight_method = lambda : None
         self._getExplClass()
 
@@ -169,10 +170,10 @@ class Manager(object):
         else:
             mode = 'Regex'
 
-        modes = {"--nameOnly", "--fullPath", "--fuzzy", "--regex"}
+        modes = {"--nameOnly", "--fullPath", "--fuzzy", "--regexMode"}
         for opt in kwargs.get("arguments", {}):
             if opt in modes:
-                if opt == "--regex":
+                if opt == "--regexMode":
                     mode = 'Regex'
                 elif self._getExplorer().supportsNameOnly():
                     if opt == "--nameOnly":
@@ -297,11 +298,15 @@ class Manager(object):
         self._help_length = len(help)
         orig_row = self._getInstance().window.cursor[0]
         if self._getInstance().isReverseOrder():
+            self._getInstance().buffer.options['modifiable'] = True
             self._getInstance().buffer.append(help[::-1])
+            self._getInstance().buffer.options['modifiable'] = False
             lfCmd("normal! Gzb")
             self._getInstance().window.cursor = (orig_row, 0)
         else:
+            self._getInstance().buffer.options['modifiable'] = True
             self._getInstance().buffer.append(help, 0)
+            self._getInstance().buffer.options['modifiable'] = False
             self._getInstance().window.cursor = (orig_row + self._help_length, 0)
 
     def _hideHelp(self):
@@ -536,7 +541,7 @@ class Manager(object):
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
                                             is_name_only=False, sort_results=False)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
-                        "Function", "History", "Cmd_History", "Search_History"]:
+                        "Function", "History", "Cmd_History", "Search_History", "Rg"]:
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
                                             is_name_only=True, sort_results=False)
                 else:
@@ -564,7 +569,7 @@ class Manager(object):
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight2)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
-                        "Function", "History", "Cmd_History", "Search_History"]:
+                        "Function", "History", "Cmd_History", "Search_History", "Rg"]:
                     filter_method = partial(self._fuzzyFilterEx,
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight3)
@@ -691,6 +696,10 @@ class Manager(object):
                     return_index = False
                     filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
                                             is_name_only=False, sort_results=not is_continue)
+                elif self._getExplorer().getStlCategory() in ["Rg"]:
+                    return_index = False
+                    filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
+                                            is_name_only=True, sort_results=not is_continue)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History"]:
                     return_index = True
@@ -723,7 +732,7 @@ class Manager(object):
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight2)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
-                        "Function", "History", "Cmd_History", "Search_History"]:
+                        "Function", "History", "Cmd_History", "Search_History", "Rg"]:
                     filter_method = partial(self._fuzzyFilter,
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight3)
@@ -1132,8 +1141,7 @@ class Manager(object):
         self._arguments = kwargs.get("arguments", {})
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
-        lfCmd("echohl WarningMsg | redraw |"
-              "echo ' searching ...' | echohl NONE")
+        lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
         try:
             content = self._getExplorer().getContent(*args, **kwargs)
         except Exception as e:
@@ -1159,10 +1167,13 @@ class Manager(object):
             self._index = 0
 
         self._start_time = time.time()
+        self._bang_start_time = self._start_time
+        self._bang_count = 0
 
         self._pattern = kwargs.get("pattern", "") or kwargs.get("arguments", {}).get("--input", [""])[0]
         self._cli.setPattern(self._pattern)
 
+        self._read_content_exception = None
         if isinstance(content, list):
             self._is_content_list = True
             if len(content[0]) == len(content[0].rstrip("\r\n")):
@@ -1190,7 +1201,6 @@ class Manager(object):
             self._callback = self._workInIdle
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
-                self.input()
             else:
                 self._content = []
                 self._read_finished = 0
@@ -1200,7 +1210,12 @@ class Manager(object):
                 self._reader_thread.daemon = True
                 self._reader_thread.start()
 
+            if not kwargs.get('bang', 0):
                 self.input()
+            else:
+                lfCmd("echo")
+                self._getInstance().buffer.options['modifiable'] = False
+                self._bangEnter()
         else:
             self._is_content_list = False
             self._result_content = []
@@ -1216,12 +1231,16 @@ class Manager(object):
         self._launched = True
 
     def _readContent(self, content):
-        for line in content:
-            self._content.append(line)
-            if self._stop_reader_thread:
-                break
-        else:
+        try:
+            for line in content:
+                self._content.append(line)
+                if self._stop_reader_thread:
+                    break
+            else:
+                self._read_finished = 1
+        except Exception:
             self._read_finished = 1
+            self._read_content_exception = sys.exc_info()
 
     def _setResultContent(self):
         if len(self._result_content) > len(self._getInstance().buffer):
@@ -1229,7 +1248,10 @@ class Manager(object):
         elif self._index == 0:
             self._getInstance().setBuffer(self._content)
 
-    def _workInIdle(self, content=None):
+    def _workInIdle(self, content=None, bang=False):
+        if self._read_content_exception is not None:
+            raise self._read_content_exception[1]
+
         if self._is_content_list:
             if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
                 if self._fuzzy_engine:
@@ -1257,7 +1279,15 @@ class Manager(object):
                 if self._cli.pattern:
                     self._getInstance().setStlResultsCount(len(self._result_content))
                 else:
-                    self._getInstance().setBuffer(self._content[:self._initial_count])
+                    if bang:
+                        if self._getInstance().empty():
+                            self._getInstance().appendBuffer(self._content)
+                        else:
+                            buffer_len = len(self._getInstance().buffer) - self._help_length
+                            self._getInstance().appendBuffer(self._content[buffer_len:])
+                        lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
+                    else:
+                        self._getInstance().setBuffer(self._content[:self._initial_count])
                     self._getInstance().setStlTotal(len(self._content)//self._getUnit())
                     self._getInstance().setStlResultsCount(len(self._content))
 
@@ -1293,11 +1323,25 @@ class Manager(object):
                         step = 2000
                     self._search(self._content[:cur_len], True, step)
             else:
-                if len(self._getInstance().buffer) < min(cur_len, self._initial_count):
+                if bang:
+                    if self._getInstance().empty():
+                        self._getInstance().appendBuffer(self._content)
+                    else:
+                        buffer_len = len(self._getInstance().buffer) - self._help_length
+                        self._getInstance().appendBuffer(self._content[buffer_len:])
+                    if time.time() - self._bang_start_time > 0.5:
+                        self._bang_start_time = time.time()
+                        lfCmd("echohl WarningMsg | redraw | echo ' searching %s' | echohl NONE" % ('.' * self._bang_count))
+                        self._bang_count = (self._bang_count + 1) % 9
+                elif len(self._getInstance().buffer) < min(cur_len, self._initial_count):
                     self._getInstance().setBuffer(self._content[:self._initial_count])
 
     @modifiableController
     def input(self):
+        if self._timer_id is not None:
+            lfCmd("call timer_stop(%s)" % self._timer_id)
+            self._timer_id = None
+
         self._hideHelp()
         self._resetHighlights()
 

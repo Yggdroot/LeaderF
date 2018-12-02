@@ -266,25 +266,36 @@ class LfInstance(object):
         # if lfEval("has('nvim')") == '1':
         #     # NvimError: string cannot contain newlines
         #     content = [ line.rstrip("\r\n") for line in content ]
-        if self._reverse_order:
-            orig_row = self._window_object.cursor[0]
-            orig_buf_len = len(self._buffer_object)
+        try:
+            if self._reverse_order:
+                orig_row = self._window_object.cursor[0]
+                orig_buf_len = len(self._buffer_object)
 
-            self._buffer_object[:] = content[::-1]
-            buffer_len = len(self._buffer_object)
-            if buffer_len < self._initial_win_height:
-                self._window_object.height = buffer_len
-            elif self._window_object.height < self._initial_win_height:
-                self._window_object.height = self._initial_win_height
+                self._buffer_object[:] = content[::-1]
+                buffer_len = len(self._buffer_object)
+                if buffer_len < self._initial_win_height:
+                    self._window_object.height = buffer_len
+                elif self._window_object.height < self._initial_win_height:
+                    self._window_object.height = self._initial_win_height
 
-            try:
-                self._window_object.cursor = (orig_row + buffer_len - orig_buf_len, 0)
-            except vim.error:
-                self._window_object.cursor = (buffer_len, 0)
+                try:
+                    self._window_object.cursor = (orig_row + buffer_len - orig_buf_len, 0)
+                except vim.error:
+                    self._window_object.cursor = (buffer_len, 0)
 
-            self.setLineNumber()
-        else:
+                self.setLineNumber()
+            else:
+                self._buffer_object[:] = content
+        finally:
+            self.buffer.options['modifiable'] = False
+
+    def appendBuffer(self, content):
+        self.buffer.options['modifiable'] = True
+        if self.empty():
             self._buffer_object[:] = content
+        else:
+            self._buffer_object.append(content)
+        self.buffer.options['modifiable'] = False
 
     def appendLine(self, line):
         self._buffer_object.append(line)
