@@ -1250,7 +1250,15 @@ class Manager(object):
 
     def _workInIdle(self, content=None, bang=False):
         if self._read_content_exception is not None:
-            raise self._read_content_exception[1]
+            if bang == True:
+                if self._timer_id is not None:
+                    lfCmd("call timer_stop(%s)" % self._timer_id)
+                    self._timer_id = None
+
+                lfPrintError(self._read_content_exception[1])
+                return
+            else:
+                raise self._read_content_exception[1]
 
         if self._is_content_list:
             if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
@@ -1285,6 +1293,10 @@ class Manager(object):
                         else:
                             buffer_len = len(self._getInstance().buffer) - self._help_length
                             self._getInstance().appendBuffer(self._content[buffer_len:])
+
+                        if self._timer_id is not None:
+                            lfCmd("call timer_stop(%s)" % self._timer_id)
+                            self._timer_id = None
                         lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
                     else:
                         self._getInstance().setBuffer(self._content[:self._initial_count])

@@ -206,7 +206,7 @@ class RgExplorer(Explorer):
 
         executor = AsyncExecutor()
         self._executor.append(executor)
-        cmd = '''rg --no-messages --no-heading --with-filename --color never --line-number '''\
+        cmd = '''rg --no-ignore-messages --no-heading --with-filename --color never --line-number '''\
                 '''{} {}{}{}{}{}{}'''.format(case_flag, word_or_line, zero_args_options,
                                                   one_args_options, repeatable_options, lfDecode(pattern), path)
         lfCmd("let g:Lf_Debug_RgCmd = '%s'" % escQuote(cmd))
@@ -349,6 +349,7 @@ class RgExplManager(Manager):
             else:
                 lfCmd("hide buffer +%s %s" % (line_num, buf_number))
             lfCmd("norm! zz")
+            lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
         except vim.error as e:
             lfPrintError(e)
 
@@ -406,6 +407,23 @@ class RgExplManager(Manager):
         if self._timer_id is not None:
             lfCmd("call timer_stop(%s)" % self._timer_id)
             self._timer_id = None
+
+    def _previewResult(self, preview):
+        if not self._needPreview(preview):
+            return
+
+        line = self._getInstance().currentLine
+        orig_pos = self._getInstance().getOriginalPos()
+        cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
+
+        saved_eventignore = vim.options['eventignore']
+        vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
+        try:
+            vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
+            self._acceptSelection(line)
+        finally:
+            # vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
+            vim.options['eventignore'] = saved_eventignore
 
     def _bangEnter(self):
         super(RgExplManager, self)._bangEnter()
