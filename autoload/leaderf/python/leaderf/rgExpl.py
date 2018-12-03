@@ -422,7 +422,7 @@ class RgExplManager(Manager):
             vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
             self._acceptSelection(line)
         finally:
-            # vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
+            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
             vim.options['eventignore'] = saved_eventignore
 
     def _bangEnter(self):
