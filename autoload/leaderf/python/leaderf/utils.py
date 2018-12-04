@@ -133,5 +133,14 @@ def lfRelpath(path, start=os.curdir):
     except ValueError:
         return path
 
+def lfWinId(winnr, tab=None):
+    if lfEval("exists('*win_getid')") == '1':
+        if tab:
+            return int(lfEval("win_getid(%d, %d)" % (winnr, tab)))
+        else:
+            return int(lfEval("win_getid(%d)" % winnr))
+    else:
+        return None
+
 def lfPrintError(error):
     lfCmd("echohl Error | redraw | echo '%s' | echohl None" % escQuote(str(error)))

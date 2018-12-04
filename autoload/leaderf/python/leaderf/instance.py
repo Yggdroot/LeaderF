@@ -226,6 +226,7 @@ class LfInstance(object):
             self._createBufWindow(win_pos)
         else:
             self._orig_win_nr = vim.current.window.number
+            self._orig_win_id = lfWinId(self._orig_win_nr)
             self._createBufWindow(win_pos)
         self._setAttributes()
         self._setStatusline()
@@ -246,8 +247,11 @@ class LfInstance(object):
         else:
             if len(vim.windows) > 1:
                 lfCmd("silent! hide")
-                # 'silent!' is used to skip error E16.
-                lfCmd("silent! exec '%d wincmd w'" % self._orig_win_nr)
+                if self._orig_win_id is not None:
+                    lfCmd("call win_gotoid(%d)" % self._orig_win_id)
+                else:
+                    # 'silent!' is used to skip error E16.
+                    lfCmd("silent! exec '%d wincmd w'" % self._orig_win_nr)
                 if lfEval("get(g:, 'Lf_VimResized', 0)") == '0' \
                         and self._orig_win_count == len(vim.windows):
                     lfCmd(self._restore_sizes) # why this line does not take effect?
