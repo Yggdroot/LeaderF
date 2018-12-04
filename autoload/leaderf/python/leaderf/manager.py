@@ -1165,13 +1165,12 @@ class Manager(object):
         else:
             lfCmd("normal! gg")
             self._index = 0
+            self._pattern = kwargs.get("pattern", "") or kwargs.get("arguments", {}).get("--input", [""])[0]
+            self._cli.setPattern(self._pattern)
 
         self._start_time = time.time()
         self._bang_start_time = self._start_time
         self._bang_count = 0
-
-        self._pattern = kwargs.get("pattern", "") or kwargs.get("arguments", {}).get("--input", [""])[0]
-        self._cli.setPattern(self._pattern)
 
         self._read_content_exception = None
         if isinstance(content, list):
