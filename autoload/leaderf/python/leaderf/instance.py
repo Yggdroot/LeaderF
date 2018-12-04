@@ -110,6 +110,7 @@ class LfInstance(object):
 
         if win_pos != 'fullScreen':
             self._restore_sizes = lfEval("winrestcmd()")
+            self._orig_win_count = len(vim.windows)
 
         """
         https://github.com/vim/vim/issues/1737
@@ -247,7 +248,8 @@ class LfInstance(object):
                 lfCmd("silent! hide")
                 # 'silent!' is used to skip error E16.
                 lfCmd("silent! exec '%d wincmd w'" % self._orig_win_nr)
-                if lfEval("get(g:, 'Lf_VimResized', 0)") == '0':
+                if lfEval("get(g:, 'Lf_VimResized', 0)") == '0' \
+                        and self._orig_win_count == len(vim.windows):
                     lfCmd(self._restore_sizes) # why this line does not take effect?
                                                # it's weird. repeat 4 times
                     lfCmd(self._restore_sizes) # fix issue #102
