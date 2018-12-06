@@ -1,3 +1,39 @@
+v1.19 (2018-12-6)
+=================
+
+**BREAKING CHANGES**:
+
+* `<Up>` and  `<Down>` is changed. [issue #236](https://github.com/Yggdroot/LeaderF/issues/236)  
+  from: `navigate the result list.`  
+  to:   `recall last/next input pattern from history.`
+
+Feature enhancements:
+
+* [Feature #57](https://github.com/Yggdroot/LeaderF/issues/57):
+  Add support for rg(`Leaderf rg`)  
+  For more details: `Leaderf rg -h`
+* [Feature #130](https://github.com/Yggdroot/LeaderF/issues/130):
+  Add Changelog file.
+* [Feature #208](https://github.com/Yggdroot/LeaderF/issues/208):
+  Add support for input file list.  
+  Add `--file` option for `Leaderf file`.
+* [Feature #213](https://github.com/Yggdroot/LeaderF/issues/213):
+  Add support for input history.  
+  Use `<UP>` and `<Down>` to loop the input history.
+* Add `one-dark` colorscheme.
+
+Bug fixes:
+
+* [BUG #220](https://github.com/Yggdroot/LeaderF/issues/220)
+* [BUG #227](https://github.com/Yggdroot/LeaderF/issues/227):
+  `autocmd filetype leaderf set nonumber` is broken after this commit
+* [BUG #233](https://github.com/Yggdroot/LeaderF/issues/233)
+* [BUG #234](https://github.com/Yggdroot/LeaderF/issues/234)
+* [BUG #241](https://github.com/Yggdroot/LeaderF/issues/241)
+* [BUG #245](https://github.com/Yggdroot/LeaderF/issues/245)
+* Restore original sizes only if windows count no change.
+Restore original sizes only if windows count no change.
+
 v1.18 (2018-10-7)
 =================
 
