@@ -110,6 +110,7 @@ call s:InitVar('g:Lf_RememberLastSearch', 0)
 call s:InitVar('g:Lf_UseCache', 1)
 call s:InitVar('g:Lf_RootMarkers', ['.git', '.hg', '.svn'])
 call s:InitVar('g:Lf_WorkingDirectoryMode', 'c')
+call s:InitVar('g:Lf_WorkingDirectory', '')
 call s:InitVar('g:Lf_ShowHidden', 0)
 call s:InitDict('g:Lf_PreviewResult', {
             \ 'File': 0,
