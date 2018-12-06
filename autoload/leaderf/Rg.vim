@@ -41,22 +41,27 @@ function! leaderf#Rg#Maps()
     endif
 endfunction
 
+" return the visually selected text and quote it with double quote
+function! leaderf#Rg#visual()
+    try
+        let x_save = @x
+        norm! gv"xy
+        return '"' . escape(@x, '"') . '"'
+    finally
+        let @x = x_save
+    endtry
+endfunction
+
 " type: 0, word under cursor
 "       1, WORD under cursor
-"       2, word visually selected
+"       2, text visually selected
 function! leaderf#Rg#getPattern(type)
     if a:type == 0
         return expand('<cword>')
     elseif a:type == 1
         return escape(expand('<cWORD>'))
     elseif a:type == 2
-        try
-            let x_save = @x
-            norm! gv"xy
-            return '"' . escape(@x, '"') . '"'
-        finally
-            let @x = x_save
-        endtry
+        return leaderf#Rg#visual()
     else
         return ''
     endif
@@ -64,7 +69,7 @@ endfunction
 
 " type: 0, word under cursor
 "       1, WORD under cursor
-"       2, word visually selected
+"       2, text visually selected
 function! leaderf#Rg#startCmdline(type, is_bang, is_regex, is_whole_word)
     return printf("Leaderf%s rg %s%s-e %s ", a:is_bang ? '!' : '', a:is_regex ? '' : '-F ',
                 \ a:is_whole_word ? '-w ' : '', leaderf#Rg#getPattern(a:type))

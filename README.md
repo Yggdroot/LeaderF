@@ -136,8 +136,8 @@ usage: Leaderf[!] rg [-h] [-e <PATTERN>...] [-F] [-i] [-L] [-P] [-S] [-s] [-v]
                      [--max-depth <NUM>] [--max-filesize <NUM+SUFFIX?>]
                      [-g <GLOB>...] [--iglob <GLOB>...]
                      [--ignore-file <PATH>...] [-t <TYPE>...] [-T <TYPE>...]
-                     [--current-buffer | --all-buffers] [--reverse]
-                     [--stayOpen] [--input <INPUT> | --cword]
+                     [--current-buffer | --all-buffers] [--recall] [--append]
+                     [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
                      [--nameOnly | --fullPath | --fuzzy | --regexMode]
                      [<PATH> [<PATH> ...]]
@@ -196,6 +196,8 @@ specific arguments:
                         specified on the command line override glob and ignore rules.
   --current-buffer      Searches in current buffer.
   --all-buffers         Searches in all listed buffers.
+  --recall              Recall last search. If the result window is closed, reopen it.
+  --append              Append to the previous search results.
 
 common arguments:
   --reverse             show results in bottom-up order
@@ -216,33 +218,22 @@ common arguments:
 
 If [!] is given, enter normal mode directly.
 ```
-Some handy maps for `Leaderf rg`:
 
-| Map                                          | Description
-| ---                                          | -----------
-| `<Plug>LeaderfRgPrompt`                      | shortcut for `:Leaderf rg -e<Space>`
-| `<Plug>LeaderfRgCwordLiteralNoBoundary`      | search word under cursor literally without `-w` option
-| `<Plug>LeaderfRgBangCwordLiteralNoBoundary`  | like `<Plug>LeaderfRgCwordLiteralNoBoundary`, but with a bang(`!`)<br>e.g., `Leaderf! rg ...`
-| `<Plug>LeaderfRgCwordLiteralBoundary`        | search word under cursor literally with `-w` option
-| `<Plug>LeaderfRgBangCwordLiteralBoundary`    | like `<Plug>LeaderfRgCwordLiteralBoundary`, but with a bang(`!`)
-| `<Plug>LeaderfRgCwordRegexNoBoundary`        | search word under cursor treated as regex without `-w` option
-| `<Plug>LeaderfRgBangCwordRegexNoBoundary`    | like `<Plug>LeaderfRgCwordRegexNoBoundary`, but with a bang(`!`)
-| `<Plug>LeaderfRgCwordRegexBoundary`          | search word under cursor treated as regex with `-w` option
-| `<Plug>LeaderfRgBangCwordRegexBoundary`      | like `<Plug>LeaderfRgCwordRegexBoundary`, but with a bang(`!`)
-| `<Plug>LeaderfRgVisualLiteralNoBoundary`     | search visually selected words literally without `-w` option
-| `<Plug>LeaderfRgBangVisualLiteralNoBoundary` | like `<Plug>LeaderfRgVisualLiteralNoBoundary`, but with a bang(`!`)
-| `<Plug>LeaderfRgVisualLiteralBoundary`       | search visually selected words literally with `-w` option
-| `<Plug>LeaderfRgBangVisualLiteralBoundary`   | like `<Plug>LeaderfRgVisualLiteralBoundary`, but with a bang(`!`)
-| `<Plug>LeaderfRgVisualRegexNoBoundary`       | search visually selected words treated as regex without `-w` option
-| `<Plug>LeaderfRgBangVisualRegexNoBoundary`   | like `<Plug>LeaderfRgVisualRegexNoBoundary`, but with a bang(`!`)
-| `<Plug>LeaderfRgVisualRegexBoundary`         | search visually selected words treated as regex with `-w` option
-| `<Plug>LeaderfRgBangVisualRegexBoundary`     | like `<Plug>LeaderfRgVisualRegexBoundary`, but with a bang(`!`)
-
-You can also customize the map by yourself, e.g.,
+You can customize some handy maps, e.g.,
 
 ```vim
+" search word under cursor, the pattern is treated as regex
+noremap <C-F> :<C-U><C-R>=printf("Leaderf! rg -e %s ", expand("<cword>"))<CR>
+" search word under cursor, the pattern is treated as regex,
+" append the result to previous search results.
+noremap <C-G> :<C-U><C-R>=printf("Leaderf! rg --append -e %s ", expand("<cword>"))<CR>
 " search word under cursor literally only in current buffer
-noremap <C-B> :<C-U><C-R>=printf("Leaderf rg -F --current-buffer -e %s", expand("<cword>"))<CR>
+noremap <C-B> :<C-U><C-R>=printf("Leaderf! rg -F --current-buffer -e %s ", expand("<cword>"))<CR>
+" search visually selected text literally and enter normal mode directly,
+" don't quit LeaderF after accepting an entry
+xnoremap gf :<C-U><C-R>=printf("Leaderf! rg -F --stayOpen -e %s ", leaderf#Rg#visual())<CR>
+" recall last search. If the result window is closed, reopen it.
+noremap go :<C-U><C-R>=printf("Leaderf! rg --recall ")<CR><CR>
 ```
 Once LeaderF is launched:
 

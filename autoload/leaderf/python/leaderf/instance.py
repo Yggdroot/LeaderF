@@ -118,7 +118,8 @@ class LfInstance(object):
         """
         # clear the buffer first to avoid a flash
         if self._buffer_object is not None and self._buffer_object.valid \
-                and lfEval("g:Lf_RememberLastSearch") == '0':
+                and lfEval("g:Lf_RememberLastSearch") == '0' \
+                and "--append" not in self._arguments:
             self.buffer.options['modifiable'] = True
             del self._buffer_object[:]
 
@@ -301,6 +302,12 @@ class LfInstance(object):
             self._buffer_object[:] = content
         else:
             self._buffer_object.append(content)
+        self.buffer.options['modifiable'] = False
+
+    def clearBuffer(self):
+        self.buffer.options['modifiable'] = True
+        if self._buffer_object and self._buffer_object.valid:
+            del self._buffer_object[:]
         self.buffer.options['modifiable'] = False
 
     def appendLine(self, line):

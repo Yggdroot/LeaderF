@@ -19,8 +19,12 @@ from .mru import *
 class RgExplorer(Explorer):
     def __init__(self):
         self._executor = []
+        self._pattern_regex = []
 
     def getContent(self, *args, **kwargs):
+        if "--recall" in kwargs.get("arguments", {}):
+            return []
+
         arg_line = kwargs.get("arguments", {}).get("arg_line")
         # -S/--smart-case, -s/--case-sensitive, -i/--ignore-case
         index = {}
@@ -101,7 +105,9 @@ class RgExplorer(Explorer):
 
         is_literal = "-F" in kwargs.get("arguments", {})
         pattern = ''
-        self._pattern_regex = []
+        if "--append" not in kwargs.get("arguments", {}):
+            self._pattern_regex = []
+
         for i in kwargs.get("arguments", {}).get("-e", []):
             pattern += r'-e %s ' % i
             if case_flag == '-i':
@@ -379,8 +385,7 @@ class RgExplManager(Manager):
         help.append('" x : open file under cursor in a horizontally split window')
         help.append('" v : open file under cursor in a vertically split window')
         help.append('" t : open file under cursor in a new tabpage')
-        help.append('" d : wipe out buffer under cursor')
-        help.append('" D : delete buffer under cursor')
+        help.append('" p : preview the result')
         help.append('" i/<Tab> : switch to input mode')
         help.append('" q/<Esc> : quit')
         help.append('" <F1> : toggle this help')
@@ -396,6 +401,7 @@ class RgExplManager(Manager):
         try:
             for i in self._getExplorer().getPatternRegex():
                 id = int(lfEval("matchadd('Lf_hl_rgHighlight', '%s', 9)" % escQuote(i)))
+                self._match_ids.append(id)
         except vim.error:
             pass
 
@@ -430,7 +436,8 @@ class RgExplManager(Manager):
         if lfEval("exists('*timer_start')") == '0':
             lfCmd("echohl Error | redraw | echo ' E117: Unknown function: timer_start' | echohl NONE")
             return
-        self._timer_id = lfEval("timer_start(1, 'leaderf#Rg#TimerCallback', {'repeat': -1})")
+        if "--recall" not in self._arguments:
+            self._timer_id = lfEval("timer_start(1, 'leaderf#Rg#TimerCallback', {'repeat': -1})")
 
 
 #*****************************************************

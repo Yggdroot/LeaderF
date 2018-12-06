@@ -158,6 +158,7 @@ command! -bar -nargs=0 LeaderfHelpCword call leaderf#Help#startExplPattern(g:Lf_
 command! -bar -nargs=0 LeaderfColorscheme call leaderf#Colors#startExpl(g:Lf_WindowPosition)
 
 command! -bar -nargs=0 LeaderfRgInteractive call leaderf#Rg#Interactive()
+command! -bar -nargs=0 LeaderfRgRecall exec "Leaderf! rg --recall"
 
 try
     exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'

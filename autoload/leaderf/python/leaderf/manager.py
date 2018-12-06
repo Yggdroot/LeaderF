@@ -971,9 +971,11 @@ class Manager(object):
 
     def _cleanup(self):
         if lfEval("g:Lf_RememberLastSearch") == '0':
+            self._pattern_bak = self._cli.pattern
             self._cli.clear()
             self._clearHighlights()
             self._clearHighlightsPos()
+            self._help_length_bak = self._help_length
             self._help_length = 0
         self.clearSelections()
 
@@ -1143,7 +1145,10 @@ class Manager(object):
         self._cli.setRefineFeature(self._supportsRefine())
         lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
         try:
-            content = self._getExplorer().getContent(*args, **kwargs)
+            if self._getExplorer().getStlCategory() in ["Rg"] and "--recall" in self._arguments:
+                content = self._content
+            else:
+                content = self._getExplorer().getContent(*args, **kwargs)
         except Exception as e:
             lfPrintError(e)
             return
@@ -1201,7 +1206,21 @@ class Manager(object):
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
             else:
-                self._content = []
+                if self._getExplorer().getStlCategory() in ["Rg"]:
+                    if "--append" in self._arguments:
+                        self._offset_in_content = len(self._content)
+                        self._help_length = self._help_length_bak
+                        if self._pattern_bak:
+                            self._getInstance().setBuffer(self._content)
+                            self._createHelpHint()
+                    else:
+                        self._getInstance().clearBuffer()
+                        self._content = []
+                        self._offset_in_content = 0
+                else:
+                    self._content = []
+                    self._offset_in_content = 0
+
                 self._read_finished = 0
 
                 self._stop_reader_thread = False
@@ -1224,6 +1243,7 @@ class Manager(object):
                 self.input()
             else:
                 self._content = []
+                self._offset_in_content = 0
                 self._read_finished = 0
                 self.input()
 
@@ -1288,10 +1308,12 @@ class Manager(object):
                 else:
                     if bang:
                         if self._getInstance().empty():
-                            self._getInstance().appendBuffer(self._content)
+                            self._offset_in_content = len(self._content)
+                            self._getInstance().appendBuffer(self._content[:self._offset_in_content])
                         else:
-                            buffer_len = len(self._getInstance().buffer) - self._help_length
-                            self._getInstance().appendBuffer(self._content[buffer_len:])
+                            cur_len = len(self._content)
+                            self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
+                            self._offset_in_content = cur_len
 
                         if self._timer_id is not None:
                             lfCmd("call timer_stop(%s)" % self._timer_id)
@@ -1336,10 +1358,13 @@ class Manager(object):
             else:
                 if bang:
                     if self._getInstance().empty():
-                        self._getInstance().appendBuffer(self._content)
+                        self._offset_in_content = len(self._content)
+                        self._getInstance().appendBuffer(self._content[:self._offset_in_content])
                     else:
-                        buffer_len = len(self._getInstance().buffer) - self._help_length
-                        self._getInstance().appendBuffer(self._content[buffer_len:])
+                        cur_len = len(self._content)
+                        self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
+                        self._offset_in_content = cur_len
+
                     if time.time() - self._bang_start_time > 0.5:
                         self._bang_start_time = time.time()
                         lfCmd("echohl WarningMsg | redraw | echo ' searching %s' | echohl NONE" % ('.' * self._bang_count))

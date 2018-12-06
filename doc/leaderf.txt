@@ -583,6 +583,32 @@ USAGE                                           *leaderf-usage*
 :LeaderfRgInteractive                           *LeaderfRgInteractive*
     Launch LeaderF to use rg interactively.
 
+:LeaderfRgRecall                                *LeaderfRgRecall*
+    Recall last search of rg.
+
+Some handy maps for `Leaderf rg`:
+
+| Map                                        | Description
+| ---                                        | -----------
+| `<Plug>LeaderfRgPrompt`                      | shortcut for `:Leaderf rg -e<Space>`
+| `<Plug>LeaderfRgCwordLiteralNoBoundary`      | search word under cursor literally without `-w` option
+| `<Plug>LeaderfRgBangCwordLiteralNoBoundary`  | like `<Plug>LeaderfRgCwordLiteralNoBoundary`, but with a bang(`!`)
+                                             | e.g., `Leaderf! rg ...`
+| `<Plug>LeaderfRgCwordLiteralBoundary`        | search word under cursor literally with `-w` option
+| `<Plug>LeaderfRgBangCwordLiteralBoundary`    | like `<Plug>LeaderfRgCwordLiteralBoundary`, but with a bang(`!`)
+| `<Plug>LeaderfRgCwordRegexNoBoundary`        | search word under cursor treated as regex without `-w` option
+| `<Plug>LeaderfRgBangCwordRegexNoBoundary`    | like `<Plug>LeaderfRgCwordRegexNoBoundary`, but with a bang(`!`)
+| `<Plug>LeaderfRgCwordRegexBoundary`          | search word under cursor treated as regex with `-w` option
+| `<Plug>LeaderfRgBangCwordRegexBoundary`      | like `<Plug>LeaderfRgCwordRegexBoundary`, but with a bang(`!`)
+| `<Plug>LeaderfRgVisualLiteralNoBoundary`     | search visually selected text literally without `-w` option
+| `<Plug>LeaderfRgBangVisualLiteralNoBoundary` | like `<Plug>LeaderfRgVisualLiteralNoBoundary`, but with a bang(`!`)
+| `<Plug>LeaderfRgVisualLiteralBoundary`       | search visually selected text literally with `-w` option
+| `<Plug>LeaderfRgBangVisualLiteralBoundary`   | like `<Plug>LeaderfRgVisualLiteralBoundary`, but with a bang(`!`)
+| `<Plug>LeaderfRgVisualRegexNoBoundary`       | search visually selected text treated as regex without `-w` option
+| `<Plug>LeaderfRgBangVisualRegexNoBoundary`   | like `<Plug>LeaderfRgVisualRegexNoBoundary`, but with a bang(`!`)
+| `<Plug>LeaderfRgVisualRegexBoundary`         | search visually selected text treated as regex with `-w` option
+| `<Plug>LeaderfRgBangVisualRegexBoundary`     | like `<Plug>LeaderfRgVisualRegexBoundary`, but with a bang(`!`)
+
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C>, <ESC> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.
