@@ -317,11 +317,11 @@ Customization
 
  * Change key bindings
 
-    By default, `<Tab>` is the shortcut key to switch to normal mode, if you want to change the key into `<ESC>`:
+    By default, `<Up>` and `<Down>` are used to recall last/next input pattern from history. If you want to use them to navigate the result list just like `<C-K>` and `<C-J>` :
 
-    `let g:Lf_CommandMap = {'<Tab>': ['<ESC>']}`
+    `let g:Lf_CommandMap = {'<C-K>': ['<Up>'], '<C-J>': ['<Down>']}`
 
-    for more detail, please refer to [here][7].
+    for more detail, please refer to `:h g:Lf_CommandMap`.
 
  * Customize the statusline
 
@@ -349,5 +349,4 @@ This plugin is released under the Apache License, Version 2.0 (the "License").
   [3]: https://github.com/gmarik/Vundle.vim
   [4]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L189-L349
   [5]: https://github.com/junegunn/vim-plug
-  [6]: https://stackoverflow.com/questions/2817869/error-unable-to-find-vcvarsall-bat
-  [7]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L484-L489
+  [6]: https://stackoverflow.com/questions/2817869/error-unable-to-find-vcvarsall-bat  
