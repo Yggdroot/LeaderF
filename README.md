@@ -84,7 +84,7 @@ Usage
 ```
 usage: Leaderf[!] [-h] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                   [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
-                  [--nameOnly | --fullPath | --fuzzy | --regexMode]
+                  [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
                   {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer,rg}
                   ...
 
@@ -140,7 +140,7 @@ usage: Leaderf[!] rg [-h] [-e <PATTERN>...] [-F] [-i] [-L] [-P] [-S] [-s] [-v]
                      [--current-buffer | --all-buffers] [--recall] [--append]
                      [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
-                     [--nameOnly | --fullPath | --fuzzy | --regexMode]
+                     [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
                      [<PATH> [<PATH> ...]]
 
 optional arguments:
@@ -224,15 +224,14 @@ If [!] is given, enter normal mode directly.
 You can customize some handy maps, e.g.,
 
 ```vim
-" search word under cursor, the pattern is treated as regex
+" search word under cursor, the pattern is treated as regex, and enter normal mode directly
 noremap <C-F> :<C-U><C-R>=printf("Leaderf! rg -e %s ", expand("<cword>"))<CR>
 " search word under cursor, the pattern is treated as regex,
 " append the result to previous search results.
 noremap <C-G> :<C-U><C-R>=printf("Leaderf! rg --append -e %s ", expand("<cword>"))<CR>
 " search word under cursor literally only in current buffer
 noremap <C-B> :<C-U><C-R>=printf("Leaderf! rg -F --current-buffer -e %s ", expand("<cword>"))<CR>
-" search visually selected text literally and enter normal mode directly,
-" don't quit LeaderF after accepting an entry
+" search visually selected text literally, don't quit LeaderF after accepting an entry
 xnoremap gf :<C-U><C-R>=printf("Leaderf! rg -F --stayOpen -e %s ", leaderf#Rg#visual())<CR>
 " recall last search. If the result window is closed, reopen it.
 noremap go :<C-U>Leaderf! rg --stayOpen --recall<CR>
