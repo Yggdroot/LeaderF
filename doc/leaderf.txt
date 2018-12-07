@@ -481,6 +481,12 @@ g:Lf_WorkingDirectoryMode                       *g:Lf_WorkingDirectoryMode*
     Note: if "f", "F" is included with "a" or "A", use the behavior of "f" or
     "F"(as a fallback) when a root can't be found.
 
+g:Lf_WorkingDirectory                           *g:Lf_WorkingDirectory*
+    Set LeaderF's working directory. It's will ignore |g:Lf_RootMarkers| and
+	|g:Lf_WorkingDirectoryMode| what you set.
+	e.g., >
+	let g:Lf_WorkingDirectory = finddir('.git', '.;')
+<
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
     prompt(|leaderf-prompt|).

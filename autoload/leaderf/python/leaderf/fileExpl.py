@@ -676,12 +676,18 @@ class FileExplManager(Manager):
         self._orig_cwd = os.getcwd()
         root_markers = lfEval("g:Lf_RootMarkers")
         mode = lfEval("g:Lf_WorkingDirectoryMode")
+        working_dir = lfEval("g:Lf_WorkingDirectory")
 
         # https://github.com/neovim/neovim/issues/8336
         if lfEval("has('nvim')") == '1':
             chdir = vim.chdir
         else:
             chdir = os.chdir
+
+        if os.path.exists(working_dir) and os.path.isdir(working_dir):
+            chdir(working_dir)
+            super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
+            return
 
         cur_buf_name = lfDecode(vim.current.buffer.name)
         fall_back = False
