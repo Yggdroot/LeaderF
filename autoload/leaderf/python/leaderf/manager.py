@@ -310,6 +310,7 @@ class Manager(object):
             self._getInstance().window.cursor = (orig_row + self._help_length, 0)
 
     def _hideHelp(self):
+        self._getInstance().buffer.options['modifiable'] = True
         if self._getInstance().isReverseOrder():
             orig_row = self._getInstance().window.cursor[0]
             countdown = len(self._getInstance().buffer) - orig_row - self._help_length

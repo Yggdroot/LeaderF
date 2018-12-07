@@ -233,7 +233,7 @@ noremap <C-B> :<C-U><C-R>=printf("Leaderf! rg -F --current-buffer -e %s ", expan
 " don't quit LeaderF after accepting an entry
 xnoremap gf :<C-U><C-R>=printf("Leaderf! rg -F --stayOpen -e %s ", leaderf#Rg#visual())<CR>
 " recall last search. If the result window is closed, reopen it.
-noremap go :<C-U><C-R>=printf("Leaderf! rg --recall ")<CR><CR>
+noremap go :<C-U>Leaderf! rg --stayOpen --recall<CR>
 ```
 Once LeaderF is launched:
 
