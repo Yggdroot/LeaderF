@@ -105,6 +105,7 @@ optional arguments:
   --fullPath            LeaderF is in FullPath mode by default
   --fuzzy               LeaderF is in Fuzzy mode by default
   --regexMode           LeaderF is in Regex mode by default
+  --nowrap              long lines in the LeaderF window won't wrap
 
 subcommands:
 
@@ -215,6 +216,7 @@ common arguments:
   --fullPath            LeaderF is in FullPath mode by default
   --fuzzy               LeaderF is in Fuzzy mode by default
   --regexMode           LeaderF is in Regex mode by default
+  --nowrap              long lines in the LeaderF window won't wrap
 
 If [!] is given, enter normal mode directly.
 ```

@@ -1,4 +1,4 @@
-v1.19 (2018-12-6)
+v1.19 (2018-12-7)
 =================
 
 **BREAKING CHANGES**:
@@ -21,6 +21,7 @@ Feature enhancements:
   Add support for input history.  
   Use `<UP>` and `<Down>` to loop the input history.
 * Add `one-dark` colorscheme.
+* Add `--nowrap` option for LeaderF.
 
 Bug fixes:
 
@@ -32,7 +33,6 @@ Bug fixes:
 * [BUG #241](https://github.com/Yggdroot/LeaderF/issues/241)
 * [BUG #245](https://github.com/Yggdroot/LeaderF/issues/245)
 * Restore original sizes only if windows count no change.
-Restore original sizes only if windows count no change.
 
 v1.18 (2018-10-7)
 =================

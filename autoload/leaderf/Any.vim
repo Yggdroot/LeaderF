@@ -147,6 +147,7 @@ let g:Lf_CommonArguments = [
             \   {"name": ["--fuzzy"],    "nargs": 0, "help": "LeaderF is in Fuzzy mode by default"},
             \   {"name": ["--regexMode"],    "nargs": 0, "help": "LeaderF is in Regex mode by default"},
             \ ],
+            \ {"name": ["--nowrap"], "nargs": 0, "help": "long lines in the LeaderF window won't wrap"},
             \]
 
 " arguments is something like g:Lf_CommonArguments

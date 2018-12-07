@@ -197,6 +197,8 @@ class Manager(object):
         self._resetAutochdir()
 
     def _afterEnter(self):
+        if "--nowrap" in self._arguments:
+            self._getInstance().window.options['wrap'] = False
         self._cleanup()
         self._defineMaps()
         lfCmd("runtime syntax/leaderf.vim")
