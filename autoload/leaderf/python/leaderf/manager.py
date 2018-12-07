@@ -1146,7 +1146,7 @@ class Manager(object):
         self._arguments = kwargs.get("arguments", {})
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
-        lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
+        # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
         try:
             if self._getExplorer().getStlCategory() in ["Rg"] and "--recall" in self._arguments:
                 content = self._content

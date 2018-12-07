@@ -437,6 +437,7 @@ class RgExplManager(Manager):
             lfCmd("echohl Error | redraw | echo ' E117: Unknown function: timer_start' | echohl NONE")
             return
         if "--recall" not in self._arguments:
+            self._workInIdle(bang=True)
             self._timer_id = lfEval("timer_start(1, 'leaderf#Rg#TimerCallback', {'repeat': -1})")
 
 
