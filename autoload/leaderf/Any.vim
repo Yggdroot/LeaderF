@@ -110,6 +110,8 @@ let g:Lf_Arguments = {
             \               "help": "Include or exclude files and directories for searching that match the given glob. Globs are matched case insensitively.(This option can be provided multiple times.)"},
             \           {"name": ["--ignore-file"], "action": "append", "metavar": "<PATH>...",
             \               "help": "Specifies a path to one or more .gitignore format rules files."},
+            \           {"name": ["--type-add"], "action": "append", "metavar": "<TYPE_SPEC>...",
+            \               "help": "Add a new glob for a particular file type."},
             \           {"name": ["-t", "--type"], "action": "append", "metavar": "<TYPE>...",
             \               "help": "Only search files matching TYPE. Multiple type flags may be provided."},
             \           {"name": ["-T", "--type-not"], "action": "append", "metavar": "<TYPE>...",
