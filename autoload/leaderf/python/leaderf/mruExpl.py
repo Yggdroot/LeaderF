@@ -194,7 +194,9 @@ class MruExplManager(Manager):
         self._explorer.delFromCache(dirname + basename)
         if len(self._content) > 0:
             self._content.remove(line)
-        del vim.current.line
+        # `del vim.current.line` does not work in neovim 
+        # https://github.com/neovim/neovim/issues/9361
+        del vim.current.buffer[vim.current.window.cursor[0] - 1]
         lfCmd("setlocal nomodifiable")
 
 
