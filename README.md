@@ -136,7 +136,8 @@ usage: Leaderf[!] rg [-h] [-e <PATTERN>...] [-F] [-i] [-L] [-P] [-S] [-s] [-v]
                      [--no-ignore-vcs] [-E <ENCODING>] [-M <NUM>] [-m <NUM>]
                      [--max-depth <NUM>] [--max-filesize <NUM+SUFFIX?>]
                      [-g <GLOB>...] [--iglob <GLOB>...]
-                     [--ignore-file <PATH>...] [-t <TYPE>...] [-T <TYPE>...]
+                     [--ignore-file <PATH>...] [--type-add <TYPE_SPEC>...]
+                     [-t <TYPE>...] [-T <TYPE>...]
                      [--current-buffer | --all-buffers] [--recall] [--append]
                      [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
@@ -189,6 +190,8 @@ specific arguments:
                         Globs are matched case insensitively.(This option can be provided multiple times.)
   --ignore-file <PATH>...
                         Specifies a path to one or more .gitignore format rules files.
+  --type-add <TYPE_SPEC>...
+                        Add a new glob for a particular file type.
   -t <TYPE>..., --type <TYPE>...
                         Only search files matching TYPE. Multiple type flags may be provided.
   -T <TYPE>..., --type-not <TYPE>...
