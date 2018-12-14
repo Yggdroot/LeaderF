@@ -99,7 +99,7 @@ class RgExplorer(Explorer):
         if "--ignore-file" in kwargs.get("arguments", {}):
             repeatable_options += "--ignore-file %s " % " --ignore-file ".join(kwargs.get("arguments", {})["--ignore-file"])
         if "--type-add" in kwargs.get("arguments", {}):
-            repeatable_options += "--type-add %s " % kwargs.get("arguments", {})["--type-add"][0]
+            repeatable_options += "--type-add %s " % " --type-add ".join(kwargs.get("arguments", {})["--type-add"])
         if "-t" in kwargs.get("arguments", {}):
             repeatable_options += "-t %s " % " -t ".join(kwargs.get("arguments", {})["-t"])
         if "-T" in kwargs.get("arguments", {}):
