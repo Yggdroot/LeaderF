@@ -44,6 +44,9 @@ class MruExplorer(Explorer):
         if kwargs["cb_name"] == lines[0]:
             lines = lines[1:] + lines[0:1]
 
+        if "--no-split-path" in kwargs.get("arguments", {}):
+            return lines
+
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(line))))
                                     for line in lines)
@@ -128,15 +131,24 @@ class MruExplManager(Manager):
         """
         if not line:
             return ''
-        prefix_len = self._getExplorer().getPrefixLength()
-        if mode == 0:
-            return line[prefix_len:]
-        elif mode == 1:
-            start_pos = line.find(' "') # what if there is " in file name?
-            return line[prefix_len:start_pos].rstrip()
+
+        if "--no-split-path" in self._arguments:
+            if mode == 0:
+                return line
+            elif mode == 1:
+                return getBasename(line)
+            else:
+                return getDirname(line)
         else:
-            start_pos = line.find(' "') # what if there is " in file name?
-            return line[start_pos+2 : -1]
+            prefix_len = self._getExplorer().getPrefixLength()
+            if mode == 0:
+                return line[prefix_len:]
+            elif mode == 1:
+                start_pos = line.find(' "') # what if there is " in file name?
+                return line[prefix_len:start_pos].rstrip()
+            else:
+                start_pos = line.find(' "') # what if there is " in file name?
+                return line[start_pos+2 : -1]
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -148,14 +160,20 @@ class MruExplManager(Manager):
         """
         if not line:
             return 0
-        prefix_len = self._getExplorer().getPrefixLength()
-        if mode == 0:
-            return prefix_len
-        elif mode == 1:
-            return prefix_len
+        if "--no-split-path" in self._arguments:
+            if mode == 0 or mode == 2:
+                return 0
+            else:
+                return lfBytesLen(getDirname(line))
         else:
-            start_pos = line.find(' "') # what if there is " in file name?
-            return lfBytesLen(line[:start_pos+2])
+            prefix_len = self._getExplorer().getPrefixLength()
+            if mode == 0:
+                return prefix_len
+            elif mode == 1:
+                return prefix_len
+            else:
+                start_pos = line.find(' "') # what if there is " in file name?
+                return lfBytesLen(line[:start_pos+2])
 
     def _createHelp(self):
         help = []
@@ -175,8 +193,9 @@ class MruExplManager(Manager):
 
     def _afterEnter(self):
         super(MruExplManager, self)._afterEnter()
-        id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
-        self._match_ids.append(id)
+        if "--no-split-path" not in self._arguments:
+            id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
+            self._match_ids.append(id)
 
     def _beforeExit(self):
         super(MruExplManager, self)._beforeExit()

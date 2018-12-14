@@ -64,6 +64,7 @@ let g:Lf_Arguments = {
             \   ],
             \ "mru":[
             \           {"name": ["--cwd"], "nargs": 0, "help": "search MRU in current working directory"},
+            \           {"name": ["--no-split-path"], "nargs": 0, "help": "do not split the path"},
             \   ],
             \ "tag":[],
             \ "bufTag":[
