@@ -1025,6 +1025,13 @@ class Manager(object):
 
         self._cli.writeHistory(self._getExplorer().getStlCategory())
 
+        # https://github.com/neovim/neovim/issues/8336
+        if lfEval("has('nvim')") == '1':
+            chdir = vim.chdir
+        else:
+            chdir = os.chdir
+
+        cwd = os.getcwd()
         if len(self._selections) > 0:
             files = []
             for i in sorted(self._selections.keys()):
@@ -1036,6 +1043,12 @@ class Manager(object):
                     pass
             else:
                 self._getInstance().exitBuffer()
+
+            # https://github.com/Yggdroot/LeaderF/issues/257
+            win_local_cwd = lfEval("getcwd(winnr())")
+            if cwd != win_local_cwd:
+                chdir(cwd)
+
             if mode == '':
                 self._argaddFiles(files)
                 self._accept(files[0], mode)
@@ -1055,6 +1068,12 @@ class Manager(object):
                         pass
                 else:
                     self._getInstance().exitBuffer()
+
+            # https://github.com/Yggdroot/LeaderF/issues/257
+            win_local_cwd = lfEval("getcwd(winnr())")
+            if cwd != win_local_cwd:
+                chdir(cwd)
+
             self._accept(file, mode, self._getInstance().buffer, line_nr) # for bufTag
 
         if need_exit:
