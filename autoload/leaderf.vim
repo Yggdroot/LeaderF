@@ -185,7 +185,9 @@ let s:Lf_CommandMap = {
             \ '<MiddleMouse>': ['<MiddleMouse>'],
             \ '<2-LeftMouse>': ['<2-LeftMouse>'],
             \ '<C-LeftMouse>': ['<C-LeftMouse>'],
-            \ '<S-LeftMouse>': ['<S-LeftMouse>']
+            \ '<S-LeftMouse>': ['<S-LeftMouse>'],
+            \ '<ScrollWheelUp>': ['<ScrollWheelUp>'],
+            \ '<ScrollWheelDown>': ['<ScrollWheelDown>']
             \}
 
 function! s:InitCommandMap(var, dict)
