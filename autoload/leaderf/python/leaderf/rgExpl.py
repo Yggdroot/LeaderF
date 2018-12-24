@@ -283,7 +283,7 @@ class RgExplorer(Explorer):
         # \U{7F}      any hex character code corresponding to a Unicode code point
         vim_regex = re.sub(r'\\([uU])', r'%\1', vim_regex)
 
-        vim_regex = re.sub(r'\[\[:ascii:\]\]', r'[\x00-\x7F]', vim_regex)
+        vim_regex = re.sub(r'\[\[:ascii:\]\]', r'[\\x00-\\x7F]', vim_regex)
         vim_regex = re.sub(r'\[\[:word:\]\]', r'[0-9A-Za-z_]', vim_regex)
 
         vim_regex = vim_regex.replace(r'[[:^alnum:]]', r'[^0-9A-Za-z]')
