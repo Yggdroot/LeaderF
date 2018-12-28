@@ -505,6 +505,7 @@ class AnyHub(object):
     def __init__(self):
         self._managers = {}
         self._parser = None
+        self._pyext_manages = {}
 
     def _add_argument(self, parser, arg_list, positional_args):
         """
@@ -617,7 +618,8 @@ class AnyHub(object):
                 from .rgExpl import rgExplManager
                 manager = rgExplManager
             else:
-                raise Exception("Unrecognized argument %s!" % category)
+                lfCmd("call %s('%s')" % (lfEval("g:Lf_PythonExtensions['%s'].registerFunc" % category), category))
+                manager = self._pyext_manages[category]
 
         positions = {"--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen"}
         win_pos = "--" + lfEval("g:Lf_WindowPosition")
@@ -640,12 +642,16 @@ class AnyHub(object):
             self._parser = argparse.ArgumentParser(prog="Leaderf[!]", epilog="If [!] is given, enter normal mode directly.")
             self._add_argument(self._parser, lfEval("g:Lf_CommonArguments"), [])
             subparsers = self._parser.add_subparsers(title="subcommands", description="", help="")
-            for category in itertools.chain(lfEval("keys(g:Lf_Extensions)"),
-                    (i for i in lfEval("keys(g:Lf_Arguments)") if i not in lfEval("keys(g:Lf_Extensions)"))):
+            extensions = itertools.chain(lfEval("keys(g:Lf_Extensions)"), lfEval("keys(g:Lf_PythonExtensions)"))
+            for category in itertools.chain(extensions,
+                    (i for i in lfEval("keys(g:Lf_Arguments)") if i not in extensions)):
                 positional_args = []
                 if lfEval("has_key(g:Lf_Extensions, '%s')" % category) == '1':
                     help = lfEval("get(g:Lf_Extensions['%s'], 'help', '')" % category)
                     arg_def = lfEval("get(g:Lf_Extensions['%s'], 'arguments', [])" % category)
+                elif lfEval("has_key(g:Lf_PythonExtensions, '%s')" % category) == '1':
+                    help = lfEval("get(g:Lf_PythonExtensions['%s'], 'help', '')" % category)
+                    arg_def = lfEval("get(g:Lf_PythonExtensions['%s'], 'arguments', [])" % category)
                 else:
                     help = lfEval("g:Lf_Helps['%s']" % category)
                     arg_def = lfEval("g:Lf_Arguments['%s']" % category)
@@ -672,6 +678,10 @@ class AnyHub(object):
             return
         except SystemExit:
             return
+
+    def addPythonExtension(self, name, extensionManager):
+        if name not in self._pyext_manages:
+            self._pyext_manages[name] = extensionManager
 
 
 #*****************************************************

@@ -29,6 +29,7 @@ call s:InitVar('g:Lf_ShortcutB', '<Leader>b')
 call s:InitVar('g:Lf_WindowPosition', 'bottom')
 call s:InitVar('g:Lf_CacheDirectory', $HOME)
 call s:InitVar('g:Lf_MruBufnrs', [])
+call s:InitVar('g:Lf_PythonExtensions', {})
 
 function! g:LfNoErrMsgMatch(expr, pat)
     try
@@ -51,6 +52,10 @@ call s:InitVar('g:Lf_SelfContent', {})
 
 function! g:LfRegisterSelf(cmd, description)
     let g:Lf_SelfContent[a:cmd] = a:description
+endfunction
+
+function! g:LfRegisterPythonExtension(name, dict)
+    let g:Lf_PythonExtensions[a:name] = a:dict
 endfunction
 
 augroup LeaderF_Mru

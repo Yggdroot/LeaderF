@@ -180,14 +180,16 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
     let argList = split(a:cmdline[:a:cursorPos-1], '[ \t!]\+')
     let argNum = len(argList)
     if argNum == 1  " Leaderf
-        return keys(g:Lf_Arguments) + keys(g:Lf_Extensions)
+        return keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions)
     elseif argNum == 2 && a:cmdline[a:cursorPos-1] !~ '\s'  " 'Leaderf b'
-        return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions), "v:val =~? '^".a:argLead."'")
+        return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions), "v:val =~? '^".a:argLead."'")
     else
         let existingOptions = a:cmdline[a:cursorPos-1] !~ '\s' ? argList[2:-2] : argList[2:]
         let options = []
         if has_key(g:Lf_Extensions, argList[1])
             let arguments = get(g:Lf_Extensions[argList[1]], "arguments", [])
+        elseif has_key(g:Lf_PythonExtensions, argList[1])
+            let arguments = get(g:Lf_PythonExtensions[argList[1]], "arguments", [])
         elseif has_key(g:Lf_Arguments, argList[1])
             let arguments = g:Lf_Arguments[argList[1]]
         else
