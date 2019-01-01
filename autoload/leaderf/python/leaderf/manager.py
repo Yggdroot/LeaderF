@@ -1427,10 +1427,10 @@ class Manager(object):
                 self._index = 0 # search from beginning
                 if self._cli.pattern:
                     self._search(cur_content)
-            elif equal(cmd, '<C-K>') or equal(cmd, '<ScrollWheelUp>'):
+            elif equal(cmd, '<C-K>'):
                 self._toUp()
                 self._previewResult(False)
-            elif equal(cmd, '<C-J>') or equal(cmd, '<ScrollWheelDown>'):
+            elif equal(cmd, '<C-J>'):
                 self._toDown()
                 self._previewResult(False)
             elif equal(cmd, '<Up>'):

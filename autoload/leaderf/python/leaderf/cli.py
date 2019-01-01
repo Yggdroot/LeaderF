@@ -516,6 +516,14 @@ class LfCli(object):
                         self._toLeft()
                     elif equal(cmd, '<Right>'):
                         self._toRight()
+                    elif equal(cmd, '<ScrollWheelUp>'):
+                        yield '<C-K>'
+                        yield '<C-K>'
+                        yield '<C-K>'
+                    elif equal(cmd, '<ScrollWheelDown>'):
+                        yield '<C-J>'
+                        yield '<C-J>'
+                        yield '<C-J>'
                     elif equal(cmd, '<C-C>'):
                         yield '<Quit>'
                     else:
