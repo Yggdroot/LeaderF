@@ -360,7 +360,7 @@ class FileExplorer(Explorer):
 
             cmd = 'ag --nocolor --silent %s %s %s %s -g "" "%s"' % (ignore, followlinks, show_hidden, no_ignore, dir)
         elif default_tool["find"] and lfEval("executable('find')") == '1' \
-                and lfEval("executable('sed')") == '1':
+                and lfEval("executable('sed')") == '1' and os.name != 'nt':
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore_dir = ""
             for d in wildignore["dir"]:
