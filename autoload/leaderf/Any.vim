@@ -156,6 +156,8 @@ let g:Lf_CommonArguments = [
 " arguments is something like g:Lf_CommonArguments
 " return something like
 " [
+"   "--reverse",
+"   "--stayOpen",
 "   ["--input", "--cword"],
 "   ["--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen"],
 "   ["--nameOnly", "--fullPath", "--fuzzy", "--regexMode"],
@@ -176,13 +178,54 @@ function! s:Lf_Refine(arguments)
     return result
 endfunction
 
+" arguments is something like g:Lf_CommonArguments
+" return something like
+" {
+"   "--reverse":  {"name": ["--reverse"], "nargs": 0, "help": "show results in bottom-up order"},
+"   "--stayOpen": {"name": ["--stayOpen"], "nargs": 0, "help": "don't quit LeaderF after accepting an entry"},
+"   "--input":    {"name": ["--input"], "nargs": 1, "help": "specifies INPUT as the pattern inputted in advance"},
+"   "--cword":    {"name": ["--cword"], "nargs": 0, "help": "current word under cursor is inputted in advance"},
+"   ...
+" }
+function! s:Lf_GenDict(arguments)
+    let result = {}
+    for arg in a:arguments
+        if type(arg) == type([])
+            for a in arg
+                for i in a["name"]
+                    let result[i] = a
+                endfor
+            endfor
+        else
+            for i in arg["name"]
+                let result[i] = arg
+            endfor
+        endif
+    endfor
+    return result
+endfunction
+
+function! s:Lf_FuzzyMatch(pattern, str)
+    let i = 0
+    let pattern_len = len(a:pattern)
+    let j = 0
+    let str_len = len(a:str)
+    while i < pattern_len && j < str_len
+        if a:pattern[i] ==? a:str[j]
+            let i += 1
+        endif
+        let j += 1
+    endwhile
+    return i >= pattern_len
+endfunction
+
 function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
     let argList = split(a:cmdline[:a:cursorPos-1], '[ \t!]\+')
     let argNum = len(argList)
     if argNum == 1  " Leaderf
         return keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions)
     elseif argNum == 2 && a:cmdline[a:cursorPos-1] !~ '\s'  " 'Leaderf b'
-        return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions), "v:val =~? '^".a:argLead."'")
+        return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions), "s:Lf_FuzzyMatch(a:argLead, v:val)")
     else
         let existingOptions = a:cmdline[a:cursorPos-1] !~ '\s' ? argList[2:-2] : argList[2:]
         let options = []
@@ -195,12 +238,16 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
         else
             let arguments = []
         endif
+        let argDict = s:Lf_GenDict(arguments + g:Lf_CommonArguments)
         for opt in s:Lf_Refine(arguments + g:Lf_CommonArguments)
             if type(opt) == type([])
-                if len(filter(copy(opt), "index(".string(existingOptions).", v:val) >= 0")) == 0
+                let existingOpt = filter(copy(opt), "index(".string(existingOptions).", v:val) >= 0")
+                if len(existingOpt) == 0
                     let options += opt
+                elseif get(argDict[existingOpt[0]], "action", "") == "append"
+                    let options += argDict[existingOpt[0]].name
                 endif
-            elseif index(existingOptions, opt) == -1
+            elseif index(existingOptions, opt) == -1 || get(argDict[opt], "action", "") == "append"
                 call add(options, opt)
             endif
         endfor
