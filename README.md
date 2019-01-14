@@ -133,11 +133,13 @@ use `:Leaderf <subcommand> -h` to get specific help of subcommand, e.g., `:Leade
 usage: Leaderf[!] rg [-h] [-e <PATTERN>...] [-F] [-i] [-L] [-P] [-S] [-s] [-v]
                      [-w] [-x] [--hidden] [--no-config] [--no-ignore]
                      [--no-ignore-global] [--no-ignore-parent]
-                     [--no-ignore-vcs] [-E <ENCODING>] [-M <NUM>] [-m <NUM>]
-                     [--max-depth <NUM>] [--max-filesize <NUM+SUFFIX?>]
-                     [-g <GLOB>...] [--iglob <GLOB>...]
-                     [--ignore-file <PATH>...] [--type-add <TYPE_SPEC>...]
-                     [-t <TYPE>...] [-T <TYPE>...]
+                     [--no-ignore-vcs] [--no-pcre2-unicode] [-E <ENCODING>]
+                     [-M <NUM>] [-m <NUM>] [--max-depth <NUM>]
+                     [--max-filesize <NUM+SUFFIX?>]
+                     [--path-separator <SEPARATOR>] [--sort <SORTBY>]
+                     [--sortr <SORTBY>] [-f <PATTERNFILE>...] [-g <GLOB>...]
+                     [--iglob <GLOB>...] [--ignore-file <PATH>...]
+                     [--type-add <TYPE_SPEC>...] [-t <TYPE>...] [-T <TYPE>...]
                      [--current-buffer | --all-buffers] [--recall] [--append]
                      [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
@@ -174,6 +176,8 @@ specific arguments:
                         `$HOME/.config/git/ignore`).
   --no-ignore-parent    Don't respect ignore files (.gitignore, .ignore, etc.) in parent directories.
   --no-ignore-vcs       Don't respect version control ignore files (.gitignore, etc.).
+  --no-pcre2-unicode    When PCRE2 matching is enabled, this flag will disable
+                        Unicode mode, which is otherwise enabled by default.
   -E <ENCODING>, --encoding <ENCODING>
                         Specify the text encoding that rg will use on all files searched.
   -M <NUM>, --max-columns <NUM>
@@ -183,6 +187,13 @@ specific arguments:
   --max-depth <NUM>     Limit the depth of directory traversal to NUM levels beyond the paths given.
   --max-filesize <NUM+SUFFIX?>
                         Ignore files larger than NUM in size. This does not apply to directories.
+  --path-separator <SEPARATOR>
+                        Set the path separator to use when printing file paths.
+  --sort <SORTBY>       This flag enables sorting of results in ascending order.
+  --sortr <SORTBY>      This flag enables sorting of results in descending order.
+  -f <PATTERNFILE>..., --file <PATTERNFILE>...
+                        Search for patterns from the given file, with one pattern per line.
+                        (This option can be provided multiple times.)
   -g <GLOB>..., --glob <GLOB>...
                         Include or exclude files and directories for searching that match the given
                         glob.(This option can be provided multiple times.)

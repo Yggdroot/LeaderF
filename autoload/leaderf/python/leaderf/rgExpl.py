@@ -78,6 +78,8 @@ class RgExplorer(Explorer):
             zero_args_options += "--no-ignore-parent "
         if "--no-ignore-vcs" in kwargs.get("arguments", {}):
             zero_args_options += "--no-ignore-vcs "
+        if "--no-pcre2-unicode" in kwargs.get("arguments", {}):
+            zero_args_options += "--no-pcre2-unicode "
 
         one_args_options = ''
         if "-E" in kwargs.get("arguments", {}):
@@ -90,8 +92,16 @@ class RgExplorer(Explorer):
             one_args_options += "--max-depth %s " % kwargs.get("arguments", {})["--max-depth"][0]
         if "--max-filesize" in kwargs.get("arguments", {}):
             one_args_options += "--max-filesize %s " % kwargs.get("arguments", {})["--max-filesize"][0]
+        if "--path-separator" in kwargs.get("arguments", {}):
+            one_args_options += "--path-separator %s " % kwargs.get("arguments", {})["--path-separator"][0]
+        if "--sort" in kwargs.get("arguments", {}):
+            one_args_options += "--sort %s " % kwargs.get("arguments", {})["--sort"][0]
+        if "--sortr" in kwargs.get("arguments", {}):
+            one_args_options += "--sortr %s " % kwargs.get("arguments", {})["--sortr"][0]
 
         repeatable_options = ''
+        if "-f" in kwargs.get("arguments", {}):
+            repeatable_options += "-f %s " % " -f ".join(kwargs.get("arguments", {})["-f"])
         if "-g" in kwargs.get("arguments", {}):
             repeatable_options += "-g %s " % " -g ".join(kwargs.get("arguments", {})["-g"])
         if "--iglob" in kwargs.get("arguments", {}):
