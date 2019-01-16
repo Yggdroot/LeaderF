@@ -224,7 +224,7 @@ class RgExplorer(Explorer):
 
         executor = AsyncExecutor()
         self._executor.append(executor)
-        cmd = '''rg --no-ignore-messages --no-heading --with-filename --color never --line-number '''\
+        cmd = '''rg --no-config --no-ignore-messages --no-heading --with-filename --color never --line-number '''\
                 '''{} {}{}{}{}{}{}'''.format(case_flag, word_or_line, zero_args_options,
                                                   one_args_options, repeatable_options, lfDecode(pattern), path)
         lfCmd("let g:Lf_Debug_RgCmd = '%s'" % escQuote(cmd))
