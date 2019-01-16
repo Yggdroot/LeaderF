@@ -224,9 +224,10 @@ class RgExplorer(Explorer):
 
         executor = AsyncExecutor()
         self._executor.append(executor)
+        extra_options = ' '.join(lfEval("get(g:, 'Lf_RgConfig', [])"))
         cmd = '''rg --no-config --no-ignore-messages --no-heading --with-filename --color never --line-number '''\
-                '''{} {}{}{}{}{}{}'''.format(case_flag, word_or_line, zero_args_options,
-                                                  one_args_options, repeatable_options, lfDecode(pattern), path)
+                '''{} {}{}{}{}{} {}{}'''.format(case_flag, word_or_line, zero_args_options,
+                                                  one_args_options, repeatable_options, extra_options, lfDecode(pattern), path)
         lfCmd("let g:Lf_Debug_RgCmd = '%s'" % escQuote(cmd))
         content = executor.execute(cmd, encoding=lfEval("&encoding"), cleanup=partial(removeFiles, tmpfilenames))
         return content

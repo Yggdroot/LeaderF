@@ -122,7 +122,7 @@ subcommands:
     self                execute the commands of itself
     bufTag              navigate tags in the buffer
     buffer              search buffers
-    rg                  grep using rg
+    rg                  grep using rg(ripgrep)
 
 If [!] is given, enter normal mode directly.
 ```

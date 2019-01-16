@@ -532,6 +532,17 @@ g:Lf_HistoryNumber                              *g:Lf_HistoryNumber*
     Specify the number of records in history.
     Default value is 100.
 
+g:Lf_RgConfig                                   *g:Lf_RgConfig*
+    Specify a list of ripgrep configurations. For example, >
+    let g:Lf_RgConfig = [
+        \ "--max-columns=150",
+        \ "--type-add web:*.{html,css,js}*",
+        \ "--glob=!git/*",
+        \ "--hidden"
+    \ ]
+<
+    Default value is [].
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
