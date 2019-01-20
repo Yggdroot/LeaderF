@@ -248,6 +248,9 @@ class Manager(object):
     def _needExit(self, line, arguments):
         return True
 
+    def setArguments(self, arguments):
+        self._arguments = arguments
+
     #**************************************************************
 
     def _needPreview(self, preview):
@@ -700,9 +703,14 @@ class Manager(object):
                     filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
                                             is_name_only=False, sort_results=not is_continue)
                 elif self._getExplorer().getStlCategory() in ["Rg"]:
-                    return_index = False
-                    filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=True, sort_results=not is_continue)
+                    if "--match-path" in self._arguments:
+                        return_index = False
+                        filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
+                                                is_name_only=True, sort_results=not is_continue)
+                    else:
+                        return_index = True
+                        filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
+                                                is_name_only=True, sort_results=not is_continue)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History"]:
                     return_index = True
@@ -1162,7 +1170,7 @@ class Manager(object):
                 self._selections[i+1] = id
 
     def startExplorer(self, win_pos, *args, **kwargs):
-        self._arguments = kwargs.get("arguments", {})
+        self.setArguments(kwargs.get("arguments", {}))
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")

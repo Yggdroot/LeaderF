@@ -339,6 +339,8 @@ class RgExplManager(Manager):
     def __init__(self):
         super(RgExplManager, self).__init__()
         self._match_ids = []
+        self._match_path = False
+        self._has_column = False
 
     def _getExplClass(self):
         return RgExplorer
@@ -372,6 +374,12 @@ class RgExplManager(Manager):
         except vim.error as e:
             lfPrintError(e)
 
+    def setArguments(self, arguments):
+        self._arguments = arguments
+        self._match_path = "--match-path" in arguments
+        if "--recall" not in self._arguments:
+            self._has_column = "--column" in lfEval("get(g:, 'Lf_RgConfig', [])")
+
     def _getDigest(self, line, mode):
         """
         specify what part in the line to be processed and highlighted
@@ -380,7 +388,13 @@ class RgExplManager(Manager):
                   1, return the name only
                   2, return the directory name
         """
-        return line
+        if self._match_path:
+            return line
+        else:
+            if self._has_column:
+                return line.split(":", 3)[-1]
+            else:
+                return line.split(":", 2)[-1]
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -390,7 +404,15 @@ class RgExplManager(Manager):
                   1, return the start postion of name only
                   2, return the start postion of directory name
         """
-        return 0
+        if self._match_path:
+            return 0
+        else:
+            if self._has_column:
+                file_path, line_num, column, content = line.split(":", 3)
+                return lfBytesLen(file_path + line_num + column) + 3
+            else:
+                file_path, line_num, content = line.split(":", 2)
+                return lfBytesLen(file_path + line_num) + 2
 
     def _createHelp(self):
         help = []
@@ -411,6 +433,10 @@ class RgExplManager(Manager):
         self._match_ids.append(id)
         id = int(lfEval("matchadd('Lf_hl_rgLineNumber', '^.\{-}\zs:\d\+:', 10)"))
         self._match_ids.append(id)
+        if self._has_column:
+            id = int(lfEval("matchadd('Lf_hl_rgColumnNumber', '^.\{-}:\d\+:\zs\d\+:', 10)"))
+            self._match_ids.append(id)
+
         try:
             for i in self._getExplorer().getPatternRegex():
                 id = int(lfEval("matchadd('Lf_hl_rgHighlight', '%s', 9)" % escQuote(i)))

@@ -140,7 +140,7 @@ usage: Leaderf[!] rg [-h] [-e <PATTERN>...] [-F] [-i] [-L] [-P] [-S] [-s] [-v]
                      [--sortr <SORTBY>] [-f <PATTERNFILE>...] [-g <GLOB>...]
                      [--iglob <GLOB>...] [--ignore-file <PATH>...]
                      [--type-add <TYPE_SPEC>...] [-t <TYPE>...] [-T <TYPE>...]
-                     [--current-buffer | --all-buffers] [--recall] [--append]
+                     [--current-buffer | --all-buffers] [--recall] [--append] [--match-path]
                      [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
                      [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
@@ -213,6 +213,7 @@ specific arguments:
   --all-buffers         Searches in all listed buffers.
   --recall              Recall last search. If the result window is closed, reopen it.
   --append              Append to the previous search results.
+  --match-path          Match the file path when fuzzy searching.
 
 common arguments:
   --reverse             show results in bottom-up order
