@@ -23,15 +23,23 @@ class AsyncExecutor(object):
         self._process = None
         self._finished = False
 
-    def _readerThread(self, fd, queue, is_out):
+    def _readerThread(self, fd, queue, is_stdout):
         try:
+            max_count = int(lfEval("g:Lf_MaxCount"))
+            count = 0
             for line in iter(fd.readline, b""):
                 queue.put(line)
+
+                if is_stdout and max_count > 0:
+                    count += 1
+                    if count >= max_count:
+                        self.killProcess()
+                        break
         except ValueError:
             pass
         finally:
             queue.put(None)
-            if is_out:
+            if is_stdout:
                 self._finished = True
 
     def execute(self, cmd, encoding=None, cleanup=None):
@@ -112,6 +120,7 @@ class AsyncExecutor(object):
                 try:
                     if self._process:
                         self._process.stdout.close()
+                        self._process.stderr.close()
                 except IOError:
                     pass
 

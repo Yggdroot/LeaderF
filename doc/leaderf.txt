@@ -543,6 +543,12 @@ g:Lf_RgConfig                                   *g:Lf_RgConfig*
 <
     Default value is [].
 
+g:Lf_MaxCount                                   *g:Lf_MaxCount*
+    Specify the limit of the number of source entries. LeaderF will stop
+    producing the source entries if the limit is hit. There is no limit if the
+    value is less than 1(<=0).
+    Default value is 2000000.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

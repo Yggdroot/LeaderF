@@ -125,6 +125,7 @@ call s:InitDict('g:Lf_PreviewResult', {
 call s:InitDict('g:Lf_NormalMap', {})
 call s:InitVar('g:Lf_Extensions', {})
 call s:InitDict('g:Lf_CtagsFuncOpts', {})
+call s:InitDict('g:Lf_MaxCount', 2000000)
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
