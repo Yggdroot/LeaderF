@@ -22,17 +22,17 @@ class AsyncExecutor(object):
         self._errQueue = Queue.Queue()
         self._process = None
         self._finished = False
+        self._max_count = int(lfEval("g:Lf_MaxCount"))
 
     def _readerThread(self, fd, queue, is_stdout):
         try:
-            max_count = int(lfEval("g:Lf_MaxCount"))
             count = 0
             for line in iter(fd.readline, b""):
                 queue.put(line)
 
-                if is_stdout and max_count > 0:
+                if is_stdout and self._max_count > 0:
                     count += 1
-                    if count >= max_count:
+                    if count >= self._max_count:
                         self.killProcess()
                         break
         except ValueError:
