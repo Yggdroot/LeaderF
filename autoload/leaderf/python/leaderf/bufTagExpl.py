@@ -457,6 +457,10 @@ class BufTagExplManager(Manager):
             buf_number = int(items[4])
             if orig_buf_nr == buf_number:
                 tags.append((index, buf_number, line_nr))
+
+        if self._getInstance().isReverseOrder():
+            tags = tags[::-1]
+
         last = len(tags) - 1
         while last >= 0:
             if tags[last][2] <= orig_line:

@@ -302,6 +302,15 @@ class LfInstance(object):
             self._buffer_object[:] = content
         else:
             self._buffer_object.append(content)
+
+        if self._reverse_order:
+            buffer_len = len(self._buffer_object)
+            if buffer_len < self._initial_win_height:
+                self._window_object.height = buffer_len
+            elif self._window_object.height < self._initial_win_height:
+                self._window_object.height = self._initial_win_height
+            lfCmd("normal! Gzb")
+
         self.buffer.options['modifiable'] = False
 
     def clearBuffer(self):

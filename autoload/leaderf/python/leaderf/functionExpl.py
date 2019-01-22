@@ -335,6 +335,10 @@ class FunctionExplManager(Manager):
             line_nr, buf_number = int(line_nr), int(buf_number)
             if orig_buf_nr == buf_number:
                 tags.append((index, buf_number, line_nr))
+
+        if self._getInstance().isReverseOrder():
+            tags = tags[::-1]
+
         last = len(tags) - 1
         while last >= 0:
             if tags[last][2] <= orig_line:
