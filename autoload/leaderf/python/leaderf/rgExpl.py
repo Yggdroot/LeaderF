@@ -464,7 +464,7 @@ class RgExplManager(Manager):
         saved_eventignore = vim.options['eventignore']
         vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
         try:
-            vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
+            vim.current.tabpage, vim.current.window = orig_pos[:2]
             self._acceptSelection(line)
         finally:
             vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
