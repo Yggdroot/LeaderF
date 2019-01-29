@@ -20,10 +20,25 @@ class RgExplorer(Explorer):
     def __init__(self):
         self._executor = []
         self._pattern_regex = []
+        self._context_separator = "..."
+        self._display_multi = False
 
     def getContent(self, *args, **kwargs):
         if "--recall" in kwargs.get("arguments", {}):
             return []
+
+        rg_config = lfEval("get(g:, 'Lf_RgConfig', [])")
+        extra_options = ' '.join(rg_config)
+        for opt in rg_config:
+            opt = opt.strip()
+            if opt.startswith("--context-separator"):
+                self._context_separator = re.split(r'=|\s+', opt)[1]
+                if self._context_separator.startswith('"') and self._context_separator.endswith('"'):
+                    self._context_separator = self._context_separator[1:-1]
+            if self._display_multi == False and (opt.startswith("-A") or opt.startswith("-B")
+                    or opt.startswith("-C") or opt.startswith("--after-context")
+                    or opt.startswith("--before-context") or opt.startswith("--context")):
+                self._display_multi = True
 
         arg_line = kwargs.get("arguments", {}).get("arg_line")
         # -S/--smart-case, -s/--case-sensitive, -i/--ignore-case
@@ -82,6 +97,22 @@ class RgExplorer(Explorer):
             zero_args_options += "--no-pcre2-unicode "
 
         one_args_options = ''
+        if "--context-separator" in kwargs.get("arguments", {}):
+            self._context_separator = kwargs.get("arguments", {})["--context-separator"][0]
+            if self._context_separator.startswith('"') and self._context_separator.endswith('"'):
+                self._context_separator = self._context_separator[1:-1]
+            one_args_options += '--context-separator="%s" ' % self._context_separator
+        else:
+            one_args_options += "--context-separator=%s " % self._context_separator
+        if "-A" in kwargs.get("arguments", {}):
+            one_args_options += "-A %s " % kwargs.get("arguments", {})["-A"][0]
+            self._display_multi = True
+        if "-B" in kwargs.get("arguments", {}):
+            one_args_options += "-B %s " % kwargs.get("arguments", {})["-B"][0]
+            self._display_multi = True
+        if "-C" in kwargs.get("arguments", {}):
+            one_args_options += "-C %s " % kwargs.get("arguments", {})["-C"][0]
+            self._display_multi = True
         if "-E" in kwargs.get("arguments", {}):
             one_args_options += "-E %s " % kwargs.get("arguments", {})["-E"][0]
         if "-M" in kwargs.get("arguments", {}):
@@ -224,10 +255,9 @@ class RgExplorer(Explorer):
 
         executor = AsyncExecutor()
         self._executor.append(executor)
-        extra_options = ' '.join(lfEval("get(g:, 'Lf_RgConfig', [])"))
-        cmd = '''rg --no-config --no-ignore-messages --no-heading --with-filename --color never --line-number '''\
-                '''{} {}{}{}{}{} {}{}'''.format(case_flag, word_or_line, zero_args_options,
-                                                  one_args_options, repeatable_options, extra_options, lfDecode(pattern), path)
+        cmd = '''rg {} --no-config --no-ignore-messages --no-heading --with-filename --color never --line-number '''\
+                '''{} {}{}{}{}{}{}'''.format(extra_options, case_flag, word_or_line, zero_args_options,
+                                                  one_args_options, repeatable_options, lfDecode(pattern), path)
         lfCmd("let g:Lf_Debug_RgCmd = '%s'" % escQuote(cmd))
         content = executor.execute(cmd, encoding=lfEval("&encoding"), cleanup=partial(removeFiles, tmpfilenames))
         return content
@@ -331,6 +361,12 @@ class RgExplorer(Explorer):
     def getPatternRegex(self):
         return self._pattern_regex
 
+    def getContextSeparator(self):
+        return self._context_separator
+
+    def displayMulti(self):
+        return self._display_multi
+
 
 #*****************************************************
 # RgExplManager
@@ -353,7 +389,7 @@ class RgExplManager(Manager):
             return
 
         line = args[0]
-        m = re.match(r'(.+?):(\d+):', line)
+        m = re.match(r'^(.+?)[:-](\d+)[:-]', line)
         file, line_num = m.group(1, 2)
         if file.startswith('+'):
             file = os.path.abspath(file)
@@ -391,10 +427,26 @@ class RgExplManager(Manager):
         if self._match_path:
             return line
         else:
-            if self._has_column:
-                return line.split(":", 3)[-1]
+            if self._getExplorer().displayMulti():
+                if line == self._getExplorer().getContextSeparator():
+                    return ""
+
+                if self._has_column:
+                    m = re.match(r'^.+?[:-]\d+[:-]', line)
+                    file_lineno = m.group(0)
+                    if file_lineno.endswith(':'):
+                        index = line.find(':', len(file_lineno))
+                        return line[index+1:]
+                    else:
+                        return line[len(file_lineno):]
+                else:
+                    m = re.match(r'^.+?[:-]\d+[:-]', line)
+                    return line[len(m.group(0)):]
             else:
-                return line.split(":", 2)[-1]
+                if self._has_column:
+                    return line.split(":", 3)[-1]
+                else:
+                    return line.split(":", 2)[-1]
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -407,12 +459,28 @@ class RgExplManager(Manager):
         if self._match_path:
             return 0
         else:
-            if self._has_column:
-                file_path, line_num, column, content = line.split(":", 3)
-                return lfBytesLen(file_path + line_num + column) + 3
+            if self._getExplorer().displayMulti():
+                if line == self._getExplorer().getContextSeparator():
+                    return len(line)
+
+                if self._has_column:
+                    m = re.match(r'^.+?[:-]\d+[:-]', line)
+                    file_lineno = m.group(0)
+                    if file_lineno.endswith(':'):
+                        index = line.find(':', len(file_lineno))
+                        return lfBytesLen(line[:index + 1])
+                    else:
+                        return lfBytesLen(file_lineno)
+                else:
+                    m = re.match(r'^.+?[:-]\d+[:-]', line)
+                    return lfBytesLen(m.group(0))
             else:
-                file_path, line_num, content = line.split(":", 2)
-                return lfBytesLen(file_path + line_num) + 2
+                if self._has_column:
+                    file_path, line_num, column, content = line.split(":", 3)
+                    return lfBytesLen(file_path + line_num + column) + 3
+                else:
+                    file_path, line_num, content = line.split(":", 2)
+                    return lfBytesLen(file_path + line_num) + 2
 
     def _createHelp(self):
         help = []
@@ -429,9 +497,11 @@ class RgExplManager(Manager):
 
     def _afterEnter(self):
         super(RgExplManager, self)._afterEnter()
-        id = int(lfEval("matchadd('Lf_hl_rgFileName', '^.\{-}\ze:\d', 10)"))
+        id = int(lfEval("matchadd('Lf_hl_rgFileName', '^.\{-}\ze[:-]\d', 10)"))
         self._match_ids.append(id)
         id = int(lfEval("matchadd('Lf_hl_rgLineNumber', '^.\{-}\zs:\d\+:', 10)"))
+        self._match_ids.append(id)
+        id = int(lfEval("matchadd('Lf_hl_rgLineNumber2', '^.\{-}\zs-\d\+-', 10)"))
         self._match_ids.append(id)
         if self._has_column:
             id = int(lfEval("matchadd('Lf_hl_rgColumnNumber', '^.\{-}:\d\+:\zs\d\+:', 10)"))

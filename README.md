@@ -130,18 +130,19 @@ If [!] is given, enter normal mode directly.
 use `:Leaderf <subcommand> -h` to get specific help of subcommand, e.g., `:Leaderf rg -h`
 
 ```
-usage: Leaderf[!] rg [-h] [-e <PATTERN>...] [-F] [-i] [-L] [-P] [-S] [-s] [-v]
-                     [-w] [-x] [--hidden] [--no-config] [--no-ignore]
-                     [--no-ignore-global] [--no-ignore-parent]
-                     [--no-ignore-vcs] [--no-pcre2-unicode] [-E <ENCODING>]
-                     [-M <NUM>] [-m <NUM>] [--max-depth <NUM>]
-                     [--max-filesize <NUM+SUFFIX?>]
+usage: Leaderf[!] rg [-h] [-A <NUM>] [-B <NUM>] [-C <NUM>]
+                     [--context-separator <SEPARATOR>] [-e <PATTERN>...] [-F]
+                     [-i] [-L] [-P] [-S] [-s] [-v] [-w] [-x] [--hidden]
+                     [--no-config] [--no-ignore] [--no-ignore-global]
+                     [--no-ignore-parent] [--no-ignore-vcs]
+                     [--no-pcre2-unicode] [-E <ENCODING>] [-M <NUM>]
+                     [-m <NUM>] [--max-depth <NUM>] [--max-filesize <NUM+SUFFIX?>]
                      [--path-separator <SEPARATOR>] [--sort <SORTBY>]
                      [--sortr <SORTBY>] [-f <PATTERNFILE>...] [-g <GLOB>...]
                      [--iglob <GLOB>...] [--ignore-file <PATH>...]
                      [--type-add <TYPE_SPEC>...] [-t <TYPE>...] [-T <TYPE>...]
-                     [--current-buffer | --all-buffers] [--recall] [--append] [--match-path]
-                     [--reverse] [--stayOpen] [--input <INPUT> | --cword]
+                     [--current-buffer | --all-buffers] [--recall] [--append]
+                     [--match-path] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
                      [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
                      [<PATH> [<PATH> ...]]
@@ -150,6 +151,14 @@ optional arguments:
   -h, --help            show this help message and exit
 
 specific arguments:
+  -A <NUM>, --after-context <NUM>
+                        Show NUM lines after each match.
+  -B <NUM>, --before-context <NUM>
+                        Show NUM lines before each match.
+  -C <NUM>, --context <NUM>
+                        Show NUM lines before and after each match.
+  --context-separator <SEPARATOR>
+                        The string used to separate non-contiguous context lines in the output.
   -e <PATTERN>..., --regexp <PATTERN>...
                         A pattern to search for. This option can be provided multiple times, where all
                         patterns given are searched.

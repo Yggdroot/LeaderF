@@ -73,6 +73,7 @@ if has("syntax")
     highlight def link Lf_hl_helpTagfile        Comment
     highlight def link Lf_hl_rgFileName         Directory
     highlight def link Lf_hl_rgLineNumber       Constant
+    highlight def link Lf_hl_rgLineNumber2      Folded
     highlight def link Lf_hl_rgColumnNumber     Constant
     highlight def Lf_hl_rgHighlight guifg=#000000 guibg=#CCCC66 ctermfg=16 ctermbg=185
 endif

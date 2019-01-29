@@ -193,6 +193,9 @@ class LfInstance(object):
         else:
             self._reverse_order = False
 
+    def ignoreReverse(self):
+        self._reverse_order = False
+
     def setStlCategory(self, category):
         lfCmd("let g:Lf_{}_StlCategory = '{}'".format(self._category, category) )
 

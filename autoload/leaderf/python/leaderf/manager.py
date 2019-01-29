@@ -1031,6 +1031,10 @@ class Manager(object):
                 lfCmd("norm! j")
                 return
 
+        if self._getExplorer().getStlCategory() == "Rg" \
+                and self._getInstance().currentLine == self._getExplorer().getContextSeparator():
+            return
+
         self._cli.writeHistory(self._getExplorer().getStlCategory())
 
         # https://github.com/neovim/neovim/issues/8336
@@ -1173,21 +1177,22 @@ class Manager(object):
         self.setArguments(kwargs.get("arguments", {}))
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
+
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
-        try:
-            if self._getExplorer().getStlCategory() in ["Rg"] and "--recall" in self._arguments:
-                content = self._content
-            else:
-                content = self._getExplorer().getContent(*args, **kwargs)
-        except Exception as e:
-            lfPrintError(e)
-            return
+        if self._getExplorer().getStlCategory() in ["Rg"] and "--recall" in self._arguments:
+            content = self._content
+        else:
+            content = self._getExplorer().getContent(*args, **kwargs)
 
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
 
         self._getInstance().setArguments(self._arguments)
+        if self._getExplorer().getStlCategory() in ["Rg"] and ("-A" in kwargs.get("arguments", {}) \
+                or "-B" in kwargs.get("arguments", {}) or "-C" in kwargs.get("arguments", {})):
+            self._getInstance().ignoreReverse()
+
         self._getInstance().enterBuffer(win_pos)
         self._initial_count = self._getInstance().getInitialWinHeight()
 
