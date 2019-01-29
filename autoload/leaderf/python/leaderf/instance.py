@@ -37,12 +37,14 @@ class LfInstance(object):
         self._is_autocmd_set = False
         self._reverse_order = lfEval("get(g:, 'Lf_ReverseOrder', 0)") == '1'
         self._orig_pos = () # (tabpage, window, buffer)
+        self._running_status = 0
         self._highlightStl()
 
     def _initStlVar(self):
         lfCmd("let g:Lf_{}_StlCategory = '-'".format(self._category))
         lfCmd("let g:Lf_{}_StlMode = '-'".format(self._category))
         lfCmd("let g:Lf_{}_StlCwd= '-'".format(self._category))
+        lfCmd("let g:Lf_{}_StlRunning = ':'".format(self._category))
         lfCmd("let g:Lf_{}_StlTotal = '0'".format(self._category))
         lfCmd("let g:Lf_{}_StlLineNumber = '1'".format(self._category))
         lfCmd("let g:Lf_{}_StlResultsCount = '0'".format(self._category))
@@ -62,7 +64,7 @@ class LfInstance(object):
         else:
             stl += "%#Lf_hl_{0}_stlLineInfo# %l/%{{g:Lf_{0}_StlResultsCount}} "
         stl += "%#Lf_hl_{0}_stlSeparator5#%{{g:Lf_StlSeparator.right}}"
-        stl += "%#Lf_hl_{0}_stlTotal# Total: %{{g:Lf_{0}_StlTotal}} "
+        stl += "%#Lf_hl_{0}_stlTotal# Total%{{g:Lf_{0}_StlRunning}} %{{g:Lf_{0}_StlTotal}} "
         self._stl = stl.format(self._category)
 
     def _highlightStl(self):
@@ -213,6 +215,15 @@ class LfInstance(object):
     def setStlResultsCount(self, count):
         lfCmd("let g:Lf_{}_StlResultsCount = '{}'".format(self._category, count))
 
+    def setStlRunning(self, running):
+        if running:
+            status = (':', ' ')
+            lfCmd("let g:Lf_{}_StlRunning = '{}'".format(self._category, status[self._running_status]))
+            self._running_status = (self._running_status + 1) & 1
+        else:
+            self._running_status = 0
+            lfCmd("let g:Lf_{}_StlRunning = ':'".format(self._category))
+
     def enterBuffer(self, win_pos):
         if self._enterOpeningBuffer():
             return
@@ -337,6 +348,7 @@ class LfInstance(object):
 
         try:
             start = time.time()
+            status_start = start
             cur_content = []
             for line in content:
                 cur_content.append(line)
@@ -345,11 +357,16 @@ class LfInstance(object):
                     self.setBuffer(cur_content)
                     if self._reverse_order:
                         lfCmd("normal! G")
+
+                    if time.time() - status_start > 0.45:
+                        status_start = time.time()
+                        self.setStlRunning(True)
                     self.setStlTotal(len(self._buffer_object)//unit)
                     self.setStlResultsCount(len(self._buffer_object)//unit)
                     lfCmd("redrawstatus")
             self.setBuffer(cur_content)
             self.setStlTotal(len(self._buffer_object)//unit)
+            self.setStlRunning(False)
             self.setStlResultsCount(len(self._buffer_object)//unit)
             lfCmd("redrawstatus")
             set_content(cur_content)

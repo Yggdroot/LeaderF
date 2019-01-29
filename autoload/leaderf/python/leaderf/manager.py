@@ -1210,6 +1210,7 @@ class Manager(object):
 
         self._start_time = time.time()
         self._bang_start_time = self._start_time
+        self._status_start_time = self._start_time
         self._bang_count = 0
 
         self._read_content_exception = None
@@ -1357,6 +1358,7 @@ class Manager(object):
                     else:
                         self._getInstance().setBuffer(self._content[:self._initial_count])
                     self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+                    self._getInstance().setStlRunning(False)
                     self._getInstance().setStlResultsCount(len(self._content))
 
                 lfCmd("redrawstatus")
@@ -1374,6 +1376,10 @@ class Manager(object):
             if time.time() - self._start_time > 0.1:
                 self._start_time = time.time()
                 self._getInstance().setStlTotal(cur_len//self._getUnit())
+                if time.time() - self._status_start_time > 0.45:
+                    self._status_start_time = time.time()
+                    self._getInstance().setStlRunning(True)
+
                 if self._cli.pattern:
                     self._getInstance().setStlResultsCount(len(self._result_content))
                 else:
