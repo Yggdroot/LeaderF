@@ -229,7 +229,11 @@ class FunctionExplManager(Manager):
         # {kind} {code} {file} {line}
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
         line_nr, buf_number = line.rsplit(":", 1)[1].split()
-        lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
+        if kwargs.get("mode", '') == 't':
+            buf_name = lfEval("bufname(%s)" % buf_number)
+            lfCmd("tab drop %s | %s" % (escSpecial(buf_name), line_nr))
+        else:
+            lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         lfCmd("norm! ^")
         lfCmd("norm! zz")
         lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")

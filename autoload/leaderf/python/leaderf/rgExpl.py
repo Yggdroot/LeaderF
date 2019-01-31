@@ -402,7 +402,10 @@ class RgExplManager(Manager):
 
         try:
             if buf_number == -1:
-                lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
+                if kwargs.get("mode", '') == 't':
+                    lfCmd("tab drop %s | %s" % (escSpecial(file), line_num))
+                else:
+                    lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
             else:
                 lfCmd("hide buffer +%s %s" % (line_num, buf_number))
             lfCmd("norm! zz")

@@ -79,7 +79,10 @@ class TagExplManager(Manager):
         res = right.split(';"\t', 1)
         tagaddress = res[0]
         try:
-            lfCmd("hide edit %s" % escSpecial(tagfile))
+            if kwargs.get("mode", '') == 't':
+                lfCmd("tab drop %s" % escSpecial(tagfile))
+            else:
+                lfCmd("hide edit %s" % escSpecial(tagfile))
         except vim.error as e: # E37
             lfPrintError(e)
 

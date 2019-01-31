@@ -240,7 +240,11 @@ class BufTagExplManager(Manager):
         tagname = items[0]
         line_nr = items[3].rsplit(":", 1)[1]
         buf_number = items[4]
-        lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
+        if kwargs.get("mode", '') == 't':
+            buf_name = lfEval("bufname(%s)" % buf_number)
+            lfCmd("tab drop %s | %s" % (escSpecial(buf_name), line_nr))
+        else:
+            lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         if "preview" not in kwargs:
             lfCmd("norm! ^")
             lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))

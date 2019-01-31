@@ -121,7 +121,10 @@ class Manager(object):
         try:
             if file.startswith('+'):
                 file = os.path.abspath(file)
-            lfCmd("hide edit %s" % escSpecial(file))
+            if kwargs.get("mode", '') == 't':
+                lfCmd("tab drop %s" % escSpecial(file))
+            else:
+                lfCmd("hide edit %s" % escSpecial(file))
         except vim.error as e: # E37
             lfPrintError(e)
 
@@ -1010,8 +1013,11 @@ class Manager(object):
                 lfCmd("split")
             elif mode == 'v':
                 lfCmd("vsplit")
-            elif mode == 't':
-                lfCmd("tabedit")
+
+            kwargs["mode"] = mode
+            tabpage_count = len(vim.tabpages)
+            self._acceptSelection(file, *args, **kwargs)
+            if mode == 't' and len(vim.tabpages) > tabpage_count:
                 tab_pos = int(lfEval("g:Lf_TabpagePosition"))
                 if tab_pos == 0:
                     lfCmd("tabm 0")
@@ -1019,7 +1025,6 @@ class Manager(object):
                     lfCmd("tabm -1")
                 elif tab_pos == 3:
                     lfCmd("tabm")
-            self._acceptSelection(file, *args, **kwargs)
 
     def accept(self, mode=''):
         if self._getInstance().isReverseOrder():
