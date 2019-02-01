@@ -549,6 +549,12 @@ g:Lf_MaxCount                                   *g:Lf_MaxCount*
     value is less than 1(<=0).
     Default value is 2000000.
 
+g:Lf_NoChdir                                    *g:Lf_NoChdir*
+    Don't change the current working directory when using `LeaderfFile dir` if
+    the value is 1, otherwise the current working directory will be changed
+    to `dir`.
+    Default value is 0.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

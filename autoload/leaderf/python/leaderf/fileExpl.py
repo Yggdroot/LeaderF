@@ -237,7 +237,7 @@ class FileExplorer(Explorer):
                 else:
                     recurse_submodules = ""
 
-                cmd = "git ls-files %s && git ls-files --others %s %s" % (recurse_submodules, no_ignore, ignore)
+                cmd = 'git ls-files %s "%s" && git ls-files --others %s %s "%s"' % (recurse_submodules, dir, no_ignore, ignore, dir)
                 self._external_cmd = cmd
                 return cmd
             elif self._exists(dir, ".hg"):
@@ -523,16 +523,20 @@ class FileExplorer(Explorer):
                     result += f.readlines()
             return result
 
+        dir = os.getcwd()
+
         if kwargs.get("arguments", {}).get("directory"):
             dir = kwargs.get("arguments", {}).get("directory")[0]
             if os.path.exists(os.path.expanduser(lfDecode(dir))):
-                lfCmd("silent cd %s" % dir)
+                if lfEval("get(g:, 'Lf_NoChdir', 0)") == '0':
+                    lfCmd("silent cd %s" % dir)
+                    dir = os.getcwd()
+                else:
+                    dir = os.path.abspath(lfDecode(dir))
             else:
                 lfCmd("echohl ErrorMsg | redraw | echon "
                       "'Unknown directory `%s`' | echohl NONE" % dir)
                 return None
-
-        dir = os.getcwd()
 
         no_ignore = kwargs.get("arguments", {}).get("--no-ignore")
         if no_ignore != self._no_ignore:
@@ -581,7 +585,7 @@ class FileExplorer(Explorer):
         return 'File'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.path.abspath(self._cur_dir)))
+        return escQuote(lfEncode(os.getcwd()))
 
     def supportsMulti(self):
         return True
