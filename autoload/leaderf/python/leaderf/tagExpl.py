@@ -15,7 +15,6 @@ from .manager import *
 #*****************************************************
 class TagExplorer(Explorer):
     def __init__(self):
-        os.stat_float_times(False)
         self._tag_list = []
         self._file_tags = {}    # a dict with (key, value) = (tag file name, [mtime,taglist])
 
