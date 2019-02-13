@@ -237,7 +237,7 @@ class FileExplorer(Explorer):
                 else:
                     recurse_submodules = ""
 
-                cmd = 'git ls-files %s "%s" && git ls-files --others %s %s "%s"' % (recurse_submodules, dir, no_ignore, ignore, dir)
+                cmd = '(cd %s && git ls-files %s && git ls-files --others %s %s) | sed "s,^,%s/," ' % (dir, recurse_submodules, no_ignore, ignore, dir)
                 self._external_cmd = cmd
                 return cmd
             elif self._exists(dir, ".hg"):
