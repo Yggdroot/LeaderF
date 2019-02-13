@@ -960,14 +960,20 @@ class Manager(object):
                 self._highlight_ids.append(id)
 
     def _regexFilter(self, iterable):
+        def noErrMatch(text, pattern):
+            try:
+                return '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" % (text, pattern))
+            except TypeError:   # python 2
+                return '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" % (text.replace('\x00', '\x01'), pattern))
+            except ValueError:  # python 3
+                return '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" % (text.replace('\x00', '\x01'), pattern))
+
         try:
             if ('-2' == lfEval("g:LfNoErrMsgMatch('', '%s')" % escQuote(self._cli.pattern))):
                 return iter([])
             else:
                 return (line for line in iterable
-                        if '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" %
-                        (escQuote(self._getDigest(line, 0).strip()),
-                         escQuote(self._cli.pattern))))
+                        if noErrMatch(escQuote(self._getDigest(line, 0).strip()), escQuote(self._cli.pattern)))
         except vim.error:
             return iter([])
 
