@@ -552,7 +552,9 @@ class FileExplorer(Explorer):
             cmd = self._buildCmd(dir, **kwargs)
             lfCmd("let g:Lf_Debug_Cmd = '%s'" % escQuote(cmd))
 
+            lfCmd("let g:Lf_FilesFromCache = 0")
             if lfEval("g:Lf_UseCache") == '1' and kwargs.get("refresh", False) == False:
+                lfCmd("let g:Lf_FilesFromCache = 1")
                 self._content = self._getFilesFromCache()
                 if self._content:
                     return self._content

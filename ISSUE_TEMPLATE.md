@@ -14,6 +14,7 @@ Make sure that you have the latest version of LeaderF.
 - Output of `:py print(sys.version)`: 
 - Output of `:py3 print(sys.version)`: 
 - Output of `:echo g:Lf_Debug_Cmd`: <!-- should only provide this information if it's an issue of :Leaderf file -->
+- Output of `:echo g:Lf_FilesFromCache`: <!-- should only provide this information if it's an issue of :Leaderf file -->
 - Operating system: <!-- use [x] to select, note: no space in between brackets -->
     - [ ] Linux
     - [ ] Mac OS X
