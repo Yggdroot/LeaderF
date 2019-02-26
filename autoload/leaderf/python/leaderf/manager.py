@@ -119,8 +119,9 @@ class Manager(object):
             return
         file = args[0]
         try:
-            if file.startswith('+'):
-                file = os.path.abspath(file)
+            if not os.path.isabs(file):
+                file = os.path.join(self._getInstance().getCwd(), file)
+
             if kwargs.get("mode", '') == 't':
                 lfCmd("tab drop %s" % escSpecial(file))
             else:
@@ -1194,6 +1195,7 @@ class Manager(object):
             content = self._content
         else:
             content = self._getExplorer().getContent(*args, **kwargs)
+            self._getInstance().setCwd(os.getcwd())
 
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")

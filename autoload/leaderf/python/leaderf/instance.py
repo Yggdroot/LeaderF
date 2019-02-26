@@ -38,6 +38,7 @@ class LfInstance(object):
         self._reverse_order = lfEval("get(g:, 'Lf_ReverseOrder', 0)") == '1'
         self._orig_pos = () # (tabpage, window, buffer)
         self._running_status = 0
+        self._current_working_directory = None
         self._highlightStl()
 
     def _initStlVar(self):
@@ -419,5 +420,10 @@ class LfInstance(object):
             line_nr = 1 + len(self._buffer_object) - self._window_object.cursor[0]
             lfCmd("let g:Lf_{}_StlLineNumber = '{}'".format(self._category, line_nr))
 
+    def setCwd(self, cwd):
+        self._current_working_directory = cwd
+
+    def getCwd(self):
+        return self._current_working_directory
 
 #  vim: set ts=4 sw=4 tw=0 et :

@@ -117,10 +117,14 @@ class MruExplManager(Manager):
         dirname = self._getDigest(line, 2)
         basename = self._getDigest(line, 1)
         try:
+            file = dirname + basename
+            if not os.path.isabs(file):
+                file = os.path.join(self._getInstance().getCwd(), file)
+
             if kwargs.get("mode", '') == 't':
-                lfCmd("tab drop %s" % escSpecial(dirname + basename))
+                lfCmd("tab drop %s" % escSpecial(file))
             else:
-                lfCmd("hide edit %s" % escSpecial(dirname + basename))
+                lfCmd("hide edit %s" % escSpecial(file))
         except vim.error as e: # E37
             lfPrintError(e)
 
