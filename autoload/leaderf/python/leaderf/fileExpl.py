@@ -631,23 +631,6 @@ class FileExplManager(Manager):
         help.append('" ---------------------------------------------------------')
         return help
 
-    def _restoreOrigCwd(self):
-        if self._orig_cwd is None:
-            return
-
-        # https://github.com/neovim/neovim/issues/8336
-        if lfEval("has('nvim')") == '1':
-            chdir = vim.chdir
-        else:
-            chdir = os.chdir
-
-        try:
-            if int(lfEval("&autochdir")) == 0 and os.getcwd() != self._orig_cwd:
-                chdir(self._orig_cwd)
-        except:
-            if os.getcwd() != self._orig_cwd:
-                chdir(self._orig_cwd)
-
     def _nearestAncestor(self, markers, path):
         """
         return the nearest ancestor path(including itself) of `path` that contains

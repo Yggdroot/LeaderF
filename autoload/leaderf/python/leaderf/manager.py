@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import vim
+import os
 import sys
 import time
 import operator
@@ -85,6 +86,7 @@ class Manager(object):
         self._reader_thread = None
         self._timer_id = None
         self._highlight_method = lambda : None
+        self._orig_cwd = None
         self._getExplClass()
 
     #**************************************************************
@@ -247,7 +249,21 @@ class Manager(object):
         pass
 
     def _restoreOrigCwd(self):
-        pass
+        if self._orig_cwd is None:
+            return
+
+        # https://github.com/neovim/neovim/issues/8336
+        if lfEval("has('nvim')") == '1':
+            chdir = vim.chdir
+        else:
+            chdir = os.chdir
+
+        try:
+            if int(lfEval("&autochdir")) == 0 and os.getcwd() != self._orig_cwd:
+                chdir(self._orig_cwd)
+        except:
+            if os.getcwd() != self._orig_cwd:
+                chdir(self._orig_cwd)
 
     def _needExit(self, line, arguments):
         return True

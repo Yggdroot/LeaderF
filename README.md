@@ -142,7 +142,8 @@ usage: Leaderf[!] rg [-h] [-A <NUM>] [-B <NUM>] [-C <NUM>]
                      [--iglob <GLOB>...] [--ignore-file <PATH>...]
                      [--type-add <TYPE_SPEC>...] [-t <TYPE>...] [-T <TYPE>...]
                      [--current-buffer | --all-buffers] [--recall] [--append]
-                     [--match-path] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
+                     [--match-path] [--wd-mode <MODE>] [--reverse]
+                     [--stayOpen] [--input <INPUT> | --cword]
                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
                      [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
                      [<PATH> [<PATH> ...]]
@@ -223,6 +224,8 @@ specific arguments:
   --recall              Recall last search. If the result window is closed, reopen it.
   --append              Append to the previous search results.
   --match-path          Match the file path when fuzzy searching.
+  --wd-mode <MODE>      Specify the working directory mode, value has the same
+                        meaning as g:Lf_WorkingDirectoryMode.
 
 common arguments:
   --reverse             show results in bottom-up order

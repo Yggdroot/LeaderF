@@ -391,8 +391,8 @@ class RgExplManager(Manager):
         line = args[0]
         m = re.match(r'^(.+?)[:-](\d+)[:-]', line)
         file, line_num = m.group(1, 2)
-        if file.startswith('+'):
-            file = os.path.abspath(file)
+        if not os.path.isabs(file):
+            file = os.path.join(self._getInstance().getCwd(), file)
 
         match = re.search(r'\d+_`No_Name_(\d+)`', file)
         if match:
@@ -553,6 +553,77 @@ class RgExplManager(Manager):
             if self._read_finished < 2:
                 self._timer_id = lfEval("timer_start(1, 'leaderf#Rg#TimerCallback', {'repeat': -1})")
 
+    def _nearestAncestor(self, markers, path):
+        """
+        return the nearest ancestor path(including itself) of `path` that contains
+        one of files or directories in `markers`.
+        `markers` is a list of file or directory names.
+        """
+        if os.name == 'nt':
+            # e.g. C:\\
+            root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
+        else:
+            root = '/'
+
+        path = os.path.abspath(path)
+        while path != root:
+            for name in markers:
+                if os.path.exists(os.path.join(path, name)):
+                    return path
+            path = os.path.abspath(os.path.join(path, ".."))
+
+        for name in markers:
+            if os.path.exists(os.path.join(path, name)):
+                return path
+
+        return ""
+
+    def startExplorer(self, win_pos, *args, **kwargs):
+        self._orig_cwd = os.getcwd()
+        root_markers = lfEval("g:Lf_RootMarkers")
+        mode = kwargs.get("arguments", {}).get("--wd-mode", ["c"])[0]
+        working_dir = lfEval("g:Lf_WorkingDirectory")
+
+        # https://github.com/neovim/neovim/issues/8336
+        if lfEval("has('nvim')") == '1':
+            chdir = vim.chdir
+        else:
+            chdir = os.chdir
+
+        if os.path.exists(working_dir) and os.path.isdir(working_dir):
+            chdir(working_dir)
+            super(RgExplManager, self).startExplorer(win_pos, *args, **kwargs)
+            return
+
+        cur_buf_name = lfDecode(vim.current.buffer.name)
+        fall_back = False
+        if 'a' in mode:
+            working_dir = self._nearestAncestor(root_markers, self._orig_cwd)
+            if working_dir: # there exists a root marker in nearest ancestor path
+                chdir(working_dir)
+            else:
+                fall_back = True
+        elif 'A' in mode:
+            if cur_buf_name:
+                working_dir = self._nearestAncestor(root_markers, os.path.dirname(cur_buf_name))
+            else:
+                working_dir = ""
+            if working_dir: # there exists a root marker in nearest ancestor path
+                chdir(working_dir)
+            else:
+                fall_back = True
+        else:
+            fall_back = True
+
+        if fall_back:
+            if 'f' in mode:
+                if cur_buf_name:
+                    chdir(os.path.dirname(cur_buf_name))
+            elif 'F' in mode:
+                if cur_buf_name and not os.path.dirname(cur_buf_name).startswith(self._orig_cwd):
+                    chdir(os.path.dirname(cur_buf_name))
+
+        super(RgExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
 #*****************************************************
 # rgExplManager is a singleton
