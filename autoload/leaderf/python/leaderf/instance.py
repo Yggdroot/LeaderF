@@ -111,6 +111,19 @@ class LfInstance(object):
     def _createBufWindow(self, win_pos):
         self._win_pos = win_pos
 
+        saved_eventignore = vim.options['eventignore']
+        vim.options['eventignore'] = 'all'
+        try:
+            orig_win = vim.current.window
+            for w in vim.windows:
+                vim.current.window = w
+                if lfEval("exists('w:lf_win_view')") == '0':
+                    lfCmd("let w:lf_win_view = {}")
+                lfCmd("let w:lf_win_view['%s'] = winsaveview()" % self._category)
+        finally:
+            vim.current.window = orig_win
+            vim.options['eventignore'] = saved_eventignore
+
         if win_pos != 'fullScreen':
             self._restore_sizes = lfEval("winrestcmd()")
             self._orig_win_count = len(vim.windows)
@@ -178,6 +191,18 @@ class LfInstance(object):
                   .format(self._category))
             lfCmd("autocmd VimResized * let g:Lf_VimResized = 1")
             lfCmd("augroup END")
+
+        saved_eventignore = vim.options['eventignore']
+        vim.options['eventignore'] = 'all'
+        try:
+            orig_win = vim.current.window
+            for w in vim.windows:
+                vim.current.window = w
+                if lfEval("exists('w:lf_win_view')") != '0' and lfEval("has_key(w:lf_win_view, '%s')" % self._category) != '0':
+                    lfCmd("call winrestview(w:lf_win_view['%s'])" % self._category)
+        finally:
+            vim.current.window = orig_win
+            vim.options['eventignore'] = saved_eventignore
 
     def _enterOpeningBuffer(self):
         if (self._tabpage_object and self._tabpage_object.valid
@@ -278,6 +303,18 @@ class LfInstance(object):
                     lfCmd(self._restore_sizes) # fix issue #102
             else:
                 lfCmd("bd")
+
+            saved_eventignore = vim.options['eventignore']
+            vim.options['eventignore'] = 'all'
+            try:
+                orig_win = vim.current.window
+                for w in vim.windows:
+                    vim.current.window = w
+                    if lfEval("exists('w:lf_win_view')") != '0' and lfEval("has_key(w:lf_win_view, '%s')" % self._category) != '0':
+                        lfCmd("call winrestview(w:lf_win_view['%s'])" % self._category)
+            finally:
+                vim.current.window = orig_win
+                vim.options['eventignore'] = saved_eventignore
 
         lfCmd("echo")
 
