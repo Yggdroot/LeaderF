@@ -166,12 +166,16 @@ command! -bar -nargs=0 LeaderfRgInteractive call leaderf#Rg#Interactive()
 command! -bar -nargs=0 LeaderfRgRecall exec "Leaderf! rg --recall"
 
 try
-    exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
+    if g:Lf_ShortcutF != ""
+        exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
+    endif
 catch /^Vim\%((\a\+)\)\=:E227/
 endtry
 
 try
-    exec 'nnoremap <silent><unique> ' g:Lf_ShortcutB ':<C-U>LeaderfBuffer<CR>'
+    if g:Lf_ShortcutB != ""
+        exec 'nnoremap <silent><unique> ' g:Lf_ShortcutB ':<C-U>LeaderfBuffer<CR>'
+    endif
 catch /^Vim\%((\a\+)\)\=:E227/
 endtry
 
