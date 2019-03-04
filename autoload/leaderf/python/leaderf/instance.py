@@ -286,6 +286,19 @@ class LfInstance(object):
 
             lfCmd("set showtabline=%d" % self._show_tabline)
         else:
+            saved_eventignore = vim.options['eventignore']
+            vim.options['eventignore'] = 'all'
+            try:
+                orig_win = vim.current.window
+                for w in vim.windows:
+                    vim.current.window = w
+                    if lfEval("exists('w:lf_win_view')") == '0':
+                        lfCmd("let w:lf_win_view = {}")
+                    lfCmd("let w:lf_win_view['%s'] = winsaveview()" % self._category)
+            finally:
+                vim.current.window = orig_win
+                vim.options['eventignore'] = saved_eventignore
+
             if len(vim.windows) > 1:
                 lfCmd("silent! hide")
                 if self._orig_win_id is not None:
