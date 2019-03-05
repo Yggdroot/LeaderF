@@ -80,7 +80,8 @@ function! leaderf#Rg#Interactive()
         echohl Question
         let pattern = input("Search pattern: ")
         let glob = input("Search in files(e.g., *.c, *.cpp): ", "*")
-        exec printf("Leaderf rg %s%s -g %s", pattern == '' ? '' : '-e ', pattern, join(split(glob), ' -g '))
+        let globList = map(split(glob, '[ ,]\+'), 'v:val =~ ''^".*"$'' ? v:val : ''"''.v:val.''"''')
+        exec printf("Leaderf rg %s%s -g %s", pattern == '' ? '' : '-e ', pattern, join(globList, ' -g '))
     finally
         echohl None
     endtry
