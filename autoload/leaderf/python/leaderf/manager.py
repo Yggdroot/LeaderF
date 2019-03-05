@@ -127,7 +127,7 @@ class Manager(object):
             if kwargs.get("mode", '') == 't':
                 lfCmd("tab drop %s" % escSpecial(file))
             else:
-                lfCmd("hide edit %s" % escSpecial(file))
+                lfCmd("silent hide edit %s" % escSpecial(file))
         except vim.error as e: # E37
             lfPrintError(e)
 
