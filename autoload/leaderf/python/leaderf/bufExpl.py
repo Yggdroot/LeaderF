@@ -118,7 +118,11 @@ class BufExplManager(Manager):
             return
         line = args[0]
         buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
-        lfCmd("hide buffer %d" % buf_number)
+        if kwargs.get("mode", '') == 't':
+            buf_name = lfEval("bufname(%s)" % buf_number)
+            lfCmd("tab drop %s" % escSpecial(buf_name))
+        else:
+            lfCmd("hide buffer %d" % buf_number)
 
     def _getDigest(self, line, mode):
         """
