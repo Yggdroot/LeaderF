@@ -581,7 +581,8 @@ class RgExplManager(Manager):
     def startExplorer(self, win_pos, *args, **kwargs):
         self._orig_cwd = os.getcwd()
         root_markers = lfEval("g:Lf_RootMarkers")
-        mode = kwargs.get("arguments", {}).get("--wd-mode", ["c"])[0]
+        wd_mode = lfEval("g:Lf_WorkingDirectoryMode")
+        mode = kwargs.get("arguments", {}).get("--wd-mode", [wd_mode])[0]
         working_dir = lfEval("g:Lf_WorkingDirectory")
 
         # https://github.com/neovim/neovim/issues/8336
