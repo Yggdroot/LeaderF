@@ -1261,6 +1261,8 @@ class Manager(object):
             else:
                 self._getInstance().setBuffer(self._content[:self._initial_count])
 
+            if lfEval("has('nvim')") == '1':
+                lfCmd("redrawstatus")
             self._callback = self._workInIdle
             if not kwargs.get('bang', 0):
                 self.input()

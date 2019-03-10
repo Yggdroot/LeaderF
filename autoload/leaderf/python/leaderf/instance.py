@@ -240,6 +240,8 @@ class LfInstance(object):
 
     def setStlResultsCount(self, count):
         lfCmd("let g:Lf_{}_StlResultsCount = '{}'".format(self._category, count))
+        if lfEval("has('nvim')") == '1':
+            lfCmd("redrawstatus")
 
     def setStlRunning(self, running):
         if running:
@@ -335,9 +337,10 @@ class LfInstance(object):
 
     def setBuffer(self, content):
         self.buffer.options['modifiable'] = True
-        # if lfEval("has('nvim')") == '1':
-        #     # NvimError: string cannot contain newlines
-        #     content = [ line.rstrip("\r\n") for line in content ]
+        if lfEval("has('nvim')") == '1':
+            if isinstance(content, list) and len(content) > 0 and len(content[0]) != len(content[0].rstrip("\r\n")):
+                # NvimError: string cannot contain newlines
+                content = [ line.rstrip("\r\n") for line in content ]
         try:
             if self._reverse_order:
                 orig_row = self._window_object.cursor[0]
