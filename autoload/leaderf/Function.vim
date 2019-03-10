@@ -64,3 +64,7 @@ endfunction
 function! leaderf#Function#cleanup()
     call leaderf#LfPy("functionExplManager._beforeExit()")
 endfunction
+
+function! leaderf#Function#TimerCallback(id)
+    call leaderf#LfPy("functionExplManager._callback(bang=True)")
+endfunction

@@ -314,6 +314,9 @@ class BufTagExplManager(Manager):
         for i in self._match_ids:
             lfCmd("silent! call matchdelete(%d)" % i)
         self._match_ids = []
+        if self._timer_id is not None:
+            lfCmd("call timer_stop(%s)" % self._timer_id)
+            self._timer_id = None
 
     def _getUnit(self):
         """
@@ -446,10 +449,24 @@ class BufTagExplManager(Manager):
             vim.options['eventignore'] = saved_eventignore
 
     def _bangEnter(self):
+        super(BufTagExplManager, self)._bangEnter()
+        if "--all" in self._arguments and not self._is_content_list:
+            if lfEval("exists('*timer_start')") == '0':
+                lfCmd("echohl Error | redraw | echo ' E117: Unknown function: timer_start' | echohl NONE")
+                return
+            self._callback(bang=True)
+            if self._read_finished < 2:
+                self._timer_id = lfEval("timer_start(1, 'leaderf#BufTag#TimerCallback', {'repeat': -1})")
+        else:
+            self._relocateCursor()
+
+    def _bangReadFinished(self):
         self._relocateCursor()
 
     def _relocateCursor(self):
         inst = self._getInstance()
+        if inst.empty():
+            return
         orig_buf_nr = inst.getOriginalPos()[2].number
         orig_line = inst.getOriginalCursor()[0]
         tags = []

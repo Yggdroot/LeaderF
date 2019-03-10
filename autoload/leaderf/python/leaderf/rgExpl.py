@@ -392,6 +392,8 @@ class RgExplManager(Manager):
         m = re.match(r'^(.+?)[:-](\d+)[:-]', line)
         file, line_num = m.group(1, 2)
         if not os.path.isabs(file):
+            if file.startswith(".\\") or file.startswith("./"):
+                file = file[2:]
             file = os.path.join(self._getInstance().getCwd(), file)
 
         match = re.search(r'\d+_`No_Name_(\d+)`', file)

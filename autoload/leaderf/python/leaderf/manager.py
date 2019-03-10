@@ -227,6 +227,9 @@ class Manager(object):
     def _bangEnter(self):
         pass
 
+    def _bangReadFinished(self):
+        pass
+
     def _getList(self, pairs):
         """
         this function can be overridden
@@ -1262,6 +1265,7 @@ class Manager(object):
             if not kwargs.get('bang', 0):
                 self.input()
             else:
+                self._getInstance().appendBuffer(self._content[self._initial_count:])
                 lfCmd("echo")
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
@@ -1306,12 +1310,17 @@ class Manager(object):
             self._callback = partial(self._workInIdle, content)
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
-                self.input()
             else:
                 self._content = []
                 self._offset_in_content = 0
                 self._read_finished = 0
+
+            if not kwargs.get('bang', 0):
                 self.input()
+            else:
+                lfCmd("echo")
+                self._getInstance().buffer.options['modifiable'] = False
+                self._bangEnter()
 
         self._launched = True
 
@@ -1384,6 +1393,9 @@ class Manager(object):
                         if self._timer_id is not None:
                             lfCmd("call timer_stop(%s)" % self._timer_id)
                             self._timer_id = None
+
+                        self._bangReadFinished()
+
                         lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
                     else:
                         self._getInstance().setBuffer(self._content[:self._initial_count])

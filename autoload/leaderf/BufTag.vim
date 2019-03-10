@@ -64,3 +64,7 @@ endfunction
 function! leaderf#BufTag#cleanup()
     call leaderf#LfPy("bufTagExplManager._beforeExit()")
 endfunction
+
+function! leaderf#BufTag#TimerCallback(id)
+    call leaderf#LfPy("bufTagExplManager._callback(bang=True)")
+endfunction
