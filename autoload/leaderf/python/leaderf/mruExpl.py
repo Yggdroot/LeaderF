@@ -119,7 +119,10 @@ class MruExplManager(Manager):
         try:
             file = dirname + basename
             if not os.path.isabs(file):
-                file = os.path.join(self._getInstance().getCwd(), file)
+                if file.startswith(".\\") or file.startswith("./"):
+                    file = file[2:]
+                file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+                file = lfEncode(file)
 
             if kwargs.get("mode", '') == 't':
                 lfCmd("tab drop %s" % escSpecial(file))

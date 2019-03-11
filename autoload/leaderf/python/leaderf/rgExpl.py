@@ -394,7 +394,8 @@ class RgExplManager(Manager):
         if not os.path.isabs(file):
             if file.startswith(".\\") or file.startswith("./"):
                 file = file[2:]
-            file = os.path.join(self._getInstance().getCwd(), file)
+            file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+            file = lfEncode(file)
 
         match = re.search(r'\d+_`No_Name_(\d+)`', file)
         if match:
