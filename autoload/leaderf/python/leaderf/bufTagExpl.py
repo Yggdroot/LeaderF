@@ -79,7 +79,7 @@ class BufTagExplorer(Explorer):
                 yield list(itertools.chain(tag_list, itertools.chain.from_iterable(exe_taglist)))
 
     def _getTagResult(self, buffer):
-        if not buffer.name:
+        if not buffer.name or lfEval("bufloaded(%d)" % buffer.number) == '0':
             return []
         changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % buffer.number))
         # there is no change since last call
@@ -123,7 +123,7 @@ class BufTagExplorer(Explorer):
         return (buffer, result)
 
     def _formatResult(self, buffer, result):
-        if not buffer.name:
+        if not buffer.name or lfEval("bufloaded(%d)" % buffer.number) == '0':
             return []
 
         # a list of [tag, file, line, kind, scope]
