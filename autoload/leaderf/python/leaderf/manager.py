@@ -1096,12 +1096,19 @@ class Manager(object):
             if cwd != win_local_cwd:
                 chdir(cwd)
 
+            orig_cwd = os.getcwd()
             if mode == '':
                 self._argaddFiles(files)
                 self._accept(files[0], mode)
             else:
                 for file in files:
                     self._accept(file, mode)
+
+            if os.getcwd() != orig_cwd:
+                dir_changed_by_autocmd = True
+            else:
+                dir_changed_by_autocmd = False
+
             need_exit = True
         else:
             file = self._getInstance().currentLine
@@ -1121,11 +1128,17 @@ class Manager(object):
             if cwd != win_local_cwd:
                 chdir(cwd)
 
+            orig_cwd = os.getcwd()
             self._accept(file, mode, self._getInstance().buffer, line_nr) # for bufTag
+            if os.getcwd() != orig_cwd:
+                dir_changed_by_autocmd = True
+            else:
+                dir_changed_by_autocmd = False
 
         if need_exit:
             self._setAutochdir()
-            self._restoreOrigCwd()
+            if dir_changed_by_autocmd == False:
+                self._restoreOrigCwd()
             return None
         else:
             self._beforeExit()
