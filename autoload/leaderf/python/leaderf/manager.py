@@ -384,7 +384,7 @@ class Manager(object):
         if self._getInstance().isReverseOrder() and self._getInstance().getCurrentPos()[0] == 1:
             adjust = True
             self._setResultContent()
-            if self._cli.pattern \
+            if self._cli.pattern and self._cli.isFuzzy \
                     and len(self._highlight_pos) < (len(self._getInstance().buffer) - self._help_length) // self._getUnit() \
                     and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
                 self._highlight_method()
@@ -411,7 +411,7 @@ class Manager(object):
     def _pageUp(self):
         if self._getInstance().isReverseOrder():
             self._setResultContent()
-            if self._cli.pattern \
+            if self._cli.pattern and self._cli.isFuzzy \
                     and len(self._highlight_pos) < (len(self._getInstance().buffer) - self._help_length) // self._getUnit() \
                     and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
                 self._highlight_method()
