@@ -335,6 +335,13 @@ class LfInstance(object):
 
         self._after_exit()
 
+    def _actualLength(self, buffer):
+        num = 0
+        columns = int(lfEval("&columns"))
+        for i in buffer:
+            num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + columns - 1)// columns
+        return num
+
     def setBuffer(self, content):
         self.buffer.options['modifiable'] = True
         if lfEval("has('nvim')") == '1':
@@ -349,14 +356,17 @@ class LfInstance(object):
                 self._buffer_object[:] = content[::-1]
                 buffer_len = len(self._buffer_object)
                 if buffer_len < self._initial_win_height:
-                    self._window_object.height = buffer_len
+                    self._window_object.height = min(self._initial_win_height, self._actualLength(self._buffer_object))
                 elif self._window_object.height < self._initial_win_height:
                     self._window_object.height = self._initial_win_height
 
                 try:
                     self._window_object.cursor = (orig_row + buffer_len - orig_buf_len, 0)
+                    if self._window_object.cursor == (buffer_len, 0):
+                        lfCmd("normal! Gzb")
                 except vim.error:
                     self._window_object.cursor = (buffer_len, 0)
+                    lfCmd("normal! Gzb")
 
                 self.setLineNumber()
             else:
@@ -374,7 +384,7 @@ class LfInstance(object):
         if self._reverse_order:
             buffer_len = len(self._buffer_object)
             if buffer_len < self._initial_win_height:
-                self._window_object.height = buffer_len
+                self._window_object.height = min(self._initial_win_height, self._actualLength(self._buffer_object))
             elif self._window_object.height < self._initial_win_height:
                 self._window_object.height = self._initial_win_height
             lfCmd("normal! Gzb")
