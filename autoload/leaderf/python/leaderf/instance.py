@@ -356,17 +356,20 @@ class LfInstance(object):
                 self._buffer_object[:] = content[::-1]
                 buffer_len = len(self._buffer_object)
                 if buffer_len < self._initial_win_height:
-                    self._window_object.height = min(self._initial_win_height, self._actualLength(self._buffer_object))
+                    if "--nowrap" not in self._arguments:
+                        self._window_object.height = min(self._initial_win_height, self._actualLength(self._buffer_object))
+                    else:
+                        self._window_object.height = buffer_len
                 elif self._window_object.height < self._initial_win_height:
                     self._window_object.height = self._initial_win_height
 
                 try:
                     self._window_object.cursor = (orig_row + buffer_len - orig_buf_len, 0)
                     if self._window_object.cursor == (buffer_len, 0):
-                        lfCmd("normal! Gzb")
+                        lfCmd("normal! zb")
                 except vim.error:
                     self._window_object.cursor = (buffer_len, 0)
-                    lfCmd("normal! Gzb")
+                    lfCmd("normal! zb")
 
                 self.setLineNumber()
             else:
@@ -384,7 +387,10 @@ class LfInstance(object):
         if self._reverse_order:
             buffer_len = len(self._buffer_object)
             if buffer_len < self._initial_win_height:
-                self._window_object.height = min(self._initial_win_height, self._actualLength(self._buffer_object))
+                if "--nowrap" not in self._arguments:
+                    self._window_object.height = min(self._initial_win_height, self._actualLength(self._buffer_object))
+                else:
+                    self._window_object.height = buffer_len
             elif self._window_object.height < self._initial_win_height:
                 self._window_object.height = self._initial_win_height
             lfCmd("normal! Gzb")
