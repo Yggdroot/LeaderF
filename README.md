@@ -1,7 +1,7 @@
 LeaderF
 =======
 
-This plugin is mainly used for locating files, buffers, mrus, tags in large project.
+This plugin is mainly used for locating files, buffers, mrus, ctags, gtags, etc. in large project.
 
  - Written in Python.
  - Support fuzzy and regex searching.
@@ -130,20 +130,16 @@ If [!] is given, enter normal mode directly.
 use `:Leaderf <subcommand> -h` to get specific help of subcommand, e.g., `:Leaderf rg -h`
 
 ```
-usage: Leaderf[!] rg [-h] [-A <NUM>] [-B <NUM>] [-C <NUM>]
-                     [--context-separator <SEPARATOR>] [-e <PATTERN>...] [-F]
-                     [-i] [-L] [-P] [-S] [-s] [-v] [-w] [-x] [--hidden]
-                     [--no-config] [--no-ignore] [--no-ignore-global]
-                     [--no-ignore-parent] [--no-ignore-vcs]
-                     [--no-pcre2-unicode] [-E <ENCODING>] [-M <NUM>]
-                     [-m <NUM>] [--max-depth <NUM>] [--max-filesize <NUM+SUFFIX?>]
-                     [--path-separator <SEPARATOR>] [--sort <SORTBY>]
-                     [--sortr <SORTBY>] [-f <PATTERNFILE>...] [-g <GLOB>...]
-                     [--iglob <GLOB>...] [--ignore-file <PATH>...]
-                     [--type-add <TYPE_SPEC>...] [-t <TYPE>...] [-T <TYPE>...]
-                     [--current-buffer | --all-buffers] [--recall] [--append]
-                     [--match-path] [--wd-mode <MODE>] [--reverse]
-                     [--stayOpen] [--input <INPUT> | --cword]
+usage: Leaderf[!] rg [-h] [-A <NUM>] [-B <NUM>] [-C <NUM>] [--context-separator <SEPARATOR>]
+                     [-e <PATTERN>...] [-F] [-i] [-L] [-P] [-S] [-s] [-v] [-w] [-x] [--hidden]
+                     [--no-config] [--no-ignore] [--no-ignore-global] [--no-ignore-parent]
+                     [--no-ignore-vcs] [--no-pcre2-unicode] [-E <ENCODING>] [-M <NUM>] [-m <NUM>]
+                     [--max-depth <NUM>] [--max-filesize <NUM+SUFFIX?>] [--path-separator <SEPARATOR>]
+                     [--sort <SORTBY>] [--sortr <SORTBY>] [-f <PATTERNFILE>...] [-g <GLOB>...]
+                     [--iglob <GLOB>...] [--ignore-file <PATH>...] [--type-add <TYPE_SPEC>...]
+                     [-t <TYPE>...] [-T <TYPE>...] [--current-buffer | --all-buffers] [--recall]
+                     [--append] [--match-path] [--wd-mode <MODE>] [--reverse] [--stayOpen]
+                     [--input <INPUT> | --cword]
                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
                      [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
                      [<PATH> [<PATH> ...]]
@@ -175,8 +171,8 @@ specific arguments:
   -w, --word-regexp     Only show matches surrounded by word boundaries. This is roughly equivalent to
                         putting \b before and after all of the search patterns.
   -x, --line-regexp     Only show matches surrounded by line boundaries.
-  --hidden              Search hidden files and directories. By default, hidden files and directories
-                        are skipped.
+  --hidden              Search hidden files and directories. By default, hidden files and directories are
+                        skipped.
   --no-config           Never read configuration files. When this flag is present, rg will not respect
                         the RIPGREP_CONFIG_PATH environment variable.
   --no-ignore           Don't respect ignore files (.gitignore, .ignore, etc.). This implies
@@ -186,8 +182,8 @@ specific arguments:
                         `$HOME/.config/git/ignore`).
   --no-ignore-parent    Don't respect ignore files (.gitignore, .ignore, etc.) in parent directories.
   --no-ignore-vcs       Don't respect version control ignore files (.gitignore, etc.).
-  --no-pcre2-unicode    When PCRE2 matching is enabled, this flag will disable
-                        Unicode mode, which is otherwise enabled by default.
+  --no-pcre2-unicode    When PCRE2 matching is enabled, this flag will disable Unicode mode, which is
+                        otherwise enabled by default.
   -E <ENCODING>, --encoding <ENCODING>
                         Specify the text encoding that rg will use on all files searched.
   -M <NUM>, --max-columns <NUM>
@@ -202,8 +198,8 @@ specific arguments:
   --sort <SORTBY>       This flag enables sorting of results in ascending order.
   --sortr <SORTBY>      This flag enables sorting of results in descending order.
   -f <PATTERNFILE>..., --file <PATTERNFILE>...
-                        Search for patterns from the given file, with one pattern per line.
-                        (This option can be provided multiple times.)
+                        Search for patterns from the given file, with one pattern per line.(This option
+                        can be provided multiple times.)
   -g <GLOB>..., --glob <GLOB>...
                         Include or exclude files and directories for searching that match the given
                         glob.(This option can be provided multiple times.)
@@ -224,8 +220,8 @@ specific arguments:
   --recall              Recall last search. If the result window is closed, reopen it.
   --append              Append to the previous search results.
   --match-path          Match the file path when fuzzy searching.
-  --wd-mode <MODE>      Specify the working directory mode, value has the same
-                        meaning as g:Lf_WorkingDirectoryMode.
+  --wd-mode <MODE>      Specify the working directory mode, value has the same meaning as
+                        g:Lf_WorkingDirectoryMode.
 
 common arguments:
   --reverse             show results in bottom-up order

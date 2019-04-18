@@ -3,6 +3,7 @@ import sys
 import shlex
 import signal
 import threading
+import itertools
 import subprocess
 from .utils import *
 
@@ -42,13 +43,14 @@ class AsyncExecutor(object):
             if is_stdout:
                 self._finished = True
 
-    def execute(self, cmd, encoding=None, cleanup=None):
+    def execute(self, cmd, encoding=None, cleanup=None, env=None):
         if os.name == 'nt':
             self._process = subprocess.Popen(cmd, bufsize=-1,
                                              stdin=subprocess.PIPE,
                                              stdout=subprocess.PIPE,
                                              stderr=subprocess.PIPE,
                                              shell=True,
+                                             env=env,
                                              universal_newlines=False)
         else:
             self._process = subprocess.Popen(cmd, bufsize=-1,
@@ -56,6 +58,7 @@ class AsyncExecutor(object):
                                              stderr=subprocess.PIPE,
                                              preexec_fn=os.setsid,
                                              shell=True,
+                                             env=env,
                                              universal_newlines=False)
 
         self._finished = False
@@ -97,6 +100,15 @@ class AsyncExecutor(object):
             self._encoding = encoding
             self._cleanup = cleanup
             self._process = process
+            self._results = []
+
+        def __add__(self, iterable):
+            self._results.append(iterable)
+            return self
+
+        def __iadd__(self, iterable):
+            self._results.append(iterable)
+            return self
 
         def __iter__(self):
             try:
@@ -126,6 +138,9 @@ class AsyncExecutor(object):
 
                 if self._cleanup:
                     self._cleanup()
+
+            for i in itertools.chain.from_iterable(self._results):
+                yield i
 
 
 if __name__ == "__main__":

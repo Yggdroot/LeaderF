@@ -77,7 +77,7 @@ class ColorschemeExplManager(Manager):
         help = []
         help.append('" <CR>/<double-click>/o : execute command under cursor')
         help.append('" i/<Tab> : switch to input mode')
-        help.append('" q/<Esc> : quit')
+        help.append('" q : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
         return help

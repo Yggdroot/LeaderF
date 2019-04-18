@@ -63,6 +63,14 @@ augroup LeaderF_Mru
                 \ call lfMru#recordBuffer(expand('<abuf>'))
 augroup END
 
+augroup LeaderF_Gtags
+    if get(g:, 'Lf_GtagsAutoGenerate', 0) == 1
+        autocmd!
+        autocmd BufRead * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 0)
+        autocmd BufWritePost * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 1)
+    endif
+augroup END
+
 noremap <silent> <Plug>LeaderfFileTop        :<C-U>call leaderf#File#startExpl('top')<CR>
 noremap <silent> <Plug>LeaderfFileBottom     :<C-U>call leaderf#File#startExpl('bottom')<CR>
 noremap <silent> <Plug>LeaderfFileLeft       :<C-U>call leaderf#File#startExpl('left')<CR>

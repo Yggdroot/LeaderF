@@ -119,10 +119,8 @@ class MruExplManager(Manager):
         try:
             file = dirname + basename
             if not os.path.isabs(file):
-                if file.startswith(".\\") or file.startswith("./"):
-                    file = file[2:]
                 file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
-                file = lfEncode(file)
+                file = os.path.normpath(lfEncode(file))
 
             if kwargs.get("mode", '') == 't':
                 lfCmd("tab drop %s" % escSpecial(file))
@@ -197,7 +195,7 @@ class MruExplManager(Manager):
         help.append('" a : select all files')
         help.append('" c : clear all selections')
         help.append('" p : preview the file')
-        help.append('" q/<Esc> : quit')
+        help.append('" q : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
         return help
@@ -224,7 +222,7 @@ class MruExplManager(Manager):
         self._explorer.delFromCache(dirname + basename)
         if len(self._content) > 0:
             self._content.remove(line)
-        # `del vim.current.line` does not work in neovim 
+        # `del vim.current.line` does not work in neovim
         # https://github.com/neovim/neovim/issues/9361
         del vim.current.buffer[vim.current.window.cursor[0] - 1]
         lfCmd("setlocal nomodifiable")

@@ -268,7 +268,7 @@ struct FuzzyEngine
         pthread_mutex_lock(&(queue).mutex);                                         \
         --(queue).unfinished_tasks;                                                 \
         if ( (queue).unfinished_tasks <= 0 )                                        \
-            pthread_cond_broadcast(&(queue).task_cond);                             \
+            pthread_cond_signal(&(queue).task_cond);                                \
         pthread_mutex_unlock(&(queue).mutex);                                       \
     } while(0)
 

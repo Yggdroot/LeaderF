@@ -122,10 +122,8 @@ class Manager(object):
         file = args[0]
         try:
             if not os.path.isabs(file):
-                if file.startswith(".\\") or file.startswith("./"):
-                    file = file[2:]
                 file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
-                file = lfEncode(file)
+                file = os.path.normpath(lfEncode(file))
 
             if kwargs.get("mode", '') == 't':
                 lfCmd("tab drop %s" % escSpecial(file))
@@ -1226,8 +1224,13 @@ class Manager(object):
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
 
+        if self._getExplorer().getStlCategory() in ["Gtags"] and ("--update" in self._arguments
+                or "--remove" in self._arguments):
+            self._getExplorer().getContent(*args, **kwargs)
+            return
+
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
-        if self._getExplorer().getStlCategory() in ["Rg"] and "--recall" in self._arguments:
+        if self._getExplorer().getStlCategory() in ["Rg", "Gtags"] and "--recall" in self._arguments:
             content = self._content
         else:
             content = self._getExplorer().getContent(*args, **kwargs)
@@ -1294,7 +1297,7 @@ class Manager(object):
             if lfEval("g:Lf_CursorBlink") == '0':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
             else:
-                if self._getExplorer().getStlCategory() in ["Rg"]:
+                if self._getExplorer().getStlCategory() in ["Rg", "Gtags"]:
                     if "--append" in self._arguments:
                         self._offset_in_content = len(self._content)
                         self._help_length = self._help_length_bak

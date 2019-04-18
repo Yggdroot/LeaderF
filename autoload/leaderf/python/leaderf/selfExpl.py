@@ -35,7 +35,7 @@ class SelfExplorer(Explorer):
             '16 LeaderfHistorySearch    "execute the search command in the history"',
             '17 LeaderfHelp             "navigate the help tags"',
             '18 LeaderfColorscheme      "switch between colorschemes"'
-            ] 
+            ]
 
     def getContent(self, *args, **kwargs):
         extra_content = lfEval("g:Lf_SelfContent")
@@ -117,7 +117,7 @@ class SelfExplManager(Manager):
         help = []
         help.append('" <CR>/<double-click>/o : execute command under cursor')
         help.append('" i/<Tab> : switch to input mode')
-        help.append('" q/<Esc> : quit')
+        help.append('" q : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
         return help

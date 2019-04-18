@@ -392,10 +392,8 @@ class RgExplManager(Manager):
         m = re.match(r'^(.+?)[:-](\d+)[:-]', line)
         file, line_num = m.group(1, 2)
         if not os.path.isabs(file):
-            if file.startswith(".\\") or file.startswith("./"):
-                file = file[2:]
             file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
-            file = lfEncode(file)
+            file = os.path.normpath(lfEncode(file))
 
         match = re.search(r'\d+_`No_Name_(\d+)`', file)
         if match:
@@ -495,8 +493,9 @@ class RgExplManager(Manager):
         help.append('" v : open file under cursor in a vertically split window')
         help.append('" t : open file under cursor in a new tabpage')
         help.append('" p : preview the result')
+        help.append('" d : delete the line under the cursor')
         help.append('" i/<Tab> : switch to input mode')
-        help.append('" q/<Esc> : quit')
+        help.append('" q : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
         return help
@@ -628,6 +627,19 @@ class RgExplManager(Manager):
                     chdir(os.path.dirname(cur_buf_name))
 
         super(RgExplManager, self).startExplorer(win_pos, *args, **kwargs)
+
+    def deleteCurrentLine(self):
+        if vim.current.window.cursor[0] <= self._help_length:
+            return
+        lfCmd("setlocal modifiable")
+        line = vim.current.line
+        if len(self._content) > 0:
+            self._content.remove(line)
+        # `del vim.current.line` does not work in neovim
+        # https://github.com/neovim/neovim/issues/9361
+        del vim.current.buffer[vim.current.window.cursor[0] - 1]
+        lfCmd("setlocal nomodifiable")
+
 
 #*****************************************************
 # rgExplManager is a singleton

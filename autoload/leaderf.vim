@@ -125,7 +125,12 @@ call s:InitDict('g:Lf_PreviewResult', {
 call s:InitDict('g:Lf_NormalMap', {})
 call s:InitVar('g:Lf_Extensions', {})
 call s:InitDict('g:Lf_CtagsFuncOpts', {})
-call s:InitDict('g:Lf_MaxCount', 2000000)
+call s:InitVar('g:Lf_MaxCount', 2000000)
+call s:InitDict('g:Lf_GtagsfilesCmd', {
+            \ '.git': 'git ls-files --recurse-submodules',
+            \ '.hg': 'hg files',
+            \ 'default': 'rg --no-messages --files'
+            \})
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
@@ -239,3 +244,13 @@ function! leaderf#LfPy(cmd)
     exec g:Lf_py . a:cmd
 endfunction
 
+" return the visually selected text and quote it with double quote
+function! leaderf#visual()
+    try
+        let x_save = @x
+        norm! gv"xy
+        return '"' . escape(@x, '"') . '"'
+    finally
+        let @x = x_save
+    endtry
+endfunction

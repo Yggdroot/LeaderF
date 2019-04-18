@@ -48,6 +48,7 @@ let g:Lf_Helps = {
             \ "colorscheme":    "switch between colorschemes",
             \ "self":           "execute the commands of itself",
             \ "rg":             "grep using rg",
+            \ "gtags":          "navigate tags using the gtags",
             \ }
 
 let g:Lf_Arguments = {
@@ -137,6 +138,33 @@ let g:Lf_Arguments = {
             \           {"name": ["--append"], "nargs": 0, "help": "Append to the previous search results."},
             \           {"name": ["--match-path"], "nargs": 0, "help": "Match the file path when fuzzy searching."},
             \           {"name": ["--wd-mode"], "nargs": 1, "metavar": "<MODE>", "help": "Specify the working directory mode, value has the same meaning as g:Lf_WorkingDirectoryMode."},
+            \   ],
+            \ "gtags":[
+            \           [
+            \              {"name": ["--update"], "nargs": 0, "help": "Create tag files if tag files do not exist, update the tag files otherwise."},
+            \              {"name": ["--remove"], "nargs": 0, "help": "Remove the tag files generated."},
+            \           ],
+            \           {"name": ["--accept-dotfiles"], "nargs": 0, "help": "Accept files and directories whose names begin with a dot.  By default, gtags ignores them."},
+            \           {"name": ["--skip-unreadable"], "nargs": 0, "help": "Skip unreadable files."},
+            \           {"name": ["--gtagsconf"], "nargs": 1, "metavar": "<FILE>", "help": "Set environment variable GTAGSCONF to <FILE>."},
+            \           {"name": ["--gtagslabel"], "nargs": 1, "metavar": "<LABEL>", "help": "Set environment variable GTAGSLABEL to <LABEL>."},
+            \           {"name": ["--skip-symlink"], "nargs": "?", "metavar": "<TYPE>", "help": "Skip symbolic links. If type is 'f' then skip only symbolic links for file, else if 'd' then skip only symbolic links for directory. The default value of type is 'a' (all symbolic links)."},
+            \           {"name": ["--gtagslibpath"], "nargs": "+", "metavar": "<PATH>", "help": "Specify the paths to search for library functions."},
+            \           [
+            \               {"name": ["-d", "--definition"], "nargs": 1, "metavar": "<PATTERN>", "help": "Show locations of definitions."},
+            \               {"name": ["-r", "--reference"], "nargs": 1, "metavar": "<PATTERN>", "help": "Show reference to a symbol which has definitions."},
+            \               {"name": ["-s", "--symbol"], "nargs": 1, "metavar": "<PATTERN>", "help": "Show reference to a symbol which has no definition."},
+            \               {"name": ["-g", "--grep"], "nargs": 1, "metavar": "<PATTERN>", "help": "Show all lines which match to the <PATTERN>."},
+            \               {"name": ["--by-context"], "nargs": 0, "help": "Decide tag type by context at cursor position. If the context is a definition of the pattern then use -r, else if there is at least one definition of the pattern then use -d, else use -s. Regular expression is not allowed for pattern."},
+            \           ],
+            \           {"name": ["-i", "--ignore-case"], "nargs": 0, "help": "Ignore case distinctions in the pattern."},
+            \           {"name": ["--literal"], "nargs": 0, "help": "Execute literal search instead of regular expression search."},
+            \           {"name": ["--path-style"], "nargs": 1, "metavar": "<FORMAT>", "help": "Show path names using <FORMAT>, which may be one of: `relative`, `absolute`, `shorter`, `abslib` or `through`. `relative` means relative path.  `absolute`  means  absolute path.  `shorter` means the shorter one of relative and absolute path.  `abslib` means absolute path for libraries (GTAGSLIBPATH) and relative path for the rest.  `through` means the relative path from the project root directory (internal format of GPATH).  The default is `relative`."},
+            \           {"name": ["-S", "--scope"], "nargs": 1, "metavar": "<DIR>", "help": "Show only tags which exist under <DIR> directory."},
+            \           {"name": ["--recall"], "nargs": 0, "help": "Recall last search. If the result window is closed, reopen it."},
+            \           {"name": ["--append"], "nargs": 0, "help": "Append to the previous search results."},
+            \           {"name": ["--match-path"], "nargs": 0, "help": "Match the file path when fuzzy searching."},
+            \           {"name": ["--all"], "nargs": 0, "help": "search tags in all opening buffers"},
             \   ],
             \}
 

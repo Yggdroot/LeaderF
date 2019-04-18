@@ -176,7 +176,7 @@ class BufExplManager(Manager):
         help.append('" d : wipe out buffer under cursor')
         help.append('" D : delete buffer under cursor')
         help.append('" i/<Tab> : switch to input mode')
-        help.append('" q/<Esc> : quit')
+        help.append('" q : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
         return help

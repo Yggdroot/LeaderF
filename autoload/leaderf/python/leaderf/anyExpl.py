@@ -229,7 +229,7 @@ class AnyExplManager(Manager):
         help.append('" v : open file under cursor in a vertically split window')
         help.append('" t : open file under cursor in a new tabpage')
         help.append('" i/<Tab> : switch to input mode')
-        help.append('" q/<Esc> : quit')
+        help.append('" q : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
         return help
@@ -500,6 +500,35 @@ class LfShlex(shlex.shlex):
         self.whitespace_split = True
         return list(self)
 
+class LfHelpFormatter(argparse.HelpFormatter):
+    def __init__(self,
+                 prog,
+                 indent_increment=2,
+                 max_help_position=24,
+                 width=105):
+        super(LfHelpFormatter, self).__init__(prog, indent_increment, max_help_position, width)
+
+gtags_usage = """
+\n
+Leaderf[!] gtags [-h] [--remove] [--recall] [--all]
+Leaderf[!] gtags --update [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [--accept-dotfiles]
+                 [--skip-unreadable] [--skip-symlink [<TYPE>]] [--gtagslibpath <PATH> [<PATH> ...]]
+Leaderf[!] gtags -d <PATTERN> [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
+                 [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
+Leaderf[!] gtags -r <PATTERN> [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
+                 [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
+Leaderf[!] gtags -s <PATTERN> [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
+                 [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
+Leaderf[!] gtags -g <PATTERN> [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
+                 [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
+Leaderf[!] gtags --by-context [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
+                 [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
+
+[COMMON_OPTIONS]: [--reverse] [--stayOpen] [--input <INPUT> | --cword]
+                  [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
+                  [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
+ \n
+"""
 
 class AnyHub(object):
     def __init__(self):
@@ -617,6 +646,9 @@ class AnyHub(object):
             elif category == "rg":
                 from .rgExpl import rgExplManager
                 manager = rgExplManager
+            elif category == "gtags":
+                from .gtagsExpl import gtagsExplManager
+                manager = gtagsExplManager
             else:
                 lfCmd("call %s('%s')" % (lfEval("g:Lf_PythonExtensions['%s'].registerFunc" % category), category))
                 manager = self._pyext_manages[category]
@@ -639,7 +671,7 @@ class AnyHub(object):
 
     def start(self, arg_line, *args, **kwargs):
         if self._parser is None:
-            self._parser = argparse.ArgumentParser(prog="Leaderf[!]", epilog="If [!] is given, enter normal mode directly.")
+            self._parser = argparse.ArgumentParser(prog="Leaderf[!]", formatter_class=LfHelpFormatter, epilog="If [!] is given, enter normal mode directly.")
             self._add_argument(self._parser, lfEval("g:Lf_CommonArguments"), [])
             subparsers = self._parser.add_subparsers(title="subcommands", description="", help="")
             extensions = itertools.chain(lfEval("keys(g:Lf_Extensions)"), lfEval("keys(g:Lf_PythonExtensions)"))
@@ -656,7 +688,10 @@ class AnyHub(object):
                     help = lfEval("g:Lf_Helps['%s']" % category)
                     arg_def = lfEval("g:Lf_Arguments['%s']" % category)
 
-                parser = subparsers.add_parser(category, help=help, epilog="If [!] is given, enter normal mode directly.")
+                if category == 'gtags':
+                    parser = subparsers.add_parser(category, usage=gtags_usage, formatter_class=LfHelpFormatter, help=help, epilog="If [!] is given, enter normal mode directly.")
+                else:
+                    parser = subparsers.add_parser(category, help=help, formatter_class=LfHelpFormatter, epilog="If [!] is given, enter normal mode directly.")
                 group = parser.add_argument_group('specific arguments')
                 self._add_argument(group, arg_def, positional_args)
 
@@ -666,8 +701,11 @@ class AnyHub(object):
                 parser.set_defaults(start=partial(self._default_action, category, positional_args))
 
         try:
-            # do not produce an error when extra arguments are present
-            the_args = self._parser.parse_known_args(LfShlex(arg_line, posix=False).split())[0]
+            # # do not produce an error when extra arguments are present
+            # the_args = self._parser.parse_known_args(LfShlex(arg_line, posix=False).split())[0]
+
+            # produce an error when extra arguments are present
+            the_args = self._parser.parse_args(LfShlex(arg_line, posix=False).split())
             arguments = vars(the_args)
             arguments = arguments.copy()
             del arguments["start"]

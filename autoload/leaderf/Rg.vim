@@ -34,6 +34,7 @@ function! leaderf#Rg#Maps()
     nnoremap <buffer> <silent> i             :exec g:Lf_py "rgExplManager.input()"<CR>
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "rgExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "rgExplManager.toggleHelp()"<CR>
+    nnoremap <buffer> <silent> d             :exec g:Lf_py "rgExplManager.deleteCurrentLine()"<CR>
     if has_key(g:Lf_NormalMap, "Rg")
         for i in g:Lf_NormalMap["Rg"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

@@ -276,7 +276,7 @@ class FunctionExplManager(Manager):
         help.append('" t : open file under cursor in a new tabpage')
         help.append('" i/<Tab> : switch to input mode')
         help.append('" p : preview the result')
-        help.append('" q/<Esc> : quit')
+        help.append('" q : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
         return help

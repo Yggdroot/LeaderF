@@ -626,7 +626,7 @@ class FileExplManager(Manager):
         help.append('" a : select all files')
         help.append('" c : clear all selections')
         help.append('" p : preview the file')
-        help.append('" q/<Esc> : quit')
+        help.append('" q : quit')
         help.append('" <F5> : refresh the cache')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
