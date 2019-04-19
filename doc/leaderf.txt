@@ -482,8 +482,8 @@ g:Lf_WorkingDirectoryMode                       *g:Lf_WorkingDirectoryMode*
     "F"(as a fallback) when a root can't be found.
 
 g:Lf_WorkingDirectory                           *g:Lf_WorkingDirectory*
-    Set LeaderF's working directory. It's will ignore |g:Lf_RootMarkers| and
-	|g:Lf_WorkingDirectoryMode| what you set.
+    Set LeaderF's working directory. It will ignore the |g:Lf_RootMarkers| and
+	|g:Lf_WorkingDirectoryMode| option set.
 	e.g., >
 	let g:Lf_WorkingDirectory = finddir('.git', '.;')
 <
@@ -606,7 +606,7 @@ g:Lf_Gtagsconf                                    *g:Lf_Gtagsconf*
 
     Default value is "".
 
-g:Lf_Gtagslable                                   *g:Lf_Gtagslable*
+g:Lf_Gtagslabel                                   *g:Lf_Gtagslable*
     This option specifies a label of the configuration file.
     By default, gtags supports C, C++, Yacc, Java, PHP and Assembly
     programming language. If you want to support other programming languages,
