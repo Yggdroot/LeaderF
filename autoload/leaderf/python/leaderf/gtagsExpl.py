@@ -460,7 +460,7 @@ class GtagsExplorer(Explorer):
         self._skip_symlink =  "--skip-symlink %s " % lfEval("get(g:, 'Lf_GtagsSkipSymlink', '')") \
                                 if lfEval("get(g:, 'Lf_GtagsSkipSymlink', '')") != '' else ""
         self._gtagsconf = lfEval("get(g:, 'Lf_Gtagsconf', '')")
-        self._gtagslabel = lfEval("get(g:, 'Lf_Gtagslable', 'default')")
+        self._gtagslabel = lfEval("get(g:, 'Lf_Gtagslabel', 'default')")
 
         if lfEval("get(g:, 'Lf_GtagsfilesFromFileExpl', 1)") == '0':
             self._Lf_GtagsfilesFromFileExpl = False
