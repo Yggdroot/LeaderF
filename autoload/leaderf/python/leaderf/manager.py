@@ -275,6 +275,9 @@ class Manager(object):
     def setArguments(self, arguments):
         self._arguments = arguments
 
+    def getArguments(self):
+        return self._arguments
+
     #**************************************************************
 
     def _needPreview(self, preview):
@@ -1298,7 +1301,7 @@ class Manager(object):
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
             else:
                 if self._getExplorer().getStlCategory() in ["Rg", "Gtags"]:
-                    if "--append" in self._arguments:
+                    if "--append" in self.getArguments():
                         self._offset_in_content = len(self._content)
                         self._help_length = self._help_length_bak
                         if self._pattern_bak:

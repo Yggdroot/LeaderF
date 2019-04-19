@@ -563,14 +563,17 @@ g:Lf_GtagsAutoGenerate                          *g:Lf_GtagsAutoGenerate*
     generated manually by using `Leaderf gtags --update` .
     Default value is 0.
 
-g:Lf_GtagsfilesFromFileExpl                     *g:Lf_GtagsfilesFromFileExpl*
+g:Lf_GtagsSource                                *g:Lf_GtagsSource*
     Gtags accepts a list of files as target files. This option indicates
-    whether to use FileExplorer as the source of target files.
-    Default value is 1, which means that target files come from FileExplorer.
+    where the target files come from. It has 3 values: 0, 1, 2.
+    0 - gtags search the target files by itself.
+    1 - the target files come from FileExplorer.
+    2 - the target files come from |g:Lf_GtagsfilesCmd|.
+    Default value is 0.
 
 g:Lf_GtagsfilesCmd                              *g:Lf_GtagsfilesCmd*
-    If |g:Lf_GtagsfilesFromFileExpl| is 0, use the command defined by this option
-    to generate the target files.
+    If |g:Lf_GtagsSource| is 2, use the command defined by this option to
+    generate the target files.
     Default value is: >
     let g:Lf_GtagsfilesCmd = {
             \ '.git': 'git ls-files --recurse-submodules',
@@ -606,7 +609,7 @@ g:Lf_Gtagsconf                                    *g:Lf_Gtagsconf*
 
     Default value is "".
 
-g:Lf_Gtagslabel                                   *g:Lf_Gtagslable*
+g:Lf_Gtagslabel                                   *g:Lf_Gtagslabel*
     This option specifies a label of the configuration file.
     By default, gtags supports C, C++, Yacc, Java, PHP and Assembly
     programming language. If you want to support other programming languages,

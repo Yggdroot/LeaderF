@@ -510,7 +510,8 @@ class LfHelpFormatter(argparse.HelpFormatter):
 
 gtags_usage = """
 \n
-Leaderf[!] gtags [-h] [--remove] [--recall] [--all]
+Leaderf[!] gtags [-h] [--remove] [--recall]
+Leaderf[!] gtags [--current-buffer | --all-buffers | --all] [--result <FORMAT>] [COMMON_OPTIONS]
 Leaderf[!] gtags --update [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [--accept-dotfiles]
                  [--skip-unreadable] [--skip-symlink [<TYPE>]] [--gtagslibpath <PATH> [<PATH> ...]]
 Leaderf[!] gtags -d <PATTERN> [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
