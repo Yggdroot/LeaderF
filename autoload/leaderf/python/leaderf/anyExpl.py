@@ -511,9 +511,9 @@ class LfHelpFormatter(argparse.HelpFormatter):
 gtags_usage = """
 \n
 Leaderf[!] gtags [-h] [--remove] [--recall]
-Leaderf[!] gtags [--current-buffer | --all-buffers | --all] [--result <FORMAT>] [COMMON_OPTIONS]
 Leaderf[!] gtags --update [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [--accept-dotfiles]
                  [--skip-unreadable] [--skip-symlink [<TYPE>]] [--gtagslibpath <PATH> [<PATH> ...]]
+Leaderf[!] gtags [--current-buffer | --all-buffers | --all] [--result <FORMAT>] [COMMON_OPTIONS]
 Leaderf[!] gtags -d <PATTERN> [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
                  [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
 Leaderf[!] gtags -r <PATTERN> [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
@@ -577,14 +577,15 @@ class AnyHub(object):
                     except: # ? * +
                         nargs = arg["nargs"]
 
+                choices = arg.get("choices", None)
                 if nargs == 0:
                     add_argument(*arg["name"], action='store_const', const=[],
                                  default=argparse.SUPPRESS, help=arg.get("help", ""))
                 elif nargs == "?":
-                    add_argument(*arg["name"], action=OptionalAction, nargs=nargs,
+                    add_argument(*arg["name"], choices=choices, action=OptionalAction, nargs=nargs,
                                  default=argparse.SUPPRESS, help=arg.get("help", ""))
                 else:
-                    add_argument(*arg["name"], nargs=nargs, action=arg.get("action", None), default=argparse.SUPPRESS,
+                    add_argument(*arg["name"], choices=choices, nargs=nargs, action=arg.get("action", None), default=argparse.SUPPRESS,
                                  help=arg.get("help", ""))
 
     def _default_action(self, category, positional_args, arguments, *args, **kwargs):

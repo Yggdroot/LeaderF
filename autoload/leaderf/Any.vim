@@ -159,7 +159,7 @@ let g:Lf_Arguments = {
             \           ],
             \           {"name": ["-i", "--ignore-case"], "nargs": 0, "help": "Ignore case distinctions in the pattern."},
             \           {"name": ["--literal"], "nargs": 0, "help": "Execute literal search instead of regular expression search."},
-            \           {"name": ["--path-style"], "nargs": 1, "metavar": "<FORMAT>", "help": "Show path names using <FORMAT>, which may be one of: `relative`, `absolute`, `shorter`, `abslib` or `through`. `relative` means relative path.  `absolute`  means  absolute path.  `shorter` means the shorter one of relative and absolute path.  `abslib` means absolute path for libraries (GTAGSLIBPATH) and relative path for the rest.  `through` means the relative path from the project root directory (internal format of GPATH).  The default is `relative`."},
+            \           {"name": ["--path-style"], "nargs": 1, "choices": ["relative", "absolute", "shorter", "abslib", "through"], "metavar": "<FORMAT>", "help": "Show path names using <FORMAT>, which may be one of: `relative`, `absolute`, `shorter`, `abslib` or `through`. `relative` means relative path.  `absolute`  means  absolute path.  `shorter` means the shorter one of relative and absolute path.  `abslib` means absolute path for libraries (GTAGSLIBPATH) and relative path for the rest.  `through` means the relative path from the project root directory (internal format of GPATH).  The default is `relative`."},
             \           {"name": ["-S", "--scope"], "nargs": 1, "metavar": "<DIR>", "help": "Show only tags which exist under <DIR> directory."},
             \           {"name": ["--recall"], "nargs": 0, "help": "Recall last search. If the result window is closed, reopen it."},
             \           {"name": ["--match-path"], "nargs": 0, "help": "Match the file path when fuzzy searching."},
@@ -169,7 +169,7 @@ let g:Lf_Arguments = {
             \               {"name": ["--all-buffers"], "nargs": 0, "help": "Show tags in all listed buffers."},
             \               {"name": ["--all"], "nargs": 0, "help": "Show tags in the whole project."},
             \           ],
-            \           {"name": ["--result"], "nargs": 1, "metavar": "<FORMAT>", "help": "Show result using format, which may be one of: `ctags`(default), `ctags-x`,  `ctags-mod`."},
+            \           {"name": ["--result"], "nargs": 1, "choices": ["ctags", "ctags-x", "ctags-mod"], "metavar": "<FORMAT>", "help": "Show result using format, which may be one of: `ctags`(default), `ctags-x`,  `ctags-mod`."},
             \   ],
             \}
 
@@ -273,6 +273,13 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
         return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions), "s:Lf_FuzzyMatch(a:argLead, v:val)")
     else
         let existingOptions = a:cmdline[a:cursorPos-1] !~ '\s' ? argList[2:-2] : argList[2:]
+        if argList[1] == "gtags"
+            if get(existingOptions, -1, "") == "--path-style"
+                return ["relative", "absolute", "shorter", "abslib", "through"]
+            elseif get(existingOptions, -1, "") == "--result"
+                return ["ctags", "ctags-x", "ctags-mod"]
+            endif
+        endif
         let options = []
         if has_key(g:Lf_Extensions, argList[1])
             let arguments = get(g:Lf_Extensions[argList[1]], "arguments", [])
