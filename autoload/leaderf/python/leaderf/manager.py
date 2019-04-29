@@ -1043,7 +1043,7 @@ class Manager(object):
             elif mode == 'h':
                 lfCmd("split")
             elif mode == 'v':
-                lfCmd("vsplit")
+                lfCmd("bel vsplit")
 
             kwargs["mode"] = mode
             tabpage_count = len(vim.tabpages)
@@ -1223,14 +1223,15 @@ class Manager(object):
                 self._selections[i+1] = id
 
     def startExplorer(self, win_pos, *args, **kwargs):
-        self.setArguments(kwargs.get("arguments", {}))
+        arguments_dict = kwargs.get("arguments", {})
+        self.setArguments(arguments_dict)
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
 
-        if self._getExplorer().getStlCategory() in ["Gtags"] and ("--update" in self._arguments
-                or "--remove" in self._arguments):
-            self._getExplorer().getContent(*args, **kwargs)
-            return
+        if self._getExplorer().getStlCategory() in ["Gtags"]:
+            if "--update" in self._arguments or "--remove" in self._arguments:
+                self._getExplorer().getContent(*args, **kwargs)
+                return
 
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
         if self._getExplorer().getStlCategory() in ["Rg", "Gtags"] and "--recall" in self._arguments:
@@ -1238,14 +1239,19 @@ class Manager(object):
         else:
             content = self._getExplorer().getContent(*args, **kwargs)
             self._getInstance().setCwd(os.getcwd())
+            if self._getExplorer().getStlCategory() in ["Gtags"] and "--auto-jump" in self._arguments \
+                    and isinstance(content, list) and len(content) == 1:
+                mode = self._arguments["--auto-jump"][0] if len(self._arguments["--auto-jump"]) else ""
+                self._accept(content[0], mode)
+                return
 
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
 
         self._getInstance().setArguments(self._arguments)
-        if self._getExplorer().getStlCategory() in ["Rg"] and ("-A" in kwargs.get("arguments", {}) \
-                or "-B" in kwargs.get("arguments", {}) or "-C" in kwargs.get("arguments", {})):
+        if self._getExplorer().getStlCategory() in ["Rg"] and ("-A" in arguments_dict \
+                or "-B" in arguments_dict or "-C" in arguments_dict):
             self._getInstance().ignoreReverse()
 
         self._getInstance().enterBuffer(win_pos)
@@ -1260,7 +1266,7 @@ class Manager(object):
         else:
             lfCmd("normal! gg")
             self._index = 0
-            self._pattern = kwargs.get("pattern", "") or kwargs.get("arguments", {}).get("--input", [""])[0]
+            self._pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
             self._cli.setPattern(self._pattern)
 
         self._start_time = time.time()

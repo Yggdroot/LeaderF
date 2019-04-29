@@ -75,7 +75,36 @@ class AsyncExecutor(object):
 
         stdout_thread.join(0.01)
 
-        result = AsyncExecutor.Result(self._outQueue, self._errQueue, encoding, cleanup, self._process)
+        def read(outQueue, errQueue, encoding, cleanup):
+            try:
+                if encoding:
+                    while True:
+                        line = outQueue.get()
+                        if line is None:
+                            break
+                        yield lfBytes2Str(line.rstrip(b"\r\n"), encoding)
+                else:
+                    while True:
+                        line = outQueue.get()
+                        if line is None:
+                            break
+                        yield lfEncode(lfBytes2Str(line.rstrip(b"\r\n")))
+
+                err = b"".join(iter(errQueue.get, None))
+                if err:
+                    raise Exception(lfBytes2Str(err, encoding))
+            finally:
+                try:
+                    if self._process:
+                        self._process.stdout.close()
+                        self._process.stderr.close()
+                except IOError:
+                    pass
+
+                if cleanup:
+                    cleanup()
+
+        result = AsyncExecutor.Result(read(self._outQueue, self._errQueue, encoding, cleanup))
 
         return result
 
@@ -94,53 +123,23 @@ class AsyncExecutor(object):
             self._process = None
 
     class Result(object):
-        def __init__(self, outQueue, errQueue, encoding, cleanup, process):
-            self._outQueue = outQueue
-            self._errQueue = errQueue
-            self._encoding = encoding
-            self._cleanup = cleanup
-            self._process = process
-            self._results = []
+        def __init__(self, iterable):
+            self._g = iterable
 
         def __add__(self, iterable):
-            self._results.append(iterable)
+            self._g = itertools.chain(self._g, iterable)
             return self
 
         def __iadd__(self, iterable):
-            self._results.append(iterable)
+            self._g = itertools.chain(self._g, iterable)
+            return self
+
+        def join_left(self, iterable):
+            self._g = itertools.chain(iterable, self._g)
             return self
 
         def __iter__(self):
-            try:
-                if self._encoding:
-                    while True:
-                        line = self._outQueue.get()
-                        if line is None:
-                            break
-                        yield lfBytes2Str(line.rstrip(b"\r\n"), self._encoding)
-                else:
-                    while True:
-                        line = self._outQueue.get()
-                        if line is None:
-                            break
-                        yield lfEncode(lfBytes2Str(line.rstrip(b"\r\n")))
-
-                err = b"".join(iter(self._errQueue.get, None))
-                if err:
-                    raise Exception(lfBytes2Str(err, self._encoding))
-            finally:
-                try:
-                    if self._process:
-                        self._process.stdout.close()
-                        self._process.stderr.close()
-                except IOError:
-                    pass
-
-                if self._cleanup:
-                    self._cleanup()
-
-            for i in itertools.chain.from_iterable(self._results):
-                yield i
+            return self._g
 
 
 if __name__ == "__main__":

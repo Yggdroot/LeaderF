@@ -6,6 +6,7 @@ import re
 import os
 import os.path
 import shutil
+import itertools
 import subprocess
 from .utils import *
 from .explorer import *
@@ -57,7 +58,8 @@ class GtagsExplorer(Explorer):
                 print(e)
 
     def getContent(self, *args, **kwargs):
-        if "--recall" in kwargs.get("arguments", {}):
+        arguments_dict = kwargs.get("arguments", {})
+        if "--recall" in arguments_dict:
             return []
 
         if vim.current.buffer.name:
@@ -65,59 +67,64 @@ class GtagsExplorer(Explorer):
         else:
             filename = os.path.join(os.getcwd(), 'no_name')
 
-        if "--gtagsconf" in kwargs.get("arguments", {}):
-            self._gtagsconf = kwargs.get("arguments", {})["--gtagsconf"][0]
-        if "--gtagslabel" in kwargs.get("arguments", {}):
-            self._gtagslabel = kwargs.get("arguments", {})["--gtagslabel"][0]
+        if "--gtagsconf" in arguments_dict:
+            self._gtagsconf = arguments_dict["--gtagsconf"][0]
+        if "--gtagslabel" in arguments_dict:
+            self._gtagslabel = arguments_dict["--gtagslabel"][0]
 
         if self._gtagsconf == '' and os.name == 'nt':
             self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
 
-        if "--gtagslibpath" in kwargs.get("arguments", {}):
-            self._gtagslibpath = [os.path.expanduser(p) for p in kwargs.get("arguments", {})["--gtagslibpath"]]
+        if "--gtagslibpath" in arguments_dict:
+            self._gtagslibpath = [os.path.expanduser(p) for p in arguments_dict["--gtagslibpath"]]
         else:
             self._gtagslibpath = []
 
-        if "--update" in kwargs.get("arguments", {}):
-            if "--accept-dotfiles" in kwargs.get("arguments", {}):
+        if "--update" in arguments_dict:
+            if "--accept-dotfiles" in arguments_dict:
                 self._accept_dotfiles = "--accept-dotfiles "
-            if "--skip-unreadable" in kwargs.get("arguments", {}):
+            if "--skip-unreadable" in arguments_dict:
                 self._skip_unreadable = "--skip-unreadable "
-            if "--skip-symlink" in kwargs.get("arguments", {}):
-                skip_symlink = kwargs.get("arguments", {})["--skip-symlink"]
+            if "--skip-symlink" in arguments_dict:
+                skip_symlink = arguments_dict["--skip-symlink"]
                 self._skip_symlink = "--skip-symlink%s " % ('=' + skip_symlink[0] if skip_symlink else "")
             self.updateGtags(filename, single_update=False, auto=False)
             return
-        elif "--remove" in kwargs.get("arguments", {}):
+        elif "--remove" in arguments_dict:
             self._remove(filename)
             return
 
-        if "--path-style" in kwargs.get("arguments", {}):
-            path_style = "--path-style %s " % kwargs.get("arguments", {})["--path-style"][0]
+        if "--path-style" in arguments_dict:
+            path_style = "--path-style %s " % arguments_dict["--path-style"][0]
         else:
             path_style = ""
 
+        auto_jump = False
         self._last_result_format = self._result_format
         self._result_format = None
-        if "-d" in kwargs.get("arguments", {}):
-            pattern = kwargs.get("arguments", {})["-d"][0]
+        if "-d" in arguments_dict:
+            pattern = arguments_dict["-d"][0]
             pattern_option = "-d -e %s " % pattern
-        elif "-r" in kwargs.get("arguments", {}):
-            pattern = kwargs.get("arguments", {})["-r"][0]
+            if "--auto-jump" in arguments_dict:
+                auto_jump = True
+        elif "-r" in arguments_dict:
+            pattern = arguments_dict["-r"][0]
             pattern_option = "-r -e %s " % pattern
-        elif "-s" in kwargs.get("arguments", {}):
-            pattern = kwargs.get("arguments", {})["-s"][0]
+            if "--auto-jump" in arguments_dict:
+                auto_jump = True
+        elif "-s" in arguments_dict:
+            pattern = arguments_dict["-s"][0]
             pattern_option = "-s -e %s " % pattern
-        elif "-g" in kwargs.get("arguments", {}):
-            pattern = kwargs.get("arguments", {})["-g"][0]
+        elif "-g" in arguments_dict:
+            pattern = arguments_dict["-g"][0]
             pattern_option = "-g -e %s " % pattern
-        elif "--by-context" in kwargs.get("arguments", {}):
+        elif "--by-context" in arguments_dict:
             pattern = lfEval('expand("<cword>")')
             pattern_option = '--from-here "%d:%s" %s ' % (vim.current.window.cursor[0], vim.current.buffer.name, pattern)
         else:
-            if "--current-buffer" in kwargs.get("arguments", {}):
+            if "--current-buffer" in arguments_dict:
                 pattern_option = '-f "%s" -q' % vim.current.buffer.name
-            elif "--all-buffers" in kwargs.get("arguments", {}):
+            elif "--all-buffers" in arguments_dict:
                 pattern_option = '-f "%s" -q' % '" "'.join(b.name for b in vim.buffers)
             else: # '--all' or empty means the whole project
                 pattern_option = None
@@ -134,8 +141,8 @@ class GtagsExplorer(Explorer):
                                 dbpath = tmp_dbpath
                                 break
 
-            if "--result" in kwargs.get("arguments", {}):
-                self._result_format = kwargs.get("arguments", {})["--result"][0]
+            if "--result" in arguments_dict:
+                self._result_format = arguments_dict["--result"][0]
             else:
                 self._result_format = "ctags"
 
@@ -158,22 +165,22 @@ class GtagsExplorer(Explorer):
             content = executor.execute(cmd, env=env)
             return content
 
-        if "-S" in kwargs.get("arguments", {}):
-            scope = "--scope %s " % os.path.abspath(kwargs.get("arguments", {})["-S"][0])
+        if "-S" in arguments_dict:
+            scope = "--scope %s " % os.path.abspath(arguments_dict["-S"][0])
         else:
             scope = ""
 
-        if "--literal" in kwargs.get("arguments", {}):
+        if "--literal" in arguments_dict:
             literal = "--literal "
         else:
             literal = ""
 
-        if "-i" in kwargs.get("arguments", {}):
+        if "-i" in arguments_dict:
             ignorecase = "-i "
         else:
             ignorecase = ""
 
-        if "--append" not in kwargs.get("arguments", {}) or self._last_result_format is not None:
+        if "--append" not in arguments_dict or self._last_result_format is not None:
             self._pattern_regex = []
 
         # build vim regex, which is used for highlighting
@@ -196,7 +203,7 @@ class GtagsExplorer(Explorer):
             self._pattern_regex.append(r'\V' + case_pattern + p)
         else:
             vim_regex = self.translateRegex(case_pattern + p)
-            if "-g" not in kwargs.get("arguments", {}):
+            if "-g" not in arguments_dict:
                 vim_regex = vim_regex.replace('.', r'\w')
 
             self._pattern_regex.append(vim_regex)
@@ -233,6 +240,13 @@ class GtagsExplorer(Explorer):
                     executor = AsyncExecutor()
                     self._executor.append(executor)
                     content += executor.execute(cmd, env=env)
+
+        if auto_jump:
+            first_two = list(itertools.islice(content, 2))
+            if len(first_two) == 1:
+                return first_two
+            else:
+                return content.join_left(first_two)
 
         return content
 
@@ -543,6 +557,7 @@ class GtagsExplorer(Explorer):
         if self._Lf_ExternalCommand:
             return self._Lf_ExternalCommand
 
+        arguments_dict = kwargs.get("arguments", {})
         if self._Lf_UseVersionControlTool:
             if self._exists(dir, ".git"):
                 wildignore = self._Lf_WildIgnore
@@ -556,7 +571,7 @@ class GtagsExplorer(Explorer):
                 for i in wildignore["file"]:
                     ignore += ' -x "%s"' % i
 
-                if "--no-ignore" in kwargs.get("arguments", {}):
+                if "--no-ignore" in arguments_dict:
                     no_ignore = ""
                 else:
                     no_ignore = "--exclude-standard"
@@ -616,7 +631,7 @@ class GtagsExplorer(Explorer):
             else:
                 show_hidden = ""
 
-            if "--no-ignore" in kwargs.get("arguments", {}):
+            if "--no-ignore" in arguments_dict:
                 no_ignore = "--no-ignore"
             else:
                 no_ignore = ""
@@ -647,7 +662,7 @@ class GtagsExplorer(Explorer):
             else:
                 show_hidden = ""
 
-            if "--no-ignore" in kwargs.get("arguments", {}):
+            if "--no-ignore" in arguments_dict:
                 no_ignore = "-U"
             else:
                 no_ignore = ""
@@ -673,7 +688,7 @@ class GtagsExplorer(Explorer):
             else:
                 show_hidden = ""
 
-            if "--no-ignore" in kwargs.get("arguments", {}):
+            if "--no-ignore" in arguments_dict:
                 no_ignore = "-U"
             else:
                 no_ignore = ""

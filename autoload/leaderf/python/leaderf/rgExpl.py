@@ -24,7 +24,8 @@ class RgExplorer(Explorer):
         self._display_multi = False
 
     def getContent(self, *args, **kwargs):
-        if "--recall" in kwargs.get("arguments", {}):
+        arguments_dict = kwargs.get("arguments", {})
+        if "--recall" in arguments_dict:
             return []
 
         rg_config = lfEval("get(g:, 'Lf_RgConfig', [])")
@@ -40,7 +41,7 @@ class RgExplorer(Explorer):
                     or opt.startswith("--before-context") or opt.startswith("--context")):
                 self._display_multi = True
 
-        arg_line = kwargs.get("arguments", {}).get("arg_line")
+        arg_line = arguments_dict.get("arg_line")
         # -S/--smart-case, -s/--case-sensitive, -i/--ignore-case
         index = {}
         index['-S'] = max(arg_line.rfind(' -S '), arg_line.rfind(' --smart-case '))
@@ -70,88 +71,88 @@ class RgExplorer(Explorer):
             word_or_line = ''
 
         zero_args_options = ''
-        if "-F" in kwargs.get("arguments", {}):
+        if "-F" in arguments_dict:
             zero_args_options += "-F "
-        if "-L" in kwargs.get("arguments", {}):
+        if "-L" in arguments_dict:
             zero_args_options += "-L "
-        if "-P" in kwargs.get("arguments", {}):
+        if "-P" in arguments_dict:
             zero_args_options += "-P "
             is_perl = True
         else:
             is_perl = False
-        if "-v" in kwargs.get("arguments", {}):
+        if "-v" in arguments_dict:
             zero_args_options += "-v "
-        if "--hidden" in kwargs.get("arguments", {}):
+        if "--hidden" in arguments_dict:
             zero_args_options += "--hidden "
-        if "--no-config" in kwargs.get("arguments", {}):
+        if "--no-config" in arguments_dict:
             zero_args_options += "--no-config "
-        if "--no-ignore" in kwargs.get("arguments", {}):
+        if "--no-ignore" in arguments_dict:
             zero_args_options += "--no-ignore "
-        if "--no-ignore-global" in kwargs.get("arguments", {}):
+        if "--no-ignore-global" in arguments_dict:
             zero_args_options += "--no-ignore-global "
-        if "--no-ignore-parent" in kwargs.get("arguments", {}):
+        if "--no-ignore-parent" in arguments_dict:
             zero_args_options += "--no-ignore-parent "
-        if "--no-ignore-vcs" in kwargs.get("arguments", {}):
+        if "--no-ignore-vcs" in arguments_dict:
             zero_args_options += "--no-ignore-vcs "
-        if "--no-pcre2-unicode" in kwargs.get("arguments", {}):
+        if "--no-pcre2-unicode" in arguments_dict:
             zero_args_options += "--no-pcre2-unicode "
 
         one_args_options = ''
-        if "--context-separator" in kwargs.get("arguments", {}):
-            self._context_separator = kwargs.get("arguments", {})["--context-separator"][0]
+        if "--context-separator" in arguments_dict:
+            self._context_separator = arguments_dict["--context-separator"][0]
             if self._context_separator.startswith('"') and self._context_separator.endswith('"'):
                 self._context_separator = self._context_separator[1:-1]
             one_args_options += '--context-separator="%s" ' % self._context_separator
         else:
             one_args_options += "--context-separator=%s " % self._context_separator
-        if "-A" in kwargs.get("arguments", {}):
-            one_args_options += "-A %s " % kwargs.get("arguments", {})["-A"][0]
+        if "-A" in arguments_dict:
+            one_args_options += "-A %s " % arguments_dict["-A"][0]
             self._display_multi = True
-        if "-B" in kwargs.get("arguments", {}):
-            one_args_options += "-B %s " % kwargs.get("arguments", {})["-B"][0]
+        if "-B" in arguments_dict:
+            one_args_options += "-B %s " % arguments_dict["-B"][0]
             self._display_multi = True
-        if "-C" in kwargs.get("arguments", {}):
-            one_args_options += "-C %s " % kwargs.get("arguments", {})["-C"][0]
+        if "-C" in arguments_dict:
+            one_args_options += "-C %s " % arguments_dict["-C"][0]
             self._display_multi = True
-        if "-E" in kwargs.get("arguments", {}):
-            one_args_options += "-E %s " % kwargs.get("arguments", {})["-E"][0]
-        if "-M" in kwargs.get("arguments", {}):
-            one_args_options += "-M %s " % kwargs.get("arguments", {})["-M"][0]
-        if "-m" in kwargs.get("arguments", {}):
-            one_args_options += "-m %s " % kwargs.get("arguments", {})["-m"][0]
-        if "--max-depth" in kwargs.get("arguments", {}):
-            one_args_options += "--max-depth %s " % kwargs.get("arguments", {})["--max-depth"][0]
-        if "--max-filesize" in kwargs.get("arguments", {}):
-            one_args_options += "--max-filesize %s " % kwargs.get("arguments", {})["--max-filesize"][0]
-        if "--path-separator" in kwargs.get("arguments", {}):
-            one_args_options += "--path-separator %s " % kwargs.get("arguments", {})["--path-separator"][0]
-        if "--sort" in kwargs.get("arguments", {}):
-            one_args_options += "--sort %s " % kwargs.get("arguments", {})["--sort"][0]
-        if "--sortr" in kwargs.get("arguments", {}):
-            one_args_options += "--sortr %s " % kwargs.get("arguments", {})["--sortr"][0]
+        if "-E" in arguments_dict:
+            one_args_options += "-E %s " % arguments_dict["-E"][0]
+        if "-M" in arguments_dict:
+            one_args_options += "-M %s " % arguments_dict["-M"][0]
+        if "-m" in arguments_dict:
+            one_args_options += "-m %s " % arguments_dict["-m"][0]
+        if "--max-depth" in arguments_dict:
+            one_args_options += "--max-depth %s " % arguments_dict["--max-depth"][0]
+        if "--max-filesize" in arguments_dict:
+            one_args_options += "--max-filesize %s " % arguments_dict["--max-filesize"][0]
+        if "--path-separator" in arguments_dict:
+            one_args_options += "--path-separator %s " % arguments_dict["--path-separator"][0]
+        if "--sort" in arguments_dict:
+            one_args_options += "--sort %s " % arguments_dict["--sort"][0]
+        if "--sortr" in arguments_dict:
+            one_args_options += "--sortr %s " % arguments_dict["--sortr"][0]
 
         repeatable_options = ''
-        if "-f" in kwargs.get("arguments", {}):
-            repeatable_options += "-f %s " % " -f ".join(kwargs.get("arguments", {})["-f"])
-        if "-g" in kwargs.get("arguments", {}):
-            repeatable_options += "-g %s " % " -g ".join(kwargs.get("arguments", {})["-g"])
-        if "--iglob" in kwargs.get("arguments", {}):
-            repeatable_options += "--iglob %s " % " --iglob ".join(kwargs.get("arguments", {})["--iglob"])
-        if "--ignore-file" in kwargs.get("arguments", {}):
-            repeatable_options += "--ignore-file %s " % " --ignore-file ".join(kwargs.get("arguments", {})["--ignore-file"])
-        if "--type-add" in kwargs.get("arguments", {}):
-            repeatable_options += "--type-add %s " % " --type-add ".join(kwargs.get("arguments", {})["--type-add"])
-        if "-t" in kwargs.get("arguments", {}):
-            repeatable_options += "-t %s " % " -t ".join(kwargs.get("arguments", {})["-t"])
-        if "-T" in kwargs.get("arguments", {}):
-            repeatable_options += "-T %s " % " -T ".join(kwargs.get("arguments", {})["-T"])
+        if "-f" in arguments_dict:
+            repeatable_options += "-f %s " % " -f ".join(arguments_dict["-f"])
+        if "-g" in arguments_dict:
+            repeatable_options += "-g %s " % " -g ".join(arguments_dict["-g"])
+        if "--iglob" in arguments_dict:
+            repeatable_options += "--iglob %s " % " --iglob ".join(arguments_dict["--iglob"])
+        if "--ignore-file" in arguments_dict:
+            repeatable_options += "--ignore-file %s " % " --ignore-file ".join(arguments_dict["--ignore-file"])
+        if "--type-add" in arguments_dict:
+            repeatable_options += "--type-add %s " % " --type-add ".join(arguments_dict["--type-add"])
+        if "-t" in arguments_dict:
+            repeatable_options += "-t %s " % " -t ".join(arguments_dict["-t"])
+        if "-T" in arguments_dict:
+            repeatable_options += "-T %s " % " -T ".join(arguments_dict["-T"])
 
-        is_literal = "-F" in kwargs.get("arguments", {})
+        is_literal = "-F" in arguments_dict
         pattern = ''
-        if "--append" not in kwargs.get("arguments", {}):
+        if "--append" not in arguments_dict:
             self._pattern_regex = []
 
-        for i in kwargs.get("arguments", {}).get("-e", []):
+        for i in arguments_dict.get("-e", []):
             pattern += r'-e %s ' % i
             if case_flag == '-i':
                 case_pattern = r'\c'
@@ -190,7 +191,7 @@ class RgExplorer(Explorer):
         if pattern == '':
             pattern = '"" '
 
-        path = ' '.join(kwargs.get("arguments", {}).get("PATH", []))
+        path = ' '.join(arguments_dict.get("PATH", []))
         if path == '' and os.name == 'nt':
             path = '.'
 
@@ -207,7 +208,7 @@ class RgExplorer(Explorer):
         else:
             tmp_file = tempfile.NamedTemporaryFile
 
-        if "--current-buffer" in kwargs.get("arguments", {}):
+        if "--current-buffer" in arguments_dict:
             path = ''   # omit the <PATH> option
             if vim.current.buffer.name:
                 try:
@@ -229,7 +230,7 @@ class RgExplorer(Explorer):
                 path = '"' + file_name + '"'
                 tmpfilenames.append(file_name)
 
-        if "--all-buffers" in kwargs.get("arguments", {}):
+        if "--all-buffers" in arguments_dict:
             path = ''   # omit the <PATH> option
             for b in vim.buffers:
                 if lfEval("buflisted(%d)" % b.number) == '1':
