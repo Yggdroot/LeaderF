@@ -11,6 +11,8 @@ import locale
 lfCmd = vim.command
 lfEval = vim.eval
 
+lf_encoding = lfEval("&encoding")
+
 if sys.version_info >= (3, 0):
 
     def lfEncode(str):
@@ -25,7 +27,7 @@ if sys.version_info >= (3, 0):
 
     def lfBytesLen(str):
         """ string length in bytes """
-        return len(str.encode(lfEval("&encoding"), errors="ignore"))
+        return len(str.encode(lf_encoding, errors="ignore"))
 
     def lfBytes2Str(bytes, encoding=None):
         try:
@@ -50,7 +52,7 @@ else: # python 2.x
             if locale.getdefaultlocale()[1] is None:
                 return str
             else:
-                return str.decode(locale.getdefaultlocale()[1]).encode(lfEval("&encoding"))
+                return str.decode(locale.getdefaultlocale()[1]).encode(lf_encoding)
         except ValueError:
             return str
         except UnicodeDecodeError:
@@ -61,7 +63,7 @@ else: # python 2.x
             if locale.getdefaultlocale()[1] is None:
                 return str
             else:
-                return str.decode(lfEval("&encoding")).encode(
+                return str.decode(lf_encoding).encode(
                         locale.getdefaultlocale()[1])
         except UnicodeDecodeError:
             return str

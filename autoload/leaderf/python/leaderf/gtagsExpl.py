@@ -37,6 +37,7 @@ class GtagsExplorer(Explorer):
         self._result_format = None
         self._last_result_format = None
         self._evalVimVar()
+        self._has_nvim = lfEval("has('nvim')") == '1'
 
         self._task_queue = Queue.Queue()
         self._worker_thread = threading.Thread(target=self._processTask)
@@ -770,12 +771,24 @@ class GtagsExplorer(Explorer):
         env["GTAGSFORCECPP"] = ""
         proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stderr=subprocess.PIPE, env=env)
         _, error = proc.communicate()
+
+        def print_log(args):
+            print(args)
+
         if error:
-            print(cmd)
-            print(error)
-            print("gtags error!")
+            if self._has_nvim:
+                vim.async_call(print_log, cmd)
+                vim.async_call(print_log, error)
+                vim.async_call(print_log, "gtags error!")
+            else:
+                print(cmd)
+                print(error)
+                print("gtags error!")
         else:
-            print("gtags generated successfully!")
+            if self._has_nvim:
+                vim.async_call(print_log, "gtags generated successfully!")
+            else:
+                print("gtags generated successfully!")
 
     def getStlCategory(self):
         return 'Gtags'
