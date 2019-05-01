@@ -19,29 +19,19 @@ class AsyncExecutor(object):
     read the output asynchronously.
     """
     def __init__(self):
-        self._outQueue = Queue.Queue()
         self._errQueue = Queue.Queue()
         self._process = None
         self._finished = False
         self._max_count = int(lfEval("g:Lf_MaxCount"))
 
-    def _readerThread(self, fd, queue, is_stdout):
+    def _readerThread(self, fd, queue):
         try:
-            count = 0
             for line in iter(fd.readline, b""):
                 queue.put(line)
-
-                if is_stdout and self._max_count > 0:
-                    count += 1
-                    if count >= self._max_count:
-                        self.killProcess()
-                        break
         except ValueError:
             pass
         finally:
             queue.put(None)
-            if is_stdout:
-                self._finished = True
 
     def execute(self, cmd, encoding=None, cleanup=None, env=None):
         if os.name == 'nt':
@@ -63,37 +53,38 @@ class AsyncExecutor(object):
 
         self._finished = False
 
-        stdout_thread = threading.Thread(target=self._readerThread,
-                                         args=(self._process.stdout, self._outQueue, True))
-        stdout_thread.daemon = True
-        stdout_thread.start()
-
         stderr_thread = threading.Thread(target=self._readerThread,
-                                         args=(self._process.stderr, self._errQueue, False))
+                                         args=(self._process.stderr, self._errQueue))
         stderr_thread.daemon = True
         stderr_thread.start()
 
-        stdout_thread.join(0.01)
-
-        def read(outQueue, errQueue, encoding, cleanup):
+        def read(source):
             try:
+                count = 0
                 if encoding:
-                    while True:
-                        line = outQueue.get()
-                        if line is None:
-                            break
+                    for line in source:
                         yield lfBytes2Str(line.rstrip(b"\r\n"), encoding)
+                        if self._max_count > 0:
+                            count += 1
+                            if count >= self._max_count:
+                                self.killProcess()
+                                break
                 else:
-                    while True:
-                        line = outQueue.get()
-                        if line is None:
-                            break
+                    for line in source:
                         yield lfEncode(lfBytes2Str(line.rstrip(b"\r\n")))
+                        if self._max_count > 0:
+                            count += 1
+                            if count >= self._max_count:
+                                self.killProcess()
+                                break
 
-                err = b"".join(iter(errQueue.get, None))
+                err = b"".join(iter(self._errQueue.get, None))
                 if err:
                     raise Exception(lfBytes2Str(err, encoding))
+            except ValueError:
+                pass
             finally:
+                self._finished = True
                 try:
                     if self._process:
                         self._process.stdout.close()
@@ -104,7 +95,7 @@ class AsyncExecutor(object):
                 if cleanup:
                     cleanup()
 
-        result = AsyncExecutor.Result(read(self._outQueue, self._errQueue, encoding, cleanup))
+        result = AsyncExecutor.Result(read(iter(self._process.stdout.readline, b"")))
 
         return result
 
