@@ -197,6 +197,10 @@ let g:Lf_CommonArguments = [
             \   {"name": ["--regexMode"],    "nargs": 0, "help": "LeaderF is in Regex mode by default"},
             \ ],
             \ {"name": ["--nowrap"], "nargs": 0, "help": "long lines in the LeaderF window won't wrap"},
+            \ [
+            \   {"name": ["--next"], "nargs": 0, "help": "Jump to the next result."},
+            \   {"name": ["--previous"], "nargs": 0, "help": "Jump to the previous result."},
+            \ ],
             \]
 
 " arguments is something like g:Lf_CommonArguments

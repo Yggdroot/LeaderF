@@ -213,6 +213,11 @@ class Manager(object):
             self._fuzzy_engine = fuzzyEngine.createFuzzyEngine(cpu_count, False)
 
     def _beforeExit(self):
+        if self._getInstance().window.valid:
+            self._getInstance().cursorRow = self._getInstance().window.cursor[0]
+        self._getInstance().helpLength = self._help_length
+        self._help_length = 0
+        self._show_help = False
         self._cleanup()
         self._getExplorer().cleanup()
         if self._fuzzy_engine:
@@ -1020,8 +1025,6 @@ class Manager(object):
             self._cli.clear()
             self._clearHighlights()
             self._clearHighlightsPos()
-            self._help_length_bak = self._help_length
-            self._help_length = 0
         self.clearSelections()
 
     @modifiableController
@@ -1035,6 +1038,8 @@ class Manager(object):
         self._createHelpHint()
         self.clearSelections()
         self._resetHighlights()
+        if self._getInstance().isReverseOrder():
+            self._getInstance().window.height = len(self._getInstance().buffer)
 
     def _accept(self, file, mode, *args, **kwargs):
         if file:
@@ -1146,6 +1151,104 @@ class Manager(object):
             self._content = vim.current.buffer[:]
             return False
 
+    def _jumpNext(self):
+        instance = self._getInstance()
+        if instance.window is None or instance.empty() or len(instance.buffer) == self._help_length:
+            return False
+
+        if instance.isReverseOrder():
+            if instance.window.valid:
+                if instance.window.cursor[0] > len(instance.buffer) - self._help_length:
+                    instance.window.cursor = (len(instance.buffer) - self._help_length, 0)
+                elif instance.window.cursor[0] == 1: # at the first line
+                    instance.window.cursor = (len(instance.buffer) - self._help_length, 0)
+                else:
+                    instance.window.cursor = (instance.window.cursor[0] - 1, 0)
+                instance.window.options["cursorline"] = True
+
+                instance.gotoOriginalWindow()
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "")
+            else:
+                if instance.cursorRow > len(instance.buffer) - instance.helpLength:
+                    instance.cursorRow = len(instance.buffer) - instance.helpLength
+                elif instance.cursorRow == 1: # at the last line
+                    instance.cursorRow = len(instance.buffer) - instance.helpLength
+                else:
+                    instance.cursorRow -= 1
+
+                self._accept(instance.buffer[instance.cursorRow - 1], "")
+                lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
+                        (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1, len(instance.buffer) - instance.helpLength))
+        else:
+            if instance.window.valid:
+                if instance.window.cursor[0] <= self._help_length:
+                    instance.window.cursor = (self._help_length + 1, 0)
+                elif instance.window.cursor[0] == len(instance.buffer): # at the last line
+                    instance.window.cursor = (self._help_length + 1, 0)
+                else:
+                    instance.window.cursor = (instance.window.cursor[0] + 1, 0)
+                instance.window.options["cursorline"] = True
+
+                instance.gotoOriginalWindow()
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "")
+            else:
+                if instance.cursorRow <= instance.helpLength:
+                    instance.cursorRow = instance.helpLength + 1
+                elif instance.cursorRow == len(instance.buffer): # at the last line
+                    instance.cursorRow = instance.helpLength + 1
+                else:
+                    instance.cursorRow += 1
+
+                self._accept(instance.buffer[instance.cursorRow - 1], "")
+                lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
+                        (instance.cursorRow - instance.helpLength, len(instance.buffer) - instance.helpLength))
+
+        return True
+
+    def _jumpPrevious(self):
+        instance = self._getInstance()
+        if instance.window is None or instance.empty() or len(instance.buffer) == self._help_length:
+            return False
+
+        if instance.isReverseOrder():
+            if instance.window.valid:
+                if instance.window.cursor[0] >= len(instance.buffer) - self._help_length:
+                    instance.window.cursor = (1, 0)
+                else:
+                    instance.window.cursor = (instance.window.cursor[0] + 1, 0)
+                instance.window.options["cursorline"] = True
+
+                instance.gotoOriginalWindow()
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "")
+            else:
+                if instance.cursorRow >= len(instance.buffer) - instance.helpLength:
+                    instance.cursorRow = 1
+                else:
+                    instance.cursorRow += 1
+
+                self._accept(instance.buffer[instance.cursorRow - 1], "")
+                lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
+                        (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1, len(instance.buffer) - instance.helpLength))
+        else:
+            if instance.window.valid:
+                if instance.window.cursor[0] <= self._help_length + 1:
+                    instance.window.cursor = (len(instance.buffer), 0)
+                else:
+                    instance.window.cursor = (instance.window.cursor[0] - 1, 0)
+                instance.window.options["cursorline"] = True
+
+                instance.gotoOriginalWindow()
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "")
+            else:
+                if instance.cursorRow <= instance.helpLength + 1:
+                    instance.cursorRow = len(instance.buffer)
+                else:
+                    instance.cursorRow -= 1
+
+                self._accept(instance.buffer[instance.cursorRow - 1], "")
+                lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
+                        (instance.cursorRow - instance.helpLength, len(instance.buffer) - instance.helpLength))
+
     def quit(self):
         self._getInstance().exitBuffer()
         self._setAutochdir()
@@ -1233,6 +1336,15 @@ class Manager(object):
                 self._getExplorer().getContent(*args, **kwargs)
                 return
 
+        if "--next" in arguments_dict:
+            if self._jumpNext() == False:
+                lfCmd("echohl Error | redraw | echo 'Error, no content!' | echohl NONE")
+            return
+        elif "--previous" in arguments_dict:
+            if self._jumpPrevious() == False:
+                lfCmd("echohl Error | redraw | echo 'Error, no content!' | echohl NONE")
+            return
+
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
         if self._getExplorer().getStlCategory() in ["Rg", "Gtags"] and "--recall" in self._arguments:
             content = self._content
@@ -1309,7 +1421,6 @@ class Manager(object):
                 if self._getExplorer().getStlCategory() in ["Rg", "Gtags"]:
                     if "--append" in self.getArguments():
                         self._offset_in_content = len(self._content)
-                        self._help_length = self._help_length_bak
                         if self._pattern_bak:
                             self._getInstance().setBuffer(self._content)
                             self._createHelpHint()

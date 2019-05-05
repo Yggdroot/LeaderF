@@ -994,6 +994,13 @@ class GtagsExplManager(Manager):
             self._workInIdle(bang=True)
             if self._read_finished < 2:
                 self._timer_id = lfEval("timer_start(1, 'leaderf#Gtags#TimerCallback', {'repeat': -1})")
+        else:
+            instance = self._getInstance()
+            if instance.isLastReverseOrder():
+                instance.window.cursor = (min(instance.cursorRow, len(instance.buffer)), 0)
+            else:
+                instance.window.cursor = (max(instance.cursorRow - instance.helpLength, 1), 0)
+            instance.window.options["cursorline"] = True
 
     def deleteCurrentLine(self):
         if vim.current.window.cursor[0] <= self._help_length:

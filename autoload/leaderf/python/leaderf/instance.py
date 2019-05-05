@@ -36,8 +36,11 @@ class LfInstance(object):
         self._show_tabline = int(lfEval("&showtabline"))
         self._is_autocmd_set = False
         self._reverse_order = lfEval("get(g:, 'Lf_ReverseOrder', 0)") == '1'
+        self._last_reverse_order = self._reverse_order
         self._orig_pos = () # (tabpage, window, buffer)
         self._running_status = 0
+        self._cursor_row = None
+        self._help_length = None
         self._current_working_directory = None
         self._highlightStl()
 
@@ -215,6 +218,7 @@ class LfInstance(object):
         return False
 
     def setArguments(self, arguments):
+        self._last_reverse_order = self._reverse_order
         self._arguments = arguments
         if "--reverse" in self._arguments or lfEval("get(g:, 'Lf_ReverseOrder', 0)") == '1':
             self._reverse_order = True
@@ -484,6 +488,9 @@ class LfInstance(object):
     def isReverseOrder(self):
         return self._reverse_order
 
+    def isLastReverseOrder(self):
+        return self._last_reverse_order
+
     def setLineNumber(self):
         if self._reverse_order:
             line_nr = 1 + len(self._buffer_object) - self._window_object.cursor[0]
@@ -494,5 +501,28 @@ class LfInstance(object):
 
     def getCwd(self):
         return self._current_working_directory
+
+    @property
+    def cursorRow(self):
+        return self._cursor_row
+
+    @cursorRow.setter
+    def cursorRow(self, row):
+        self._cursor_row = row
+
+    @property
+    def helpLength(self):
+        return self._help_length
+
+    @helpLength.setter
+    def helpLength(self, length):
+        self._help_length = length
+
+    def gotoOriginalWindow(self):
+        if self._orig_win_id is not None:
+            lfCmd("call win_gotoid(%d)" % self._orig_win_id)
+        else:
+            # 'silent!' is used to skip error E16.
+            lfCmd("silent! exec '%d wincmd w'" % self._orig_win_nr)
 
 #  vim: set ts=4 sw=4 tw=0 et :
