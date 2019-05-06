@@ -77,7 +77,7 @@ class GtagsExplorer(Explorer):
             self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
 
         if "--gtagslibpath" in arguments_dict:
-            self._gtagslibpath = [os.path.expanduser(p) for p in arguments_dict["--gtagslibpath"]]
+            self._gtagslibpath = [os.path.abspath(os.path.expanduser(p)) for p in arguments_dict["--gtagslibpath"]]
         else:
             self._gtagslibpath = []
 
