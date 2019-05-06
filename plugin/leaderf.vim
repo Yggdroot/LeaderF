@@ -64,11 +64,11 @@ augroup LeaderF_Mru
 augroup END
 
 augroup LeaderF_Gtags
+    autocmd!
     if get(g:, 'Lf_GtagsAutoGenerate', 0) == 1
-        autocmd!
         autocmd BufRead * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 0)
-        autocmd BufWritePost * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 1)
     endif
+    autocmd BufWritePost * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 1)
 augroup END
 
 noremap <silent> <Plug>LeaderfFileTop        :<C-U>call leaderf#File#startExpl('top')<CR>
