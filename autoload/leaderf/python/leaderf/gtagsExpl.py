@@ -943,9 +943,9 @@ class GtagsExplManager(Manager):
             id = int(lfEval('''matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+$')'''))
             self._match_ids.append(id)
         elif self._getExplorer().getResultFormat() == "ctags-x":
-            id = int(lfEval('''matchadd('Lf_hl_gtagsFileName', '^\w\+\s\+\d\+\s\+\zs\S\+')'''))
+            id = int(lfEval('''matchadd('Lf_hl_gtagsFileName', '^\S\+\s\+\d\+\s\+\zs\S\+')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_gtagsLineNumber', '^\w\+\s\+\zs\d\+')'''))
+            id = int(lfEval('''matchadd('Lf_hl_gtagsLineNumber', '^\S\+\s\+\zs\d\+')'''))
             self._match_ids.append(id)
         else: # ctags-mod
             id = int(lfEval('''matchadd('Lf_hl_gtagsFileName', '^.\{-}\ze\t')'''))
