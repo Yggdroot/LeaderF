@@ -58,42 +58,92 @@ class AsyncExecutor(object):
         stderr_thread.daemon = True
         stderr_thread.start()
 
-        def read(source):
-            try:
-                count = 0
-                if encoding:
-                    for line in source:
-                        yield lfBytes2Str(line.rstrip(b"\r\n"), encoding)
-                        if self._max_count > 0:
-                            count += 1
-                            if count >= self._max_count:
-                                self.killProcess()
-                                break
-                else:
-                    for line in source:
-                        yield lfEncode(lfBytes2Str(line.rstrip(b"\r\n")))
-                        if self._max_count > 0:
-                            count += 1
-                            if count >= self._max_count:
-                                self.killProcess()
-                                break
-
-                err = b"".join(iter(self._errQueue.get, None))
-                if err:
-                    raise Exception(lfBytes2Str(err, encoding))
-            except ValueError:
-                pass
-            finally:
-                self._finished = True
+        if sys.version_info >= (3, 0):
+            def read(source):
                 try:
-                    if self._process:
-                        self._process.stdout.close()
-                        self._process.stderr.close()
-                except IOError:
-                    pass
+                    count = 0
+                    if encoding:
+                        for line in source:
+                            try:
+                                line.decode("ascii")
+                                yield line.rstrip(b"\r\n").decode()
+                            except UnicodeDecodeError:
+                                yield lfBytes2Str(line.rstrip(b"\r\n"), encoding)
+                            if self._max_count > 0:
+                                count += 1
+                                if count >= self._max_count:
+                                    self.killProcess()
+                                    break
+                    else:
+                        for line in source:
+                            try:
+                                line.decode("ascii")
+                                yield line.rstrip(b"\r\n").decode()
+                            except UnicodeDecodeError:
+                                yield lfBytes2Str(line.rstrip(b"\r\n"))
+                            if self._max_count > 0:
+                                count += 1
+                                if count >= self._max_count:
+                                    self.killProcess()
+                                    break
 
-                if cleanup:
-                    cleanup()
+                    err = b"".join(iter(self._errQueue.get, None))
+                    if err:
+                        raise Exception(lfBytes2Str(err, encoding))
+                except ValueError:
+                    pass
+                finally:
+                    self._finished = True
+                    try:
+                        if self._process:
+                            self._process.stdout.close()
+                            self._process.stderr.close()
+                    except IOError:
+                        pass
+
+                    if cleanup:
+                        cleanup()
+        else:
+            def read(source):
+                try:
+                    count = 0
+                    if encoding:
+                        for line in source:
+                            yield line.rstrip(b"\r\n")
+                            if self._max_count > 0:
+                                count += 1
+                                if count >= self._max_count:
+                                    self.killProcess()
+                                    break
+                    else:
+                        for line in source:
+                            try:
+                                line.decode("ascii")
+                                yield line.rstrip(b"\r\n")
+                            except UnicodeDecodeError:
+                                yield lfEncode(line.rstrip(b"\r\n"))
+                            if self._max_count > 0:
+                                count += 1
+                                if count >= self._max_count:
+                                    self.killProcess()
+                                    break
+
+                    err = b"".join(iter(self._errQueue.get, None))
+                    if err:
+                        raise Exception(err)
+                except ValueError:
+                    pass
+                finally:
+                    self._finished = True
+                    try:
+                        if self._process:
+                            self._process.stdout.close()
+                            self._process.stderr.close()
+                    except IOError:
+                        pass
+
+                    if cleanup:
+                        cleanup()
 
         result = AsyncExecutor.Result(read(iter(self._process.stdout.readline, b"")))
 
