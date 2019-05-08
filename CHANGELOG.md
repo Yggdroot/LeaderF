@@ -1,3 +1,49 @@
+v1.20 (2019-5-8)
+================
+
+Feature enhancements:
+
+* [Feature #191](https://github.com/Yggdroot/LeaderF/issues/191):
+  add support for GNU Global(`Leaderf gtags`)  
+  For more details: `Leaderf gtags -h`
+* [Feature #254](https://github.com/Yggdroot/LeaderF/issues/254):
+  Add rg option `--type-add`.
+* Add `--no-split-path` for "Leaderf mru"
+* Add mouse wheel support for terminal vim
+* Add rg options `--no-pcre2-unicode`, `--path-separator`, `--sort`, `--sortr`, `-f`, `--match-path`
+* Add g:Lf_RgConfig and g:Lf_MaxCount
+* [Feature #266](https://github.com/Yggdroot/LeaderF/issues/266):
+  Add "-A", "-B" and "-C" options for `Leaderf rg`
+* [Feature #274](https://github.com/Yggdroot/LeaderF/issues/274):
+  Add g:Lf_NoChdir
+* [Feature #277](https://github.com/Yggdroot/LeaderF/issues/277):
+  Add `--wd-mode` support for `Leaderf rg`
+* Add preview support for `Leaderf file`
+* Add preview support for `Leaderf mru`
+* Use tab drop to open buffer
+* `--wd-mode` use the value of `g:Lf_WorkingDirectoryMode` by default
+* Optimize the asyncExecutor
+* Add `--next` and `--previous` to navigate the results
+
+Bug fixes:
+
+* [BUG #257](https://github.com/Yggdroot/LeaderF/issues/257)
+* [BUG #261](https://github.com/Yggdroot/LeaderF/issues/261)
+  Never read configuration files.
+* [BUG #267](https://github.com/Yggdroot/LeaderF/issues/267)
+* [BUG #272](https://github.com/Yggdroot/LeaderF/issues/272)
+* [BUG #273](https://github.com/Yggdroot/LeaderF/issues/273)
+* [BUG #278](https://github.com/Yggdroot/LeaderF/issues/278)
+* [BUG #280](https://github.com/Yggdroot/LeaderF/issues/280)
+* [BUG #283](https://github.com/Yggdroot/LeaderF/issues/283)
+* [BUG #297](https://github.com/Yggdroot/LeaderF/issues/297)
+* [BUG #302](https://github.com/Yggdroot/LeaderF/issues/302)
+* [BUG #304](https://github.com/Yggdroot/LeaderF/issues/304)
+* [BUG #307](https://github.com/Yggdroot/LeaderF/issues/307)
+* [BUG #310](https://github.com/Yggdroot/LeaderF/issues/310)
+* [BUG #315](https://github.com/Yggdroot/LeaderF/issues/315)
+* Fix the hang issue if `silent`
+
 v1.19 (2018-12-7)
 =================
 

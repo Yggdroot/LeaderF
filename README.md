@@ -85,7 +85,7 @@ Usage
 usage: Leaderf[!] [-h] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                   [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
                   [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
-                  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer,rg}
+                  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer,rg,gtags}
                   ...
 
 optional arguments:
@@ -106,6 +106,8 @@ optional arguments:
   --fuzzy               LeaderF is in Fuzzy mode by default
   --regexMode           LeaderF is in Regex mode by default
   --nowrap              long lines in the LeaderF window won't wrap
+  --next                Jump to the next result.
+  --previous            Jump to the previous result.
 
 subcommands:
 
@@ -123,6 +125,7 @@ subcommands:
     bufTag              navigate tags in the buffer
     buffer              search buffers
     rg                  grep using rg(ripgrep)
+    gtags               navigate tags using the gtags
 
 If [!] is given, enter normal mode directly.
 ```
@@ -240,6 +243,8 @@ common arguments:
   --fuzzy               LeaderF is in Fuzzy mode by default
   --regexMode           LeaderF is in Regex mode by default
   --nowrap              long lines in the LeaderF window won't wrap
+  --next                Jump to the next result.
+  --previous            Jump to the previous result.
 
 If [!] is given, enter normal mode directly.
 ```

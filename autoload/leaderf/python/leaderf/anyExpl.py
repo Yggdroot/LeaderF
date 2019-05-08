@@ -527,7 +527,7 @@ Leaderf[!] gtags --by-context [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>
 
 [COMMON_OPTIONS]: [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                   [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
-                  [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
+                  [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap] [--next | --previous]
  \n
 """
 
