@@ -132,7 +132,33 @@ class LfCli(object):
         self._cursor_pos = len(self._cmdline)
         self._buildPattern()
 
+    # https://github.com/neovim/neovim/issues/6538
+    def _buildNvimPrompt(self):
+        lfCmd("redraw")
+        if self._is_fuzzy:
+            if self._is_full_path:
+                lfCmd("echohl Constant | echon '>F> ' | echohl NONE")
+            else:
+                lfCmd("echohl Constant | echon '>>> ' | echohl NONE")
+        else:
+            lfCmd("echohl Constant | echon 'R>> ' | echohl NONE")
+
+        lfCmd("echohl Normal | echon '%s' | echohl NONE" %
+              escQuote(''.join(self._cmdline[:self._cursor_pos])))
+        if self._cursor_pos < len(self._cmdline):
+            lfCmd("hi! default link Lf_hl_cursor Cursor")
+            lfCmd("echohl Lf_hl_cursor | echon '%s' | echohl NONE" %
+                  escQuote(''.join(self._cmdline[self._cursor_pos])))
+            lfCmd("echohl Normal | echon '%s' | echohl NONE" %
+                  escQuote(''.join(self._cmdline[self._cursor_pos+1:])))
+        else:
+            lfCmd("hi! default link Lf_hl_cursor NONE")
+
     def _buildPrompt(self):
+        if lfEval("has('nvim')") == '1':
+            self._buildNvimPrompt()
+            return
+
         delta_time = datetime.now() - self._start_time
         delta_ms = delta_time.microseconds + (delta_time.seconds +
                    delta_time.days * 24 * 3600) * 10**6
