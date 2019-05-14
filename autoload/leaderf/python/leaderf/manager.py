@@ -1540,10 +1540,11 @@ class Manager(object):
                         lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
                     else:
                         self._getInstance().setBuffer(self._content[:self._initial_count])
-                    self._getInstance().setStlTotal(len(self._content)//self._getUnit())
-                    self._getInstance().setStlRunning(False)
+
                     self._getInstance().setStlResultsCount(len(self._content))
 
+                self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+                self._getInstance().setStlRunning(False)
                 lfCmd("redrawstatus")
 
             if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
