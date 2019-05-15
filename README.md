@@ -136,15 +136,15 @@ use `:Leaderf <subcommand> -h` to get specific help of subcommand, e.g., `:Leade
 usage: Leaderf[!] rg [-h] [-A <NUM>] [-B <NUM>] [-C <NUM>] [--context-separator <SEPARATOR>]
                      [-e <PATTERN>...] [-F] [-i] [-L] [-P] [-S] [-s] [-v] [-w] [-x] [--hidden]
                      [--no-config] [--no-ignore] [--no-ignore-global] [--no-ignore-parent]
-                     [--no-ignore-vcs] [--no-pcre2-unicode] [-E <ENCODING>] [-M <NUM>] [-m <NUM>]
-                     [--max-depth <NUM>] [--max-filesize <NUM+SUFFIX?>] [--path-separator <SEPARATOR>]
-                     [--sort <SORTBY>] [--sortr <SORTBY>] [-f <PATTERNFILE>...] [-g <GLOB>...]
-                     [--iglob <GLOB>...] [--ignore-file <PATH>...] [--type-add <TYPE_SPEC>...]
-                     [-t <TYPE>...] [-T <TYPE>...] [--current-buffer | --all-buffers] [--recall]
-                     [--append] [--match-path] [--wd-mode <MODE>] [--reverse] [--stayOpen]
-                     [--input <INPUT> | --cword]
+                     [--no-ignore-vcs] [--no-messages] [--no-pcre2-unicode] [-E <ENCODING>] [-M <NUM>]
+                     [-m <NUM>] [--max-depth <NUM>] [--max-filesize <NUM+SUFFIX?>]
+                     [--path-separator <SEPARATOR>] [--sort <SORTBY>] [--sortr <SORTBY>]
+                     [-f <PATTERNFILE>...] [-g <GLOB>...] [--iglob <GLOB>...] [--ignore-file <PATH>...]
+                     [--type-add <TYPE_SPEC>...] [-t <TYPE>...] [-T <TYPE>...]
+                     [--current-buffer | --all-buffers] [--recall] [--append] [--match-path]
+                     [--wd-mode <MODE>] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                      [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
-                     [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
+                     [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap] [--next | --previous]
                      [<PATH> [<PATH> ...]]
 
 optional arguments:
@@ -185,6 +185,7 @@ specific arguments:
                         `$HOME/.config/git/ignore`).
   --no-ignore-parent    Don't respect ignore files (.gitignore, .ignore, etc.) in parent directories.
   --no-ignore-vcs       Don't respect version control ignore files (.gitignore, etc.).
+  --no-messages         Suppress all error messages related to opening and reading files.
   --no-pcre2-unicode    When PCRE2 matching is enabled, this flag will disable Unicode mode, which is
                         otherwise enabled by default.
   -E <ENCODING>, --encoding <ENCODING>

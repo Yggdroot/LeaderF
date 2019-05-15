@@ -105,6 +105,7 @@ let g:Lf_Arguments = {
             \               "help": "Don't respect ignore files that come from 'global' sources such as git's `core.excludesFile` configuration option (which defaults to `$HOME/.config/git/ignore`)."},
             \           {"name": ["--no-ignore-parent"], "nargs": 0, "help": "Don't respect ignore files (.gitignore, .ignore, etc.) in parent directories."},
             \           {"name": ["--no-ignore-vcs"], "nargs": 0, "help": "Don't respect version control ignore files (.gitignore, etc.)."},
+            \           {"name": ["--no-messages"], "nargs": 0, "help": "Suppress all error messages related to opening and reading files."},
             \           {"name": ["--no-pcre2-unicode"], "nargs": 0, "help": "When PCRE2 matching is enabled, this flag will disable Unicode mode, which is otherwise enabled by default."},
             \           {"name": ["-E", "--encoding"], "nargs": 1, "metavar": "<ENCODING>", "help": "Specify the text encoding that rg will use on all files searched."},
             \           {"name": ["-M", "--max-columns"], "nargs": 1, "metavar": "<NUM>", "help": "Don't print lines longer than this limit in bytes."},

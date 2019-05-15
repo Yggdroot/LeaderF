@@ -94,6 +94,8 @@ class RgExplorer(Explorer):
             zero_args_options += "--no-ignore-parent "
         if "--no-ignore-vcs" in arguments_dict:
             zero_args_options += "--no-ignore-vcs "
+        if "--no-messages" in arguments_dict:
+            zero_args_options += "--no-messages "
         if "--no-pcre2-unicode" in arguments_dict:
             zero_args_options += "--no-pcre2-unicode "
 
