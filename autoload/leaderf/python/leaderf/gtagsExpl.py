@@ -122,6 +122,8 @@ class GtagsExplorer(Explorer):
         elif "--by-context" in arguments_dict:
             pattern = lfEval('expand("<cword>")')
             pattern_option = '--from-here "%d:%s" %s ' % (vim.current.window.cursor[0], vim.current.buffer.name, pattern)
+            if "--auto-jump" in arguments_dict:
+                auto_jump = True
         else:
             if "--current-buffer" in arguments_dict:
                 pattern_option = '-f "%s" -q' % vim.current.buffer.name

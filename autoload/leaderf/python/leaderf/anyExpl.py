@@ -522,8 +522,8 @@ Leaderf[!] gtags -s <PATTERN> [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>
                  [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
 Leaderf[!] gtags -g <PATTERN> [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
                  [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
-Leaderf[!] gtags --by-context [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>] [--append]
-                 [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
+Leaderf[!] gtags --by-context [--auto-jump [<TYPE>]] [-i] [--literal] [--path-style <FORMAT>] [-S <DIR>]
+                 [--append] [--match-path] [--gtagsconf <FILE>] [--gtagslabel <LABEL>] [COMMON_OPTIONS]
 
 [COMMON_OPTIONS]: [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                   [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
