@@ -447,10 +447,11 @@ class Manager(object):
         return exit_loop
 
     def _search(self, content, is_continue=False, step=0):
-        self.clearSelections()
-        self._clearHighlights()
-        self._clearHighlightsPos()
-        self._cli.highlightMatches()
+        if not is_continue:
+            self.clearSelections()
+            self._clearHighlights()
+            self._clearHighlightsPos()
+            self._cli.highlightMatches()
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
             self._getInstance().setBuffer(content[:self._initial_count])
             self._getInstance().setStlResultsCount(len(content))
