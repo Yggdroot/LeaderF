@@ -255,7 +255,21 @@ class Manager(object):
         return False
 
     def _previewResult(self, preview):
-        pass
+        if not self._needPreview(preview):
+            return
+
+        line = self._getInstance().currentLine
+        orig_pos = self._getInstance().getOriginalPos()
+        cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
+
+        saved_eventignore = vim.options['eventignore']
+        vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
+        try:
+            vim.current.tabpage, vim.current.window = orig_pos[:2]
+            self._acceptSelection(line)
+        finally:
+            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
+            vim.options['eventignore'] = saved_eventignore
 
     def _restoreOrigCwd(self):
         if self._orig_cwd is None:

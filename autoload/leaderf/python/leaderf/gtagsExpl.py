@@ -851,7 +851,11 @@ class GtagsExplManager(Manager):
             else:
                 lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
             lfCmd("norm! zz")
-            lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
+            preview_dict = lfEval("g:Lf_PreviewResult")
+            if int(preview_dict.get(self._getExplorer().getStlCategory(), 0)) == 0:
+                lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
+            else:
+                lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
         except vim.error as e:
             lfPrintError(e)
 
@@ -969,23 +973,6 @@ class GtagsExplManager(Manager):
         if self._timer_id is not None:
             lfCmd("call timer_stop(%s)" % self._timer_id)
             self._timer_id = None
-
-    def _previewResult(self, preview):
-        if not self._needPreview(preview):
-            return
-
-        line = self._getInstance().currentLine
-        orig_pos = self._getInstance().getOriginalPos()
-        cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
-
-        saved_eventignore = vim.options['eventignore']
-        vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
-        try:
-            vim.current.tabpage, vim.current.window = orig_pos[:2]
-            self._acceptSelection(line)
-        finally:
-            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
-            vim.options['eventignore'] = saved_eventignore
 
     def _bangEnter(self):
         super(GtagsExplManager, self)._bangEnter()

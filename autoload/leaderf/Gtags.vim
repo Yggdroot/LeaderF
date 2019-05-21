@@ -23,6 +23,13 @@ function! leaderf#Gtags#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "gtagsExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "gtagsExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "gtagsExplManager._previewResult(True)"<CR>
+    nnoremap <buffer> <silent> j             j:exec g:Lf_py "gtagsExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> k             k:exec g:Lf_py "gtagsExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "gtagsExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "gtagsExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "gtagsExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "gtagsExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "gtagsExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "gtagsExplManager.quit()"<CR>
     " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "gtagsExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "gtagsExplManager.input()"<CR>

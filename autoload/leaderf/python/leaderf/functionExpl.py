@@ -236,7 +236,11 @@ class FunctionExplManager(Manager):
             lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         lfCmd("norm! ^")
         lfCmd("norm! zz")
-        lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
+        preview_dict = lfEval("g:Lf_PreviewResult")
+        if int(preview_dict.get(self._getExplorer().getStlCategory(), 0)) == 0:
+            lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
+        else:
+            lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
 
     def _getDigest(self, line, mode):
         """
