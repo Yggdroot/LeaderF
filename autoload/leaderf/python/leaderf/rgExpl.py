@@ -509,7 +509,7 @@ class RgExplManager(Manager):
 
     def _afterEnter(self):
         super(RgExplManager, self)._afterEnter()
-        id = int(lfEval("matchadd('Lf_hl_rgFileName', '^.\{-}\ze[:-]\d', 10)"))
+        id = int(lfEval("matchadd('Lf_hl_rgFileName', '^.\{-}\ze\(:\d\+:\|-\d\+-\)', 10)"))
         self._match_ids.append(id)
         id = int(lfEval("matchadd('Lf_hl_rgLineNumber', '^.\{-}\zs:\d\+:', 10)"))
         self._match_ids.append(id)
