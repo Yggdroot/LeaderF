@@ -205,9 +205,11 @@ class GtagsExplorer(Explorer):
 
             self._pattern_regex.append(r'\V' + case_pattern + p)
         else:
-            vim_regex = self.translateRegex(case_pattern + p)
             if "-g" not in arguments_dict:
+                vim_regex = self.translateRegex(case_pattern + p.join([r'\b', r'\b']))
                 vim_regex = vim_regex.replace('.', r'\w')
+            else:
+                vim_regex = self.translateRegex(case_pattern + p)
 
             self._pattern_regex.append(vim_regex)
 
