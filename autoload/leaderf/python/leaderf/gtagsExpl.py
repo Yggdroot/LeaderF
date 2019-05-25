@@ -1014,6 +1014,22 @@ class GtagsExplManager(Manager):
     def _supportsRefine(self):
         return True
 
+    def startExplorer(self, win_pos, *args, **kwargs):
+        if  "through" in kwargs.get("arguments", {}).get("--path-style", []):
+            self._orig_cwd = os.getcwd()
+
+            # https://github.com/neovim/neovim/issues/8336
+            if lfEval("has('nvim')") == '1':
+                chdir = vim.chdir
+            else:
+                chdir = os.chdir
+
+            root_markers = lfEval("g:Lf_RootMarkers")
+            project_root = self._getExplorer()._nearestAncestor(root_markers, os.getcwd())
+            chdir(project_root)
+
+        super(GtagsExplManager, self).startExplorer(win_pos, *args, **kwargs)
+
 
 #*****************************************************
 # gtagsExplManager is a singleton
