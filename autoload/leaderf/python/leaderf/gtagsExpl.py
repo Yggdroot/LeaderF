@@ -1024,9 +1024,16 @@ class GtagsExplManager(Manager):
             else:
                 chdir = os.chdir
 
+            if vim.current.buffer.name:
+                path = os.path.dirname(lfDecode(vim.current.buffer.name))
+            else:
+                path = os.getcwd()
             root_markers = lfEval("g:Lf_RootMarkers")
-            project_root = self._getExplorer()._nearestAncestor(root_markers, os.getcwd())
-            chdir(project_root)
+            project_root = self._getExplorer()._nearestAncestor(root_markers, path)
+            if project_root == "" and path != os.getcwd():
+                project_root = self._getExplorer()._nearestAncestor(root_markers, os.getcwd())
+            if project_root:
+                chdir(project_root)
 
         super(GtagsExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
