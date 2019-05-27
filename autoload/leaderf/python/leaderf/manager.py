@@ -1430,8 +1430,10 @@ class Manager(object):
             self._is_content_list = False
             self._result_content = []
             self._callback = self._workInIdle
-            if lfEval("g:Lf_CursorBlink") == '0':
+            if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
+                self._read_finished = 1
+                self._offset_in_content = 0
             else:
                 if self._getExplorer().getStlCategory() in ["Rg", "Gtags"]:
                     if "--append" in self.getArguments():
@@ -1464,8 +1466,10 @@ class Manager(object):
             self._is_content_list = False
             self._result_content = []
             self._callback = partial(self._workInIdle, content)
-            if lfEval("g:Lf_CursorBlink") == '0':
+            if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
+                self._read_finished = 1
+                self._offset_in_content = 0
             else:
                 self._content = []
                 self._offset_in_content = 0

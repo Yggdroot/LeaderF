@@ -43,6 +43,7 @@ class LfCli(object):
         self._cmdline = []
         self._pattern = ''
         self._cursor_pos = 0
+        self._orig_cursor_pos = -1
         self._start_time = datetime.now()
         self._idle = False
         self._blinkon = True
@@ -169,9 +170,15 @@ class LfCli(object):
                 lfCmd("hi! default link Lf_hl_cursor Cursor")
             else:
                 lfCmd("hi! default link Lf_hl_cursor NONE")
+
             if lfEval("g:Lf_CursorBlink") == '1':
                 self._start_time = datetime.now()
                 self._blinkon = not self._blinkon
+            else:
+                if self._cursor_pos == self._orig_cursor_pos:
+                    return
+                else:
+                    self._orig_cursor_pos = self._cursor_pos
 
         if self._is_fuzzy:
             if self._is_full_path:
@@ -458,7 +465,7 @@ class LfCli(object):
                 self._buildPrompt()
                 self._idle = False
 
-                if lfEval("g:Lf_CursorBlink") == '1':
+                if lfEval("get(g:, 'Lf_NoAsync', 0)") == '0':
                     try:
                         callback()
                         time.sleep(0.001) # cpu usage 100% without sleep
@@ -466,7 +473,7 @@ class LfCli(object):
                         lfPrintError(e)
                         break
 
-                if lfEval("g:Lf_CursorBlink") == '1':
+                if lfEval("get(g:, 'Lf_NoAsync', 0)") == '0':
                     lfCmd("let nr = getchar(1)")
                     if lfEval("!type(nr) && nr == 0") == '1':
                         self._idle = True
@@ -486,6 +493,7 @@ class LfCli(object):
                 else:
                     lfCmd("let nr = getchar()")
                     lfCmd("let ch = !type(nr) ? nr2char(nr) : nr")
+                    self._blinkon = True
 
                 if lfEval("!type(nr) && nr >= 0x20") == '1':
                     self._insert(lfEval("ch"))
