@@ -369,11 +369,11 @@ class LfInstance(object):
 
                 try:
                     self._window_object.cursor = (orig_row + buffer_len - orig_buf_len, 0)
-                    if self._window_object.cursor == (buffer_len, 0):
-                        lfCmd("normal! zb")
+                    # if self._window_object.cursor == (buffer_len, 0):
+                    #     lfCmd("normal! zb")
                 except vim.error:
                     self._window_object.cursor = (buffer_len, 0)
-                    lfCmd("normal! zb")
+                    # lfCmd("normal! zb")
 
                 self.setLineNumber()
             else:
