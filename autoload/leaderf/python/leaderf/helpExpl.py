@@ -29,7 +29,7 @@ class HelpExplorer(Explorer):
         for dir in lfEval("&rtp").split(','):
             tags_file = os.path.join(dir, "doc", "tags")
             try:
-                with lfOpen(tags_file, 'r+', errors='ignore') as f:
+                with lfOpen(tags_file, 'r', errors='ignore') as f:
                     lines = f.readlines()
                     for line in lines:
                         tag, file = line.split()[:2]
