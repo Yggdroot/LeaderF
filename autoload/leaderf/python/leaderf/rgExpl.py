@@ -513,8 +513,9 @@ class RgExplManager(Manager):
         self._match_ids.append(id)
         id = int(lfEval("matchadd('Lf_hl_rgLineNumber', '^.\{-}\zs:\d\+:', 10)"))
         self._match_ids.append(id)
-        id = int(lfEval("matchadd('Lf_hl_rgLineNumber2', '^.\{-}\zs-\d\+-', 10)"))
-        self._match_ids.append(id)
+        if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
+            id = int(lfEval("matchadd('Lf_hl_rgLineNumber2', '^.\{-}\zs-\d\+-', 10)"))
+            self._match_ids.append(id)
         if self._has_column:
             id = int(lfEval("matchadd('Lf_hl_rgColumnNumber', '^.\{-}:\d\+:\zs\d\+:', 10)"))
             self._match_ids.append(id)
