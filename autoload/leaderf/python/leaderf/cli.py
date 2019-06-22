@@ -110,6 +110,7 @@ class LfCli(object):
     def clear(self):
         self._cmdline[:] = []
         self._cursor_pos = 0
+        self._orig_cursor_pos = -1
         self._pattern = ''
 
     def _toLeft(self):
