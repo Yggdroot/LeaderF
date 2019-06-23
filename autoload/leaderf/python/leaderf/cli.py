@@ -43,7 +43,6 @@ class LfCli(object):
         self._cmdline = []
         self._pattern = ''
         self._cursor_pos = 0
-        self._orig_cursor_pos = -1
         self._start_time = datetime.now()
         self._idle = False
         self._blinkon = True
@@ -110,7 +109,6 @@ class LfCli(object):
     def clear(self):
         self._cmdline[:] = []
         self._cursor_pos = 0
-        self._orig_cursor_pos = -1
         self._pattern = ''
 
     def _toLeft(self):
@@ -175,11 +173,8 @@ class LfCli(object):
             if lfEval("g:Lf_CursorBlink") == '1':
                 self._start_time = datetime.now()
                 self._blinkon = not self._blinkon
-            else:
-                if self._cursor_pos == self._orig_cursor_pos:
-                    return
-                else:
-                    self._orig_cursor_pos = self._cursor_pos
+            elif self._idle:
+                return
 
         if self._is_fuzzy:
             if self._is_full_path:
