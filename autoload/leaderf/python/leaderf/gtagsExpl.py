@@ -431,6 +431,9 @@ class GtagsExplorer(Explorer):
             self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
 
         root, dbpath, exists = self._root_dbpath(filename)
+        if not filename.startswith(root):
+            return
+
         self._updateLibGtags(dbpath)
         if single_update:
             if exists:
