@@ -92,7 +92,7 @@ class BufTagExplorer(Explorer):
             self._buf_changedtick[buffer.number] = changedtick
 
         if lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "cpp":
-            extra_options = "--c++-kinds=+p"
+            extra_options = "--language-force=C++ --c++-kinds=+p"
         elif lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "c":
             extra_options = "--c-kinds=+p"
         elif lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "python":

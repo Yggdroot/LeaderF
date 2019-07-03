@@ -28,7 +28,7 @@ class FunctionExplorer(Explorer):
                 "aspvbs": "--asp-kinds=f",
                 "awk": "--awk-kinds=f",
                 "c": "--c-kinds=fp",
-                "cpp": "--c++-kinds=fp",
+                "cpp": "--c++-kinds=fp --language-force=C++",
                 "cs": "--c#-kinds=m",
                 "erlang": "--erlang-kinds=f",
                 "fortran": "--fortran-kinds=f",
