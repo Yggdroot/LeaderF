@@ -633,6 +633,8 @@ class RgExplManager(Manager):
         line = vim.current.line
         if len(self._content) > 0:
             self._content.remove(line)
+            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+            self._getInstance().setStlResultsCount(len(self._content)//self._getUnit())
         # `del vim.current.line` does not work in neovim
         # https://github.com/neovim/neovim/issues/9361
         del vim.current.buffer[vim.current.window.cursor[0] - 1]
