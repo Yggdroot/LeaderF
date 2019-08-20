@@ -428,15 +428,16 @@ class LfInstance(object):
                 cur_content.append(line)
                 if time.time() - start > 0.1:
                     start = time.time()
-                    self.setBuffer(cur_content)
-                    if self._reverse_order:
-                        lfCmd("normal! G")
+                    if len(self._buffer_object) <= self._window_object.height:
+                        self.setBuffer(cur_content)
+                        if self._reverse_order:
+                            lfCmd("normal! G")
 
                     if time.time() - status_start > 0.45:
                         status_start = time.time()
                         self.setStlRunning(True)
-                    self.setStlTotal(len(self._buffer_object)//unit)
-                    self.setStlResultsCount(len(self._buffer_object)//unit)
+                    self.setStlTotal(len(cur_content)//unit)
+                    self.setStlResultsCount(len(cur_content)//unit)
                     lfCmd("redrawstatus")
             self.setBuffer(cur_content)
             self.setStlTotal(len(self._buffer_object)//unit)
