@@ -154,7 +154,15 @@ class RgExplorer(Explorer):
         if "--append" not in arguments_dict:
             self._pattern_regex = []
 
-        for i in arguments_dict.get("-e", []):
+        path_list = arguments_dict.get("PATH", [])
+        path = ' '.join(path_list)
+
+        pattern_list = arguments_dict.get("-e", [])
+        for i in pattern_list or path_list[:1]:
+            if len(pattern_list) == 0:
+                # treat the first PATH as pattern
+                path = ' '.join(path_list[1:])
+
             pattern += r'-e %s ' % i
             if case_flag == '-i':
                 case_pattern = r'\c'
@@ -193,7 +201,6 @@ class RgExplorer(Explorer):
         if pattern == '':
             pattern = '"" '
 
-        path = ' '.join(arguments_dict.get("PATH", []))
         if path == '' and os.name == 'nt':
             path = '.'
 
