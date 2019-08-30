@@ -399,8 +399,31 @@ class RgExplManager(Manager):
             return
 
         line = args[0]
-        m = re.match(r'^(.+?)[:-](\d+)[:-]', line)
-        file, line_num = m.group(1, 2)
+        if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
+            m = re.match(r'^(.+?)([:-])(\d+)\2', line)
+            file, sep, line_num = m.group(1, 2, 3)
+            if not os.path.exists(file):
+                if sep == ':':
+                    sep = '-'
+                else:
+                    sep = ':'
+                m = re.match(r'^(.+?)%s(\d+)%s' % (sep, sep), line)
+                if m:
+                    file, line_num = m.group(1, 2)
+            i = 1
+            while not os.path.exists(file):
+                m = re.match(r'^(.+?(?:([:-])\d+.*?){%d})\2(\d+)\2' % i, line)
+                i += 1
+                file, line_num = m.group(1, 3)
+        else:
+            m = re.match(r'^(.+?):(\d+):', line)
+            file, line_num = m.group(1, 2)
+            i = 1
+            while not os.path.exists(file):
+                m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):' % i, line)
+                i += 1
+                file, line_num = m.group(1, 2)
+
         if not os.path.isabs(file):
             file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
             file = os.path.normpath(lfEncode(file))
@@ -516,7 +539,10 @@ class RgExplManager(Manager):
 
     def _afterEnter(self):
         super(RgExplManager, self)._afterEnter()
-        id = int(lfEval("matchadd('Lf_hl_rgFileName', '^.\{-}\ze\(:\d\+:\|-\d\+-\)', 10)"))
+        if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
+            id = int(lfEval("matchadd('Lf_hl_rgFileName', '^.\{-}\ze\(:\d\+:\|-\d\+-\)', 10)"))
+        else:
+            id = int(lfEval("matchadd('Lf_hl_rgFileName', '^.\{-}\ze\:\d\+:', 10)"))
         self._match_ids.append(id)
         id = int(lfEval("matchadd('Lf_hl_rgLineNumber', '^.\{-}\zs:\d\+:', 10)"))
         self._match_ids.append(id)
