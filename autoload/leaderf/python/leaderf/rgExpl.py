@@ -402,7 +402,7 @@ class RgExplManager(Manager):
         if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
             m = re.match(r'^(.+?)([:-])(\d+)\2', line)
             file, sep, line_num = m.group(1, 2, 3)
-            if not os.path.exists(file):
+            if not os.path.exists(lfDecode(file)):
                 if sep == ':':
                     sep = '-'
                 else:
@@ -411,7 +411,7 @@ class RgExplManager(Manager):
                 if m:
                     file, line_num = m.group(1, 2)
             i = 1
-            while not os.path.exists(file):
+            while not os.path.exists(lfDecode(file)):
                 m = re.match(r'^(.+?(?:([:-])\d+.*?){%d})\2(\d+)\2' % i, line)
                 i += 1
                 file, line_num = m.group(1, 3)
@@ -419,7 +419,7 @@ class RgExplManager(Manager):
             m = re.match(r'^(.+?):(\d+):', line)
             file, line_num = m.group(1, 2)
             i = 1
-            while not os.path.exists(file):
+            while not os.path.exists(lfDecode(file)):
                 m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):' % i, line)
                 i += 1
                 file, line_num = m.group(1, 2)
