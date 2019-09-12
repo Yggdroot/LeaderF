@@ -210,6 +210,7 @@ class FunctionExplManager(Manager):
         super(FunctionExplManager, self).__init__()
         self._match_ids = []
         self._orig_line = ''
+        self._cursorline_dict = {}
 
     def _getExplClass(self):
         return FunctionExplorer
@@ -236,11 +237,11 @@ class FunctionExplManager(Manager):
             lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         lfCmd("norm! ^")
         lfCmd("norm! zz")
-        preview_dict = lfEval("g:Lf_PreviewResult")
-        if int(preview_dict.get(self._getExplorer().getStlCategory(), 0)) == 0:
-            lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
-        else:
-            lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
+
+        if vim.current.window not in self._cursorline_dict:
+            self._cursorline_dict[vim.current.window] = vim.current.window.options["cursorline"]
+
+        lfCmd("setlocal cursorline")
 
     def _getDigest(self, line, mode):
         """
@@ -308,6 +309,8 @@ class FunctionExplManager(Manager):
         if self._timer_id is not None:
             lfCmd("call timer_stop(%s)" % self._timer_id)
             self._timer_id = None
+        for k, v in self._cursorline_dict.items():
+            k.options["cursorline"] = v
 
     def _supportsRefine(self):
         return True

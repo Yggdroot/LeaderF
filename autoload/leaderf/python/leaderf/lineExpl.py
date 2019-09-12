@@ -54,6 +54,7 @@ class LineExplManager(Manager):
     def __init__(self):
         super(LineExplManager, self).__init__()
         self._match_ids = []
+        self._cursorline_dict = {}
 
     def _getExplClass(self):
         return LineExplorer
@@ -70,11 +71,11 @@ class LineExplManager(Manager):
         lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         lfCmd("norm! ^")
         lfCmd("norm! zz")
-        preview_dict = lfEval("g:Lf_PreviewResult")
-        if int(preview_dict.get(self._getExplorer().getStlCategory(), 0)) == 0:
-            lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
-        else:
-            lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
+
+        if vim.current.window not in self._cursorline_dict:
+            self._cursorline_dict[vim.current.window] = vim.current.window.options["cursorline"]
+
+        lfCmd("setlocal cursorline")
 
     def _getDigest(self, line, mode):
         """
@@ -118,6 +119,8 @@ class LineExplManager(Manager):
         for i in self._match_ids:
             lfCmd("silent! call matchdelete(%d)" % i)
         self._match_ids = []
+        for k, v in self._cursorline_dict.items():
+            k.options["cursorline"] = v
 
 
 #*****************************************************
