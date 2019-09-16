@@ -212,7 +212,6 @@ class BufTagExplManager(Manager):
         self._match_ids = []
         self._supports_preview = int(lfEval("g:Lf_PreviewCode"))
         self._orig_line = ''
-        self._cursorline_dict = {}
 
     def _getExplClass(self):
         return BufTagExplorer

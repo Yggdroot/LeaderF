@@ -825,7 +825,6 @@ class GtagsExplManager(Manager):
         super(GtagsExplManager, self).__init__()
         self._match_ids = []
         self._match_path = False
-        self._cursorline_dict = {}
 
     def _getExplClass(self):
         return GtagsExplorer

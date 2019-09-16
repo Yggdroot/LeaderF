@@ -54,7 +54,6 @@ class LineExplManager(Manager):
     def __init__(self):
         super(LineExplManager, self).__init__()
         self._match_ids = []
-        self._cursorline_dict = {}
 
     def _getExplClass(self):
         return LineExplorer

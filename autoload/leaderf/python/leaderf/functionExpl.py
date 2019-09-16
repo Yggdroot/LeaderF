@@ -210,7 +210,6 @@ class FunctionExplManager(Manager):
         super(FunctionExplManager, self).__init__()
         self._match_ids = []
         self._orig_line = ''
-        self._cursorline_dict = {}
 
     def _getExplClass(self):
         return FunctionExplorer

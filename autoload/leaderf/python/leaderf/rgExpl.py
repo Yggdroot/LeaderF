@@ -387,7 +387,6 @@ class RgExplManager(Manager):
         self._match_ids = []
         self._match_path = False
         self._has_column = False
-        self._cursorline_dict = {}
 
     def _getExplClass(self):
         return RgExplorer

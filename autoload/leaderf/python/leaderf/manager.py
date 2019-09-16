@@ -87,6 +87,7 @@ class Manager(object):
         self._timer_id = None
         self._highlight_method = lambda : None
         self._orig_cwd = None
+        self._cursorline_dict = {}
         self._getExplClass()
 
     #**************************************************************
@@ -1070,6 +1071,8 @@ class Manager(object):
             kwargs["mode"] = mode
             tabpage_count = len(vim.tabpages)
             self._acceptSelection(file, *args, **kwargs)
+            for k, v in self._cursorline_dict.items():
+                k.options["cursorline"] = v
             if mode == 't' and len(vim.tabpages) > tabpage_count:
                 tab_pos = int(lfEval("g:Lf_TabpagePosition"))
                 if tab_pos == 0:

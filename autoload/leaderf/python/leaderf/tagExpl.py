@@ -62,7 +62,6 @@ class TagExplManager(Manager):
     def __init__(self):
         super(TagExplManager, self).__init__()
         self._match_ids = []
-        self._cursorline_dict = {}
 
     def _getExplClass(self):
         return TagExplorer
