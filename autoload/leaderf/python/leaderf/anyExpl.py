@@ -713,9 +713,9 @@ class AnyHub(object):
             del arguments["start"]
             arguments["arg_line"] = arg_line
             the_args.start(arguments, *args, **kwargs)
-        except ValueError as e:
-            lfPrintError(e)
-            return
+        # except ValueError as e:
+        #     lfPrintError(e)
+        #     return
         except SystemExit:
             return
 

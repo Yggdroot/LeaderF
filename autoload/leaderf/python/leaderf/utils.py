@@ -67,6 +67,8 @@ else: # python 2.x
                         locale.getdefaultlocale()[1])
         except UnicodeDecodeError:
             return str
+        except:
+            return str
 
     def lfOpen(file, mode='r', buffering=-1, encoding=None, errors=None,
                newline=None, closefd=True):
@@ -145,5 +147,5 @@ def lfWinId(winnr, tab=None):
         return None
 
 def lfPrintError(error):
-    error = lfEncode(str(error))
+    error = lfEncode(str(repr(error)))
     lfCmd("echohl Error | redraw | echo '%s' | echohl None" % escQuote(error))
