@@ -64,7 +64,7 @@ class GtagsExplorer(Explorer):
             return []
 
         if vim.current.buffer.name:
-            filename = lfDecode(vim.current.buffer.name)
+            filename = os.path.normpath(lfDecode(vim.current.buffer.name))
         else:
             filename = os.path.join(os.getcwd(), 'no_name')
 
