@@ -432,7 +432,11 @@ class GtagsExplorer(Explorer):
 
         root, dbpath, exists = self._root_dbpath(filename)
         if not filename.startswith(root):
-            lfCmd("let g:Lf_Debug_Gtags = '%s'" % escQuote(str((filename, root))))
+            if self._has_nvim:
+                vim.async_call(lfCmd, "let g:Lf_Debug_Gtags = '%s'" % escQuote(str((filename, root))))
+            else:
+                lfCmd("let g:Lf_Debug_Gtags = '%s'" % escQuote(str((filename, root))))
+
             return
 
         self._updateLibGtags(dbpath)
