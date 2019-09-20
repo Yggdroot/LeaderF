@@ -1075,7 +1075,9 @@ class Manager(object):
             tabpage_count = len(vim.tabpages)
             self._acceptSelection(file, *args, **kwargs)
             for k, v in self._cursorline_dict.items():
-                k.options["cursorline"] = v
+                if k.valid:
+                    k.options["cursorline"] = v
+            self._cursorline_dict.clear()
             if mode == 't' and len(vim.tabpages) > tabpage_count:
                 tab_pos = int(lfEval("g:Lf_TabpagePosition"))
                 if tab_pos == 0:

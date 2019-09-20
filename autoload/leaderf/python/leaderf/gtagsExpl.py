@@ -992,7 +992,9 @@ class GtagsExplManager(Manager):
             lfCmd("call timer_stop(%s)" % self._timer_id)
             self._timer_id = None
         for k, v in self._cursorline_dict.items():
-            k.options["cursorline"] = v
+            if k.valid:
+                k.options["cursorline"] = v
+        self._cursorline_dict.clear()
 
     def _bangEnter(self):
         super(GtagsExplManager, self)._bangEnter()

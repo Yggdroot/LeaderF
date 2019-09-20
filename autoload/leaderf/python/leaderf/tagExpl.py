@@ -167,7 +167,9 @@ class TagExplManager(Manager):
             lfCmd("silent! call matchdelete(%d)" % i)
         self._match_ids = []
         for k, v in self._cursorline_dict.items():
-            k.options["cursorline"] = v
+            if k.valid:
+                k.options["cursorline"] = v
+        self._cursorline_dict.clear()
 
 
 #*****************************************************
