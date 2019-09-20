@@ -482,7 +482,7 @@ class GtagsExplorer(Explorer):
             libdbpath = self._generateDbpath(path)
             if not os.path.exists(libdbpath):
                 os.makedirs(libdbpath)
-            cmd = 'cd {}"{}" && gtags {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, path,
+            cmd = 'cd {}"{}" && gtags -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, path,
                         self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                         '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                         self._gtagslabel, libdbpath)
@@ -767,17 +767,17 @@ class GtagsExplorer(Explorer):
         cmd = self._file_list_cmd(root)
         if cmd:
             if os.name == 'nt':
-                cmd = 'cd {}"{}" && ( {} ) | gtags {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
+                cmd = 'cd {}"{}" && ( {} ) | gtags -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
                             self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, dbpath)
             else:
-                cmd = 'cd {}"{}" && {{ {}; }} | gtags {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
+                cmd = 'cd {}"{}" && {{ {}; }} | gtags -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
                             self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, dbpath)
         else:
-            cmd = 'cd {}"{}" && gtags {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, root,
+            cmd = 'cd {}"{}" && gtags -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, root,
                         self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                         '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                         self._gtagslabel, dbpath)
@@ -804,6 +804,11 @@ class GtagsExplorer(Explorer):
                 vim.async_call(print_log, "gtags generated successfully!")
             else:
                 print("gtags generated successfully!")
+
+        if self._has_nvim:
+            vim.async_call(lfCmd, "let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
+        else:
+            lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
 
     def getStlCategory(self):
         return 'Gtags'
