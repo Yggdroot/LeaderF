@@ -78,6 +78,9 @@ class GtagsExplorer(Explorer):
 
         if "--gtagslibpath" in arguments_dict:
             self._gtagslibpath = [os.path.abspath(os.path.expanduser(p)) for p in arguments_dict["--gtagslibpath"]]
+            for i in self._gtagslibpath:
+                if not os.path.exists(i):
+                    print("`%s` does not exist!" % i)
         else:
             self._gtagslibpath = []
 
