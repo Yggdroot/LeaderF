@@ -442,7 +442,7 @@ class GtagsExplorer(Explorer):
 
             return
 
-        self._updateLibGtags(dbpath)
+        self._updateLibGtags(root, dbpath)
         if single_update:
             if exists:
                 cmd = 'cd {}"{}" && gtags {}{}{}{}--gtagslabel {} --single-update "{}" "{}"'.format(self._cd_option, root,
@@ -458,14 +458,14 @@ class GtagsExplorer(Explorer):
             if not exists:
                 self._executeCmd(root, dbpath)
 
-    def _updateLibGtags(self, dbpath):
+    def _updateLibGtags(self, root, dbpath):
         if not self._gtagslibpath:
             return
 
         if not os.path.exists(dbpath):
             os.makedirs(dbpath)
 
-        libpaths = ["%s\t%s\n" % (p, self._generateDbpath(p)) for p in self._gtagslibpath if os.path.exists(p)]
+        libpaths = ["%s\t%s\n" % (p, self._generateDbpath(p)) for p in self._gtagslibpath if os.path.exists(p) and p != root]
         if libpaths:
             libdb = os.path.join(dbpath, "GTAGSLIBPATH")
             with lfOpen(libdb, 'w', errors='ignore') as f:
