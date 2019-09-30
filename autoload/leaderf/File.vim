@@ -61,3 +61,7 @@ endfunction
 function! leaderf#File#cleanup()
     call leaderf#LfPy("fileExplManager._beforeExit()")
 endfunction
+
+function! leaderf#File#TimerCallback(id)
+    call leaderf#LfPy("fileExplManager._workInIdle(bang=True)")
+endfunction

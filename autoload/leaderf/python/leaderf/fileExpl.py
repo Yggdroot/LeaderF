@@ -657,6 +657,22 @@ class FileExplManager(Manager):
 
         return ""
 
+    def _beforeExit(self):
+        super(FileExplManager, self)._beforeExit()
+        if self._timer_id is not None:
+            lfCmd("call timer_stop(%s)" % self._timer_id)
+            self._timer_id = None
+
+    def _bangEnter(self):
+        super(FileExplManager, self)._bangEnter()
+        if lfEval("exists('*timer_start')") == '0':
+            lfCmd("echohl Error | redraw | echo ' E117: Unknown function: timer_start' | echohl NONE")
+            return
+
+        self._workInIdle(bang=True)
+        if self._read_finished < 2:
+            self._timer_id = lfEval("timer_start(1, 'leaderf#File#TimerCallback', {'repeat': -1})")
+
     def startExplorer(self, win_pos, *args, **kwargs):
         if kwargs.get("arguments", {}).get("directory"): # behavior no change for `LeaderfFile <directory>`
             self._orig_cwd = None
