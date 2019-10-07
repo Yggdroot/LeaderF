@@ -142,7 +142,7 @@ static uint16_t valTable[64] =
 
 typedef struct TextContext
 {
-    char* text;
+    const char* text;
     uint64_t* text_mask;
     uint16_t text_len;
     uint16_t col_num;
@@ -156,7 +156,7 @@ typedef struct ValueElements
     uint16_t end;
 }ValueElements;
 
-PatternContext* initPattern(char* pattern, uint16_t pattern_len)
+PatternContext* initPattern(const char* pattern, uint16_t pattern_len)
 {
     PatternContext* pPattern_ctxt = (PatternContext*)malloc(sizeof(PatternContext));
     if ( !pPattern_ctxt )
@@ -200,7 +200,7 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
     uint16_t col_num = pText_ctxt->col_num;
     uint16_t j = pText_ctxt->offset;
 
-    char* pattern = pPattern_ctxt->pattern;
+    const char* pattern = pPattern_ctxt->pattern;
     uint16_t base_offset = pattern[k] * col_num;
     uint64_t x = text_mask[base_offset + (j >> 6)] >> (j & 63);
     uint16_t i = 0;
@@ -242,7 +242,7 @@ ValueElements* evaluate_nameOnly(TextContext* pText_ctxt,
     uint16_t max_prefix_score = 0;
     float max_score = MIN_WEIGHT;
 
-    char* text = pText_ctxt->text;
+    const char* text = pText_ctxt->text;
     uint16_t text_len = pText_ctxt->text_len;
     uint16_t pattern_len = pPattern_ctxt->pattern_len - k;
     int64_t* pattern_mask = pPattern_ctxt->pattern_mask;
@@ -403,7 +403,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
     uint16_t col_num = pText_ctxt->col_num;
     uint16_t j = pText_ctxt->offset;
 
-    char* pattern = pPattern_ctxt->pattern;
+    const char* pattern = pPattern_ctxt->pattern;
     uint16_t base_offset = pattern[k] * col_num;
     uint64_t x = text_mask[base_offset + (j >> 6)] >> (j & 63);
     uint16_t i = 0;
@@ -445,7 +445,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
     uint16_t max_prefix_score = 0;
     float max_score = MIN_WEIGHT;
 
-    char* text = pText_ctxt->text;
+    const char* text = pText_ctxt->text;
     uint16_t text_len = pText_ctxt->text_len;
     uint16_t pattern_len = pPattern_ctxt->pattern_len - k;
     int64_t* pattern_mask = pPattern_ctxt->pattern_mask;
@@ -453,7 +453,11 @@ ValueElements* evaluate(TextContext* pText_ctxt,
     uint16_t special = 0;
     if ( i == 0 )
         special = 5;
-    else if ( text[i-1] == '/' || text[i-1] == '\\' )
+#if defined(_MSC_VER)
+    else if ( text[i-1] == '\\' || text[i-1] == '/' )
+#else
+    else if ( text[i-1] == '/' )
+#endif
         special = k == 0 ? 5 : 3;
     else if ( isupper(text[i]) )
         special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
@@ -565,7 +569,11 @@ ValueElements* evaluate(TextContext* pText_ctxt,
                 i += FM_CTZ(x);
             }
 
-            if ( text[i-1] == '/' || text[i-1] == '\\' )
+#if defined(_MSC_VER)
+            if ( text[i-1] == '\\' || text[i-1] == '/' )
+#else
+            if ( text[i-1] == '/' )
+#endif
                 special = k == 0 ? 5 : 3;
             else if ( isupper(text[i]) )
                 special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
@@ -607,7 +615,7 @@ ValueElements* evaluate(TextContext* pText_ctxt,
     return val + k;
 }
 
-float getWeight(char* text, uint16_t text_len,
+float getWeight(const char* text, uint16_t text_len,
                 PatternContext* pPattern_ctxt,
                 uint8_t is_name_only)
 {
@@ -617,7 +625,7 @@ float getWeight(char* text, uint16_t text_len,
     uint16_t j = 0;
     uint16_t col_num = 0;
     uint64_t* text_mask = NULL;
-    char* pattern = pPattern_ctxt->pattern;
+    const char* pattern = pPattern_ctxt->pattern;
     uint16_t pattern_len = pPattern_ctxt->pattern_len;
     int64_t* pattern_mask = pPattern_ctxt->pattern_mask;
     char first_char = pattern[0];
@@ -863,7 +871,7 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
     uint64_t* text_mask = pText_ctxt->text_mask;
     uint16_t col_num = pText_ctxt->col_num;
 
-    char* pattern = pPattern_ctxt->pattern;
+    const char* pattern = pPattern_ctxt->pattern;
     uint16_t base_offset = pattern[k] * col_num;
     uint64_t x = text_mask[base_offset + (j >> 6)] >> (j & 63);
     uint16_t i = 0;
@@ -911,7 +919,7 @@ HighlightGroup* evaluateHighlights_nameOnly(TextContext* pText_ctxt,
     HighlightGroup cur_highlights;
     memset(&cur_highlights, 0, sizeof(HighlightGroup));
 
-    char* text = pText_ctxt->text;
+    const char* text = pText_ctxt->text;
     uint16_t text_len = pText_ctxt->text_len;
     uint16_t pattern_len = pPattern_ctxt->pattern_len - k;
     int64_t* pattern_mask = pPattern_ctxt->pattern_mask;
@@ -1085,7 +1093,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
     uint64_t* text_mask = pText_ctxt->text_mask;
     uint16_t col_num = pText_ctxt->col_num;
 
-    char* pattern = pPattern_ctxt->pattern;
+    const char* pattern = pPattern_ctxt->pattern;
     uint16_t base_offset = pattern[k] * col_num;
     uint64_t x = text_mask[base_offset + (j >> 6)] >> (j & 63);
     uint16_t i = 0;
@@ -1133,7 +1141,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
     HighlightGroup cur_highlights;
     memset(&cur_highlights, 0, sizeof(HighlightGroup));
 
-    char* text = pText_ctxt->text;
+    const char* text = pText_ctxt->text;
     uint16_t text_len = pText_ctxt->text_len;
     uint16_t pattern_len = pPattern_ctxt->pattern_len - k;
     int64_t* pattern_mask = pPattern_ctxt->pattern_mask;
@@ -1141,7 +1149,11 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
     uint16_t special = 0;
     if ( i == 0 )
         special = 5;
-    else if ( text[i-1] == '/' || text[i-1] == '\\' )
+#if defined(_MSC_VER)
+    else if ( text[i-1] == '\\' || text[i-1] == '/' )
+#else
+    else if ( text[i-1] == '/' )
+#endif
         special = k == 0 ? 5 : 3;
     else if ( isupper(text[i]) )
         special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
@@ -1262,7 +1274,11 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
                 i += FM_CTZ(x);
             }
 
-            if ( text[i-1] == '/' || text[i-1] == '\\' )
+#if defined(_MSC_VER)
+            if ( text[i-1] == '\\' || text[i-1] == '/' )
+#else
+            if ( text[i-1] == '/' )
+#endif
                 special = k == 0 ? 5 : 3;
             else if ( isupper(text[i]) )
                 special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
@@ -1309,7 +1325,7 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
  * is the length of the highlight in bytes.
  * e.g., [ [2,3], [6,2], [10,4], ... ]
  */
-HighlightGroup* getHighlights(char* text,
+HighlightGroup* getHighlights(const char* text,
                               uint16_t text_len,
                               PatternContext* pPattern_ctxt,
                               uint8_t is_name_only)
@@ -1319,7 +1335,7 @@ HighlightGroup* getHighlights(char* text,
 
     uint16_t col_num = 0;
     uint64_t* text_mask = NULL;
-    char* pattern = pPattern_ctxt->pattern;
+    const char* pattern = pPattern_ctxt->pattern;
     uint16_t pattern_len = pPattern_ctxt->pattern_len;
     int64_t* pattern_mask = pPattern_ctxt->pattern_mask;
     char first_char = pattern[0];
@@ -1552,6 +1568,163 @@ HighlightGroup* getHighlights(char* text,
     return pGroup;
 }
 
+/**
+ * e.g., /usr/src/example.tar.gz
+ * `dirname` is "/usr/src"
+ * `basename` is "example.tar.gz"
+ * `filename` is "example.tar", `suffix` is ".gz"
+ */
+uint32_t getPathWeight(const char* filename,
+                       const char* suffix,
+                       const char* dirname,
+                       const char* path, uint32_t path_len)
+{
+    uint32_t filename_lcp = 0;
+    uint32_t filename_prefix = 0;
+    uint32_t dirname_lcp = 0;
+    uint32_t is_suffix_diff = 0;
+    uint32_t is_basename_same = 0;
+    uint32_t is_dirname_same = 0;
+
+    const char* filename_start = path;
+    const char* p = path + path_len;
+    const char* p1 = NULL;
+
+    while ( p >= path )
+    {
+#if defined(_MSC_VER)
+        if ( *p == '\\' || *p == '/' )
+#else
+        if ( *p == '/' )
+#endif
+        {
+            filename_start = p + 1;
+            break;
+        }
+        --p;
+    }
+    
+    if ( *suffix != '\0' )
+    {
+        p = filename_start;
+        p1 = filename;
+        while ( *p != '\0' && *p == *p1 )
+        {
+            ++filename_lcp;
+            ++p;
+            ++p1;
+        }
+
+        filename_prefix = filename_lcp;
+
+        if ( filename_lcp > 0 && ((*p >= 'a' && *p <= 'z') || (*p >= '0' && *p <= '9')
+                                  || (*p1 >= 'a' && *p1 <= 'z') || (*p1 >= '0' && *p1 <= '9')) )
+        {
+            --p;
+            while ( p > filename_start )
+            {
+                if ( *p >= 'a' && *p <= 'z' )
+                {
+                    --p;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            filename_prefix = p - filename_start;
+        }
+
+        p = path + path_len - 1;
+        while ( p > filename_start )
+        {
+            if ( *p == '.' )
+            {
+                if ( strcmp(suffix, p) != 0 )
+                {
+                    if ( filename_lcp > 0 )
+                        is_suffix_diff = 1;
+                }
+                else if ( *p1 == '\0' && filename_lcp == p - filename_start )
+                {
+                    is_basename_same = 1;
+                }
+                break;
+            }
+            --p;
+        }
+    }
+    else
+    {
+        is_basename_same = strcmp(filename, filename_start) == 0;
+    }
+
+    p = path;
+    p1 = dirname;
+#if defined(_MSC_VER)
+    while ( p < filename_start )
+    {
+        if ( *p1 == '\\' )
+        {
+            if ( *p == '\\' || *p == '/' )
+            {
+                ++dirname_lcp;
+            }
+            else
+            {
+                break;
+            }
+        }
+        else if ( *p != *p1 )
+        {
+            break;
+        }
+        ++p;
+        ++p1;
+    }
+#else
+    while ( p < filename_start && *p == *p1 )
+    {
+        if ( *p == '/' )
+        {
+            ++dirname_lcp;
+        }
+        ++p;
+        ++p1;
+    }
+#endif
+    /**
+     * e.g., dirname = "abc" , path = "abc/test.h"
+     * p1 != dirname is to avoid such a case:
+     * e.g., buffer name is "aaa.h", path is "/abc/def.h"
+     */
+#if defined(_MSC_VER)
+    if ( *p1 == '\0' && p1 != dirname && (*p == '\\' || *p == '/') )
+#else
+    if ( *p1 == '\0' && p1 != dirname && *p == '/' )
+#endif
+    {
+        ++dirname_lcp;
+    }
+
+    /* if dirname is empty, filename_start == p */
+    is_dirname_same = filename_start - p < 2;
+
+    /* dirname/filename+suffix is the same as path */
+    if ( is_basename_same && is_dirname_same )
+    {
+        return 0;
+    }
+
+    if ( filename_start == path && *dirname == '\0')
+    {
+        dirname_lcp = 1;
+    }
+
+    return (((filename_prefix + 1) << 24) | (dirname_lcp << 12) | (is_dirname_same << 11)
+            | filename_lcp) + (is_suffix_diff << 2) - path_len;
+}
+
 static void delPatternContext(PyObject* obj)
 {
     free(PyCapsule_GetPointer(obj, NULL));
@@ -1559,7 +1732,7 @@ static void delPatternContext(PyObject* obj)
 
 static PyObject* fuzzyMatchC_initPattern(PyObject* self, PyObject* args)
 {
-    char* pattern;
+    const char* pattern;
     Py_ssize_t pattern_len;
 
     if ( !PyArg_ParseTuple(args, "s#:initPattern", &pattern, &pattern_len) )
@@ -1572,7 +1745,7 @@ static PyObject* fuzzyMatchC_initPattern(PyObject* self, PyObject* args)
 
 static PyObject* fuzzyMatchC_getWeight(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    char* text;
+    const char* text;
     Py_ssize_t text_len;
     PyObject* py_patternCtxt;
     uint8_t is_name_only;
@@ -1591,7 +1764,7 @@ static PyObject* fuzzyMatchC_getWeight(PyObject* self, PyObject* args, PyObject*
 
 static PyObject* fuzzyMatchC_getHighlights(PyObject* self, PyObject* args, PyObject* kwargs)
 {
-    char* text;
+    const char* text;
     Py_ssize_t text_len;
     PyObject* py_patternCtxt;
     uint8_t is_name_only;

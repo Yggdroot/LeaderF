@@ -88,6 +88,7 @@ class Manager(object):
         self._highlight_method = lambda : None
         self._orig_cwd = None
         self._cursorline_dict = {}
+        self._empty_query = lfEval("get(g:, 'Lf_EmptyQuery', 1)") == '1'
         self._getExplClass()
 
     #**************************************************************
@@ -203,6 +204,7 @@ class Manager(object):
 
     def _beforeEnter(self):
         self._resetAutochdir()
+        self._cur_buffer = vim.current.buffer
 
     def _afterEnter(self):
         if "--nowrap" in self._arguments:
@@ -232,7 +234,8 @@ class Manager(object):
         pass
 
     def _bangEnter(self):
-        pass
+        if self._cli.pattern:
+            self._search(self._content)
 
     def _bangReadFinished(self):
         pass
@@ -359,7 +362,15 @@ class Manager(object):
             self._getInstance().buffer.options['modifiable'] = True
             self._getInstance().buffer.append(help[::-1])
             self._getInstance().buffer.options['modifiable'] = False
-            self._getInstance().window.height = len(self._getInstance().buffer)
+            buffer_len = len(self._getInstance().buffer)
+            if buffer_len < self._initial_count:
+                if "--nowrap" not in self._arguments:
+                    self._getInstance().window.height = min(self._initial_count,
+                            self._getInstance()._actualLength(self._getInstance().buffer))
+                else:
+                    self._getInstance().window.height = buffer_len
+            elif self._getInstance().window.height < self._initial_count:
+                self._getInstance().window.height = self._initial_count
             lfCmd("normal! Gzb")
             self._getInstance().window.cursor = (orig_row, 0)
         else:
@@ -474,6 +485,7 @@ class Manager(object):
             self._clearHighlights()
             self._clearHighlightsPos()
             self._cli.highlightMatches()
+
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
             self._getInstance().setBuffer(content[:self._initial_count])
             self._getInstance().setStlResultsCount(len(content))
@@ -503,11 +515,11 @@ class Manager(object):
         length = len(content)
         if self._index == 0:
             self._cb_content = []
-            self._result_content = content
+            self._result_content = []
             self._index = min(step, length)
             cur_content = content[:self._index]
         else:
-            if not is_continue and not self._getInstance().empty():
+            if not is_continue and self._result_content:
                 self._cb_content += self._result_content
 
             if len(self._cb_content) >= step:
@@ -856,6 +868,47 @@ class Manager(object):
         else:
             self._highlight_method = highlight_method
             self._highlight_method()
+
+    def _guessFilter(self, filename, suffix, dirname, iterable):
+        """
+        return a list, each item is a pair (weight, line)
+        """
+        return ((FuzzyMatch.getPathWeight(filename, suffix, dirname, line), line) for line in iterable)
+
+    def _guessSearch(self, content, is_continue=False, step=0):
+        if self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] != b'':
+            self._getInstance().setBuffer(content[:self._initial_count])
+            self._getInstance().setStlResultsCount(len(content))
+            self._result_content = []
+            return
+
+        buffer_name = os.path.normpath(lfDecode(self._cur_buffer.name))
+        if lfEval("g:Lf_ShowRelativePath") == '1':
+            buffer_name = os.path.relpath(buffer_name)
+
+        buffer_name = lfEncode(buffer_name)
+        dirname, basename = os.path.split(buffer_name)
+        filename, suffix = os.path.splitext(basename)
+        if self._fuzzy_engine:
+            filter_method = partial(fuzzyEngine.guessMatch, engine=self._fuzzy_engine, filename=filename,
+                                    suffix=suffix, dirname=dirname, sort_results=not is_continue)
+            step = len(content)
+
+            pair = self._filter(step, filter_method, content, is_continue, True)
+            if is_continue: # result is not sorted
+                pairs = sorted(zip(*pair), key=operator.itemgetter(0), reverse=True)
+                self._result_content = self._getList(pairs)
+            else:
+                self._result_content = pair[1]
+        else:
+            step = len(content)
+            filter_method = partial(self._guessFilter, filename, suffix, dirname)
+            pairs = self._filter(step, filter_method, content, is_continue)
+            pairs.sort(key=operator.itemgetter(0), reverse=True)
+            self._result_content = self._getList(pairs)
+
+        self._getInstance().setBuffer(self._result_content[:self._initial_count])
+        self._getInstance().setStlResultsCount(len(self._result_content))
 
     def _highlight_and_mode(self, highlight_methods):
         self._clearHighlights()
@@ -1403,8 +1456,8 @@ class Manager(object):
         else:
             lfCmd("normal! gg")
             self._index = 0
-            self._pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
-            self._cli.setPattern(self._pattern)
+            pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
+            self._cli.setPattern(pattern)
 
         self._start_time = time.time()
         self._bang_start_time = self._start_time
@@ -1414,17 +1467,21 @@ class Manager(object):
         self._read_content_exception = None
         if isinstance(content, list):
             self._is_content_list = True
+            self._read_finished = 1
+
             if len(content[0]) == len(content[0].rstrip("\r\n")):
                 self._content = content
             else:
                 self._content = [line.rstrip("\r\n") for line in content]
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
-            self._result_content = self._content
+            self._result_content = []
+            self._cb_content = []
             self._getInstance().setStlResultsCount(len(self._content))
             if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
                 pass
             else:
-                self._getInstance().setBuffer(self._content[:self._initial_count])
+                if not (self._empty_query and self._getExplorer().getStlCategory() in ["File"]):
+                    self._getInstance().setBuffer(self._content[:self._initial_count])
 
             if lfEval("has('nvim')") == '1':
                 lfCmd("redrawstatus")
@@ -1436,9 +1493,26 @@ class Manager(object):
                 lfCmd("echo")
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
+
+                if self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+                    self._guessSearch(self._content)
+                    if self._result_content: # self._result_content is [] only if 
+                                             #  self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] != b'':
+                        self._getInstance().appendBuffer(self._result_content[self._initial_count:])
+                    else:
+                        self._getInstance().appendBuffer(self._content[self._initial_count:])
+
+                    if self._timer_id is not None:
+                        lfCmd("call timer_stop(%s)" % self._timer_id)
+                        self._timer_id = None
+
+                    self._bangReadFinished()
+
+                    lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
         elif isinstance(content, AsyncExecutor.Result):
             self._is_content_list = False
             self._result_content = []
+            self._cb_content = []
             self._callback = self._workInIdle
             if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
@@ -1475,6 +1549,7 @@ class Manager(object):
         else:
             self._is_content_list = False
             self._result_content = []
+            self._cb_content = []
             self._callback = partial(self._workInIdle, content)
             if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
@@ -1550,6 +1625,22 @@ class Manager(object):
 
                 if self._cli.pattern:
                     self._getInstance().setStlResultsCount(len(self._result_content))
+                elif self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+                    self._guessSearch(self._content)
+                    if bang:
+                        if self._result_content: # self._result_content is [] only if 
+                                                 #  self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] != b'':
+                            self._getInstance().appendBuffer(self._result_content[self._initial_count:])
+                        else:
+                            self._getInstance().appendBuffer(self._content[self._initial_count:])
+
+                        if self._timer_id is not None:
+                            lfCmd("call timer_stop(%s)" % self._timer_id)
+                            self._timer_id = None
+
+                        self._bangReadFinished()
+
+                        lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
                 else:
                     if bang:
                         if self._getInstance().empty():
@@ -1576,14 +1667,18 @@ class Manager(object):
                 self._getInstance().setStlRunning(False)
                 lfCmd("redrawstatus")
 
-            if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
-                if self._fuzzy_engine:
-                    step = 10000 * cpu_count
-                elif is_fuzzyMatch_C:
-                    step = 10000
-                else:
-                    step = 2000
-                self._search(self._content, True, step)
+            if self._cli.pattern:
+                if self._index < len(self._content) or len(self._cb_content) > 0:
+                    if self._fuzzy_engine:
+                        step = 10000 * cpu_count
+                    elif is_fuzzyMatch_C:
+                        step = 10000
+                    else:
+                        step = 2000
+                    self._search(self._content, True, step)
+
+                    if bang:
+                        self._getInstance().appendBuffer(self._result_content[self._initial_count:])
         else:
             cur_len = len(self._content)
             if time.time() - self._start_time > 0.1:
@@ -1635,8 +1730,11 @@ class Manager(object):
         self._hideHelp()
         self._resetHighlights()
 
-        if self._pattern:
-            self._search(self._content)
+        if self._cli.pattern:    # --input xxx or from normal mode to input mode
+            if self._index == 0: # --input xxx
+                self._search(self._content)
+        elif self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+            self._guessSearch(self._content)
 
         for cmd in self._cli.input(self._callback):
             cur_len = len(self._content)

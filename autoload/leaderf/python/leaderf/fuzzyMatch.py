@@ -16,6 +16,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
+import os.path
 
 if sys.version_info >= (3, 0):
     def Unicode(str, encoding):
@@ -663,3 +664,90 @@ class FuzzyMatch(object):
 
         return highlights
 
+    # e.g., /usr/src/example.tar.gz
+    # `dirname` is "/usr/src"
+    # `basename` is "example.tar.gz"
+    # `filename` is "example.tar", `suffix` is ".gz"
+    @staticmethod
+    def getPathWeight(filename, suffix, dirname, path):
+        filename_lcp = 0
+        filename_prefix = 0
+        dirname_lcp = 0
+        is_suffix_diff = 0
+        is_basename_same = 0
+        is_dirname_same = 0
+
+        filename_start = 0
+        path_len = len(path)
+
+        for i, c in enumerate(reversed(path)):
+            if c in '/\\':
+                filename_start = path_len - i
+                break
+
+        if suffix != "":
+            i = 0
+            min_len = min(path_len - filename_start, len(filename))
+            while i < min_len:
+                if path[filename_start+i] == filename[i]:
+                    filename_lcp += 1
+                    i += 1
+                else:
+                    break
+
+            filename_prefix = filename_lcp
+
+            if i == path_len - filename_start:
+                p = '.'
+            else:
+                p = path[filename_start+i]
+
+            if i == len(filename):
+                p1 = '.'
+            else:
+                p1 = filename[i]
+
+            if filename_lcp > 0 and ('a' <= p <= 'z' or '0' <= p <= '9'
+                    or 'a' <= p1 <= 'z' or '0' <= p1 <= '9'):
+                filename_prefix -= 1
+                while filename_prefix > 0:
+                    if 'a' <= filename[filename_prefix] <= 'z':
+                        filename_prefix -= 1
+                    else:
+                        break
+
+            if filename_lcp > 0:
+                root, path_suffix = os.path.splitext(path)
+                if path_suffix != suffix:
+                    is_suffix_diff = 1
+                if is_suffix_diff == 0 and filename_lcp == len(filename) == len(root) - filename_start:
+                    is_basename_same = 1
+        else:
+            is_basename_same = 1 if filename == path[filename_start:] else 0
+
+        i = 0
+        min_len = min(filename_start, len(dirname))
+        while i < min_len:
+            if dirname[i] in '/\\':
+                if path[i] in '/\\':
+                    dirname_lcp += 1
+                else:
+                    break
+            elif dirname[i] != path[i]:
+                break
+            i += 1
+
+        if i > 0 and i == len(dirname) and i < path_len and path[i] in '/\\':
+            dirname_lcp += 1
+
+        if filename_start - i < 2:
+            is_dirname_same = 1
+
+        if is_dirname_same and is_basename_same:
+            return 0
+
+        if filename_start == 0 and dirname == "":
+            dirname_lcp = 1
+
+        return (((filename_prefix + 1) << 24) | (dirname_lcp << 12) | (is_dirname_same << 11)
+                | filename_lcp) + (is_suffix_diff << 2) - path_len

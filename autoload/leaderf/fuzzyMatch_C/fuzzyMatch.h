@@ -23,7 +23,7 @@
 
 typedef struct PatternContext
 {
-    char* pattern;
+    const char* pattern;
     int64_t pattern_mask[256];
     uint16_t pattern_len;
     uint8_t is_lower;
@@ -48,11 +48,16 @@ typedef struct HighlightGroup
 extern "C" {
 #endif
 
-PatternContext* initPattern(char* pattern, uint16_t pattern_len);
+PatternContext* initPattern(const char* pattern, uint16_t pattern_len);
 
-float getWeight(char* text, uint16_t text_len, PatternContext* pPattern_ctxt, uint8_t is_name_only);
+float getWeight(const char* text, uint16_t text_len, PatternContext* pPattern_ctxt, uint8_t is_name_only);
 
-HighlightGroup* getHighlights(char* text, uint16_t text_len, PatternContext* pPattern_ctxt, uint8_t is_name_only);
+HighlightGroup* getHighlights(const char* text, uint16_t text_len, PatternContext* pPattern_ctxt, uint8_t is_name_only);
+
+uint32_t getPathWeight(const char* filename,
+                       const char* suffix,
+                       const char* dirname,
+                       const char* path, uint32_t path_len);
 
 #ifdef __cplusplus
 }

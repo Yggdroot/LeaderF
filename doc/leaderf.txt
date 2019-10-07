@@ -617,6 +617,13 @@ g:Lf_Gtagslabel                                   *g:Lf_Gtagslabel*
     set this option as "native-pygments".
     Default value is "default".
 
+g:Lf_EmptyQuery                                   *g:Lf_EmptyQuery*
+    This option specifies whether to enable the empty query, i.e., if no
+    pattern is input, sort the result according to the best match of current
+    buffer's name.
+
+    Default value is 1.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
