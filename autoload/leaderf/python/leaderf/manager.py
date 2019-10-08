@@ -487,9 +487,12 @@ class Manager(object):
             self._cli.highlightMatches()
 
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
-            self._getInstance().setBuffer(content[:self._initial_count])
-            self._getInstance().setStlResultsCount(len(content))
-            self._result_content = []
+            if self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+                self._guessSearch(self._content)
+            else:
+                self._getInstance().setBuffer(content[:self._initial_count])
+                self._getInstance().setStlResultsCount(len(content))
+                self._result_content = []
             return
 
         if self._cli.isFuzzy:

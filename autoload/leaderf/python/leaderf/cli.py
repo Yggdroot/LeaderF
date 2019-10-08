@@ -523,14 +523,20 @@ class LfCli(object):
                         self._buildPattern()
                         yield '<Mode>'
                     elif equal(cmd, '<BS>') or equal(cmd, '<C-H>'):
+                        if not self._pattern:
+                            continue
                         self._backspace()
                         self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<C-U>'):
+                        if not self._pattern:
+                            continue
                         self._clearLeft()
                         self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<Del>'):
+                        if not self._pattern:
+                            continue
                         self._delete()
                         self._buildPattern()
                         yield '<Shorten>'
