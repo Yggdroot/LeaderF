@@ -51,6 +51,14 @@ let g:Lf_Extensions = {
     \ "orange": {}
 \}
 """
+
+def lfFunction(name):
+    if lfEval("has('nvim')") == '1':
+        func = partial(vim.call, name)
+    else:
+        func = vim.Function(name)
+    return func
+
 #*****************************************************
 # AnyExplorer
 #*****************************************************
@@ -68,28 +76,33 @@ class AnyExplorer(Explorer):
 
         if isinstance(source, list):
             result = source
-        elif isinstance(source, vim.Function):
+        elif isinstance(source, str):
             try:
-                result = list(line for line in list(source(kwargs["arguments"])))
+                source = lfFunction(source)
+                result = source(kwargs["arguments"])
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(source), err))
         elif isinstance(source, dict):
-            if isinstance(source["command"], vim.Function):
+            if lfEval("has('nvim')") == '0' and isinstance(source["command"], vim.Function):
                 try:
                     source_cmd = lfBytes2Str(source["command"](kwargs.get("arguments", {})))
                 except vim.error as err:
                     raise Exception("Error occurred in user defined %s: %s" % (str(source["command"]), err))
             elif type(source["command"]) == type("string"):
-                source_cmd = source["command"]
-
-                positional_args = kwargs["positional_args"]
-                if source_cmd.count("%s") != len(positional_args):
-                    raise Exception("Number of positional arguments does not match!\n"
-                                    "source_cmd = '{}', positional_args = {}".format(source_cmd,
-                                                                                     str(positional_args)))
+                if lfEval("has('nvim')") == '1' and source["command"].startswith("function("):
+                    function_name = source["command"][10:-2]    # source["command"] is like "function('FuncName')"
+                    source_cmd = lfFunction(function_name)(kwargs.get("arguments", {})) 
                 else:
-                    arguments = kwargs["arguments"]
-                    source_cmd = source_cmd % tuple(arguments[name][0] for name in positional_args)
+                    source_cmd = source["command"]
+
+                    positional_args = kwargs["positional_args"]
+                    if source_cmd.count("%s") != len(positional_args):
+                        raise Exception("Number of positional arguments does not match!\n"
+                                        "source_cmd = '{}', positional_args = {}".format(source_cmd,
+                                                                                         str(positional_args)))
+                    else:
+                        arguments = kwargs["arguments"]
+                        source_cmd = source_cmd % tuple(arguments[name][0] for name in positional_args)
             else:
                 raise Exception("Invalid source command `{}`, should be a string or a Funcref!".format(str(source["command"])))
 
@@ -106,17 +119,19 @@ class AnyExplorer(Explorer):
         format_line = self._config.get("format_line")
         if format_line:
             try:
-                # Note: If outQueue is empty, AsyncExecutor may yield None in read()
-                result = (format_line(line, kwargs["arguments"]) for line in result if line is not None)
-                if isinstance(result, list):
-                    result = list(result)
+                format_line = lfFunction(format_line)
+                if sys.version_info >= (3, 0) and lfEval("has('nvim')") == '0':
+                    result = (lfBytes2Str(format_line(line, kwargs["arguments"])) for line in result)
+                else:
+                    result = (format_line(line, kwargs["arguments"]) for line in result)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(format_line), err))
 
         format_list = self._config.get("format_list")
         if format_list:
             try:
-                result = list(format_list(list(result), kwargs["arguments"]))
+                format_list = lfFunction(format_list)
+                result = format_list(list(result), kwargs["arguments"])
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(format_list), err))
 
@@ -149,6 +164,7 @@ class AnyExplorer(Explorer):
 class AnyExplManager(Manager):
     def __init__(self, category, config):
         super(AnyExplManager, self).__init__()
+        self._has_nvim = lfEval("has('nvim')") == '1'
         self._getExplorer().setConfig(category, config)
         self._category = category
         self._config = config
@@ -164,6 +180,7 @@ class AnyExplManager(Manager):
         need_exit = self._config.get("need_exit")
         if need_exit:
             try:
+                need_exit = lfFunction(need_exit)
                 ret = need_exit(line, arguments)
                 return False if ret == 0 else True
             except vim.error as err:
@@ -178,6 +195,7 @@ class AnyExplManager(Manager):
         accept = self._config.get("accept")
         if accept:
             try:
+                accept = lfFunction(accept)
                 accept(line, self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(accept), err))
@@ -196,7 +214,11 @@ class AnyExplManager(Manager):
         get_digest = self._config.get("get_digest")
         if get_digest:
             try:
-                return lfBytes2Str(get_digest(line, mode)[0])
+                get_digest = lfFunction(get_digest)
+                if self._has_nvim:  # py3 in nvim return str, in vim return bytes
+                    return get_digest(line, mode)[0]
+                else:
+                    return lfBytes2Str(get_digest(line, mode)[0])
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(get_digest), err))
         else:
@@ -216,6 +238,7 @@ class AnyExplManager(Manager):
         get_digest = self._config.get("get_digest")
         if get_digest:
             try:
+                get_digest = lfFunction(get_digest)
                 return int(get_digest(line, mode)[1])
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(get_digest), err))
@@ -239,6 +262,7 @@ class AnyExplManager(Manager):
         before_enter = self._config.get("before_enter")
         if before_enter:
             try:
+                before_enter = lfFunction(before_enter)
                 before_enter(self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(before_enter), err))
@@ -250,6 +274,7 @@ class AnyExplManager(Manager):
             orig_buf_nr = self._getInstance().getOriginalPos()[2].number
             line, col = self._getInstance().getOriginalCursor()
             try:
+                after_enter = lfFunction(after_enter)
                 after_enter(orig_buf_nr, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(after_enter), err))
@@ -266,16 +291,19 @@ class AnyExplManager(Manager):
         highlight = self._config.get("highlight")
         if highlight:
             try:
+                highlight = lfFunction(highlight)
                 self._match_ids += highlight(self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(highlight), err))
 
     def _bangEnter(self):
+        super(AnyExplManager, self)._bangEnter()
         bang_enter = self._config.get("bang_enter")
         if bang_enter:
             orig_buf_nr = self._getInstance().getOriginalPos()[2].number
             line, col = self._getInstance().getOriginalCursor()
             try:
+                bang_enter = lfFunction(bang_enter)
                 bang_enter(orig_buf_nr, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(bang_enter), err))
@@ -287,6 +315,7 @@ class AnyExplManager(Manager):
             orig_buf_nr = self._getInstance().getOriginalPos()[2].number
             line, col = self._getInstance().getOriginalCursor()
             try:
+                before_exit = lfFunction(before_exit)
                 before_exit(orig_buf_nr, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(before_exit), err))
@@ -300,6 +329,7 @@ class AnyExplManager(Manager):
         after_exit = self._config.get("after_exit")
         if after_exit:
             try:
+                after_exit = lfFunction(after_exit)
                 after_exit(self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(after_exit), err))
@@ -318,6 +348,7 @@ class AnyExplManager(Manager):
                 orig_buf_nr = self._getInstance().getOriginalPos()[2].number
                 line, col = self._getInstance().getOriginalCursor()
                 try:
+                    preview = lfFunction(preview)
                     preview(orig_buf_nr, [line, col+1], self._arguments)
                 except vim.error as err:
                     raise Exception("Error occurred in user defined %s: %s" % (str(preview), err))
@@ -595,13 +626,13 @@ class AnyHub(object):
                 # so using vim.eval() instead.
                 # But Funcref object will be converted to None by vim.eval()
                 config = lfEval("g:Lf_Extensions['%s']" % category)
-                for k in config:
-                    if config[k] is None:
-                        config[k] = vim.bindeval("g:Lf_Extensions['%s']['%s']" % (category, k))
 
                 if "source" in config and isinstance(config["source"], dict) \
                         and config["source"].get("command", "") is None:
-                    config["source"]["command"] = vim.bindeval("g:Lf_Extensions['%s']['source']['command']" % category)
+                    if lfEval("has('nvim')") == '1':
+                        config["source"]["command"] = vim.eval("string(g:Lf_Extensions['%s']['source']['command'])" % category)
+                    else:
+                        config["source"]["command"] = vim.bindeval("g:Lf_Extensions['%s']['source']['command']" % category)
                 self._managers[category] = AnyExplManager(category, config)
 
             manager = self._managers[category]
