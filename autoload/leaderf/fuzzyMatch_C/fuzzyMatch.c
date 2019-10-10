@@ -1617,22 +1617,42 @@ uint32_t getPathWeight(const char* filename,
 
         filename_prefix = filename_lcp;
 
-        if ( filename_lcp > 0 && ((*p >= 'a' && *p <= 'z') || (*p >= '0' && *p <= '9')
-                                  || (*p1 >= 'a' && *p1 <= 'z') || (*p1 >= '0' && *p1 <= '9')) )
+        if ( filename_lcp > 0 )
         {
-            --p;
-            while ( p > filename_start )
+            if ( (*p >= 'a' && *p <= 'z') || (*p >= '0' && *p <= '9')
+                 || (*p1 >= 'a' && *p1 <= 'z') || (*p1 >= '0' && *p1 <= '9') )
             {
-                if ( *p >= 'a' && *p <= 'z' )
+                --p;
+                while ( p > filename_start )
                 {
-                    --p;
+                    if ( *p >= 'a' && *p <= 'z' )
+                    {
+                        --p;
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
-                else
-                {
-                    break;
-                }
+                filename_prefix = p - filename_start;
             }
-            filename_prefix = p - filename_start;
+            else if ( (*p >= 'A' && *p <= 'Z') && (*p1 >= 'A' && *p1 <= 'Z')
+                      && (*(p-1) >= 'A' && *(p-1) <= 'Z') )
+            {
+                --p;
+                while ( p > filename_start )
+                {
+                    if ( *p >= 'A' && *p <= 'Z' )
+                    {
+                        --p;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+                filename_prefix = p - filename_start;
+            }
         }
 
         p = path + path_len - 1;

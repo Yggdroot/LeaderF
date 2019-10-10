@@ -707,14 +707,22 @@ class FuzzyMatch(object):
             else:
                 p1 = filename[i]
 
-            if filename_lcp > 0 and ('a' <= p <= 'z' or '0' <= p <= '9'
-                    or 'a' <= p1 <= 'z' or '0' <= p1 <= '9'):
-                filename_prefix -= 1
-                while filename_prefix > 0:
-                    if 'a' <= filename[filename_prefix] <= 'z':
-                        filename_prefix -= 1
-                    else:
-                        break
+            if filename_lcp > 0:
+                if ('a' <= p <= 'z' or '0' <= p <= '9'
+                        or 'a' <= p1 <= 'z' or '0' <= p1 <= '9'):
+                    filename_prefix -= 1
+                    while filename_prefix > 0:
+                        if 'a' <= filename[filename_prefix] <= 'z':
+                            filename_prefix -= 1
+                        else:
+                            break
+                elif 'A' <= p <= 'Z' and 'A' <= p1 <= 'Z' and 'A' <= filename[filename_prefix-1] <= 'Z':
+                    filename_prefix -= 1
+                    while filename_prefix > 0:
+                        if 'A' <= filename[filename_prefix] <= 'Z':
+                            filename_prefix -= 1
+                        else:
+                            break
 
             if filename_lcp > 0:
                 root, path_suffix = os.path.splitext(path)
