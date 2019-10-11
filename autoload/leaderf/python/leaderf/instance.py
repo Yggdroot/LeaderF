@@ -45,13 +45,14 @@ class LfInstance(object):
         self._highlightStl()
 
     def _initStlVar(self):
-        lfCmd("let g:Lf_{}_StlCategory = '-'".format(self._category))
-        lfCmd("let g:Lf_{}_StlMode = '-'".format(self._category))
-        lfCmd("let g:Lf_{}_StlCwd= '-'".format(self._category))
-        lfCmd("let g:Lf_{}_StlRunning = ':'".format(self._category))
-        lfCmd("let g:Lf_{}_StlTotal = '0'".format(self._category))
-        lfCmd("let g:Lf_{}_StlLineNumber = '1'".format(self._category))
-        lfCmd("let g:Lf_{}_StlResultsCount = '0'".format(self._category))
+        if int(lfEval("!exists('g:Lf_{}_StlCategory')".format(self._category))):
+            lfCmd("let g:Lf_{}_StlCategory = '-'".format(self._category))
+            lfCmd("let g:Lf_{}_StlMode = '-'".format(self._category))
+            lfCmd("let g:Lf_{}_StlCwd= '-'".format(self._category))
+            lfCmd("let g:Lf_{}_StlRunning = ':'".format(self._category))
+            lfCmd("let g:Lf_{}_StlTotal = '0'".format(self._category))
+            lfCmd("let g:Lf_{}_StlLineNumber = '1'".format(self._category))
+            lfCmd("let g:Lf_{}_StlResultsCount = '0'".format(self._category))
 
         stl = "%#Lf_hl_{0}_stlName# LeaderF "
         stl += "%#Lf_hl_{0}_stlSeparator0#%{{g:Lf_StlSeparator.left}}"

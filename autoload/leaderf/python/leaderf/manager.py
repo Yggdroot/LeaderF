@@ -79,7 +79,6 @@ class Manager(object):
         self._highlight_refine_pos = []
         self._highlight_ids = []
         self._orig_line = ''
-        self._launched = False
         self._ctrlp_pressed = False
         self._fuzzy_engine = None
         self._result_content = []
@@ -1454,7 +1453,7 @@ class Manager(object):
         self._setStlMode(**kwargs)
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
-        if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
+        if lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern:
             pass
         else:
             lfCmd("normal! gg")
@@ -1479,10 +1478,10 @@ class Manager(object):
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
             self._result_content = []
             self._cb_content = []
-            self._getInstance().setStlResultsCount(len(self._content))
-            if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
+            if lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern:
                 pass
             else:
+                self._getInstance().setStlResultsCount(len(self._content))
                 if not (self._empty_query and self._getExplorer().getStlCategory() in ["File"]):
                     self._getInstance().setBuffer(self._content[:self._initial_count])
 
@@ -1569,8 +1568,6 @@ class Manager(object):
                 lfCmd("echo")
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
-
-        self._launched = True
 
     def _readContent(self, content):
         try:
