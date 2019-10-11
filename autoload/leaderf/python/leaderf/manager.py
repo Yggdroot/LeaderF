@@ -879,7 +879,7 @@ class Manager(object):
         return ((FuzzyMatch.getPathWeight(filename, suffix, dirname, line), line) for line in iterable)
 
     def _guessSearch(self, content, is_continue=False, step=0):
-        if self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] != b'':
+        if self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] not in [b'', '']:
             self._getInstance().setBuffer(content[:self._initial_count])
             self._getInstance().setStlResultsCount(len(content))
             self._result_content = []
@@ -1500,7 +1500,7 @@ class Manager(object):
                 if self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
                     self._guessSearch(self._content)
                     if self._result_content: # self._result_content is [] only if 
-                                             #  self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] != b'':
+                                             #  self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] not in [b'', '']:
                         self._getInstance().appendBuffer(self._result_content[self._initial_count:])
                     else:
                         self._getInstance().appendBuffer(self._content[self._initial_count:])
