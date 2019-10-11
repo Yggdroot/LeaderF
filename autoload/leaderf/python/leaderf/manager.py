@@ -233,7 +233,7 @@ class Manager(object):
         pass
 
     def _bangEnter(self):
-        if self._cli.pattern:
+        if self._cli.pattern and self._index == 0:
             self._search(self._content)
 
     def _bangReadFinished(self):
@@ -1512,6 +1512,7 @@ class Manager(object):
 
                     lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
         elif isinstance(content, AsyncExecutor.Result):
+            self._index = 0
             self._is_content_list = False
             self._result_content = []
             self._cb_content = []
@@ -1549,6 +1550,7 @@ class Manager(object):
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
         else:
+            self._index = 0
             self._is_content_list = False
             self._result_content = []
             self._cb_content = []
