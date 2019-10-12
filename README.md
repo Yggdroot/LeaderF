@@ -108,6 +108,7 @@ optional arguments:
   --nowrap              long lines in the LeaderF window won't wrap
   --next                Jump to the next result.
   --previous            Jump to the previous result.
+  --recall              Recall last search. If the result window is closed, reopen it.
 
 subcommands:
 
@@ -221,7 +222,6 @@ specific arguments:
                         specified on the command line override glob and ignore rules.
   --current-buffer      Searches in current buffer.
   --all-buffers         Searches in all listed buffers.
-  --recall              Recall last search. If the result window is closed, reopen it.
   --append              Append to the previous search results.
   --match-path          Match the file path when fuzzy searching.
   --wd-mode <MODE>      Specify the working directory mode, value has the same meaning as
@@ -246,6 +246,7 @@ common arguments:
   --nowrap              long lines in the LeaderF window won't wrap
   --next                Jump to the next result.
   --previous            Jump to the previous result.
+  --recall              Recall last search. If the result window is closed, reopen it.
 
 If [!] is given, enter normal mode directly.
 ```

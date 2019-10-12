@@ -139,7 +139,8 @@ class LfInstance(object):
         # clear the buffer first to avoid a flash
         if self._buffer_object is not None and self._buffer_object.valid \
                 and lfEval("g:Lf_RememberLastSearch") == '0' \
-                and "--append" not in self._arguments:
+                and "--append" not in self._arguments \
+                and "--recall" not in self._arguments:
             self.buffer.options['modifiable'] = True
             del self._buffer_object[:]
 

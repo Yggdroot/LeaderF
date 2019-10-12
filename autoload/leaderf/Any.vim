@@ -135,7 +135,6 @@ let g:Lf_Arguments = {
             \               {"name": ["--current-buffer"], "nargs": 0, "help": "Searches in current buffer."},
             \               {"name": ["--all-buffers"], "nargs": 0, "help": "Searches in all listed buffers."},
             \           ],
-            \           {"name": ["--recall"], "nargs": 0, "help": "Recall last search. If the result window is closed, reopen it."},
             \           {"name": ["--append"], "nargs": 0, "help": "Append to the previous search results."},
             \           {"name": ["--match-path"], "nargs": 0, "help": "Match the file path when fuzzy searching."},
             \           {"name": ["--wd-mode"], "nargs": 1, "metavar": "<MODE>", "help": "Specify the working directory mode, value has the same meaning as g:Lf_WorkingDirectoryMode."},
@@ -162,7 +161,6 @@ let g:Lf_Arguments = {
             \           {"name": ["--literal"], "nargs": 0, "help": "Execute literal search instead of regular expression search."},
             \           {"name": ["--path-style"], "nargs": 1, "choices": ["relative", "absolute", "shorter", "abslib", "through"], "metavar": "<FORMAT>", "help": "Show path names using <FORMAT>, which may be one of: `relative`, `absolute`, `shorter`, `abslib` or `through`. `relative` means relative path.  `absolute`  means  absolute path.  `shorter` means the shorter one of relative and absolute path.  `abslib` means absolute path for libraries (GTAGSLIBPATH) and relative path for the rest.  `through` means the relative path from the project root directory (internal format of GPATH).  The default is `relative`."},
             \           {"name": ["-S", "--scope"], "nargs": 1, "metavar": "<DIR>", "help": "Show only tags which exist under <DIR> directory."},
-            \           {"name": ["--recall"], "nargs": 0, "help": "Recall last search. If the result window is closed, reopen it."},
             \           {"name": ["--match-path"], "nargs": 0, "help": "Match the file path when fuzzy searching."},
             \           [
             \               {"name": ["--append"], "nargs": 0, "help": "Append to the previous search results."},
@@ -202,6 +200,7 @@ let g:Lf_CommonArguments = [
             \   {"name": ["--next"], "nargs": 0, "help": "Jump to the next result."},
             \   {"name": ["--previous"], "nargs": 0, "help": "Jump to the previous result."},
             \ ],
+            \ {"name": ["--recall"], "nargs": 0, "help": "Recall last search. If the result window is closed, reopen it."},
             \]
 
 " arguments is something like g:Lf_CommonArguments

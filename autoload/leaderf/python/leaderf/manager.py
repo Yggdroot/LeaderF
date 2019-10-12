@@ -208,7 +208,6 @@ class Manager(object):
     def _afterEnter(self):
         if "--nowrap" in self._arguments:
             self._getInstance().window.options['wrap'] = False
-        self._cleanup()
         self._defineMaps()
         lfCmd("runtime syntax/leaderf.vim")
         if is_fuzzyEngine_C:
@@ -218,9 +217,7 @@ class Manager(object):
         if self._getInstance().window.valid:
             self._getInstance().cursorRow = self._getInstance().window.cursor[0]
         self._getInstance().helpLength = self._help_length
-        self._help_length = 0
-        self._show_help = False
-        self._cleanup()
+        self.clearSelections()
         self._getExplorer().cleanup()
         if self._fuzzy_engine:
             fuzzyEngine.closeFuzzyEngine(self._fuzzy_engine)
@@ -233,6 +230,7 @@ class Manager(object):
         pass
 
     def _bangEnter(self):
+        self._resetHighlights()
         if self._cli.pattern and self._index == 0:
             self._search(self._content)
 
@@ -1098,12 +1096,13 @@ class Manager(object):
         self._selections.clear()
 
     def _cleanup(self):
-        if lfEval("g:Lf_RememberLastSearch") == '0':
+        if not ("--recall" in self._arguments or lfEval("g:Lf_RememberLastSearch") == '1'):
             self._pattern_bak = self._cli.pattern
             self._cli.clear()
             self._clearHighlights()
             self._clearHighlightsPos()
-        self.clearSelections()
+            self._help_length = 0
+            self._show_help = False
 
     @modifiableController
     def toggleHelp(self):
@@ -1425,9 +1424,12 @@ class Manager(object):
                 lfCmd("echohl Error | redraw | echo 'Error, no content!' | echohl NONE")
             return
 
+        self._cleanup()
+
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
-        if self._getExplorer().getStlCategory() in ["Rg", "Gtags"] and "--recall" in self._arguments:
+        if "--recall" in self._arguments or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern:
             content = self._content
+            goto_first_line = False
         else:
             content = self._getExplorer().getContent(*args, **kwargs)
             self._getInstance().setCwd(os.getcwd())
@@ -1436,6 +1438,13 @@ class Manager(object):
                 mode = self._arguments["--auto-jump"][0] if len(self._arguments["--auto-jump"]) else ""
                 self._accept(content[0], mode)
                 return
+
+            self._index = 0
+            pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
+            self._cli.setPattern(pattern)
+            goto_first_line = True
+            self._result_content = []
+            self._cb_content = []
 
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
@@ -1453,13 +1462,8 @@ class Manager(object):
         self._setStlMode(**kwargs)
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
-        if lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern:
-            pass
-        else:
+        if goto_first_line:
             lfCmd("normal! gg")
-            self._index = 0
-            pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
-            self._cli.setPattern(pattern)
 
         self._start_time = time.time()
         self._bang_start_time = self._start_time
@@ -1476,9 +1480,7 @@ class Manager(object):
             else:
                 self._content = [line.rstrip("\r\n") for line in content]
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
-            self._result_content = []
-            self._cb_content = []
-            if lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern:
+            if "--recall" in self._arguments or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern:
                 pass
             else:
                 self._getInstance().setStlResultsCount(len(self._content))
@@ -1491,12 +1493,16 @@ class Manager(object):
             if not kwargs.get('bang', 0):
                 self.input()
             else:
-                self._getInstance().appendBuffer(self._content[self._initial_count:])
+                if len(self._getInstance().buffer) < len(self._result_content):
+                    self._getInstance().appendBuffer(self._content[self._initial_count:])
                 lfCmd("echo")
+                if self._cli.pattern:
+                    self._cli._buildPrompt()
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
 
-                if self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+                if not self._content and self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+                    lfCmd("normal! gg")
                     self._guessSearch(self._content)
                     if self._result_content: # self._result_content is [] only if 
                                              #  self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] not in [b'', '']:
@@ -1512,10 +1518,7 @@ class Manager(object):
 
                     lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
         elif isinstance(content, AsyncExecutor.Result):
-            self._index = 0
             self._is_content_list = False
-            self._result_content = []
-            self._cb_content = []
             self._callback = self._workInIdle
             if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
@@ -1550,10 +1553,7 @@ class Manager(object):
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
         else:
-            self._index = 0
             self._is_content_list = False
-            self._result_content = []
-            self._cb_content = []
             self._callback = partial(self._workInIdle, content)
             if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
