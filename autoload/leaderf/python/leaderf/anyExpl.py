@@ -567,6 +567,7 @@ class AnyHub(object):
         self._managers = {}
         self._parser = None
         self._pyext_manages = {}
+        self._last_cmd = None
 
     def _add_argument(self, parser, arg_list, positional_args):
         """
@@ -741,9 +742,13 @@ class AnyHub(object):
             the_args = self._parser.parse_args(LfShlex(arg_line, posix=False).split())
             arguments = vars(the_args)
             arguments = arguments.copy()
-            del arguments["start"]
-            arguments["arg_line"] = arg_line
-            the_args.start(arguments, *args, **kwargs)
+            if "start" in arguments:
+                del arguments["start"]
+                arguments["arg_line"] = arg_line
+                the_args.start(arguments, *args, **kwargs)
+                self._last_cmd = the_args.start
+            elif "--recall" in arguments and self._last_cmd:
+                self._last_cmd(arguments, *args, **kwargs)
         # except ValueError as e:
         #     lfPrintError(e)
         #     return
