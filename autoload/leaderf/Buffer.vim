@@ -35,18 +35,3 @@ function! leaderf#Buffer#Maps()
     endif
 endfunction
 
-function! leaderf#Buffer#startExpl(win_pos, ...)
-    if a:0 == 0
-        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."')")
-    elseif a:1 == 1
-        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."', arguments={'--all': []})")
-    elseif a:1 == 2
-        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."', arguments={'--tabpage': []})")
-    else
-        call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."', arguments={'--tabpage': [], '--all': []})")
-    endif
-endfunction
-
-function! leaderf#Buffer#startExplPattern(win_pos, pattern)
-    call leaderf#LfPy("bufExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
-endfunction

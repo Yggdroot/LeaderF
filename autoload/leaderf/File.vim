@@ -45,19 +45,6 @@ function! leaderf#File#Maps()
     endif
 endfunction
 
-function! leaderf#File#startExpl(win_pos, ...)
-    if a:0 == 0
-        call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."')")
-    else
-        let dir = fnamemodify(a:1.'/',":h:gs?\\?/?")
-        call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."', arguments={'directory': ['".dir."']})")
-    endif
-endfunction
-
-function! leaderf#File#startExplPattern(win_pos, pattern)
-    call leaderf#LfPy("fileExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
-endfunction
-
 function! leaderf#File#cleanup()
     call leaderf#LfPy("fileExplManager._beforeExit()")
 endfunction

@@ -25,7 +25,3 @@ function! leaderf#History#Maps()
         endfor
     endif
 endfunction
-
-function! leaderf#History#startExpl(win_pos, type)
-    call leaderf#LfPy("historyExplManager.startExplorer('".a:win_pos."', history='".a:type."')")
-endfunction

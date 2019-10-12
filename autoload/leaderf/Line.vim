@@ -40,19 +40,3 @@ function! leaderf#Line#Maps()
         endfor
     endif
 endfunction
-
-function! leaderf#Line#startExpl(win_pos, ...)
-    if a:0 == 0
-        call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."')")
-    else
-        call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."', arguments={'--all': []})")
-    endif
-endfunction
-
-function! leaderf#Line#startExplPattern(win_pos, all, pattern)
-    if a:all == 0
-        call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."')")
-    else
-        call leaderf#LfPy("lineExplManager.startExplorer('".a:win_pos."', arguments={'--all': []}, pattern='".a:pattern."')")
-    endif
-endfunction

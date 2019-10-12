@@ -37,7 +37,3 @@ function! leaderf#Colors#Maps()
         endfor
     endif
 endfunction
-
-function! leaderf#Colors#startExpl(win_pos, ...)
-    call leaderf#LfPy("colorschemeExplManager.startExplorer('".a:win_pos."')")
-endfunction

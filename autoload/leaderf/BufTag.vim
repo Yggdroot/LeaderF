@@ -41,22 +41,6 @@ function! leaderf#BufTag#Maps()
     endif
 endfunction
 
-function! leaderf#BufTag#startExpl(win_pos, bang, ...)
-    if a:0 == 0
-        call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."', bang=".a:bang.")")
-    else
-        call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."', arguments={'--all': []}, bang=".a:bang.")")
-    endif
-endfunction
-
-function! leaderf#BufTag#startExplPattern(win_pos, bang, all, pattern)
-    if a:all == 0
-        call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."', bang=".a:bang.")")
-    else
-        call leaderf#LfPy("bufTagExplManager.startExplorer('".a:win_pos."', arguments={'--all': []}, pattern='".a:pattern."', bang=".a:bang.")")
-    endif
-endfunction
-
 function! leaderf#BufTag#removeCache(bufNum)
     call leaderf#LfPy("bufTagExplManager.removeCache(".a:bufNum.")")
 endfunction

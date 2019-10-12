@@ -71,23 +71,23 @@ augroup LeaderF_Gtags
     autocmd BufWritePost * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 1)
 augroup END
 
-noremap <silent> <Plug>LeaderfFileTop        :<C-U>call leaderf#File#startExpl('top')<CR>
-noremap <silent> <Plug>LeaderfFileBottom     :<C-U>call leaderf#File#startExpl('bottom')<CR>
-noremap <silent> <Plug>LeaderfFileLeft       :<C-U>call leaderf#File#startExpl('left')<CR>
-noremap <silent> <Plug>LeaderfFileRight      :<C-U>call leaderf#File#startExpl('right')<CR>
-noremap <silent> <Plug>LeaderfFileFullScreen :<C-U>call leaderf#File#startExpl('fullScreen')<CR>
+noremap <silent> <Plug>LeaderfFileTop        :<C-U>Leaderf file --top<CR>
+noremap <silent> <Plug>LeaderfFileBottom     :<C-U>Leaderf file --bottom<CR>
+noremap <silent> <Plug>LeaderfFileLeft       :<C-U>Leaderf file --left<CR>
+noremap <silent> <Plug>LeaderfFileRight      :<C-U>Leaderf file --right<CR>
+noremap <silent> <Plug>LeaderfFileFullScreen :<C-U>Leaderf file --fullScreen<CR>
 
-noremap <silent> <Plug>LeaderfBufferTop        :<C-U>call leaderf#Buffer#startExpl('top')<CR>
-noremap <silent> <Plug>LeaderfBufferBottom     :<C-U>call leaderf#Buffer#startExpl('bottom')<CR>
-noremap <silent> <Plug>LeaderfBufferLeft       :<C-U>call leaderf#Buffer#startExpl('left')<CR>
-noremap <silent> <Plug>LeaderfBufferRight      :<C-U>call leaderf#Buffer#startExpl('right')<CR>
-noremap <silent> <Plug>LeaderfBufferFullScreen :<C-U>call leaderf#Buffer#startExpl('fullScreen')<CR>
+noremap <silent> <Plug>LeaderfBufferTop        :<C-U>Leaderf buffer --top<CR>
+noremap <silent> <Plug>LeaderfBufferBottom     :<C-U>Leaderf buffer --bottom<CR>
+noremap <silent> <Plug>LeaderfBufferLeft       :<C-U>Leaderf buffer --left<CR>
+noremap <silent> <Plug>LeaderfBufferRight      :<C-U>Leaderf buffer --right<CR>
+noremap <silent> <Plug>LeaderfBufferFullScreen :<C-U>Leaderf buffer --fullScreen<CR>
 
-noremap <silent> <Plug>LeaderfMruCwdTop        :<C-U>call leaderf#Mru#startExpl('top')<CR>
-noremap <silent> <Plug>LeaderfMruCwdBottom     :<C-U>call leaderf#Mru#startExpl('bottom')<CR>
-noremap <silent> <Plug>LeaderfMruCwdLeft       :<C-U>call leaderf#Mru#startExpl('left')<CR>
-noremap <silent> <Plug>LeaderfMruCwdRight      :<C-U>call leaderf#Mru#startExpl('right')<CR>
-noremap <silent> <Plug>LeaderfMruCwdFullScreen :<C-U>call leaderf#Mru#startExpl('fullScreen')<CR>
+noremap <silent> <Plug>LeaderfMruCwdTop        :<C-U>Leaderf mru --top<CR>
+noremap <silent> <Plug>LeaderfMruCwdBottom     :<C-U>Leaderf mru --bottom<CR>
+noremap <silent> <Plug>LeaderfMruCwdLeft       :<C-U>Leaderf mru --left<CR>
+noremap <silent> <Plug>LeaderfMruCwdRight      :<C-U>Leaderf mru --right<CR>
+noremap <silent> <Plug>LeaderfMruCwdFullScreen :<C-U>Leaderf mru --fullScreen<CR>
 
 noremap <Plug>LeaderfRgPrompt :<C-U>Leaderf rg -e<Space>
 noremap <Plug>LeaderfRgCwordLiteralNoBoundary :<C-U><C-R>=leaderf#Rg#startCmdline(0, 0, 0, 0)<CR>
@@ -115,60 +115,60 @@ vnoremap <silent> <Plug>LeaderfRgBangVisualLiteralBoundary   :<C-U><C-R>=leaderf
 vnoremap <silent> <Plug>LeaderfRgBangVisualRegexNoBoundary   :<C-U><C-R>=leaderf#Rg#startCmdline(2, 1, 1, 0)<CR>
 vnoremap <silent> <Plug>LeaderfRgBangVisualRegexBoundary     :<C-U><C-R>=leaderf#Rg#startCmdline(2, 1, 1, 1)<CR>
 
-command! -bar -nargs=? -complete=dir LeaderfFile call leaderf#File#startExpl(g:Lf_WindowPosition, <f-args>)
-command! -bar -nargs=? -complete=dir LeaderfFileFullScreen call leaderf#File#startExpl('fullScreen', <f-args>)
-command! -bar -nargs=1 LeaderfFilePattern call leaderf#File#startExplPattern(g:Lf_WindowPosition, <q-args>)
-command! -bar -nargs=0 LeaderfFileCword call leaderf#File#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
+command! -bar -nargs=? -complete=dir LeaderfFile Leaderf file <args>
+command! -bar -nargs=? -complete=dir LeaderfFileFullScreen Leaderf file --fullScreen <args>
+command! -bar -nargs=1 LeaderfFilePattern Leaderf file --input <args>
+command! -bar -nargs=0 LeaderfFileCword Leaderf file --cword
 
-command! -bar -nargs=0 LeaderfBuffer call leaderf#Buffer#startExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfBufferAll call leaderf#Buffer#startExpl(g:Lf_WindowPosition, 1)
-command! -bar -nargs=0 LeaderfTabBuffer call leaderf#Buffer#startExpl(g:Lf_WindowPosition, 2)
-command! -bar -nargs=0 LeaderfTabBufferAll call leaderf#Buffer#startExpl(g:Lf_WindowPosition, 3)
-command! -bar -nargs=1 LeaderfBufferPattern call leaderf#Buffer#startExplPattern(g:Lf_WindowPosition, <q-args>)
-command! -bar -nargs=0 LeaderfBufferCword call leaderf#Buffer#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
+command! -bar -nargs=0 LeaderfBuffer Leaderf buffer
+command! -bar -nargs=0 LeaderfBufferAll Leaderf buffer --all
+command! -bar -nargs=0 LeaderfTabBuffer Leaderf buffer --tabpage
+command! -bar -nargs=0 LeaderfTabBufferAll Leaderf buffer --tabpage --all
+command! -bar -nargs=1 LeaderfBufferPattern Leaderf buffer --input <args>
+command! -bar -nargs=0 LeaderfBufferCword Leaderf buffer --cword
 
-command! -bar -nargs=0 LeaderfMru call leaderf#Mru#startExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfMruCwd call leaderf#Mru#startExpl(g:Lf_WindowPosition, 1)
-command! -bar -nargs=1 LeaderfMruPattern call leaderf#Mru#startExplPattern(g:Lf_WindowPosition, 0, <q-args>)
-command! -bar -nargs=0 LeaderfMruCword call leaderf#Mru#startExplPattern(g:Lf_WindowPosition, 0, expand('<cword>'))
-command! -bar -nargs=1 LeaderfMruCwdPattern call leaderf#Mru#startExplPattern(g:Lf_WindowPosition, 1, <q-args>)
-command! -bar -nargs=0 LeaderfMruCwdCword call leaderf#Mru#startExplPattern(g:Lf_WindowPosition, 1, expand('<cword>'))
+command! -bar -nargs=0 LeaderfMru Leaderf mru
+command! -bar -nargs=0 LeaderfMruCwd Leaderf mru --cwd
+command! -bar -nargs=1 LeaderfMruPattern Leaderf mru --input <args>
+command! -bar -nargs=0 LeaderfMruCword Leaderf mru --cword
+command! -bar -nargs=1 LeaderfMruCwdPattern Leaderf mru --cwd --input <args>
+command! -bar -nargs=0 LeaderfMruCwdCword Leaderf mru --cwd --cword
 
-command! -bar -nargs=0 LeaderfTag call leaderf#Tag#startExpl(g:Lf_WindowPosition)
-command! -bar -nargs=1 LeaderfTagPattern call leaderf#Tag#startExplPattern(g:Lf_WindowPosition, <q-args>)
-command! -bar -nargs=0 LeaderfTagCword call leaderf#Tag#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
+command! -bar -nargs=0 LeaderfTag Leaderf tag
+command! -bar -nargs=1 LeaderfTagPattern Leaderf tag --input <args>
+command! -bar -nargs=0 LeaderfTagCword Leaderf tag --cword
 
-command! -bar -nargs=0 -bang LeaderfBufTag call leaderf#BufTag#startExpl(g:Lf_WindowPosition, <bang>0)
-command! -bar -nargs=0 -bang LeaderfBufTagAll call leaderf#BufTag#startExpl(g:Lf_WindowPosition, <bang>0, 1)
-command! -bar -nargs=1 -bang LeaderfBufTagPattern call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, <bang>0, 0, <q-args>)
-command! -bar -nargs=0 -bang LeaderfBufTagCword call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, <bang>0, 0, expand('<cword>'))
-command! -bar -nargs=1 -bang LeaderfBufTagAllPattern call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, <bang>0, 1, <q-args>)
-command! -bar -nargs=0 -bang LeaderfBufTagAllCword call leaderf#BufTag#startExplPattern(g:Lf_WindowPosition, <bang>0, 1, expand('<cword>'))
+command! -bar -nargs=0 -bang LeaderfBufTag Leaderf<bang> bufTag
+command! -bar -nargs=0 -bang LeaderfBufTagAll Leaderf<bang> bufTag --all
+command! -bar -nargs=1 -bang LeaderfBufTagPattern Leaderf<bang> bufTag --input <args>
+command! -bar -nargs=0 -bang LeaderfBufTagCword Leaderf<bang> bufTag --cword
+command! -bar -nargs=1 -bang LeaderfBufTagAllPattern Leaderf<bang> bufTag --all --input <args>
+command! -bar -nargs=0 -bang LeaderfBufTagAllCword Leaderf<bang> bufTag --all --cword
 
-command! -bar -nargs=0 -bang LeaderfFunction call leaderf#Function#startExpl(g:Lf_WindowPosition, <bang>0)
-command! -bar -nargs=0 -bang LeaderfFunctionAll call leaderf#Function#startExpl(g:Lf_WindowPosition, <bang>0, 1)
-command! -bar -nargs=1 -bang LeaderfFunctionPattern call leaderf#Function#startExplPattern(g:Lf_WindowPosition, <bang>0, 0, <q-args>)
-command! -bar -nargs=0 -bang LeaderfFunctionCword call leaderf#Function#startExplPattern(g:Lf_WindowPosition, <bang>0, 0, expand('<cword>'))
-command! -bar -nargs=1 -bang LeaderfFunctionAllPattern call leaderf#Function#startExplPattern(g:Lf_WindowPosition, <bang>0, 1, <q-args>)
-command! -bar -nargs=0 -bang LeaderfFunctionAllCword call leaderf#Function#startExplPattern(g:Lf_WindowPosition, <bang>0, 1, expand('<cword>'))
+command! -bar -nargs=0 -bang LeaderfFunction Leaderf<bang> function
+command! -bar -nargs=0 -bang LeaderfFunctionAll Leaderf<bang> function --all
+command! -bar -nargs=1 -bang LeaderfFunctionPattern Leaderf<bang> function --input <args>
+command! -bar -nargs=0 -bang LeaderfFunctionCword Leaderf<bang> function --cword
+command! -bar -nargs=1 -bang LeaderfFunctionAllPattern Leaderf<bang> function --all --input <args>
+command! -bar -nargs=0 -bang LeaderfFunctionAllCword Leaderf<bang> function --all --cword
 
-command! -bar -nargs=0 LeaderfLine call leaderf#Line#startExpl(g:Lf_WindowPosition)
-command! -bar -nargs=0 LeaderfLineAll call leaderf#Line#startExpl(g:Lf_WindowPosition, 1)
-command! -bar -nargs=1 LeaderfLinePattern call leaderf#Line#startExplPattern(g:Lf_WindowPosition, 0, <q-args>)
-command! -bar -nargs=0 LeaderfLineCword call leaderf#Line#startExplPattern(g:Lf_WindowPosition, 0, expand('<cword>'))
-command! -bar -nargs=1 LeaderfLineAllPattern call leaderf#Line#startExplPattern(g:Lf_WindowPosition, 1, <q-args>)
-command! -bar -nargs=0 LeaderfLineAllCword call leaderf#Line#startExplPattern(g:Lf_WindowPosition, 1, expand('<cword>'))
+command! -bar -nargs=0 LeaderfLine Leaderf line
+command! -bar -nargs=0 LeaderfLineAll Leaderf line --all
+command! -bar -nargs=1 LeaderfLinePattern Leaderf line --input <args>
+command! -bar -nargs=0 LeaderfLineCword Leaderf line --cword
+command! -bar -nargs=1 LeaderfLineAllPattern Leaderf line --all --input <args>
+command! -bar -nargs=0 LeaderfLineAllCword Leaderf line --all --cword
 
-command! -bar -nargs=0 LeaderfHistoryCmd call leaderf#History#startExpl(g:Lf_WindowPosition, "cmd")
-command! -bar -nargs=0 LeaderfHistorySearch call leaderf#History#startExpl(g:Lf_WindowPosition, "search") | silent! norm! n
+command! -bar -nargs=0 LeaderfHistoryCmd Leaderf cmdHistory
+command! -bar -nargs=0 LeaderfHistorySearch exec "Leaderf searchHistory" | silent! norm! n
 
-command! -bar -nargs=0 LeaderfSelf call leaderf#Self#startExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfSelf Leaderf self
 
-command! -bar -nargs=0 LeaderfHelp call leaderf#Help#startExpl(g:Lf_WindowPosition)
-command! -bar -nargs=1 LeaderfHelpPattern call leaderf#Help#startExplPattern(g:Lf_WindowPosition, <q-args>)
-command! -bar -nargs=0 LeaderfHelpCword call leaderf#Help#startExplPattern(g:Lf_WindowPosition, expand('<cword>'))
+command! -bar -nargs=0 LeaderfHelp Leaderf help
+command! -bar -nargs=1 LeaderfHelpPattern Leaderf help --input <args>
+command! -bar -nargs=0 LeaderfHelpCword Leaderf help --cword
 
-command! -bar -nargs=0 LeaderfColorscheme call leaderf#Colors#startExpl(g:Lf_WindowPosition)
+command! -bar -nargs=0 LeaderfColorscheme Leaderf colorscheme
 
 command! -bar -nargs=0 LeaderfRgInteractive call leaderf#Rg#Interactive()
 command! -bar -nargs=0 LeaderfRgRecall exec "Leaderf! rg --recall"
