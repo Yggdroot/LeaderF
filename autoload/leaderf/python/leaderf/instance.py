@@ -42,6 +42,8 @@ class LfInstance(object):
         self._cursor_row = None
         self._help_length = None
         self._current_working_directory = None
+        self._ignore_cur_buffer_name = lfEval("get(g:, 'Lf_IgnoreCurrentBufferName', 0)") == '1' \
+                                            and self._category in ["File"]
         self._highlightStl()
 
     def _initStlVar(self):
@@ -265,6 +267,13 @@ class LfInstance(object):
         lfCmd("let g:Lf_{}_StlLineNumber = '1'".format(self._category))
         self._orig_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
         self._orig_cursor = vim.current.window.cursor
+        self._orig_buffer_name = os.path.normpath(lfDecode(vim.current.buffer.name))
+        if lfEval("g:Lf_ShowRelativePath") == '1':
+            try:
+                self._orig_buffer_name = os.path.relpath(self._orig_buffer_name)
+            except ValueError:
+                pass
+        self._orig_buffer_name = lfEncode(self._orig_buffer_name)
 
         self._before_enter()
 
@@ -349,6 +358,19 @@ class LfInstance(object):
         return num
 
     def setBuffer(self, content):
+        if self._ignore_cur_buffer_name:
+            try:
+                k = content.index(self._orig_buffer_name, 0, self._window_object.height)
+                content = content[:k] + content[k+1:]
+            except ValueError:
+                if os.name == 'nt':
+                    buffer_name = self._orig_buffer_name.replace('\\', '/')
+                    try:
+                        k = content.index(buffer_name, 0, self._window_object.height)
+                        content = content[:k] + content[k+1:]
+                    except ValueError:
+                        pass
+
         self.buffer.options['modifiable'] = True
         if lfEval("has('nvim')") == '1':
             if isinstance(content, list) and len(content) > 0 and len(content[0]) != len(content[0].rstrip("\r\n")):

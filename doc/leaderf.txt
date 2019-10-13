@@ -624,6 +624,12 @@ g:Lf_EmptyQuery                                   *g:Lf_EmptyQuery*
 
     Default value is 1.
 
+g:Lf_IgnoreCurrentBufferName                      *g:Lf_IgnoreCurrentBufferName*
+    This option specifies whether to remove the current buffer name from
+    the result list.
+
+    Default value is 0.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
