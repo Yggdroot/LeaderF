@@ -884,7 +884,10 @@ class Manager(object):
 
         buffer_name = os.path.normpath(lfDecode(self._cur_buffer.name))
         if lfEval("g:Lf_ShowRelativePath") == '1':
-            buffer_name = os.path.relpath(buffer_name)
+            try:
+                buffer_name = os.path.relpath(buffer_name)
+            except ValueError:
+                pass
 
         buffer_name = lfEncode(buffer_name)
         dirname, basename = os.path.split(buffer_name)
