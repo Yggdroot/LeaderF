@@ -32,6 +32,7 @@ class LfInstance(object):
         self._window_object = None
         self._buffer_object = None
         self._buffer_name = lfEval("expand('$VIMRUNTIME/')") + category + '/LeaderF'
+        self._cur_buffer_name = ""
         self._win_height = float(lfEval("g:Lf_WindowHeight"))
         self._show_tabline = int(lfEval("&showtabline"))
         self._is_autocmd_set = False
@@ -349,6 +350,14 @@ class LfInstance(object):
         return num
 
     def setBuffer(self, content):
+        if lfEval("g:Lf_IgnoreBufferName") == '1':
+            buffer_name = os.path.normpath(lfDecode(self._cur_buffer_name))
+            if lfEval("g:Lf_ShowRelativePath") == '1':
+                buffer_name = os.path.relpath(buffer_name)
+
+            if buffer_name in content:
+                content.remove(buffer_name)
+
         self.buffer.options['modifiable'] = True
         if lfEval("has('nvim')") == '1':
             if isinstance(content, list) and len(content) > 0 and len(content[0]) != len(content[0].rstrip("\r\n")):

@@ -204,6 +204,7 @@ class Manager(object):
     def _beforeEnter(self):
         self._resetAutochdir()
         self._cur_buffer = vim.current.buffer
+        self._getInstance()._cur_buffer_name = vim.current.buffer.name
 
     def _afterEnter(self):
         if "--nowrap" in self._arguments:
