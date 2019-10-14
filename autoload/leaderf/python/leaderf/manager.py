@@ -60,6 +60,23 @@ def modifiableController(func):
         self._getInstance().buffer.options['modifiable'] = False
     return deco
 
+def catchException(func):
+    @wraps(func)
+    def deco(self, *args, **kwargs):
+        try:
+            func(self, *args, **kwargs)
+        except vim.error as e: # for neovim
+            if str(e) != "b'Keyboard interrupt'" and str(e) != 'Keyboard interrupt':
+                raise e
+            elif self._timer_id is not None:
+                lfCmd("call timer_stop(%s)" % self._timer_id)
+                self._timer_id = None
+        except KeyboardInterrupt: # <C-C>, this does not work in vim
+            if self._timer_id is not None:
+                lfCmd("call timer_stop(%s)" % self._timer_id)
+                self._timer_id = None
+    return deco
+
 #*****************************************************
 # Manager
 #*****************************************************
@@ -1592,6 +1609,7 @@ class Manager(object):
         elif self._index == 0:
             self._getInstance().setBuffer(self._content)
 
+    @catchException
     def _workInIdle(self, content=None, bang=False):
         if self._read_content_exception is not None:
             if bang == True:
