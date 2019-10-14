@@ -359,17 +359,14 @@ class LfInstance(object):
 
     def setBuffer(self, content):
         if self._ignore_cur_buffer_name:
-            try:
-                k = content.index(self._orig_buffer_name, 0, self._window_object.height)
-                content = content[:k] + content[k+1:]
-            except ValueError:
-                if os.name == 'nt':
-                    buffer_name = self._orig_buffer_name.replace('\\', '/')
-                    try:
-                        k = content.index(buffer_name, 0, self._window_object.height)
-                        content = content[:k] + content[k+1:]
-                    except ValueError:
-                        pass
+            if self._orig_buffer_name in content[:self._window_object.height]:
+                content = content[:]
+                content.remove(self._orig_buffer_name)
+            elif os.name == 'nt':
+                buffer_name = self._orig_buffer_name.replace('\\', '/')
+                if buffer_name in content[:self._window_object.height]:
+                    content = content[:]
+                    content.remove(buffer_name)
 
         self.buffer.options['modifiable'] = True
         if lfEval("has('nvim')") == '1':
