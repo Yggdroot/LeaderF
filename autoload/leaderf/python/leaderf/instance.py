@@ -357,15 +357,17 @@ class LfInstance(object):
             num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + columns - 1)// columns
         return num
 
-    def setBuffer(self, content):
+    def setBuffer(self, content, need_copy=False):
         if self._ignore_cur_buffer_name:
             if self._orig_buffer_name in content[:self._window_object.height]:
-                content = content[:]
+                if need_copy:
+                    content = content[:]
                 content.remove(self._orig_buffer_name)
             elif os.name == 'nt':
                 buffer_name = self._orig_buffer_name.replace('\\', '/')
                 if buffer_name in content[:self._window_object.height]:
-                    content = content[:]
+                    if need_copy:
+                        content = content[:]
                     content.remove(buffer_name)
 
         self.buffer.options['modifiable'] = True
@@ -433,7 +435,7 @@ class LfInstance(object):
 
     def initBuffer(self, content, unit, set_content):
         if isinstance(content, list):
-            self.setBuffer(content)
+            self.setBuffer(content, need_copy=True)
             self.setStlTotal(len(content)//unit)
             self.setStlResultsCount(len(content)//unit)
             return content
@@ -450,7 +452,7 @@ class LfInstance(object):
                 if time.time() - start > 0.1:
                     start = time.time()
                     if len(self._buffer_object) <= self._window_object.height:
-                        self.setBuffer(cur_content)
+                        self.setBuffer(cur_content, need_copy=True)
                         if self._reverse_order:
                             lfCmd("normal! G")
 
@@ -460,7 +462,7 @@ class LfInstance(object):
                     self.setStlTotal(len(cur_content)//unit)
                     self.setStlResultsCount(len(cur_content)//unit)
                     lfCmd("redrawstatus")
-            self.setBuffer(cur_content)
+            self.setBuffer(cur_content, need_copy=True)
             self.setStlTotal(len(self._buffer_object)//unit)
             self.setStlRunning(False)
             self.setStlResultsCount(len(self._buffer_object)//unit)

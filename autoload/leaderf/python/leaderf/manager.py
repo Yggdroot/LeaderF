@@ -1549,7 +1549,7 @@ class Manager(object):
                     if "--append" in self.getArguments():
                         self._offset_in_content = len(self._content)
                         if self._pattern_bak:
-                            self._getInstance().setBuffer(self._content)
+                            self._getInstance().setBuffer(self._content, need_copy=False)
                             self._createHelpHint()
                     else:
                         self._getInstance().clearBuffer()
@@ -1607,7 +1607,7 @@ class Manager(object):
         if len(self._result_content) > len(self._getInstance().buffer):
             self._getInstance().setBuffer(self._result_content)
         elif self._index == 0:
-            self._getInstance().setBuffer(self._content)
+            self._getInstance().setBuffer(self._content, need_copy=True)
 
     @catchException
     def _workInIdle(self, content=None, bang=False):
