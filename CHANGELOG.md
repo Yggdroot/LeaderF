@@ -1,3 +1,38 @@
+v1.21 (2019-10-15)
+==================
+
+**BREAKING CHANGES**:
+
+* Let `Leaderf rg {pattern}` work
+
+Feature enhancements:
+
+* [Feature #293] (https://github.com/Yggdroot/LeaderF/issues/293)
+  Let `--recall` support all leaderf cmd.
+  `Leaderf --recall` to recall last Leaderf command
+* [Feature #360] (https://github.com/Yggdroot/LeaderF/issues/360)
+  Find file based on the current buffer
+  Add g:Lf_IgnoreCurrentBufferName
+* Enhance the ability to write extension for nvim
+* Add support for `Leaderf! file`
+* Add "--auto-jump" support for `Leaderf[!] gtags --by-context`
+* Add "--no-messages" for Leaderf rg
+* Add g:Lf_Debug_Gtags
+
+Bug fixes:
+
+* [BUG #366](https://github.com/Yggdroot/LeaderF/issues/366)
+* [BUG #361](https://github.com/Yggdroot/LeaderF/issues/361)
+* [BUG #359](https://github.com/Yggdroot/LeaderF/issues/359)
+* [BUG #349](https://github.com/Yggdroot/LeaderF/issues/349)
+* [BUG #335](https://github.com/Yggdroot/LeaderF/issues/335)
+* [BUG #332](https://github.com/Yggdroot/LeaderF/issues/332)
+* [BUG #329](https://github.com/Yggdroot/LeaderF/issues/329)
+* [BUG #327](https://github.com/Yggdroot/LeaderF/issues/327)
+* [BUG #326](https://github.com/Yggdroot/LeaderF/issues/326)
+* [BUG #325](https://github.com/Yggdroot/LeaderF/issues/325)
+* [BUG #320](https://github.com/Yggdroot/LeaderF/issues/320)
+
 v1.20 (2019-5-8)
 ================
 
