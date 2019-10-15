@@ -7,11 +7,11 @@ v1.21 (2019-10-15)
 
 Feature enhancements:
 
-* [Feature #293] (https://github.com/Yggdroot/LeaderF/issues/293)
-  Let `--recall` support all leaderf cmd.
+* [Feature #293](https://github.com/Yggdroot/LeaderF/issues/293):  
+  Let `--recall` support all leaderf cmd.  
   `Leaderf --recall` to recall last Leaderf command
-* [Feature #360] (https://github.com/Yggdroot/LeaderF/issues/360)
-  Find file based on the current buffer
+* [Feature #360](https://github.com/Yggdroot/LeaderF/issues/360):  
+  Find file based on the current buffer  
   Add g:Lf_IgnoreCurrentBufferName
 * Enhance the ability to write extension for nvim
 * Add support for `Leaderf! file`
