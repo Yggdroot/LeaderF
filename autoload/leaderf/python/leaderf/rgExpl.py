@@ -225,7 +225,7 @@ class RgExplorer(Explorer):
                 except ValueError:
                     path = '"%s"' % lfDecode(vim.current.buffer.name)
             else:
-                file_name = '%d_`No_Name_%d`' % (os.getpid(), vim.current.buffer.number)
+                file_name = "%d_'No_Name_%d'" % (os.getpid(), vim.current.buffer.number)
                 try:
                     with lfOpen(file_name, 'w', errors='ignore') as f:
                         for line in vim.current.buffer[:]:
@@ -249,7 +249,7 @@ class RgExplorer(Explorer):
                         except ValueError:
                             path += '"' + lfDecode(b.name) + '" '
                     else:
-                        file_name = '%d_`No_Name_%d`' % (os.getpid(), b.number)
+                        file_name = "%d_'No_Name_%d'" % (os.getpid(), b.number)
                         try:
                             with lfOpen(file_name, 'w', errors='ignore') as f:
                                 for line in b[:]:
@@ -265,6 +265,9 @@ class RgExplorer(Explorer):
 
         executor = AsyncExecutor()
         self._executor.append(executor)
+        if os.name != 'nt':
+            pattern = pattern.replace('`', r"\`")
+
         cmd = '''rg {} --no-config --no-ignore-messages --no-heading --with-filename --color never --line-number '''\
                 '''{} {}{}{}{}{}{}'''.format(extra_options, case_flag, word_or_line, zero_args_options,
                                                   one_args_options, repeatable_options, lfDecode(pattern), path)
@@ -428,7 +431,7 @@ class RgExplManager(Manager):
             file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
             file = os.path.normpath(lfEncode(file))
 
-        match = re.search(r'\d+_`No_Name_(\d+)`', file)
+        match = re.search(r"\d+_'No_Name_(\d+)'", file)
         if match:
             buf_number = match.group(1)
         else:
