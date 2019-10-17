@@ -413,19 +413,21 @@ class RgExplManager(Manager):
                 m = re.match(r'^(.+?)%s(\d+)%s' % (sep, sep), line)
                 if m:
                     file, line_num = m.group(1, 2)
-            i = 1
-            while not os.path.exists(lfDecode(file)):
-                m = re.match(r'^(.+?(?:([:-])\d+.*?){%d})\2(\d+)\2' % i, line)
-                i += 1
-                file, line_num = m.group(1, 3)
+            if not re.search(r"\d+_'No_Name_(\d+)'", file):
+                i = 1
+                while not os.path.exists(lfDecode(file)):
+                    m = re.match(r'^(.+?(?:([:-])\d+.*?){%d})\2(\d+)\2' % i, line)
+                    i += 1
+                    file, line_num = m.group(1, 3)
         else:
             m = re.match(r'^(.+?):(\d+):', line)
             file, line_num = m.group(1, 2)
-            i = 1
-            while not os.path.exists(lfDecode(file)):
-                m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):' % i, line)
-                i += 1
-                file, line_num = m.group(1, 2)
+            if not re.search(r"\d+_'No_Name_(\d+)'", file):
+                i = 1
+                while not os.path.exists(lfDecode(file)):
+                    m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):' % i, line)
+                    i += 1
+                    file, line_num = m.group(1, 2)
 
         if not os.path.isabs(file):
             file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
