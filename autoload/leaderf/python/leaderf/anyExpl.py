@@ -91,7 +91,7 @@ class AnyExplorer(Explorer):
             elif type(source["command"]) == type("string"):
                 if lfEval("has('nvim')") == '1' and source["command"].startswith("function("):
                     function_name = source["command"][10:-2]    # source["command"] is like "function('FuncName')"
-                    source_cmd = lfFunction(function_name)(kwargs.get("arguments", {})) 
+                    source_cmd = lfFunction(function_name)(kwargs.get("arguments", {}))
                 else:
                     source_cmd = source["command"]
 
@@ -739,7 +739,17 @@ class AnyHub(object):
             # the_args = self._parser.parse_known_args(LfShlex(arg_line, posix=False).split())[0]
 
             # produce an error when extra arguments are present
-            the_args = self._parser.parse_args(LfShlex(arg_line, posix=False).split())
+            raw_args = LfShlex(arg_line, posix=False).split()
+
+            # ArgumentParser.add_subparsers([title][, description][, prog][, parser_class][, action][, option_string][, dest][, required][, help][, metavar])
+            #   - required - Whether or not a subcommand must be provided, by default False (added in 3.7)
+            if sys.version_info < (3, 7):
+                if "--recall" in raw_args and len([i for i in raw_args if not i.startswith('-')]) == 0:
+                    if self._last_cmd:
+                        self._last_cmd({'--recall': []}, *args, **kwargs)
+                        return
+
+            the_args = self._parser.parse_args(raw_args)
             arguments = vars(the_args)
             arguments = arguments.copy()
             if "start" in arguments:
