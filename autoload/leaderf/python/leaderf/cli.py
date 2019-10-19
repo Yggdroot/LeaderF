@@ -197,9 +197,10 @@ class LfCli(object):
 
     def _buildPattern(self):
         if self._is_fuzzy:
-            if self._and_delimiter in ''.join(self._cmdline).lstrip() and self._delimiter not in self._cmdline:
+            if self._and_delimiter in ''.join(self._cmdline).lstrip(self._and_delimiter) \
+                    and self._delimiter not in self._cmdline:
                 self._is_and_mode = True
-                patterns = re.split(r'['+self._and_delimiter+']+', ''.join(self._cmdline).strip())
+                patterns = re.split(r'['+self._and_delimiter+']+', ''.join(self._cmdline).strip(self._and_delimiter))
                 pattern_dict = OrderedDict([])
                 for p in patterns:
                     if p in pattern_dict:
