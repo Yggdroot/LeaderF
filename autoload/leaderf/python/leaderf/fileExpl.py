@@ -725,6 +725,11 @@ class FileExplManager(Manager):
 
         super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
+    def _previewInPopup(self, *args, **kwargs):
+        line = args[0]
+        buf_number = lfEval("bufnr('{}', 1)".format(line))
+        self._createPopupPreview(line, buf_number, 0)
+
 
 #*****************************************************
 # fileExplManager is a singleton

@@ -320,10 +320,16 @@ class FunctionExplManager(Manager):
         self._getExplorer().removeCache(buf_number)
 
     def _previewResult(self, preview):
+        self._closePreviewPopup()
+
         if not self._needPreview(preview):
             return
 
         line = self._getInstance().currentLine
+        if self._preview_in_popup:
+            self._previewInPopup(line)
+            return
+
         orig_pos = self._getInstance().getOriginalPos()
         cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
 
@@ -377,6 +383,16 @@ class FunctionExplManager(Manager):
             index = tags[last][0]
             lfCmd(str(index))
             lfCmd("norm! zz")
+
+    def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+        line = args[0]
+        # {kind} {code} {file} {line}
+        line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
+        line_nr, buf_number = line.rsplit(":", 1)[1].split()
+
+        self._createPopupPreview("", buf_number, line_nr)
 
 
 #*****************************************************

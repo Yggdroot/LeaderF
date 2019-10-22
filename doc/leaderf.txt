@@ -630,6 +630,21 @@ g:Lf_IgnoreCurrentBufferName                      *g:Lf_IgnoreCurrentBufferName*
 
     Default value is 0.
 
+g:Lf_PreviewInPopup                               *g:Lf_PreviewInPopup*
+    This option specifies whether to preview the result in a popup window.
+
+    Default value is 0.
+
+g:Lf_PreviewHorizontalPosition                    *g:Lf_PreviewHorizontalPosition*
+    Specify where to locate the preview window horizontally. The value can be
+    one of the following:
+    'left': the preview window is on the left side of the screen.
+    'center': the preview window is in the center of the screen.
+    'right': the preview window is on the right side of the screen.
+    'cursor': the preview window is at the cursor position.
+
+    Default value is 'cursor'.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

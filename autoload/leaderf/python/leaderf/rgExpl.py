@@ -682,6 +682,50 @@ class RgExplManager(Manager):
         del vim.current.buffer[vim.current.window.cursor[0] - 1]
         lfCmd("setlocal nomodifiable")
 
+    def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+        if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
+            m = re.match(r'^(.+?)([:-])(\d+)\2', line)
+            file, sep, line_num = m.group(1, 2, 3)
+            if not os.path.exists(lfDecode(file)):
+                if sep == ':':
+                    sep = '-'
+                else:
+                    sep = ':'
+                m = re.match(r'^(.+?)%s(\d+)%s' % (sep, sep), line)
+                if m:
+                    file, line_num = m.group(1, 2)
+            if not re.search(r"\d+_'No_Name_(\d+)'", file):
+                i = 1
+                while not os.path.exists(lfDecode(file)):
+                    m = re.match(r'^(.+?(?:([:-])\d+.*?){%d})\2(\d+)\2' % i, line)
+                    i += 1
+                    file, line_num = m.group(1, 3)
+        else:
+            m = re.match(r'^(.+?):(\d+):', line)
+            file, line_num = m.group(1, 2)
+            if not re.search(r"\d+_'No_Name_(\d+)'", file):
+                i = 1
+                while not os.path.exists(lfDecode(file)):
+                    m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):' % i, line)
+                    i += 1
+                    file, line_num = m.group(1, 2)
+
+        if not os.path.isabs(file):
+            file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+            file = os.path.normpath(lfEncode(file))
+
+        match = re.search(r"\d+_'No_Name_(\d+)'", file)
+        if match:
+            buf_number = match.group(1)
+        else:
+            buf_number = lfEval("bufadd('{}')".format(file))
+
+        self._createPopupPreview("", buf_number, line_num)
+
 
 #*****************************************************
 # rgExplManager is a singleton

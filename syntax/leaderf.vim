@@ -79,6 +79,7 @@ if has("syntax")
     highlight def link Lf_hl_gtagsFileName      Directory
     highlight def link Lf_hl_gtagsLineNumber    Constant
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#CCCC66 ctermfg=16 ctermbg=185
+    highlight def link Lf_hl_previewTitle       Statusline
 endif
 
 let b:current_syntax = "leaderf"

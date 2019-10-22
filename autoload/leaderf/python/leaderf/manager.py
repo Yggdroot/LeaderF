@@ -105,6 +105,8 @@ class Manager(object):
         self._orig_cwd = None
         self._cursorline_dict = {}
         self._empty_query = lfEval("get(g:, 'Lf_EmptyQuery', 1)") == '1'
+        self._preview_in_popup = lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1'
+        self._preview_winid = 0
         self._getExplClass()
 
     #**************************************************************
@@ -243,6 +245,8 @@ class Manager(object):
         if self._reader_thread and self._reader_thread.is_alive():
             self._stop_reader_thread = True
 
+        self._closePreviewPopup()
+
     def _afterExit(self):
         pass
 
@@ -272,11 +276,32 @@ class Manager(object):
     def _supportsRefine(self):
         return False
 
+    def _previewInPopup(self, *args, **kwargs):
+        pass
+
+    def _closePreviewPopup(self):
+        if lfEval("has('nvim')") == '1':
+            if self._preview_winid:
+                if int(lfEval("nvim_win_is_valid(%d) == v:true" % self._preview_winid)):
+                    lfCmd("call nvim_win_close(%d, 1)" % self._preview_winid)
+                self._preview_winid = 0
+        else:
+            if self._preview_winid:
+                lfCmd("call popup_close(%d)" % self._preview_winid)
+
     def _previewResult(self, preview):
+        if int(lfEval("win_id2win(%d)" % self._preview_winid)) != vim.current.window.number:
+            self._closePreviewPopup()
+
         if not self._needPreview(preview):
             return
 
         line = self._getInstance().currentLine
+
+        if self._preview_in_popup:
+            self._previewInPopup(line)
+            return
+
         orig_pos = self._getInstance().getOriginalPos()
         cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
 
@@ -320,6 +345,75 @@ class Manager(object):
 
     #**************************************************************
 
+    def _createPopupPreview(self, title, buf_number, line_nr, filter_cb="leaderf#previewFilter"):
+        if lfEval("has('nvim')") == '1':
+            width = int(lfEval("&columns"))//2
+            height = int(lfEval("&lines - (line('w$') - line('.')) - 3"))
+            height -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
+            relative = 'editor'
+            anchor = "SW"
+            row = height
+            lfCmd("call bufload(%s)" % buf_number)
+            height = min(height, len(vim.buffers[int(buf_number)]))
+            pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
+            if pos.lower() == 'center':
+                col = width // 2
+            elif pos.lower() == 'left':
+                col = 0
+            elif pos.lower() == 'right':
+                col = width
+            else:
+                relative = 'cursor'
+                row = 0
+                col = 0
+
+            config = {
+                    "relative": relative,
+                    "anchor"  : anchor,
+                    "height"  : height,
+                    "width"   : width,
+                    "row"     : row,
+                    "col"     : col
+                    }
+            self._preview_winid = int(lfEval("nvim_open_win(%s, 0, %s)" % (buf_number, str(config))))
+            lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
+            if int(line_nr) > 0:
+                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, int(line_nr)))
+        else:
+            maxwidth = int(lfEval("&columns"))//2 - 1
+            maxheight = int(lfEval("&lines - (line('w$') - line('.')) - 4"))
+            maxheight -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
+            pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
+            if pos.lower() == 'center':
+                col = 0
+            elif pos.lower() == 'left':
+                col = 1
+            elif pos.lower() == 'right':
+                col = int(lfEval("&columns"))//2 + 2
+            else:
+                col = "cursor"
+
+            options = {
+                    "title":           title,
+                    "cursorline":      1,
+                    "maxwidth":        maxwidth,
+                    "minwidth":        maxwidth,
+                    "maxheight":       maxheight,
+                    "pos":             "botleft",
+                    "line":            "cursor-1",
+                    "col":             col,
+                    "padding":         [0, 0, 0, 1],
+                    "border":          [1, 0, 0, 0],
+                    "borderchars":     [' '],
+                    "borderhighlight": ["Lf_hl_previewTitle"],
+                    "filter":          filter_cb,
+                    }
+            self._preview_winid = int(lfEval("popup_create(%s, %s)" % (buf_number, str(options))))
+            lfCmd("call win_execute(%d, 'set number')" % self._preview_winid)
+            if int(line_nr) > 0:
+                lfCmd("""call win_execute(%d, "exec 'norm! %sGzz' | redraw")""" % (self._preview_winid, line_nr))
+
     def _needPreview(self, preview):
         """
         Args:
@@ -333,7 +427,7 @@ class Manager(object):
 
         if self._getInstance().isReverseOrder():
             if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
-                return
+                return False
         elif self._getInstance().window.cursor[0] <= self._help_length:
             return False
 
@@ -488,6 +582,18 @@ class Manager(object):
             self._getInstance().setLineNumber()
             self.clearSelections()
             exit_loop = False
+        elif self._preview_winid == int(lfEval("v:mouse_winid")):
+            if lfEval("has('nvim')") == '1':
+                lfCmd("call win_gotoid(%d)" % self._preview_winid)
+                lfCmd("exec v:mouse_lnum")
+                lfCmd("exec 'norm!'.v:mouse_col.'|'")
+            else:
+                lfCmd("let opts = popup_getoptions(%d)" % self._preview_winid)
+                lfCmd("unlet opts.mousemoved")
+                lfCmd("unlet opts.moved")
+                lfCmd("let opts.filter = 'popup_filter_menu'")
+                lfCmd("call popup_setoptions(%d, opts)" % self._preview_winid)
+            exit_loop = True
         else:
             self.quit()
             exit_loop = True

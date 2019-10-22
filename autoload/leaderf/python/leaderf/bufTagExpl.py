@@ -438,14 +438,20 @@ class BufTagExplManager(Manager):
         self._getExplorer().removeCache(buf_number)
 
     def _previewResult(self, preview):
+        self._closePreviewPopup()
+
         if not self._needPreview(preview):
             return
 
         line = self._getInstance().currentLine
+        line_nr = self._getInstance().window.cursor[0]
+
+        if self._preview_in_popup:
+            self._previewInPopup(line, self._getInstance().buffer, line_nr)
+            return
+
         orig_pos = self._getInstance().getOriginalPos()
         cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
-
-        line_nr = self._getInstance().window.cursor[0]
 
         saved_eventignore = vim.options['eventignore']
         vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
@@ -499,6 +505,25 @@ class BufTagExplManager(Manager):
             index = tags[last][0]
             lfCmd(str(index))
             lfCmd("norm! zz")
+
+    def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+        line = args[0]
+        if line[0].isspace(): # if g:Lf_PreviewCode == 1
+            buffer = args[1]
+            line_nr = args[2]
+            if self._getInstance().isReverseOrder():
+                line = buffer[line_nr]
+            else:
+                line = buffer[line_nr - 2]
+        # {tag} {kind} {scope} {file}:{line} {buf_number}
+        items = re.split(" *\t *", line)
+        tagname = items[0]
+        line_nr = items[3].rsplit(":", 1)[1]
+        buf_number = items[4]
+
+        self._createPopupPreview(tagname, buf_number, line_nr)
 
 
 #*****************************************************

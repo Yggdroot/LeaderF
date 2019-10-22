@@ -254,3 +254,15 @@ function! leaderf#visual()
         let @x = x_save
     endtry
 endfunction
+
+function! leaderf#previewFilter(winid, key)
+    if a:key == "\<ESC>"
+        call popup_close(a:winid)
+        redraw
+        return 1
+    elseif a:key == "\<CR>"
+        call popup_close(a:winid)
+        redraw
+        return 0
+    endif
+endfunction
