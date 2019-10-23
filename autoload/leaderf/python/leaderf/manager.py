@@ -384,9 +384,6 @@ class Manager(object):
             if buffer_len >= line_nr > 0:
                 lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
         else:
-            maxwidth = int(lfEval("&columns"))//2 - 1
-            maxheight = int(lfEval("&lines - (line('w$') - line('.')) - 4"))
-            maxheight -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
             pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
             if pos.lower() == 'center':
                 col = 0
@@ -396,7 +393,9 @@ class Manager(object):
                 col = int(lfEval("&columns"))//2 + 2
             else:
                 col = "cursor"
-
+            maxwidth = int(lfEval("&columns"))//2 - 1
+            maxheight = int(lfEval("&lines - (line('w$') - line('.')) - 4"))
+            maxheight -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
             options = {
                     "title":           title,
                     "cursorline":      1,
@@ -412,6 +411,12 @@ class Manager(object):
                     "borderhighlight": ["Lf_hl_previewTitle"],
                     "filter":          filter_cb,
                     }
+            if maxheight < int(lfEval("&lines"))//2 - 1:
+                maxheight = int(lfEval("&lines")) - maxheight - 4
+                del options["title"]
+                options["border"] = [0, 0, 1, 0]
+                options["maxheight"] = maxheight
+
             self._preview_winid = int(lfEval("popup_create(%d, %s)" % (buf_number, str(options))))
             lfCmd("call win_execute(%d, 'set number')" % self._preview_winid)
             if line_nr > 0:
