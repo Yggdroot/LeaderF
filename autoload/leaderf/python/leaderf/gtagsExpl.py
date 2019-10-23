@@ -1057,6 +1057,27 @@ class GtagsExplManager(Manager):
 
         super(GtagsExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
+    def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+        if self._getExplorer().getResultFormat() is None:
+            file, line_num = line.split('\t', 2)[:2]
+        elif self._getExplorer().getResultFormat() == "ctags":
+            file, line_num = line.split('\t', 2)[1:]
+        elif self._getExplorer().getResultFormat() == "ctags-x":
+            line_num, file = line.split(None, 3)[1:3]
+        else: # ctags-mod
+            file, line_num = line.split('\t', 2)[:2]
+
+        if not os.path.isabs(file):
+            file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+            file = os.path.normpath(lfEncode(file))
+
+        buf_number = lfEval("bufnr('{}', 1)".format(file))
+        self._createPopupPreview("", buf_number, line_num)
+
 
 #*****************************************************
 # gtagsExplManager is a singleton

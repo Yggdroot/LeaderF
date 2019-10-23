@@ -346,6 +346,8 @@ class Manager(object):
     #**************************************************************
 
     def _createPopupPreview(self, title, buf_number, line_nr, filter_cb="leaderf#previewFilter"):
+        buf_number = int(buf_number)
+        line_nr = int(line_nr)
         if lfEval("has('nvim')") == '1':
             width = int(lfEval("&columns"))//2
             height = int(lfEval("&lines - (line('w$') - line('.')) - 3"))
@@ -353,8 +355,9 @@ class Manager(object):
             relative = 'editor'
             anchor = "SW"
             row = height
-            lfCmd("call bufload(%s)" % buf_number)
-            height = min(height, len(vim.buffers[int(buf_number)]))
+            lfCmd("call bufload(%d)" % buf_number)
+            buffer_len = len(vim.buffers[buf_number])
+            height = min(height, buffer_len)
             pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
             if pos.lower() == 'center':
                 col = width // 2
@@ -375,11 +378,11 @@ class Manager(object):
                     "row"     : row,
                     "col"     : col
                     }
-            self._preview_winid = int(lfEval("nvim_open_win(%s, 0, %s)" % (buf_number, str(config))))
+            self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (buf_number, str(config))))
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
-            if int(line_nr) > 0:
-                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, int(line_nr)))
+            if buffer_len >= line_nr > 0:
+                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
         else:
             maxwidth = int(lfEval("&columns"))//2 - 1
             maxheight = int(lfEval("&lines - (line('w$') - line('.')) - 4"))
@@ -409,10 +412,10 @@ class Manager(object):
                     "borderhighlight": ["Lf_hl_previewTitle"],
                     "filter":          filter_cb,
                     }
-            self._preview_winid = int(lfEval("popup_create(%s, %s)" % (buf_number, str(options))))
+            self._preview_winid = int(lfEval("popup_create(%d, %s)" % (buf_number, str(options))))
             lfCmd("call win_execute(%d, 'set number')" % self._preview_winid)
-            if int(line_nr) > 0:
-                lfCmd("""call win_execute(%d, "exec 'norm! %sGzz' | redraw")""" % (self._preview_winid, line_nr))
+            if line_nr > 0:
+                lfCmd("""call win_execute(%d, "exec 'norm! %dGzz' | redraw")""" % (self._preview_winid, line_nr))
 
     def _needPreview(self, preview):
         """

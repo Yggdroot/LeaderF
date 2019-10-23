@@ -123,6 +123,15 @@ class LineExplManager(Manager):
                 k.options["cursorline"] = v
         self._cursorline_dict.clear()
 
+    def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+        line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
+        line_nr, buf_number = line.rsplit(":", 1)[1].split()
+        self._createPopupPreview(vim.buffers[int(buf_number)].name, buf_number, line_nr)
+
 
 #*****************************************************
 # lineExplManager is a singleton

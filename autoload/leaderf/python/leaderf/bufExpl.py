@@ -210,6 +210,10 @@ class BufExplManager(Manager):
         del vim.current.line
         lfCmd("setlocal nomodifiable")
 
+    def _previewInPopup(self, *args, **kwargs):
+        line = args[0]
+        buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
+        self._createPopupPreview(vim.buffers[buf_number].name, buf_number, 0)
 
 
 #*****************************************************

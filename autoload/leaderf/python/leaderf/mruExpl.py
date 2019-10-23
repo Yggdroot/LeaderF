@@ -227,6 +227,22 @@ class MruExplManager(Manager):
         del vim.current.buffer[vim.current.window.cursor[0] - 1]
         lfCmd("setlocal nomodifiable")
 
+    def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+        dirname = self._getDigest(line, 2)
+        basename = self._getDigest(line, 1)
+
+        file = dirname + basename
+        if not os.path.isabs(file):
+            file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+            file = os.path.normpath(lfEncode(file))
+
+        buf_number = lfEval("bufnr('{}', 1)".format(file))
+        self._createPopupPreview(file, buf_number, 0)
+
 
 #*****************************************************
 # mruExplManager is a singleton

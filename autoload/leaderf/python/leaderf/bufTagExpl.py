@@ -509,6 +509,7 @@ class BufTagExplManager(Manager):
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0:
             return
+
         line = args[0]
         if line[0].isspace(): # if g:Lf_PreviewCode == 1
             buffer = args[1]

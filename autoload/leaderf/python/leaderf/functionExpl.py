@@ -387,6 +387,7 @@ class FunctionExplManager(Manager):
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0:
             return
+
         line = args[0]
         # {kind} {code} {file} {line}
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
