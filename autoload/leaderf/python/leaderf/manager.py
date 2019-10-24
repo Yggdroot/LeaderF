@@ -1629,7 +1629,7 @@ class Manager(object):
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
 
-                if not self._content and self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+                if not self._cli.pattern and self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
                     lfCmd("normal! gg")
                     self._guessSearch(self._content)
                     if self._result_content: # self._result_content is [] only if 
