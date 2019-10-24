@@ -411,8 +411,8 @@ class Manager(object):
                     "borderhighlight": ["Lf_hl_previewTitle"],
                     "filter":          filter_cb,
                     }
-            if maxheight < int(lfEval("&lines"))//2 - 1:
-                maxheight = int(lfEval("&lines")) - maxheight - 4
+            if maxheight < int(lfEval("&lines"))//2 - 2:
+                maxheight = int(lfEval("&lines")) - maxheight - 5
                 del options["title"]
                 options["border"] = [0, 0, 1, 0]
                 options["maxheight"] = maxheight
