@@ -595,12 +595,6 @@ class Manager(object):
                 lfCmd("call win_gotoid(%d)" % self._preview_winid)
                 lfCmd("exec v:mouse_lnum")
                 lfCmd("exec 'norm!'.v:mouse_col.'|'")
-            else:
-                lfCmd("let opts = popup_getoptions(%d)" % self._preview_winid)
-                lfCmd("unlet opts.mousemoved")
-                lfCmd("unlet opts.moved")
-                lfCmd("let opts.filter = 'popup_filter_menu'")
-                lfCmd("call popup_setoptions(%d, opts)" % self._preview_winid)
             exit_loop = True
         else:
             self.quit()
