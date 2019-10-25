@@ -1555,9 +1555,10 @@ class Manager(object):
         self._cleanup()
 
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
-        if "--recall" in self._arguments or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern:
+        empty_query = self._empty_query and self._getExplorer().getStlCategory() in ["File"]
+        remember_last_status = "--recall" in self._arguments or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern
+        if remember_last_status:
             content = self._content
-            goto_first_line = False
         else:
             content = self._getExplorer().getContent(*args, **kwargs)
             self._getInstance().setCwd(os.getcwd())
@@ -1570,7 +1571,6 @@ class Manager(object):
             self._index = 0
             pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
             self._cli.setPattern(pattern)
-            goto_first_line = True
             self._result_content = []
             self._cb_content = []
 
@@ -1590,7 +1590,7 @@ class Manager(object):
         self._setStlMode(**kwargs)
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
-        if goto_first_line:
+        if not remember_last_status:
             lfCmd("normal! gg")
 
         self._start_time = time.time()
@@ -1601,18 +1601,17 @@ class Manager(object):
         self._read_content_exception = None
         if isinstance(content, list):
             self._is_content_list = True
-            self._read_finished = 1
+            self._read_finished = 2
 
             if len(content[0]) == len(content[0].rstrip("\r\n")):
                 self._content = content
             else:
                 self._content = [line.rstrip("\r\n") for line in content]
-            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
-            if "--recall" in self._arguments or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern:
-                pass
-            else:
+
+            if not remember_last_status:
+                self._getInstance().setStlTotal(len(self._content)//self._getUnit())
                 self._getInstance().setStlResultsCount(len(self._content))
-                if not (self._empty_query and self._getExplorer().getStlCategory() in ["File"]):
+                if not empty_query:
                     self._getInstance().setBuffer(self._content[:self._initial_count])
 
             if lfEval("has('nvim')") == '1':
@@ -1621,15 +1620,18 @@ class Manager(object):
             if not kwargs.get('bang', 0):
                 self.input()
             else:
-                if len(self._getInstance().buffer) < len(self._result_content):
+                if not remember_last_status and not empty_query:
                     self._getInstance().appendBuffer(self._content[self._initial_count:])
+                elif remember_last_status and len(self._getInstance().buffer) < len(self._result_content):
+                    self._getInstance().appendBuffer(self._result_content[self._initial_count:])
+
                 lfCmd("echo")
                 if self._cli.pattern:
                     self._cli._buildPrompt()
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
 
-                if not self._cli.pattern and self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+                if not self._cli.pattern and empty_query:
                     lfCmd("normal! gg")
                     self._guessSearch(self._content)
                     if self._result_content: # self._result_content is [] only if 
