@@ -145,7 +145,8 @@ class Manager(object):
                 file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
                 file = os.path.normpath(lfEncode(file))
 
-            if kwargs.get("mode", '') == 't':
+            if kwargs.get("mode", '') == 't' and not (vim.current.buffer.name == '' and
+                    len(vim.current.buffer) == 1 and vim.current.buffer[0] == ''):
                 lfCmd("tab drop %s" % escSpecial(file))
             else:
                 lfCmd("hide edit %s" % escSpecial(file))
