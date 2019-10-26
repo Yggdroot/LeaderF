@@ -485,8 +485,12 @@ class BufTagExplManager(Manager):
         orig_line = inst.getOriginalCursor()[0]
         tags = []
         for index, line in enumerate(inst.buffer, 1):
-            if self._supports_preview and index & 1 == 0:
-                continue
+            if self._supports_preview:
+                if self._getInstance().isReverseOrder():
+                    if index & 1 == 1:
+                        continue
+                elif index & 1 == 0:
+                    continue
             items = re.split(" *\t *", line)
             line_nr = int(items[3].rsplit(":", 1)[1])
             buf_number = int(items[4])
