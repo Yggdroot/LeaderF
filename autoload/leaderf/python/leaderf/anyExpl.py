@@ -747,7 +747,9 @@ class AnyHub(object):
                 if "--recall" in raw_args and len([i for i in raw_args if not i.startswith('-')]) == 0:
                     if self._last_cmd:
                         self._last_cmd({'--recall': []}, *args, **kwargs)
-                        return
+                    else:
+                        lfPrintError("LeaderF has not been used yet!")
+                    return
 
             the_args = self._parser.parse_args(raw_args)
             arguments = vars(the_args)
@@ -757,8 +759,11 @@ class AnyHub(object):
                 arguments["arg_line"] = arg_line
                 the_args.start(arguments, *args, **kwargs)
                 self._last_cmd = the_args.start
-            elif "--recall" in arguments and self._last_cmd:
-                self._last_cmd(arguments, *args, **kwargs)
+            elif "--recall" in arguments:
+                if self._last_cmd:
+                    self._last_cmd(arguments, *args, **kwargs)
+                else:
+                    lfPrintError("LeaderF has not been used yet!")
         # except ValueError as e:
         #     lfPrintError(e)
         #     return
