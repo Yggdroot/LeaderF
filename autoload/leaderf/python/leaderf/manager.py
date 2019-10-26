@@ -1558,10 +1558,12 @@ class Manager(object):
         self._cleanup()
 
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
+        self._getInstance().setArguments(self._arguments)
         empty_query = self._empty_query and self._getExplorer().getStlCategory() in ["File"]
         remember_last_status = "--recall" in self._arguments or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern
         if remember_last_status:
             content = self._content
+            self._getInstance().useLastReverseOrder()
         else:
             content = self._getExplorer().getContent(*args, **kwargs)
             self._getInstance().setCwd(os.getcwd())
@@ -1581,7 +1583,6 @@ class Manager(object):
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
 
-        self._getInstance().setArguments(self._arguments)
         if self._getExplorer().getStlCategory() in ["Rg"] and ("-A" in arguments_dict \
                 or "-B" in arguments_dict or "-C" in arguments_dict):
             self._getInstance().ignoreReverse()

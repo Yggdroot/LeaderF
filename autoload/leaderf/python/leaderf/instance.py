@@ -182,7 +182,7 @@ class LfInstance(object):
         self._tabpage_object = vim.current.tabpage
         self._window_object = vim.current.window
         self._initial_win_height = self._window_object.height
-        if self._reverse_order:
+        if self._reverse_order and "--recall" not in self._arguments:
             self._window_object.height = 1
 
         if self._buffer_object is None or not self._buffer_object.valid:
@@ -231,6 +231,9 @@ class LfInstance(object):
 
     def ignoreReverse(self):
         self._reverse_order = False
+
+    def useLastReverseOrder(self):
+        self._reverse_order = self._last_reverse_order
 
     def setStlCategory(self, category):
         lfCmd("let g:Lf_{}_StlCategory = '{}'".format(self._category, category) )
