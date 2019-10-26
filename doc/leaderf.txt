@@ -645,6 +645,12 @@ g:Lf_PreviewHorizontalPosition                    *g:Lf_PreviewHorizontalPositio
 
     Default value is 'cursor'.
 
+g:Lf_DiscardEmptyBuffer                           *g:Lf_DiscardEmptyBuffer*
+    Specify whether to discard the first empty [No Name] buffer when opening
+    with <C-T>.
+
+    Default value is 0.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
