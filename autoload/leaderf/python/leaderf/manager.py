@@ -352,26 +352,38 @@ class Manager(object):
         buf_number = int(buf_number)
         line_nr = int(line_nr)
         if lfEval("has('nvim')") == '1':
-            width = int(lfEval("&columns"))//2
-            height = int(lfEval("&lines - (line('w$') - line('.')) - 3"))
-            height -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
+            width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
+            if width == 0:
+                width = int(lfEval("&columns"))//2
+            else:
+                width = min(width, int(lfEval("&columns")))
+            maxheight = int(lfEval("&lines - (line('w$') - line('.')) - 3"))
+            maxheight -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
             relative = 'editor'
             anchor = "SW"
-            row = height
+            row = maxheight
             lfCmd("call bufload(%d)" % buf_number)
             buffer_len = len(vim.buffers[buf_number])
-            height = min(height, buffer_len)
+            height = min(maxheight, buffer_len)
             pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
             if pos.lower() == 'center':
-                col = width // 2
+                col = (int(lfEval("&columns")) - width) // 2
             elif pos.lower() == 'left':
                 col = 0
             elif pos.lower() == 'right':
-                col = width
+                col = int(lfEval("&columns")) - width
             else:
                 relative = 'cursor'
                 row = 0
                 col = 0
+
+            if maxheight < int(lfEval("&lines"))//2 - 2:
+                anchor = "NW"
+                if relative == 'cursor':
+                    row = 1
+                else:
+                    row = maxheight + 1
+                height = min(int(lfEval("&lines")) - maxheight - 3, buffer_len)
 
             config = {
                     "relative": relative,
@@ -396,7 +408,11 @@ class Manager(object):
                 col = int(lfEval("&columns"))//2 + 2
             else:
                 col = "cursor"
-            maxwidth = int(lfEval("&columns"))//2 - 1
+            width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
+            if width == 0:
+                maxwidth = int(lfEval("&columns"))//2 - 1
+            else:
+                maxwidth = min(width, int(lfEval("&columns")))
             maxheight = int(lfEval("&lines - (line('w$') - line('.')) - 4"))
             maxheight -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
             options = {
@@ -405,6 +421,7 @@ class Manager(object):
                     "maxwidth":        maxwidth,
                     "minwidth":        maxwidth,
                     "maxheight":       maxheight,
+                    "minheight":       maxheight,
                     "pos":             "botleft",
                     "line":            "cursor-1",
                     "col":             col,
@@ -419,8 +436,10 @@ class Manager(object):
                 del options["title"]
                 options["border"] = [0, 0, 1, 0]
                 options["maxheight"] = maxheight
+                options["minheight"] = maxheight
 
-            self._preview_winid = int(lfEval("popup_create(%d, %s)" % (buf_number, str(options))))
+            lfCmd("silent let winid = popup_create(%d, %s)" % (buf_number, str(options)))
+            self._preview_winid = int(lfEval("winid"))
             lfCmd("call win_execute(%d, 'set number')" % self._preview_winid)
             if line_nr > 0:
                 lfCmd("""call win_execute(%d, "exec 'norm! %dGzz' | redraw")""" % (self._preview_winid, line_nr))

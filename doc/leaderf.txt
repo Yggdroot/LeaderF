@@ -645,6 +645,12 @@ g:Lf_PreviewHorizontalPosition                    *g:Lf_PreviewHorizontalPositio
 
     Default value is 'cursor'.
 
+g:Lf_PreviewPopupWidth                            *g:Lf_PreviewPopupWidth*
+    Specify the width of preview popup window, the value should be a non-negative
+    integer. If the value is 0, the width is half of the screen's width.
+
+    Default value is 0.
+
 g:Lf_DiscardEmptyBuffer                           *g:Lf_DiscardEmptyBuffer*
     Specify whether to discard the first empty [No Name] buffer when opening
     with <C-T>.
