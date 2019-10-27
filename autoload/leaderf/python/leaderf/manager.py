@@ -616,7 +616,7 @@ class Manager(object):
                 self._guessSearch(self._content)
             else:
                 self._getInstance().setBuffer(content[:self._initial_count])
-                self._getInstance().setStlResultsCount(len(content))
+                self._getInstance().setStlResultsCount(len(content), True)
                 self._result_content = []
             return
 
@@ -988,7 +988,7 @@ class Manager(object):
             self._result_content = self._getList(pairs)
 
         self._getInstance().setBuffer(self._result_content[:self._initial_count])
-        self._getInstance().setStlResultsCount(len(self._result_content))
+        self._getInstance().setStlResultsCount(len(self._result_content), True)
 
         if self._cli.isAndMode:
             self._highlight_method = partial(self._highlight_and_mode, highlight_methods)
@@ -1006,7 +1006,7 @@ class Manager(object):
     def _guessSearch(self, content, is_continue=False, step=0):
         if self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] not in [b'', '']:
             self._getInstance().setBuffer(content[:self._initial_count])
-            self._getInstance().setStlResultsCount(len(content))
+            self._getInstance().setStlResultsCount(len(content), True)
             self._result_content = []
             return
 
@@ -1039,7 +1039,7 @@ class Manager(object):
             self._result_content = self._getList(pairs)
 
         self._getInstance().setBuffer(self._result_content[:self._initial_count])
-        self._getInstance().setStlResultsCount(len(self._result_content))
+        self._getInstance().setStlResultsCount(len(self._result_content), True)
 
     def _highlight_and_mode(self, highlight_methods):
         self._clearHighlights()
@@ -1219,7 +1219,7 @@ class Manager(object):
             self._index = 0
         self._result_content = self._filter(8000, self._regexFilter, content, is_continue)
         self._getInstance().setBuffer(self._result_content[:self._initial_count])
-        self._getInstance().setStlResultsCount(len(self._result_content))
+        self._getInstance().setStlResultsCount(len(self._result_content), True)
 
     def clearSelections(self):
         for i in self._selections.values():

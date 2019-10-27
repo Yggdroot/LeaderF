@@ -42,6 +42,7 @@ class LfInstance(object):
         self._cursor_row = None
         self._help_length = None
         self._current_working_directory = None
+        self._cur_buffer_name_ignored = False
         self._ignore_cur_buffer_name = lfEval("get(g:, 'Lf_IgnoreCurrentBufferName', 0)") == '1' \
                                             and self._category in ["File"]
         self._highlightStl()
@@ -249,7 +250,9 @@ class LfInstance(object):
     def setStlTotal(self, total):
         lfCmd("let g:Lf_{}_StlTotal = '{}'".format(self._category, total))
 
-    def setStlResultsCount(self, count):
+    def setStlResultsCount(self, count, check_ignored=False):
+        if check_ignored and self._cur_buffer_name_ignored:
+            count -= 1
         lfCmd("let g:Lf_{}_StlResultsCount = '{}'".format(self._category, count))
         if lfEval("has('nvim')") == '1':
             lfCmd("redrawstatus")
@@ -361,14 +364,17 @@ class LfInstance(object):
         return num
 
     def setBuffer(self, content, need_copy=False):
+        self._cur_buffer_name_ignored = False
         if self._ignore_cur_buffer_name:
             if self._orig_buffer_name in content[:self._window_object.height]:
+                self._cur_buffer_name_ignored = True
                 if need_copy:
                     content = content[:]
                 content.remove(self._orig_buffer_name)
             elif os.name == 'nt':
                 buffer_name = self._orig_buffer_name.replace('\\', '/')
                 if buffer_name in content[:self._window_object.height]:
+                    self._cur_buffer_name_ignored = True
                     if need_copy:
                         content = content[:]
                     content.remove(buffer_name)
@@ -462,7 +468,7 @@ class LfInstance(object):
         if isinstance(content, list):
             self.setBuffer(content, need_copy=True)
             self.setStlTotal(len(content)//unit)
-            self.setStlResultsCount(len(content)//unit)
+            self.setStlResultsCount(len(content)//unit, True)
             return content
 
         self.buffer.options['modifiable'] = True
@@ -490,7 +496,7 @@ class LfInstance(object):
             self.setBuffer(cur_content, need_copy=True)
             self.setStlTotal(len(self._buffer_object)//unit)
             self.setStlRunning(False)
-            self.setStlResultsCount(len(self._buffer_object)//unit)
+            self.setStlResultsCount(len(self._buffer_object)//unit, True)
             lfCmd("redrawstatus")
             set_content(cur_content)
         except vim.error: # neovim <C-C>
