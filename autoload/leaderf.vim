@@ -266,3 +266,5 @@ function! leaderf#previewFilter(winid, key)
         return 0
     endif
 endfunction
+
+autocmd FileType leaderf let b:coc_suggest_disable = 1
