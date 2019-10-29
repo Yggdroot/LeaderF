@@ -180,6 +180,8 @@ class LfInstance(object):
         else:
             lfCmd("echoe 'Wrong value of g:Lf_WindowPosition'")
 
+        lfCmd("doautocmd WinEnter")
+
         self._tabpage_object = vim.current.tabpage
         self._window_object = vim.current.window
         self._initial_win_height = self._window_object.height
