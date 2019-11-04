@@ -9,7 +9,6 @@ from functools import wraps
 from collections import OrderedDict
 from .utils import *
 
-
 def cursorController(func):
     @wraps(func)
     def deco(*args, **kwargs):
@@ -470,10 +469,12 @@ class LfCli(object):
                         lfPrintError(e)
                         break
 
+                time.sleep(0.005) #this is to solve issue 375 leaderF hangs in nvim-qt 
                 if lfEval("get(g:, 'Lf_NoAsync', 0)") == '0':
                     lfCmd("let nr = getchar(1)")
                     if lfEval("!type(nr) && nr == 0") == '1':
                         self._idle = True
+                        time.sleep(0.009) #this is to solve issue 375 leaderF hangs in nvim-qt 
                         continue
                     # https://groups.google.com/forum/#!topic/vim_dev/gg-l-kaCz_M
                     # '<80><fc>^B' is <Shift>, '<80><fc>^D' is <Ctrl>,
