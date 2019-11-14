@@ -1727,8 +1727,8 @@ uint32_t getPathWeight(const char* filename,
         ++dirname_lcp;
     }
 
-    /* if dirname is empty, filename_start == p */
-    is_dirname_same = filename_start - p < 2;
+    /* if dirname is empty, filename_start == path */
+    is_dirname_same = filename_start - p == 1 || (*dirname == '\0' && filename_start == path) ;
 
     /* dirname/filename+suffix is the same as path */
     if ( is_basename_same && is_dirname_same )

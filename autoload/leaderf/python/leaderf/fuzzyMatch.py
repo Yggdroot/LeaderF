@@ -748,7 +748,7 @@ class FuzzyMatch(object):
         if i > 0 and i == len(dirname) and i < path_len and path[i] in '/\\':
             dirname_lcp += 1
 
-        if filename_start - i < 2:
+        if filename_start - i == 1 or (dirname == '' and filename_start == 0):
             is_dirname_same = 1
 
         if is_dirname_same and is_basename_same:
