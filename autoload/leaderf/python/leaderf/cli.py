@@ -196,6 +196,7 @@ class LfCli(object):
 
         if sys.version_info < (3, 0):
             input_win_width += 2 * (len(sep) - int(lfEval("strdisplaywidth('%s')" % escQuote(sep))))
+            input_win_width += len(pattern) - int(lfEval("strdisplaywidth('%s')" % escQuote(pattern)))
             if spin == '×':
                 input_win_width += len(spin) - int(lfEval("strdisplaywidth('%s')" % spin))
         part3_start = input_win_width - len(part3) - 2
@@ -219,11 +220,11 @@ class LfCli(object):
 
             lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_prompt'})")""" % input_window.id)
             lfCmd("""call win_execute(%d, "call prop_add(1, 1, {'length': %d, 'type': 'Lf_hl_popup_prompt'})")"""
-                    % (input_window.id, len(prompt)))
+                    % (input_window.id, lfBytesLen(prompt)))
 
             lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_cursor'})")""" % input_window.id)
             lfCmd("""call win_execute(%d, "call prop_add(1, %d, {'length': 1, 'type': 'Lf_hl_popup_cursor'})")"""
-                    % (input_window.id, len(prompt)+self._cursor_pos+1))
+                    % (input_window.id, lfBytesLen(prompt) + lfBytesLen(''.join(self._cmdline[:self._cursor_pos])) + 1))
 
             lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_total'})")""" % (input_window.id))
             lfCmd("""call win_execute(%d, "call prop_add(1, %d, {'length': %d, 'type': 'Lf_hl_popup_total'})")"""
@@ -261,10 +262,14 @@ class LfCli(object):
                         % (input_window.buffer.number, self._input_buf_namespace))
 
             lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_popup_prompt', 0, 0, %d)"
-                    % (input_window.buffer.number, self._input_buf_namespace, len(prompt)))
-            lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_cursor', 0, %d, %d+1)"
-                    % (input_window.buffer.number, self._input_buf_namespace,
-                        len(prompt)+self._cursor_pos, len(prompt)+self._cursor_pos))
+                    % (input_window.buffer.number, self._input_buf_namespace, lfBytesLen(prompt)))
+            cursor_pos = lfBytesLen(prompt) + lfBytesLen(''.join(self._cmdline[:self._cursor_pos]))
+            if self._cursor_pos == len(self._cmdline):
+                cursor_pos_end = cursor_pos + 1
+            else:
+                cursor_pos_end = cursor_pos + lfBytesLen(self._cmdline[self._cursor_pos])
+            lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_cursor', 0, %d, %d)"
+                    % (input_window.buffer.number, self._input_buf_namespace, cursor_pos, cursor_pos_end))
 
             lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_popup_total', 0, %d, %d)"
                     % (input_window.buffer.number, self._input_buf_namespace,
