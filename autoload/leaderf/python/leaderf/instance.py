@@ -369,6 +369,7 @@ class LfInstance(object):
             self._popup_winid = int(lfEval("winid"))
             self._setAttributes()
             lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 1)" % self._popup_winid)
+            lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._popup_winid)
 
             self._tabpage_object = vim.current.tabpage
             self._buffer_object = vim.buffers[buf_number]
@@ -403,7 +404,7 @@ class LfInstance(object):
             lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
-            lfCmd("call nvim_win_set_option(%d, 'winhighlight',  'Normal:Lf_hl_popup_inputText')" % winid)
+            lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_inputText')" % winid)
             self._popup_instance.input_win = FloatWindow(winid, vim.windows[int(lfEval("win_id2win(%d)" % winid))-1], vim.buffers[buf_number], vim.current.tabpage)
 
             if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
@@ -435,7 +436,7 @@ class LfInstance(object):
                 lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
-                lfCmd("call nvim_win_set_option(%d, 'winhighlight',  'Normal:Lf_hl_popup_blank')" % winid)
+                lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_blank')" % winid)
                 self._popup_instance.statusline_win = FloatWindow(winid, vim.windows[int(lfEval("win_id2win(%d)" % winid))-1], vim.buffers[buf_number], vim.current.tabpage)
         else:
             self._win_pos = "popup"
