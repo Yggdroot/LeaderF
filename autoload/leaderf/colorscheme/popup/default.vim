@@ -17,7 +17,7 @@
 highlight Lf_hl_popup_inputText guifg=#87ceeb guibg=#4d4d4d gui=NONE ctermfg=117 ctermbg=239 cterm=NONE
 
 " Lf_hl_popup_window is the wincolor of content window
-call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Pmenu")
+highlight Lf_hl_popup_window guifg=#eeeeee guibg=#404040 gui=NONE ctermfg=255 ctermbg=237 cterm=NONE
 
 call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_cursor", "Cursor")
 highlight Lf_hl_popup_prompt guifg=#ffcd4a guibg=NONE gui=NONE ctermfg=221 ctermbg=NONE cterm=NONE
