@@ -275,6 +275,7 @@ class LfInstance(object):
         lfCmd("setlocal shiftwidth=4")
         lfCmd("setlocal cursorline")
         lfCmd("setlocal signcolumn=no")
+        lfCmd("setlocal colorcolumn=")
         if self._reverse_order:
             lfCmd("setlocal nonumber")
             lfCmd("setlocal foldcolumn=1")
@@ -401,6 +402,7 @@ class LfInstance(object):
             lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
+            lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight',  'Normal:Lf_hl_popup_inputText')" % winid)
             self._popup_instance.input_win = FloatWindow(winid, vim.windows[int(lfEval("win_id2win(%d)" % winid))-1], vim.buffers[buf_number], vim.current.tabpage)
 
@@ -432,6 +434,7 @@ class LfInstance(object):
                 lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
+                lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'winhighlight',  'Normal:Lf_hl_popup_blank')" % winid)
                 self._popup_instance.statusline_win = FloatWindow(winid, vim.windows[int(lfEval("win_id2win(%d)" % winid))-1], vim.buffers[buf_number], vim.current.tabpage)
         else:
@@ -467,6 +470,7 @@ class LfInstance(object):
             lfCmd("call win_execute(%d, 'setlocal cursorline')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal signcolumn=no')" % self._popup_winid)
+            lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal filetype=leaderf')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._popup_winid)
 
@@ -504,6 +508,7 @@ class LfInstance(object):
             lfCmd("call win_execute(%d, 'setlocal nocursorline')" % winid)
             lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % winid)
             lfCmd("call win_execute(%d, 'setlocal signcolumn=no')" % winid)
+            lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_inputText')" % winid)
             lfCmd("call win_execute(%d, 'setlocal filetype=leaderf')" % winid)
 
@@ -539,6 +544,7 @@ class LfInstance(object):
                 lfCmd("call win_execute(%d, 'setlocal nocursorline')" % winid)
                 lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % winid)
                 lfCmd("call win_execute(%d, 'setlocal signcolumn=no')" % winid)
+                lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % winid)
                 lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_blank')" % winid)
                 lfCmd("call win_execute(%d, 'setlocal filetype=leaderf')" % winid)
 
