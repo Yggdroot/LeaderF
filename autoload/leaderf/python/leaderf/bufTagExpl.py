@@ -209,7 +209,6 @@ class BufTagExplorer(Explorer):
 class BufTagExplManager(Manager):
     def __init__(self):
         super(BufTagExplManager, self).__init__()
-        self._match_ids = []
         self._supports_preview = int(lfEval("g:Lf_PreviewCode"))
         self._orig_line = ''
 
@@ -218,11 +217,6 @@ class BufTagExplManager(Manager):
 
     def _defineMaps(self):
         lfCmd("call leaderf#BufTag#Maps()")
-        lfCmd("augroup Lf_BufTag")
-        lfCmd("autocmd!")
-        lfCmd("autocmd BufWipeout * call leaderf#BufTag#removeCache(expand('<abuf>'))")
-        lfCmd("autocmd VimLeavePre * call leaderf#BufTag#cleanup()")
-        lfCmd("augroup END")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -300,24 +294,52 @@ class BufTagExplManager(Manager):
 
     def _afterEnter(self):
         super(BufTagExplManager, self)._afterEnter()
-        id = int(lfEval('''matchadd('Lf_hl_buftagKind', '^[^\t]*\t\zs\S\+')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagScopeType', '[^\t]*\t\S\+\s*\zs\w\+:')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagScope', '^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagDirname', '[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagLineNum', '\d\+\t\ze\d\+$')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagCode', '^\s\+.*')'''))
-        self._match_ids.append(id)
+        lfCmd("augroup Lf_BufTag")
+        lfCmd("autocmd!")
+        lfCmd("autocmd BufWipeout * call leaderf#BufTag#removeCache(expand('<abuf>'))")
+        lfCmd("autocmd VimLeavePre * call leaderf#BufTag#cleanup()")
+        lfCmd("augroup END")
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagKind'', ''^[^\t]*\t\zs\S\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagScopeType'', ''[^\t]*\t\S\+\s*\zs\w\+:'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagScope'', ''^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagDirname'', ''[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagLineNum'', ''\d\+\t\ze\d\+$'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagCode'', ''^\s\+.*'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+        else:
+            id = int(lfEval('''matchadd('Lf_hl_buftagKind', '^[^\t]*\t\zs\S\+')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagScopeType', '[^\t]*\t\S\+\s*\zs\w\+:')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagScope', '^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagDirname', '[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagLineNum', '\d\+\t\ze\d\+$')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagCode', '^\s\+.*')'''))
+            self._match_ids.append(id)
 
     def _beforeExit(self):
         super(BufTagExplManager, self)._beforeExit()
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
         if self._timer_id is not None:
             lfCmd("call timer_stop(%s)" % self._timer_id)
             self._timer_id = None
@@ -414,7 +436,10 @@ class BufTagExplManager(Manager):
                 lfCmd("norm! 3kj")
                 self._getInstance().setLineNumber()
             else:
-                lfCmd("norm! 2k")
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("call win_execute(%d, 'norm! 2k')" % (self._getInstance().getPopupWinId()))
+                else:
+                    lfCmd("norm! 2k")
         else:
             super(BufTagExplManager, self)._toUp()
 
@@ -427,7 +452,10 @@ class BufTagExplManager(Manager):
                 lfCmd("norm! 2j")
                 self._getInstance().setLineNumber()
             else:
-                lfCmd("norm! 3jk")
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("call win_execute(%d, 'norm! 3jk')" % (self._getInstance().getPopupWinId()))
+                else:
+                    lfCmd("norm! 3jk")
         else:
             super(BufTagExplManager, self)._toDown()
 
@@ -507,8 +535,21 @@ class BufTagExplManager(Manager):
             last -= 1
         if last >= 0:
             index = tags[last][0]
-            lfCmd(str(index))
-            lfCmd("norm! zz")
+            if self._getInstance().getWinPos() == 'popup':
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', '%s')"
+                        % (self._getInstance().getPopupWinId(), 'leaderf#PopupFilter'))
+                lfCmd("""call win_execute(%d, "exec 'norm! %dGzz'")""" % (self._getInstance().getPopupWinId(), int(index)))
+                self._getInstance().refreshPopupStatusline()
+
+                if lfEval("exists('*leaderf#%s#NormalModeFilter')" % self._getExplorer().getStlCategory()) == '1':
+                    lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', '%s')" % (self._getInstance().getPopupWinId(),
+                            'leaderf#%s#NormalModeFilter' % self._getExplorer().getStlCategory()))
+                else:
+                    lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', function('leaderf#NormalModeFilter', [%d]))"
+                            % (self._getInstance().getPopupWinId(), id(self)))
+            else:
+                lfCmd(str(index))
+                lfCmd("norm! zz")
 
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0:

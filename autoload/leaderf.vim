@@ -196,6 +196,70 @@ let s:Lf_CommandMap = {
             \ '<ScrollWheelDown>': ['<ScrollWheelDown>']
             \}
 
+let g:Lf_KeyMap = {
+            \ "\<C-A>":         '<C-A>',
+            \ "\<C-B>":         '<C-B>',
+            \ "\<C-C>":         '<C-C>',
+            \ "\<C-D>":         '<C-D>',
+            \ "\<C-E>":         '<C-E>',
+            \ "\<C-F>":         '<C-F>',
+            \ "\<C-G>":         '<C-G>',
+            \ "\<C-H>":         '<C-H>',
+            \ "\<C-J>":         '<C-J>',
+            \ "\<C-K>":         '<C-K>',
+            \ "\<C-L>":         '<C-L>',
+            \ "\<C-N>":         '<C-N>',
+            \ "\<C-O>":         '<C-O>',
+            \ "\<C-P>":         '<C-P>',
+            \ "\<C-Q>":         '<C-Q>',
+            \ "\<C-R>":         '<C-R>',
+            \ "\<C-S>":         '<C-S>',
+            \ "\<C-T>":         '<C-T>',
+            \ "\<C-U>":         '<C-U>',
+            \ "\<C-V>":         '<C-V>',
+            \ "\<C-W>":         '<C-W>',
+            \ "\<C-X>":         '<C-X>',
+            \ "\<C-Y>":         '<C-Y>',
+            \ "\<C-Z>":         '<C-Z>',
+            \ "\<C-]>":         '<C-]>',
+            \ "\<F1>":          '<F1>',
+            \ "\<F2>":          '<F2>',
+            \ "\<F3>":          '<F3>',
+            \ "\<F4>":          '<F4>',
+            \ "\<F5>":          '<F5>',
+            \ "\<F6>":          '<F6>',
+            \ "\<F7>":          '<F7>',
+            \ "\<F8>":          '<F8>',
+            \ "\<F9>":          '<F9>',
+            \ "\<F10>":         '<F10>',
+            \ "\<F11>":         '<F11>',
+            \ "\<F12>":         '<F12>',
+            \ "\<CR>":          '<CR>',
+            \ "\<BS>":          '<BS>',
+            \ "\<TAB>":         '<TAB>',
+            \ "\<DEL>":         '<DEL>',
+            \ "\<ESC>":         '<ESC>',
+            \ "\<UP>":          '<UP>',
+            \ "\<DOWN>":        '<DOWN>',
+            \ "\<LEFT>":        '<LEFT>',
+            \ "\<RIGHT>":       '<RIGHT>',
+            \ "\<HOME>":        '<HOME>',
+            \ "\<END>":         '<END>',
+            \ "\<PAGEUP>":      '<PAGEUP>',
+            \ "\<PAGEDOWN>":    '<PAGEDOWN>',
+            \ "\<S-LEFT>":      '<S-LEFT>',
+            \ "\<S-RIGHT>":     '<S-RIGHT>',
+            \ "\<S-INSERT>":    '<S-INSERT>',
+            \ "\<LEFTMOUSE>":   '<LEFTMOUSE>',
+            \ "\<RIGHTMOUSE>":  '<RIGHTMOUSE>',
+            \ "\<MIDDLEMOUSE>": '<MIDDLEMOUSE>',
+            \ "\<2-LEFTMOUSE>": '<2-LEFTMOUSE>',
+            \ "\<C-LEFTMOUSE>": '<C-LEFTMOUSE>',
+            \ "\<S-LEFTMOUSE>": '<S-LEFTMOUSE>',
+            \ "\<SCROLLWHEELUP>": '<SCROLLWHEELUP>',
+            \ "\<SCROLLWHEELDOWN>": '<SCROLLWHEELDOWN>'
+            \}
+
 function! s:InitCommandMap(var, dict)
     if !exists(a:var)
         exec 'let '.a:var.'='.string(a:dict)
@@ -216,6 +280,12 @@ function! s:InitCommandMap(var, dict)
         endfor
         exec 'let '.a:var.'='.string(tmp)
     endif
+    let g:Lf_KeyDict = {}
+    for [key, val] in items(eval(a:var))
+        for i in val
+            let g:Lf_KeyDict[toupper(i)] = toupper(key)
+        endfor
+    endfor
 endfunction
 
 call s:InitCommandMap('g:Lf_CommandMap', s:Lf_CommandMap)
@@ -228,7 +298,7 @@ function! leaderf#versionCheck()
         return 0
     elseif g:Lf_PythonVersion == 3 && py3eval("sys.version_info < (3, 1)")
         echohl Error
-        echo "Error: LeaderF requires python3.1+, your current version is " . pyeval("sys.version")
+        echo "Error: LeaderF requires python3.1+, your current version is " . py3eval("sys.version")
         echohl None
         return 0
     elseif g:Lf_PythonVersion != 2 && g:Lf_PythonVersion != 3
@@ -240,12 +310,12 @@ function! leaderf#versionCheck()
     return 1
 endfunction
 
-function! leaderf#LfPy(cmd)
+function! leaderf#LfPy(cmd) abort
     exec g:Lf_py . a:cmd
 endfunction
 
 " return the visually selected text and quote it with double quote
-function! leaderf#visual()
+function! leaderf#visual() abort
     try
         let x_save = @x
         norm! gv"xy
@@ -255,16 +325,179 @@ function! leaderf#visual()
     endtry
 endfunction
 
-function! leaderf#previewFilter(winid, key)
-    if a:key == "\<ESC>"
+function! leaderf#popupModePreviewFilter(winid, key) abort
+    let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
+    if key ==? "<ESC>"
         call popup_close(a:winid)
         redraw
         return 1
-    elseif a:key == "\<CR>"
+    elseif key ==? "<CR>"
+        call popup_close(a:winid)
+        " https://github.com/vim/vim/issues/5216
+        "redraw
+        return 0
+    elseif key ==? "<LeftMouse>" && has('patch-8.1.2266')
+        " v:mouse_winid is always 0 in popup window(fixed in vim 8.1.2292)
+        " the below workaround can make v:mouse_winid have the value
+        if v:mouse_winid == 0
+            silent! call feedkeys("\<LeftMouse>", "n")
+            silent! call getchar()
+        endif
+
+        "echom v:mouse_winid v:mouse_lnum v:mouse_col v:mouse_win
+        " in normal window, v:mouse_lnum and v:mouse_col are always 0 after getchar()
+        if v:mouse_winid == a:winid
+            call win_execute(a:winid, "exec v:mouse_lnum")
+            call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
+            redraw
+            return 1
+        else
+            call popup_close(a:winid)
+            call win_execute(v:mouse_winid, "exec v:mouse_lnum")
+            call win_execute(v:mouse_winid, "exec 'norm!'.v:mouse_col.'|'")
+            redraw
+            return 1
+        endif
+    elseif key ==? "<ScrollWheelUp>"
+        call win_execute(a:winid, "norm! 3k")
+        redraw
+        return 1
+    elseif key ==? "<ScrollWheelDown>"
+        call win_execute(a:winid, "norm! 3j")
+        redraw
+        return 1
+    endif
+    return 0
+endfunction
+
+function! leaderf#normalModePreviewFilter(winid, key) abort
+    let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
+    if key ==? "<ESC>"
         call popup_close(a:winid)
         redraw
+        return 1
+    elseif key ==? "<CR>"
+        call popup_close(a:winid)
+        " https://github.com/vim/vim/issues/5216
+        "redraw
         return 0
+    elseif key ==? "<LeftMouse>" && has('patch-8.1.2266')
+        return 0
+    elseif key ==? "<ScrollWheelUp>"
+        call win_execute(a:winid, "norm! 3k")
+        redraw
+        return 1
+    elseif key ==? "<ScrollWheelDown>"
+        call win_execute(a:winid, "norm! 3j")
+        redraw
+        return 1
     endif
+    return 0
+endfunction
+
+function! leaderf#PopupFilter(winid, key) abort
+    return 0
+endfunction
+
+function! leaderf#NormalModeFilter(id, winid, key) abort
+    exec g:Lf_py "import ctypes"
+
+    let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
+
+    if key == "j" || key ==? "<Down>"
+        call win_execute(a:winid, "norm! j")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+        redraw
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+    elseif key == "k" || key ==? "<Up>"
+        call win_execute(a:winid, "norm! k")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+        redraw
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+    elseif key ==? "<PageUp>"
+        call win_execute(a:winid, "norm! \<PageUp>")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+    elseif key ==? "<PageDown>"
+        call win_execute(a:winid, "norm! \<PageDown>")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+    elseif key ==? "<LeftMouse>"
+        if has('patch-8.1.2266')
+            call win_execute(a:winid, "exec v:mouse_lnum")
+            call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+            redraw
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+        endif
+    elseif key ==? "<ScrollWheelUp>"
+        call win_execute(a:winid, "norm! 3k")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+        redraw
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
+    elseif key ==? "<ScrollWheelDown>"
+        call win_execute(a:winid, "norm! 3j")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+        redraw
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
+    elseif key == "q" || key ==? "<ESC>"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:id)
+    elseif key == "i" || key ==? "<Tab>"
+        call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.input()", a:id)
+    elseif key == "o" || key ==? "<CR>" || key ==? "<2-LeftMouse>"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept()", a:id)
+    elseif key == "x"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept('h')", a:id)
+    elseif key == "v"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept('v')", a:id)
+    elseif key == "t"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept('t')", a:id)
+    elseif key == "s"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.addSelections()", a:id)
+    elseif key == "a"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.selectAll()", a:id)
+    elseif key == "c"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.clearSelections()", a:id)
+    elseif key == "p"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(True)", a:id)
+    elseif key ==? "<F1>"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.toggleHelp()", a:id)
+    endif
+
+    return 1
+endfunction
+
+function! leaderf#PopupClosed(id_list, winid, result) abort
+    " result is -1 if CTRL-C was pressed,
+    if a:result == -1
+        for id in a:id_list
+            if id != a:winid
+                call popup_close(id)
+            endif
+        endfor
+    endif
+endfunction
+
+function! leaderf#ResetPopupOptions(winid, option, value) abort
+    let opts = popup_getoptions(a:winid)
+    " https://github.com/vim/vim/issues/5081
+    silent! unlet opts.mousemoved
+    silent! unlet opts.moved
+    let opts[a:option] = a:value
+    call popup_setoptions(a:winid, opts)
+endfunction
+
+" `pos` - A list with three numbers, e.g., [23, 11, 3]. As above, but
+" the third number gives the length of the highlight in bytes.
+function! leaderf#matchaddpos(group, pos) abort
+    for pos in a:pos
+        call prop_add(pos[0], pos[1], {'length': pos[2], 'type': a:group})
+    endfor
 endfunction
 
 autocmd FileType leaderf let b:coc_enabled = 0 | let b:coc_suggest_disable = 1

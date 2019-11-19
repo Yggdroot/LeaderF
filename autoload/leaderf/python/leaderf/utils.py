@@ -152,3 +152,9 @@ def lfPrintError(error):
     else:
         error = lfEncode(str(repr(error)))
         lfCmd("echohl Error | redraw | echo '%s' | echohl None" % escQuote(error))
+
+def lfActualLineCount(buffer, start, end, col_width):
+    num = 0
+    for i in buffer[start:end]:
+        num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + col_width - 1) // col_width
+    return num

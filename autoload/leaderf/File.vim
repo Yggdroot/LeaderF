@@ -52,3 +52,76 @@ endfunction
 function! leaderf#File#TimerCallback(id)
     call leaderf#LfPy("fileExplManager._workInIdle(bang=True)")
 endfunction
+
+function! leaderf#File#NormalModeFilter(winid, key) abort
+    let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
+
+    if key == "j" || key ==? "<Down>"
+        call win_execute(a:winid, "norm! j")
+        exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"
+        redraw
+        exec g:Lf_py "fileExplManager._getInstance().refreshPopupStatusline()"
+        exec g:Lf_py "fileExplManager._previewResult(False)"
+    elseif key == "k" || key ==? "<Up>"
+        call win_execute(a:winid, "norm! k")
+        exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"
+        redraw
+        exec g:Lf_py "fileExplManager._getInstance().refreshPopupStatusline()"
+        exec g:Lf_py "fileExplManager._previewResult(False)"
+    elseif key ==? "<PageUp>"
+        call win_execute(a:winid, "norm! \<PageUp>")
+        exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"
+        exec g:Lf_py "fileExplManager._getInstance().refreshPopupStatusline()"
+        exec g:Lf_py "fileExplManager._previewResult(False)"
+    elseif key ==? "<PageDown>"
+        call win_execute(a:winid, "norm! \<PageDown>")
+        exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"
+        exec g:Lf_py "fileExplManager._getInstance().refreshPopupStatusline()"
+        exec g:Lf_py "fileExplManager._previewResult(False)"
+    elseif key ==? "<LeftMouse>"
+        if has('patch-8.1.2266')
+            call win_execute(a:winid, "exec v:mouse_lnum")
+            call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
+            exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"
+            redraw
+            exec g:Lf_py "fileExplManager._previewResult(False)"
+        endif
+    elseif key ==? "<ScrollWheelUp>"
+        call win_execute(a:winid, "norm! 3k")
+        exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"
+        redraw
+        exec g:Lf_py "fileExplManager._getInstance().refreshPopupStatusline()"
+    elseif key ==? "<ScrollWheelDown>"
+        call win_execute(a:winid, "norm! 3j")
+        exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"
+        redraw
+        exec g:Lf_py "fileExplManager._getInstance().refreshPopupStatusline()"
+    elseif key == "q" || key ==? "<ESC>"
+        exec g:Lf_py "fileExplManager.quit()"
+    elseif key == "i" || key ==? "<Tab>"
+        call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
+        exec g:Lf_py "fileExplManager.input()"
+    elseif key == "o" || key ==? "<CR>" || key ==? "<2-LeftMouse>"
+        exec g:Lf_py "fileExplManager.accept()"
+    elseif key == "x"
+        exec g:Lf_py "fileExplManager.accept('h')"
+    elseif key == "v"
+        exec g:Lf_py "fileExplManager.accept('v')"
+    elseif key == "t"
+        exec g:Lf_py "fileExplManager.accept('t')"
+    elseif key == "s"
+        exec g:Lf_py "fileExplManager.addSelections()"
+    elseif key == "a"
+        exec g:Lf_py "fileExplManager.selectAll()"
+    elseif key == "c"
+        exec g:Lf_py "fileExplManager.clearSelections()"
+    elseif key == "p"
+        exec g:Lf_py "fileExplManager._previewResult(True)"
+    elseif key ==? "<F1>"
+        exec g:Lf_py "fileExplManager.toggleHelp()"
+    elseif key ==? "<F5>"
+        exec g:Lf_py "fileExplManager.refresh()"
+    endif
+
+    return 1
+endfunction

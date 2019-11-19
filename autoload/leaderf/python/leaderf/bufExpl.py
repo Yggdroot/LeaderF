@@ -105,7 +105,6 @@ class BufferExplorer(Explorer):
 class BufExplManager(Manager):
     def __init__(self):
         super(BufExplManager, self).__init__()
-        self._match_ids = []
 
     def _getExplClass(self):
         return BufferExplorer
@@ -183,32 +182,63 @@ class BufExplManager(Manager):
 
     def _afterEnter(self):
         super(BufExplManager, self)._afterEnter()
-        id = int(lfEval("matchadd('Lf_hl_bufNumber', '^\s*\zs\d\+')"))
-        self._match_ids.append(id)
-        id = int(lfEval("matchadd('Lf_hl_bufIndicators', '^\s*\d\+\s*\zsu\=\s*[#%]\=...')"))
-        self._match_ids.append(id)
-        id = int(lfEval("matchadd('Lf_hl_bufModified', '^\s*\d\+\s*u\=\s*[#%]\=.+\s*\zs.*$')"))
-        self._match_ids.append(id)
-        id = int(lfEval("matchadd('Lf_hl_bufNomodifiable', '^\s*\d\+\s*u\=\s*[#%]\=..-\s*\zs.*$')"))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
-        self._match_ids.append(id)
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufNumber'', ''^\s*\zs\d\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufIndicators'', ''^\s*\d\+\s*\zsu\=\s*[#%%]\=...'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufModified'', ''^\s*\d\+\s*u\=\s*[#%%]\=.+\s*\zs.*$'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufNomodifiable'', ''^\s*\d\+\s*u\=\s*[#%%]\=..-\s*\zs.*$'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+        else:
+            id = int(lfEval("matchadd('Lf_hl_bufNumber', '^\s*\zs\d\+')"))
+            self._match_ids.append(id)
+            id = int(lfEval("matchadd('Lf_hl_bufIndicators', '^\s*\d\+\s*\zsu\=\s*[#%]\=...')"))
+            self._match_ids.append(id)
+            id = int(lfEval("matchadd('Lf_hl_bufModified', '^\s*\d\+\s*u\=\s*[#%]\=.+\s*\zs.*$')"))
+            self._match_ids.append(id)
+            id = int(lfEval("matchadd('Lf_hl_bufNomodifiable', '^\s*\d\+\s*u\=\s*[#%]\=..-\s*\zs.*$')"))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
+            self._match_ids.append(id)
 
     def _beforeExit(self):
         super(BufExplManager, self)._beforeExit()
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
 
     def deleteBuffer(self, wipe=0):
-        if vim.current.window.cursor[0] <= self._help_length:
+        instance = self._getInstance()
+        if instance.window.cursor[0] <= self._help_length:
             return
-        lfCmd("setlocal modifiable")
-        line = vim.current.line
+        if instance.getWinPos() == 'popup':
+            lfCmd("call win_execute(%d, 'setlocal modifiable')" % instance.getPopupWinId())
+        else:
+            lfCmd("setlocal modifiable")
+        line = instance._buffer_object[instance.window.cursor[0] - 1]
+        if len(self._content) > 0:
+            self._content.remove(line)
+            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+            self._getInstance().setStlResultsCount(len(self._content)//self._getUnit())
         buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
         lfCmd("confirm %s %d" % ('bw' if wipe else 'bd', buf_number))
-        del vim.current.line
-        lfCmd("setlocal nomodifiable")
+        del instance._buffer_object[instance.window.cursor[0] - 1]
+        if instance.getWinPos() == 'popup':
+            instance.refreshPopupStatusline()
+            lfCmd("call win_execute(%d, 'setlocal nomodifiable')" % instance.getPopupWinId())
+        else:
+            lfCmd("setlocal nomodifiable")
 
     def _previewInPopup(self, *args, **kwargs):
         line = args[0]

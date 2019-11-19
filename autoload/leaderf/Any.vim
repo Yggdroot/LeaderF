@@ -188,6 +188,7 @@ let g:Lf_CommonArguments = [
             \   {"name": ["--belowright"], "nargs": 0, "help": "the LeaderF window is at the belowright of the screen"},
             \   {"name": ["--aboveleft"],  "nargs": 0, "help": "the LeaderF window is at the aboveleft of the screen"},
             \   {"name": ["--fullScreen"], "nargs": 0, "help": "the LeaderF window takes up the full screen"},
+            \   {"name": ["--popup"],      "nargs": 0, "help": "the LeaderF window is a popup window or floating window"},
             \ ],
             \ [
             \   {"name": ["--nameOnly"], "nargs": 0, "help": "LeaderF is in NameOnly mode by default"},
@@ -212,7 +213,7 @@ let g:Lf_CommonArguments = [
 "   ["--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen"],
 "   ["--nameOnly", "--fullPath", "--fuzzy", "--regexMode"],
 " ]
-function! s:Lf_Refine(arguments)
+function! s:Lf_Refine(arguments) abort
     let result = []
     for arg in a:arguments
         if type(arg) == type([])
@@ -237,7 +238,7 @@ endfunction
 "   "--cword":    {"name": ["--cword"], "nargs": 0, "help": "current word under cursor is inputted in advance"},
 "   ...
 " }
-function! s:Lf_GenDict(arguments)
+function! s:Lf_GenDict(arguments) abort
     let result = {}
     for arg in a:arguments
         if type(arg) == type([])
@@ -255,7 +256,7 @@ function! s:Lf_GenDict(arguments)
     return result
 endfunction
 
-function! s:Lf_FuzzyMatch(pattern, str)
+function! s:Lf_FuzzyMatch(pattern, str) abort
     let i = 0
     let pattern_len = len(a:pattern)
     let j = 0
@@ -269,7 +270,7 @@ function! s:Lf_FuzzyMatch(pattern, str)
     return i >= pattern_len
 endfunction
 
-function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
+function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos) abort
     let argList = split(a:cmdline[:a:cursorPos-1], '[ \t!]\+')
     let argNum = len(argList)
     if argNum == 1  " Leaderf
@@ -312,7 +313,7 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
     endif
 endfunction
 
-function! leaderf#Any#start(bang, args)
+function! leaderf#Any#start(bang, args) abort
     if a:args == ""
 
     else

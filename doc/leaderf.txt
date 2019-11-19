@@ -63,6 +63,7 @@ g:Lf_WindowPosition                             *g:Lf_WindowPosition*
     'bottom' - the LeaderF window is at the bottom of the screen.
     'left' - the LeaderF window is at the left of the screen.
     'right' - the LeaderF window is at the right of the screen.
+    'popup' - the LeaderF window is a popup window or floating window.
     Default value is 'bottom'.
 
 g:Lf_WindowHeight                               *g:Lf_WindowHeight*
@@ -415,7 +416,9 @@ g:Lf_PreviewResult                              *g:Lf_PreviewResult*
             \ 'BufTag': 1,
             \ 'Function': 1,
             \ 'Line': 0,
-            \ 'Colorscheme': 0
+            \ 'Colorscheme': 0,
+            \ 'Rg': 0,
+            \ 'Gtags': 0
             \}
 <
     e.g., if you want to disable the preview of BufTag explorer: >
@@ -656,6 +659,69 @@ g:Lf_DiscardEmptyBuffer                           *g:Lf_DiscardEmptyBuffer*
     with <C-T>.
 
     Default value is 0.
+
+g:Lf_PopupWidth                                   *g:Lf_PopupWidth*
+    Specify the width of the popup window or floating window when LeaderF is
+    in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
+    is in the options list of `Leaderf` command.
+    The value should be a non-negative integer. If the value is 0, the width
+    is 2/3 of the screen's width.
+
+    Default value is 0.
+
+g:Lf_PopupHeight                                   *g:Lf_PopupHeight*
+    Specify the height of the popup window or floating window when LeaderF is
+    in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
+    is in the options list of `Leaderf` command.
+    The value should be a non-negative integer. If the value is
+    0, the height is 40% of the screen's height.
+
+    Default value is 0.
+
+g:Lf_PopupPosition                                 *g:Lf_PopupPosition*
+    Specify the coordinate of the topleft corner of popup window or floating
+    window when LeaderF is in popup mode. `Popup mode` is when |g:Lf_WindowPosition|
+    is 'popup' or '--popup' is in the options list of `Leaderf` command.
+    The value is a list [`line`, `col`], the first line and the first column are
+    both 1.
+    If the value of `line` is 0, the popup window or floating window is vertically
+    centered.
+    If the value of `col` is 0, the popup window or floating window is horizontally
+    centered.
+
+    Default value is [0, 0].
+
+g:Lf_PopupShowStatusline                           *g:Lf_PopupShowStatusline*
+    Specify whether to show the statusline when LeaderF is in popup mode.
+    `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup' is in the
+    options list of `Leaderf` command.
+
+    Default value is 1.
+
+g:Lf_PopupPreviewPosition                          *g:Lf_PopupPreviewPosition*
+    Specify where to locate the preview window when LeaderF is in popup mode.
+    `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup' is in the
+    options list of `Leaderf` command.
+    The value can be one of the following:
+    'top': the preview window is on the top of the main LeaderF window.
+    'bottom': the preview window is at the bottom of the main LeaderF window.
+    'cursor': the preview window is at the cursor position in the main LeaderF
+              window.
+
+    Default value is 'top'.
+
+g:Lf_PopupColorscheme                              *g:Lf_PopupColorscheme*
+    You can configure the colorscheme of LeaderF in popup mode.
+    e.g. >
+    let g:Lf_PopupColorscheme = 'default'
+<
+    The colorscheme files can be found in the directory >
+    "LeaderF/autoload/leaderf/colorscheme/popup/"
+<
+    You can also define the colorscheme by yourself, follow 'default.vim' and
+    put it under "autoload/leaderf/colorscheme/popup/".
+
+    Default value is 'default'.
 
 ==============================================================================
 USAGE                                           *leaderf-usage*

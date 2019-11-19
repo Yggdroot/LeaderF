@@ -168,7 +168,6 @@ class AnyExplManager(Manager):
         self._getExplorer().setConfig(category, config)
         self._category = category
         self._config = config
-        self._match_ids = []
 
     def _getExplClass(self):
         return AnyExplorer
@@ -319,10 +318,6 @@ class AnyExplManager(Manager):
                 before_exit(orig_buf_nr, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(before_exit), err))
-
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
 
     def _afterExit(self):
         super(AnyExplManager, self)._afterExit()
@@ -687,7 +682,7 @@ class AnyHub(object):
                 lfCmd("call %s('%s')" % (lfEval("g:Lf_PythonExtensions['%s'].registerFunc" % category), category))
                 manager = self._pyext_manages[category]
 
-        positions = {"--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen"}
+        positions = {"--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen", "--popup"}
         win_pos = "--" + lfEval("g:Lf_WindowPosition")
         for i in arguments:
             if i in positions:

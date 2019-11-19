@@ -610,10 +610,6 @@ class FileExplManager(Manager):
 
     def _defineMaps(self):
         lfCmd("call leaderf#File#Maps()")
-        lfCmd("augroup Lf_File")
-        lfCmd("autocmd!")
-        lfCmd("autocmd VimLeavePre * call leaderf#File#cleanup()")
-        lfCmd("augroup END")
 
     def _createHelp(self):
         help = []
@@ -656,6 +652,13 @@ class FileExplManager(Manager):
                 return path
 
         return ""
+
+    def _afterEnter(self):
+        super(FileExplManager, self)._afterEnter()
+        lfCmd("augroup Lf_File")
+        lfCmd("autocmd!")
+        lfCmd("autocmd VimLeavePre * call leaderf#File#cleanup()")
+        lfCmd("augroup END")
 
     def _beforeExit(self):
         super(FileExplManager, self)._beforeExit()
@@ -727,7 +730,7 @@ class FileExplManager(Manager):
 
     def _previewInPopup(self, *args, **kwargs):
         line = args[0]
-        buf_number = lfEval("bufnr('{}', 1)".format(line))
+        buf_number = lfEval("bufadd('{}')".format(escQuote(line)))
         self._createPopupPreview(line, buf_number, 0)
 
 

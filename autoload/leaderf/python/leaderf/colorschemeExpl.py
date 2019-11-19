@@ -53,6 +53,10 @@ class ColorschemeExplManager(Manager):
             return
         line = args[0]
         lfCmd("colorscheme " + line)
+        if self._getInstance().getWinPos() == 'popup':
+            pass
+        elif lfEval("&filetype") == "leaderf":
+            lfCmd("doautocmd FileType leaderf")
 
     def _getDigest(self, line, mode):
         """

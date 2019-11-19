@@ -53,7 +53,6 @@ class LineExplorer(Explorer):
 class LineExplManager(Manager):
     def __init__(self):
         super(LineExplManager, self).__init__()
-        self._match_ids = []
 
     def _getExplClass(self):
         return LineExplorer
@@ -110,14 +109,17 @@ class LineExplManager(Manager):
 
     def _afterEnter(self):
         super(LineExplManager, self)._afterEnter()
-        id = int(lfEval('''matchadd('Lf_hl_lineLocation', '\t\zs\[.*:\d\+ \d\+]$')'''))
-        self._match_ids.append(id)
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_lineLocation'', ''\t\zs\[.*:\d\+ \d\+]$'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+        else:
+            id = int(lfEval('''matchadd('Lf_hl_lineLocation', '\t\zs\[.*:\d\+ \d\+]$')'''))
+            self._match_ids.append(id)
 
     def _beforeExit(self):
         super(LineExplManager, self)._beforeExit()
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
         for k, v in self._cursorline_dict.items():
             if k.valid:
                 k.options["cursorline"] = v

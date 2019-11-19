@@ -3,8 +3,10 @@
 
 import vim
 import re
+import sys
 import time
 from datetime import datetime
+from datetime import timedelta
 from functools import wraps
 from collections import OrderedDict
 from .utils import *
@@ -39,20 +41,26 @@ def cursorController(func):
 #*****************************************************
 class LfCli(object):
     def __init__(self):
+        self._instance = None
         self._cmdline = []
         self._pattern = ''
         self._cursor_pos = 0
         self._start_time = datetime.now()
         self._idle = False
         self._blinkon = True
-        self._cmd_map = lfEval("g:Lf_CommandMap")
+        self._key_dict = lfEval("g:Lf_KeyDict")
         self._refine = False
         self._delimiter = lfEval("g:Lf_DelimiterChar")
         self._and_delimiter = lfEval("get(g:, 'Lf_AndDelimiter', ' ')")
         self._supports_nameonly = False
         self._supports_refine = False
         self._is_and_mode = False
+        self._running_status = 0
+        self._input_buf_namespace = None
         self._setDefaultMode()
+
+    def setInstance(self, instance):
+        self._instance = instance
 
     def _setDefaultMode(self):
         mode = lfEval("g:Lf_DefaultMode")
@@ -153,19 +161,149 @@ class LfCli(object):
         else:
             lfCmd("hi! default link Lf_hl_cursor NONE")
 
+    def _buildPopupPrompt(self):
+        if self._is_fuzzy:
+            if self._is_full_path:
+                prompt = ' >F> '
+            else:
+                prompt = ' >>> '
+        else:
+            prompt = ' R>> '
+
+        pattern = ''.join(self._cmdline)
+        input_window = self._instance.getPopupInstance().input_win
+        content_winid = self._instance.getPopupInstance().content_win.id
+        input_win_width = input_window.width
+        if self._instance.getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'let line_num = line(".")')""" % content_winid)
+            line_num = lfEval("line_num")
+        else:
+            line_num = lfEval("line('.')")
+        result_count = lfEval("g:Lf_{}_StlResultsCount".format(self._instance._category))
+        total = lfEval("g:Lf_{}_StlTotal".format(self._instance._category))
+
+        part1 = prompt + pattern
+        part2 = "{}/{}".format(line_num, result_count)
+        part3 = total
+        sep = lfEval("g:Lf_StlSeparator.right")
+        flag = ('+', '×')
+        if lfEval("g:Lf_{}_IsRunning".format(self._instance._category)) == '1':
+            spin = "{}".format(flag[self._running_status])
+            self._running_status = (self._running_status + 1) & 1
+        else:
+            spin = ""
+            self._running_status = 0
+
+        if sys.version_info < (3, 0):
+            input_win_width += 2 * (len(sep) - int(lfEval("strdisplaywidth('%s')" % escQuote(sep))))
+            if spin == '×':
+                input_win_width += len(spin) - int(lfEval("strdisplaywidth('%s')" % spin))
+        part3_start = input_win_width - len(part3) - 2
+        sep2_start = part3_start - len(sep)
+        part2_start = sep2_start - 2 - len(part2)
+        sep1_start = part2_start - len(sep)
+        spin_start = sep1_start - 1 - len(spin)
+        part1_width = spin_start - 1
+        text = "{:<{part1_width}} {} {:>{sep_width}} {:>{part2_width}} {:>{sep_width}} {:>{part3_width}} ".format(part1,
+                                                                               spin,
+                                                                               sep,
+                                                                               part2,
+                                                                               sep,
+                                                                               part3,
+                                                                               sep_width=len(sep),
+                                                                               part1_width=part1_width,
+                                                                               part2_width=len(part2),
+                                                                               part3_width=len(part3))
+        if self._instance.getWinPos() == 'popup':
+            lfCmd("""call popup_settext(%d, '%s')""" % (input_window.id, escQuote(text)))
+
+            lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_prompt'})")""" % input_window.id)
+            lfCmd("""call win_execute(%d, "call prop_add(1, 1, {'length': %d, 'type': 'Lf_hl_popup_prompt'})")"""
+                    % (input_window.id, len(prompt)))
+
+            lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_cursor'})")""" % input_window.id)
+            lfCmd("""call win_execute(%d, "call prop_add(1, %d, {'length': 1, 'type': 'Lf_hl_popup_cursor'})")"""
+                    % (input_window.id, len(prompt)+self._cursor_pos+1))
+
+            lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_total'})")""" % (input_window.id))
+            lfCmd("""call win_execute(%d, "call prop_add(1, %d, {'length': %d, 'type': 'Lf_hl_popup_total'})")"""
+                    % (input_window.id, lfBytesLen(text[:part3_start]) + 1, len(part3) + 2))
+
+            if sep != "":
+                lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_%s_sep5'})")"""
+                        % (input_window.id, self._instance._category))
+                lfCmd("""call win_execute(%d, "call prop_add(1, %d, {'length': %d, 'type': 'Lf_hl_popup_%s_sep5'})")"""
+                        % (input_window.id, lfBytesLen(text[:sep2_start]) + 1, lfBytesLen(sep), self._instance._category))
+
+            lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_lineInfo'})")""" % (input_window.id))
+            lfCmd("""call win_execute(%d, "call prop_add(1, %d, {'length': %d, 'type': 'Lf_hl_popup_lineInfo'})")"""
+                    % (input_window.id, lfBytesLen(text[:part2_start]) + 1, len(part2) + 2))
+
+            if sep != "":
+                lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_%s_sep4'})")"""
+                        % (input_window.id, self._instance._category))
+                lfCmd("""call win_execute(%d, "call prop_add(1, %d, {'length': %d, 'type': 'Lf_hl_popup_%s_sep4'})")"""
+                        % (input_window.id, lfBytesLen(text[:sep1_start]) + 1, lfBytesLen(sep), self._instance._category))
+
+            lfCmd("""call win_execute(%d, "call prop_remove({'type': 'Lf_hl_popup_spin'})")""" % (input_window.id))
+            if spin != "":
+                lfCmd("""call win_execute(%d, "call prop_add(1, %d, {'length': %d, 'type': 'Lf_hl_popup_spin'})")"""
+                        % (input_window.id, lfBytesLen(text[:spin_start]) + 1, lfBytesLen(spin)))
+
+            lfCmd("redraw")
+        else:
+            input_window.buffer[0] = text
+
+            if self._input_buf_namespace is None:
+                self._input_buf_namespace = int(lfEval("nvim_create_namespace('')"))
+            else:
+                lfCmd("call nvim_buf_clear_namespace(%d, %d, 0, -1)"
+                        % (input_window.buffer.number, self._input_buf_namespace))
+
+            lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_popup_prompt', 0, 0, %d)"
+                    % (input_window.buffer.number, self._input_buf_namespace, len(prompt)))
+            lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_cursor', 0, %d, %d+1)"
+                    % (input_window.buffer.number, self._input_buf_namespace,
+                        len(prompt)+self._cursor_pos, len(prompt)+self._cursor_pos))
+
+            lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_popup_total', 0, %d, %d)"
+                    % (input_window.buffer.number, self._input_buf_namespace,
+                        lfBytesLen(text[:part3_start]), lfBytesLen(text[:part3_start]) + len(part3) + 2))
+
+            if sep != "":
+                lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_popup_%s_sep5', 0, %d, %d)"
+                        % (input_window.buffer.number, self._input_buf_namespace, self._instance._category,
+                            lfBytesLen(text[:sep2_start]), lfBytesLen(text[:sep2_start]) + lfBytesLen(sep)))
+
+            lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_popup_lineInfo', 0, %d, %d)"
+                    % (input_window.buffer.number, self._input_buf_namespace,
+                        lfBytesLen(text[:part2_start]), lfBytesLen(text[:part2_start]) + len(part2) + 2))
+
+            if sep != "":
+                lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_popup_%s_sep4', 0, %d, %d)"
+                        % (input_window.buffer.number, self._input_buf_namespace, self._instance._category,
+                            lfBytesLen(text[:sep1_start]), lfBytesLen(text[:sep1_start]) + lfBytesLen(sep)))
+
+            if spin != "":
+                lfCmd("call nvim_buf_add_highlight(%d, %d, 'Lf_hl_popup_spin', 0, %d, %d)"
+                        % (input_window.buffer.number, self._input_buf_namespace,
+                            lfBytesLen(text[:spin_start]), lfBytesLen(text[:spin_start]) + lfBytesLen(spin)))
+
+            lfCmd("redraw")
+
     def _buildPrompt(self):
-        if lfEval("has('nvim')") == '1':
+        if lfEval("has('nvim')") == '1' and self._instance.getWinPos() != 'floatwin':
             self._buildNvimPrompt()
             return
 
-        delta_time = datetime.now() - self._start_time
-        delta_ms = delta_time.microseconds + (delta_time.seconds +
-                   delta_time.days * 24 * 3600) * 10**6
-        if self._idle and delta_ms < 500000: # 500ms
+        if self._idle and datetime.now() - self._start_time < timedelta(milliseconds=500): # 500ms
             return
         else:
             if self._blinkon:
-                lfCmd("hi! default link Lf_hl_cursor Cursor")
+                if self._instance.getWinPos() in ('popup', 'floatwin'):
+                    lfCmd("hi! default link Lf_hl_cursor Lf_hl_popup_cursor")
+                else:
+                    lfCmd("hi! default link Lf_hl_cursor Cursor")
             else:
                 lfCmd("hi! default link Lf_hl_cursor NONE")
 
@@ -174,6 +312,10 @@ class LfCli(object):
                 self._blinkon = not self._blinkon
             elif self._idle:
                 return
+
+        if self._instance.getWinPos() in ('popup', 'floatwin'):
+            self._buildPopupPrompt()
+            return
 
         if self._is_fuzzy:
             if self._is_full_path:
@@ -501,12 +643,9 @@ class LfCli(object):
                     yield '<Update>'
                 else:
                     cmd = ''
-                    for (key, value) in self._cmd_map.items():
-                        for i in value:
-                            if lfEval('ch ==# "\%s"' % i) == '1':
-                                cmd = key
-                                break
-                        if cmd != '':
+                    for (key, value) in self._key_dict.items():
+                        if lfEval('ch ==# "\%s"' % key) == '1':
+                            cmd = value
                             break
                     if equal(cmd, '<CR>'):
                         yield '<CR>'

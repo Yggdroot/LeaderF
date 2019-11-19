@@ -58,7 +58,6 @@ class SelfExplorer(Explorer):
 class SelfExplManager(Manager):
     def __init__(self):
         super(SelfExplManager, self).__init__()
-        self._match_ids = []
 
     def _getExplClass(self):
         return SelfExplorer
@@ -124,16 +123,23 @@ class SelfExplManager(Manager):
 
     def _afterEnter(self):
         super(SelfExplManager, self)._afterEnter()
-        id = int(lfEval('''matchadd('Lf_hl_selfIndex', '^\d\+')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_selfDescription', ' \zs".*"$')'''))
-        self._match_ids.append(id)
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_selfIndex'', ''^\d\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_selfDescription'', '' \zs".*"$'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+        else:
+            id = int(lfEval('''matchadd('Lf_hl_selfIndex', '^\d\+')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_selfDescription', ' \zs".*"$')'''))
+            self._match_ids.append(id)
 
     def _beforeExit(self):
         super(SelfExplManager, self)._beforeExit()
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
 
     def _supportsRefine(self):
         return True
