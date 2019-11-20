@@ -404,28 +404,53 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
 
     let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
 
-    if key == "j" || key ==? "<Down>"
+    if key !=# "g"
+        call win_execute(a:winid, printf("let g:Lf_%d_is_g_pressed = 0", a:id))
+    endif
+
+    if key ==# "j" || key ==? "<Down>"
         call win_execute(a:winid, "norm! j")
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         redraw
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
-    elseif key == "k" || key ==? "<Up>"
+    elseif key ==# "k" || key ==? "<Up>"
         call win_execute(a:winid, "norm! k")
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         redraw
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
-    elseif key ==? "<PageUp>"
+    elseif key ==? "<PageUp>" || key ==? "<C-B>"
         call win_execute(a:winid, "norm! \<PageUp>")
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
-    elseif key ==? "<PageDown>"
+    elseif key ==? "<PageDown>" || key ==? "<C-F>"
         call win_execute(a:winid, "norm! \<PageDown>")
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+    elseif key ==# "g"
+        if get(g:, printf("Lf_%d_is_g_pressed", a:id), 0) == 0
+            let g:Lf_{a:id}_is_g_pressed = 1
+        else
+            let g:Lf_{a:id}_is_g_pressed = 0
+            call win_execute(a:winid, "norm! gg")
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+            redraw
+        endif
+    elseif key ==# "G"
+        call win_execute(a:winid, "norm! G")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+        redraw
+    elseif key ==? "<C-U>"
+        call win_execute(a:winid, "norm! \<C-U>")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+        redraw
+    elseif key ==? "<C-D>"
+        call win_execute(a:winid, "norm! \<C-D>")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+        redraw
     elseif key ==? "<LeftMouse>"
         if has('patch-8.1.2266')
             call win_execute(a:winid, "exec v:mouse_lnum")
@@ -444,26 +469,26 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         redraw
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
-    elseif key == "q" || key ==? "<ESC>"
+    elseif key ==# "q" || key ==? "<ESC>"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:id)
-    elseif key == "i" || key ==? "<Tab>"
+    elseif key ==# "i" || key ==? "<Tab>"
         call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.input()", a:id)
-    elseif key == "o" || key ==? "<CR>" || key ==? "<2-LeftMouse>"
+    elseif key ==# "o" || key ==? "<CR>" || key ==? "<2-LeftMouse>"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept()", a:id)
-    elseif key == "x"
+    elseif key ==# "x"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept('h')", a:id)
-    elseif key == "v"
+    elseif key ==# "v"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept('v')", a:id)
-    elseif key == "t"
+    elseif key ==# "t"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept('t')", a:id)
-    elseif key == "s"
+    elseif key ==# "s"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.addSelections()", a:id)
-    elseif key == "a"
+    elseif key ==# "a"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.selectAll()", a:id)
-    elseif key == "c"
+    elseif key ==# "c"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.clearSelections()", a:id)
-    elseif key == "p"
+    elseif key ==# "p"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(True)", a:id)
     elseif key ==? "<F1>"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.toggleHelp()", a:id)
