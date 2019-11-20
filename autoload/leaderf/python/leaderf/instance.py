@@ -337,13 +337,15 @@ class LfInstance(object):
         else:
             maxheight = min(height, int(lfEval("&lines")))
 
-        position = [int(i) for i in lfEval("get(g:, 'Lf_PopupPosition', [0, 0])")]
-        if position == [0, 0]:
+        line, col = [int(i) for i in lfEval("get(g:, 'Lf_PopupPosition', [0, 0])")]
+        if line == 0:
             line = (int(lfEval("&lines")) - maxheight) // 2
+        else:
+            line = min(line, int(lfEval("&lines")) - maxheight)
+
+        if col == 0:
             col = (int(lfEval("&columns")) - maxwidth) // 2
         else:
-            line, col = position
-            line = min(line, int(lfEval("&lines")) - maxheight)
             col = min(col, int(lfEval("&columns")) - maxwidth)
 
         if line <= 0:
