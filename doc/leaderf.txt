@@ -723,6 +723,42 @@ g:Lf_PopupColorscheme                              *g:Lf_PopupColorscheme*
 
     Default value is 'default'.
 
+g:Lf_PopupPalette                                  *g:Lf_PopupPalette*
+    This is a dictionary, you can customize the colorscheme of popup mode using
+    it.
+    Its structure is like below: >
+    let g:Lf_PopupPalette = {
+        \  'light': {
+        \      'Lf_hl_match': {
+        \                'gui': 'NONE',
+        \                'font': 'NONE',
+        \                'guifg': 'NONE',
+        \                'guibg': '#303136',
+        \                'cterm': 'NONE',
+        \                'ctermfg': 'NONE',
+        \                'ctermbg': '236'
+        \              },
+        \      'Lf_hl_cursorline': {
+        \                'gui': 'NONE',
+        \                'font': 'NONE',
+        \                'guifg': 'NONE',
+        \                'guibg': '#303136',
+        \                'cterm': 'NONE',
+        \                'ctermfg': 'NONE',
+        \                'ctermbg': '236'
+        \              },
+        \      },
+        \  'dark': {
+        \         ...
+        \         ...
+        \      }
+        \  }
+<
+    All the highlight groups supported are defined in
+    `LeaderF/autoload/leaderf/colorscheme/popup/default.vim`
+
+    It is not defined by default.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
