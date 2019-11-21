@@ -636,6 +636,12 @@ float getWeight(const char* text, uint16_t text_len,
         return MIN_WEIGHT;
     }
 
+    /* maximum number of int16_t is (1 << 15) - 1 */
+    if ( text_len >= (1 << 15) )
+    {
+        text_len = (1 << 15) - 1;
+    }
+
     if ( pattern_len == 1 )
     {
         if ( isupper(first_char) )
@@ -1340,6 +1346,12 @@ HighlightGroup* getHighlights(const char* text,
     int64_t* pattern_mask = pPattern_ctxt->pattern_mask;
     char first_char = pattern[0];
     char last_char = pattern[pattern_len - 1];
+
+    /* maximum number of int16_t is (1 << 15) - 1 */
+    if ( text_len >= (1 << 15) )
+    {
+        text_len = (1 << 15) - 1;
+    }
 
     if ( pattern_len == 1 )
     {
