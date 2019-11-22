@@ -2113,11 +2113,13 @@ class Manager(object):
                     if bang:
                         if self._getInstance().empty():
                             self._offset_in_content = len(self._content)
-                            self._getInstance().appendBuffer(self._content[:self._offset_in_content])
+                            if self._offset_in_content > 0:
+                                self._getInstance().appendBuffer(self._content[:self._offset_in_content])
                         else:
                             cur_len = len(self._content)
-                            self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
-                            self._offset_in_content = cur_len
+                            if cur_len > self._offset_in_content:
+                                self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
+                                self._offset_in_content = cur_len
 
                         if self._timer_id is not None:
                             lfCmd("call timer_stop(%s)" % self._timer_id)
@@ -2176,11 +2178,13 @@ class Manager(object):
                 if bang:
                     if self._getInstance().empty():
                         self._offset_in_content = len(self._content)
-                        self._getInstance().appendBuffer(self._content[:self._offset_in_content])
+                        if self._offset_in_content > 0:
+                            self._getInstance().appendBuffer(self._content[:self._offset_in_content])
                     else:
                         cur_len = len(self._content)
-                        self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
-                        self._offset_in_content = cur_len
+                        if cur_len > self._offset_in_content:
+                            self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
+                            self._offset_in_content = cur_len
 
                     if self._getInstance().getWinPos() not in ('popup', 'floatwin') and time.time() - self._bang_start_time > 0.5:
                         self._bang_start_time = time.time()
