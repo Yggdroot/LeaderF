@@ -139,6 +139,9 @@ class AnyExplorer(Explorer):
             if isinstance(result, list) and result and isinstance(result[0], bytes):
                 result = [lfBytes2Str(i) for i in result]
 
+        if lfEval("has('nvim')") != '1' and isinstance(result, vim.List):
+            result = list(result)
+
         return result
 
     def getStlCategory(self):
