@@ -238,22 +238,22 @@ class LfInstance(object):
             lfCmd("let g:Lf_{}_StlLineNumber = '1'".format(self._category))
             lfCmd("let g:Lf_{}_StlResultsCount = '0'".format(self._category))
 
-        stl = "%#Lf_hl_{0}_stlName# LeaderF "
+        stl = "%#Lf_hl_stlName# LeaderF "
         stl += "%#Lf_hl_{0}_stlSeparator0#%{{g:Lf_StlSeparator.left}}"
-        stl += "%#Lf_hl_{0}_stlCategory# %{{g:Lf_{0}_StlCategory}} "
+        stl += "%#Lf_hl_stlCategory# %{{g:Lf_{0}_StlCategory}} "
         stl += "%#Lf_hl_{0}_stlSeparator1#%{{g:Lf_StlSeparator.left}}"
         stl += "%#Lf_hl_{0}_stlMode# %(%{{g:Lf_{0}_StlMode}}%) "
         stl += "%#Lf_hl_{0}_stlSeparator2#%{{g:Lf_StlSeparator.left}}"
-        stl += "%#Lf_hl_{0}_stlCwd# %<%{{g:Lf_{0}_StlCwd}} "
+        stl += "%#Lf_hl_stlCwd# %<%{{g:Lf_{0}_StlCwd}} "
         stl += "%#Lf_hl_{0}_stlSeparator3#%{{g:Lf_StlSeparator.left}}"
-        stl += "%=%#Lf_hl_{0}_stlBlank#"
+        stl += "%=%#Lf_hl_stlBlank#"
         stl += "%#Lf_hl_{0}_stlSeparator4#%{{g:Lf_StlSeparator.right}}"
         if self._reverse_order:
-            stl += "%#Lf_hl_{0}_stlLineInfo# %{{g:Lf_{0}_StlLineNumber}}/%{{g:Lf_{0}_StlResultsCount}} "
+            stl += "%#Lf_hl_stlLineInfo# %{{g:Lf_{0}_StlLineNumber}}/%{{g:Lf_{0}_StlResultsCount}} "
         else:
-            stl += "%#Lf_hl_{0}_stlLineInfo# %l/%{{g:Lf_{0}_StlResultsCount}} "
+            stl += "%#Lf_hl_stlLineInfo# %l/%{{g:Lf_{0}_StlResultsCount}} "
         stl += "%#Lf_hl_{0}_stlSeparator5#%{{g:Lf_StlSeparator.right}}"
-        stl += "%#Lf_hl_{0}_stlTotal# Total%{{g:Lf_{0}_StlRunning}} %{{g:Lf_{0}_StlTotal}} "
+        stl += "%#Lf_hl_stlTotal# Total%{{g:Lf_{0}_StlRunning}} %{{g:Lf_{0}_StlTotal}} "
         self._stl = stl.format(self._category)
 
     def _highlightStl(self):
@@ -812,8 +812,10 @@ class LfInstance(object):
 
     def setStlMode(self, mode):
         lfCmd("let g:Lf_{}_StlMode = '{}'".format(self._category, mode))
-        lfCmd("call leaderf#colorscheme#highlightMode('{0}', g:Lf_{0}_StlMode)"
-              .format(self._category))
+        if self._win_pos in ('popup', 'floatwin'):
+            lfCmd("call leaderf#colorscheme#popup#hiMatchMode('{0}', g:Lf_{0}_StlMode)".format(self._category))
+        else:
+            lfCmd("call leaderf#colorscheme#highlightMode('{0}', g:Lf_{0}_StlMode)".format(self._category))
 
     def setStlCwd(self, cwd):
         lfCmd("let g:Lf_{}_StlCwd = '{}'".format(self._category, cwd))

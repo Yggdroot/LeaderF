@@ -227,8 +227,6 @@ class Manager(object):
 
         self._getInstance().setStlMode(mode)
         self._cli.setCurrentMode(mode)
-        if self._getInstance().getWinPos() in ('popup', 'floatwin'):
-            lfCmd("call leaderf#colorscheme#popup#hiMatchMode('%s', '%s')" % (self._getExplorer().getStlCategory(), mode))
 
     def _beforeEnter(self):
         self._resetAutochdir()

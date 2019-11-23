@@ -122,7 +122,7 @@ function! leaderf#colorscheme#popup#link_no_reverse(from, to) abort
     else
         let attr = "gui=italic cterm=italic"
     endif
-    let hiCmd = printf("hi %s %s", a:from, attr)
+    let hiCmd = printf("hi def %s %s", a:from, attr)
     let hiCmd .= printf(" guifg=%s guibg=%s", guifg == '' ? 'NONE': guifg, guibg == '' ? 'NONE': guibg)
     let hiCmd .= printf(" ctermfg=%s ctermbg=%s", ctermfg == '' ? 'NONE': ctermfg, ctermbg == '' ? 'NONE': ctermbg)
     exec hiCmd
@@ -160,27 +160,8 @@ function! leaderf#colorscheme#popup#hiMatchMode(category, mode) abort
     exec printf("hi Lf_hl_popup_%s_sep2 ctermfg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
 endfunction
 
-function! leaderf#colorscheme#popup#clear() abort
-    highlight clear Lf_hl_popup_window
-    highlight clear Lf_hl_popup_cursor
-    highlight clear Lf_hl_popup_prompt
-    highlight clear Lf_hl_popup_spin
-    highlight clear Lf_hl_popup_inputText
-    highlight clear Lf_hl_popup_normalMode
-    highlight clear Lf_hl_popup_inputMode
-    highlight clear Lf_hl_popup_category
-    highlight clear Lf_hl_popup_nameOnlyMode
-    highlight clear Lf_hl_popup_fullPathMode
-    highlight clear Lf_hl_popup_fuzzyMode
-    highlight clear Lf_hl_popup_regexMode
-    highlight clear Lf_hl_popup_cwd
-    highlight clear Lf_hl_popup_blank
-    highlight clear Lf_hl_popup_lineInfo
-    highlight clear Lf_hl_popup_total
-endfunction
-
 function! s:AddPropType() abort
-    silent! highlight link Lf_hl_cursor Cursor
+    silent! highlight def link Lf_hl_cursor Cursor
     silent! call prop_type_add("Lf_hl_popup_cursor", {'highlight': "Lf_hl_cursor", 'priority': 20})
     silent! call prop_type_add("Lf_hl_popup_window", {'highlight': "Lf_hl_popup_window", 'priority': 20})
     silent! call prop_type_add("Lf_hl_popup_prompt", {'highlight': "Lf_hl_popup_prompt", 'priority': 20})
@@ -241,9 +222,8 @@ function! s:LoadFromPalette() abort
 endfunction
 
 function! leaderf#colorscheme#popup#load(category, name)
-    call leaderf#colorscheme#popup#clear()
     silent! call leaderf#colorscheme#popup#{a:name}#a_nonexistent_function()
     call s:AddPropType()
-    call s:HighlightSeperator(a:category)
     call s:LoadFromPalette()
+    call s:HighlightSeperator(a:category)
 endfunction
