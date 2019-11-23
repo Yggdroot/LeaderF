@@ -42,7 +42,7 @@ class BufTagExplorer(Explorer):
                     if changedtick != self._buf_changedtick.get(b.number, -1):
                         break
             else:
-                return list(itertools.chain.from_iterable(self._tag_list.values()))
+                return itertools.chain.from_iterable(self._tag_list.values())
 
             return itertools.chain.from_iterable(self._getTagList())
         else:
@@ -75,8 +75,7 @@ class BufTagExplorer(Explorer):
                 yield tag_list
             else:
                 exe_taglist = (self._formatResult(*r) for r in exe_result)
-                # list can reduce the flash of screen
-                yield list(itertools.chain(tag_list, itertools.chain.from_iterable(exe_taglist)))
+                yield itertools.chain(tag_list, itertools.chain.from_iterable(exe_taglist))
 
     def _getTagResult(self, buffer):
         if not buffer.name or lfEval("bufloaded(%d)" % buffer.number) == '0':
@@ -127,7 +126,7 @@ class BufTagExplorer(Explorer):
             return []
 
         # a list of [tag, file, line, kind, scope]
-        output = [line.split('\t') for line in result if line is not None]
+        output = [line.split('\t') for line in result]
         if not output:
             return []
 
