@@ -18,13 +18,13 @@ if has("syntax")
     syn match Lf_hl_help     display '^".*'
     syn match Lf_hl_helpCmd  display '^"\s*\zs.\{-}\ze\s*:' containedin=Lf_hl_help contained
     syn match Lf_hl_nonHelp  display '^[^"].*$'
-    "if has("win32") || has("win64")
-    "    syn match Lf_hl_filename display '[^\/]*$' containedin=Lf_hl_nonHelp contained
-    "    syn match Lf_hl_dirname  display '^.*[\/]' containedin=Lf_hl_nonHelp contained
-    "else
-    "    syn match Lf_hl_filename display '[^/]*$' containedin=Lf_hl_nonHelp contained
-    "    syn match Lf_hl_dirname  display '^.*/'   containedin=Lf_hl_nonHelp contained
-    "endif
+    if has("win32") || has("win64")
+        syn match Lf_hl_filename display '[^\/]*$' containedin=Lf_hl_nonHelp contained
+        syn match Lf_hl_dirname  display '^.*[\/]' containedin=Lf_hl_nonHelp contained
+    else
+        syn match Lf_hl_filename display '[^/]*$' containedin=Lf_hl_nonHelp contained
+        syn match Lf_hl_dirname  display '^.*/'   containedin=Lf_hl_nonHelp contained
+    endif
 
     highlight def Lf_hl_selection guibg=#A5EB84 guifg=Black ctermbg=156 ctermfg=Black
     highlight def Lf_hl_cursorline guifg=Yellow ctermfg=226

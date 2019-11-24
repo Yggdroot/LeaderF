@@ -462,8 +462,12 @@ class LfCli(object):
                     regex = r'\c' + regex
 
                 try:
-                    lfCmd("syn match Lf_hl_match '%s' containedin="
-                          "Lf_hl_dirname, Lf_hl_filename contained" % regex)
+                    if self._instance.getWinPos() == 'popup':
+                        lfCmd("""call win_execute(%d, 'syn match Lf_hl_match /%s/ containedin=Lf_hl_dirname, Lf_hl_filename contained')"""
+                                % (self._instance.getPopupWinId(), regex))
+                    else:
+                        lfCmd("syn match Lf_hl_match '%s' containedin="
+                                "Lf_hl_dirname, Lf_hl_filename contained" % regex)
                 except vim.error:
                     pass
 
