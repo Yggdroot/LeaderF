@@ -46,20 +46,20 @@ if &background ==? 'dark'
 
     " the color of matching character in `And mode`
     highlight def Lf_hl_match0 guifg=SpringGreen guibg=NONE gui=bold ctermfg=85 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_match1 guifg=#FE8019 guibg=NONE gui=bold ctermfg=208 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_match2 guifg=#3FF5D1 guibg=NONE gui=bold ctermfg=50 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_match3 guifg=#FF7272 guibg=NONE gui=bold ctermfg=203 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_match4 guifg=#43B9F0 guibg=NONE gui=bold ctermfg=74 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match1 guifg=#fe8019 guibg=NONE gui=bold ctermfg=208 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match2 guifg=#3ff5d1 guibg=NONE gui=bold ctermfg=50 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match3 guifg=#ff7272 guibg=NONE gui=bold ctermfg=203 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match4 guifg=#43b9f0 guibg=NONE gui=bold ctermfg=74 ctermbg=NONE cterm=bold
 
     " the color of matching character in nameOnly mode when ';' is typed
     highlight def Lf_hl_matchRefine gui=bold guifg=Magenta cterm=bold ctermfg=201
 
     " the color of help in normal mode when <F1> is pressed
-    highlight def link Lf_hl_help               comment
+    highlight def link Lf_hl_help               Comment
     highlight def link Lf_hl_helpCmd            Identifier
 
     " the color when select multiple lines
-    highlight def Lf_hl_selection guifg=Black guibg=#A5EB84 gui=NONE ctermfg=Black ctermbg=156 cterm=NONE
+    highlight def Lf_hl_selection guifg=Black guibg=#a5eb84 gui=NONE ctermfg=Black ctermbg=156 cterm=NONE
 
     " the color of `Leaderf buffer`
     highlight def link Lf_hl_bufNumber          Constant
@@ -107,20 +107,114 @@ if &background ==? 'dark'
     highlight def link Lf_hl_rgLineNumber2      Folded
     " the color of column number if '--column' in g:Lf_RgConfig
     highlight def link Lf_hl_rgColumnNumber     Constant
-    highlight def Lf_hl_rgHighlight guifg=#000000 guibg=#CCCC66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
+    highlight def Lf_hl_rgHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     " the color of `Leaderf gtags`
     highlight def link Lf_hl_gtagsFileName      Directory
     highlight def link Lf_hl_gtagsLineNumber    Constant
-    highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#CCCC66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
+    highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
 else
-    highlight def Lf_hl_match  guifg=#1540AD guibg=NONE gui=bold ctermfg=26 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_match0 guifg=#1540AD guibg=NONE gui=bold ctermfg=26 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_match1 guifg=#A52A2A guibg=NONE gui=bold ctermfg=124 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_match2 guifg=#B52BB0 guibg=NONE gui=bold ctermfg=127 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_match3 guifg=#02781A guibg=NONE gui=bold ctermfg=28 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_match4 guifg=#F70505 guibg=NONE gui=bold ctermfg=196 ctermbg=NONE cterm=bold
-    highlight def Lf_hl_matchRefine guifg=Magenta guibg=NONE gui=bold ctermfg=201 ctermbg=NONE cterm=bold
+    " Lf_hl_popup_inputText is the wincolor of input window
+    highlight def Lf_hl_popup_inputText guifg=#525252 guibg=#f4f3d7 gui=NONE ctermfg=239 ctermbg=230 cterm=NONE
+
+    " Lf_hl_popup_window is the wincolor of content window
+    highlight def Lf_hl_popup_window guifg=#4d4d4d guibg=#fafbff gui=NONE ctermfg=239 ctermbg=231 cterm=NONE
+
+    " Lf_hl_popup_blank is the wincolor of statusline window
+    highlight def Lf_hl_popup_blank guifg=NONE guibg=#eeecc1 gui=NONE ctermbg=230 cterm=NONE
+
+    highlight def link Lf_hl_popup_cursor Cursor
+    highlight def Lf_hl_popup_prompt guifg=#c77400 guibg=NONE gui=NONE ctermfg=172 cterm=NONE
+    highlight def Lf_hl_popup_spin guifg=#f12d2d guibg=NONE gui=NONE ctermfg=196 cterm=NONE
+    highlight def Lf_hl_popup_normalMode guifg=#808000 guibg=#ccc88e gui=bold ctermfg=100 ctermbg=186 cterm=bold
+    highlight def Lf_hl_popup_inputMode guifg=#808000 guibg=#f0e68c gui=bold ctermfg=100 ctermbg=186 cterm=bold
+    highlight def Lf_hl_popup_category guifg=#4d4d4d guibg=#c7dac3 gui=NONE ctermfg=239 ctermbg=151 cterm=NONE
+    highlight def Lf_hl_popup_nameOnlyMode guifg=#4d4d4d guibg=#c9d473 gui=NONE ctermfg=239 ctermbg=186 cterm=NONE
+    highlight def Lf_hl_popup_fullPathMode guifg=#4d4d4d guibg=#dbe8cf gui=NONE ctermfg=239 ctermbg=187 cterm=NONE
+    highlight def Lf_hl_popup_fuzzyMode guifg=#4d4d4d guibg=#dbe8cf gui=NONE ctermfg=239 ctermbg=187 cterm=NONE
+    highlight def Lf_hl_popup_regexMode guifg=#4d4d4d guibg=#acbf97 gui=NONE ctermfg=239 ctermbg=144 cterm=NONE
+    highlight def Lf_hl_popup_cwd guifg=#595959 guibg=#e9f7e9 gui=NONE ctermfg=240 ctermbg=195 cterm=NONE
+    highlight def Lf_hl_popup_lineInfo guifg=#595959 guibg=#e9f7e9 gui=NONE ctermfg=240 ctermbg=195 cterm=NONE
+    highlight def Lf_hl_popup_total guifg=#4d4d4d guibg=#c7dac3 gui=NONE ctermfg=239 ctermbg=151 cterm=NONE
+
+
+    " the color of the cursorline
+    highlight def Lf_hl_cursorline guifg=#6927ff guibg=NONE gui=NONE ctermfg=57 cterm=NONE
+
+    " the color of matching character
+    highlight def Lf_hl_match guifg=#cd4545 guibg=NONE gui=bold ctermfg=167 cterm=bold
+
+    " the color of matching character in `And mode`
+    highlight def Lf_hl_match0 guifg=#cd4545 guibg=NONE gui=bold ctermfg=167 cterm=bold
+    highlight def Lf_hl_match1 guifg=#033fff guibg=NONE gui=bold ctermfg=21 cterm=bold
+    highlight def Lf_hl_match2 guifg=#b52bb0 guibg=NONE gui=bold ctermfg=127 cterm=bold
+    highlight def Lf_hl_match3 guifg=#ff7100 guibg=NONE gui=bold ctermfg=202 cterm=bold
+    highlight def Lf_hl_match4 guifg=#248888 guibg=NONE gui=bold ctermfg=30 cterm=bold
+
+    " the color of matching character in nameOnly mode when ';' is typed
+    highlight def Lf_hl_matchRefine guifg=Magenta guibg=NONE gui=bold ctermfg=201 cterm=bold
+
+    " the color of help in normal mode when <F1> is pressed
+    highlight def link Lf_hl_help               Comment
+    highlight def link Lf_hl_helpCmd            Identifier
+
+    " the color when select multiple lines
+    highlight def Lf_hl_selection guifg=#4d4d4d guibg=#a5eb84 gui=NONE ctermfg=239 ctermbg=156 cterm=NONE
+
+    " the color of `Leaderf buffer`
+    highlight def link Lf_hl_bufNumber          Constant
+    highlight def link Lf_hl_bufIndicators      Statement
+    highlight def link Lf_hl_bufModified        String
+    highlight def link Lf_hl_bufNomodifiable    Comment
+    highlight def link Lf_hl_bufDirname         Directory
+
+    " the color of `Leaderf tag`
+    highlight def link Lf_hl_tagFile            Directory
+    highlight def link Lf_hl_tagType            Type
+    highlight def link Lf_hl_tagKeyword         Keyword
+
+    " the color of `Leaderf bufTag`
+    highlight def link Lf_hl_buftagKind         Title
+    highlight def link Lf_hl_buftagScopeType    Keyword
+    highlight def link Lf_hl_buftagScope        Type
+    highlight def link Lf_hl_buftagDirname      Directory
+    highlight def link Lf_hl_buftagLineNum      Constant
+    highlight def link Lf_hl_buftagCode         Comment
+
+    " the color of `Leaderf function`
+    highlight def link Lf_hl_funcKind           Title
+    highlight def link Lf_hl_funcReturnType     Type
+    highlight def link Lf_hl_funcScope          Keyword
+    highlight def link Lf_hl_funcName           Function
+    highlight def link Lf_hl_funcDirname        Directory
+    highlight def link Lf_hl_funcLineNum        Constant
+
+    " the color of `Leaderf line`
+    highlight def link Lf_hl_lineLocation       Comment
+
+    " the color of `Leaderf self`
+    highlight def link Lf_hl_selfIndex          Constant
+    highlight def link Lf_hl_selfDescription    Comment
+
+    " the color of `Leaderf help`
+    highlight def link Lf_hl_helpTagfile        Comment
+
+    " the color of `Leaderf rg`
+    highlight def link Lf_hl_rgFileName         Directory
+    highlight def link Lf_hl_rgLineNumber       Constant
+    " the color of line number if '-A' or '-B' or '-C' is in the options list
+    " of `Leaderf rg`
+    highlight def link Lf_hl_rgLineNumber2      Folded
+    " the color of column number if '--column' in g:Lf_RgConfig
+    highlight def link Lf_hl_rgColumnNumber     Constant
+    highlight def Lf_hl_rgHighlight guifg=#4d4d4d guibg=#cccc66 gui=NONE ctermfg=239 ctermbg=185 cterm=NONE
+
+    " the color of `Leaderf gtags`
+    highlight def link Lf_hl_gtagsFileName      Directory
+    highlight def link Lf_hl_gtagsLineNumber    Constant
+    highlight def Lf_hl_gtagsHighlight guifg=#4d4d4d guibg=#cccc66 gui=NONE ctermfg=239 ctermbg=185 cterm=NONE
+
+    highlight def link Lf_hl_previewTitle       Statusline
 endif

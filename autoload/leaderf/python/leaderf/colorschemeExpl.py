@@ -52,7 +52,7 @@ class ColorschemeExplManager(Manager):
         if len(args) == 0:
             return
         line = args[0]
-        lfCmd("colorscheme " + line)
+        lfCmd("silent! colorscheme " + line)
         if self._getInstance().getWinPos() == 'popup':
             pass
         elif lfEval("&filetype") == "leaderf":

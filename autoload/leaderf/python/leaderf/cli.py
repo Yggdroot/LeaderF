@@ -372,6 +372,7 @@ class LfCli(object):
                     self._refine = False
                     self._pattern = ''.join(self._cmdline)
         else:
+            self._is_and_mode = False
             self._pattern = ''.join(self._cmdline)
 
     def _join(self, cmdline):
