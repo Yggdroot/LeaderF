@@ -43,6 +43,12 @@ function! leaderf#Gtags#Maps()
     endif
 endfunction
 
+function! leaderf#Gtags#cleanup()
+exec g:Lf_py "<< EOF"
+gtagsExplManager._beforeExit()
+EOF
+endfunction
+
 function! leaderf#Gtags#startExpl(win_pos, ...)
 exec g:Lf_py "<< EOF"
 gtagsExplManager.startExplorer(vim.eval("a:win_pos"))

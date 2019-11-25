@@ -38,6 +38,9 @@ class GtagsExplorer(Explorer):
         self._last_result_format = None
         self._evalVimVar()
         self._has_nvim = lfEval("has('nvim')") == '1'
+        self._db_timestamp = 0
+        self._manager = None
+        self._last_command = ""
 
         self._task_queue = Queue.Queue()
         self._worker_thread = threading.Thread(target=self._processTask)
@@ -57,6 +60,9 @@ class GtagsExplorer(Explorer):
                 task()
             except Exception as e:
                 print(e)
+
+    def setManager(self, manager):
+        self._manager = manager
 
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -165,10 +171,14 @@ class GtagsExplorer(Explorer):
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, pattern_option, path_style, self._result_format)
 
+            if not self._isDBModified(dbpath) and self._manager._content and self._last_command == cmd:
+                return self._manager._content
+
             executor = AsyncExecutor()
             self._executor.append(executor)
             lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
-            content = executor.execute(cmd, env=env)
+            self._last_command = cmd
+            content = executor.execute(cmd, env=env, raise_except=False)
             return content
 
         if "-S" in arguments_dict:
@@ -411,6 +421,16 @@ class GtagsExplorer(Explorer):
 
     def updateGtags(self, filename, single_update, auto):
         self._task_queue.put(partial(self._update, filename, single_update, auto))
+
+    def _isDBModified(self, dbpath):
+        try:
+            if self._db_timestamp == os.path.getmtime(dbpath):
+                return False
+            else:
+                self._db_timestamp = os.path.getmtime(dbpath)
+                return True
+        except:
+            return True
 
     def _remove(self, filename):
         if filename == "":
@@ -955,6 +975,12 @@ class GtagsExplManager(Manager):
 
     def _afterEnter(self):
         super(GtagsExplManager, self)._afterEnter()
+
+        lfCmd("augroup Lf_Gtags")
+        lfCmd("autocmd!")
+        lfCmd("autocmd VimLeavePre * call leaderf#Gtags#cleanup()")
+        lfCmd("augroup END")
+
         if self._getInstance().getWinPos() == 'popup':
             if self._getExplorer().getResultFormat() is None:
                 # \ should be escaped as \\\\
@@ -1107,6 +1133,8 @@ class GtagsExplManager(Manager):
                 project_root = self._getExplorer()._nearestAncestor(root_markers, os.getcwd())
             if project_root:
                 chdir(project_root)
+
+        self._getExplorer().setManager(self);
 
         super(GtagsExplManager, self).startExplorer(win_pos, *args, **kwargs)
 

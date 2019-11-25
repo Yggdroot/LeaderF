@@ -33,7 +33,7 @@ class AsyncExecutor(object):
         finally:
             queue.put(None)
 
-    def execute(self, cmd, encoding=None, cleanup=None, env=None):
+    def execute(self, cmd, encoding=None, cleanup=None, env=None, raise_except=True):
         if os.name == 'nt':
             self._process = subprocess.Popen(cmd, bufsize=-1,
                                              stdin=subprocess.PIPE,
@@ -88,7 +88,7 @@ class AsyncExecutor(object):
                                     break
 
                     err = b"".join(iter(self._errQueue.get, None))
-                    if err:
+                    if err and raise_except:
                         raise Exception(lfBytes2Str(err, encoding))
                 except ValueError:
                     pass
@@ -129,7 +129,7 @@ class AsyncExecutor(object):
                                     break
 
                     err = b"".join(iter(self._errQueue.get, None))
-                    if err:
+                    if err and raise_except:
                         raise Exception(err)
                 except ValueError:
                     pass
