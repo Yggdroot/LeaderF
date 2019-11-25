@@ -274,9 +274,9 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos) abort
     let argList = split(a:cmdline[:a:cursorPos-1], '[ \t!]\+')
     let argNum = len(argList)
     if argNum == 1  " Leaderf
-        return keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions) + ['--recall']
+        return keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions) + ['--recall', '--next', '--previous']
     elseif argNum == 2 && a:cmdline[a:cursorPos-1] !~ '\s'  " 'Leaderf b'
-        return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions) + ['--recall'], "s:Lf_FuzzyMatch(a:argLead, v:val)")
+        return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions) + ['--recall', '--next', '--previous'], "s:Lf_FuzzyMatch(a:argLead, v:val)")
     else
         let existingOptions = a:cmdline[a:cursorPos-1] !~ '\s' ? argList[2:-2] : argList[2:]
         if argList[1] == "gtags"

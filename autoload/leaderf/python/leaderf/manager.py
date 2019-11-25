@@ -1686,7 +1686,7 @@ class Manager(object):
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
                         (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1, len(instance.buffer) - instance.helpLength))
         else:
-            if instance.window.valid:
+            if instance.window.valid and self._getInstance().getWinPos() != 'popup':
                 if instance.window.cursor[0] <= self._help_length:
                     instance.window.cursor = (self._help_length + 1, 0)
                 elif instance.window.cursor[0] == len(instance.buffer): # at the last line
@@ -1736,7 +1736,7 @@ class Manager(object):
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
                         (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1, len(instance.buffer) - instance.helpLength))
         else:
-            if instance.window.valid:
+            if instance.window.valid and self._getInstance().getWinPos() != 'popup':
                 if instance.window.cursor[0] <= self._help_length + 1:
                     instance.window.cursor = (len(instance.buffer), 0)
                 else:
