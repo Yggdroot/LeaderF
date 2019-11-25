@@ -30,13 +30,13 @@ class TagExplorer(Explorer):
             mtime = os.path.getmtime(tagfile)
             if tagfile not in self._file_tags:
                 has_new_tagfile = True
-                with lfOpen(tagfile, 'r', errors='ignore') as f:
+                with lfOpen(tagfile, 'r', encoding='utf-8', errors='ignore') as f:
                     self._file_tags[tagfile] = [mtime, f.readlines()[6:]]
             else:
                 filenames.remove(tagfile)
                 if mtime != self._file_tags[tagfile][0]:
                     has_changed_tagfile = True
-                    with lfOpen(tagfile, 'r', errors='ignore') as f:
+                    with lfOpen(tagfile, 'r', encoding='utf-8', errors='ignore') as f:
                         self._file_tags[tagfile] = [mtime, f.readlines()[6:]]
 
         for name in filenames:
