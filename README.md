@@ -279,6 +279,7 @@ Once LeaderF is launched:
 | `<Tab>`                    | switch to normal mode
 | `<C-V>`<br>`<S-Insert>`    | paste from clipboard
 | `<C-U>`                    | clear the prompt
+| `<C-W>`                    | delete the word before the cursor in the prompt
 | `<C-J>`                    | move the cursor downward in the result window
 | `<C-K>`                    | move the cursor upward in the result window
 | `<Up>`/`<Down>`            | recall last/next input pattern from history

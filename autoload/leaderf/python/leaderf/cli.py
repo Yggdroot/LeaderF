@@ -113,6 +113,16 @@ class LfCli(object):
         self._cmdline[0:self._cursor_pos] = []
         self._cursor_pos = 0
 
+    def _delLeftWord(self):
+        orig_cursor_pos = self._cursor_pos
+        # clear trailing spaces
+        while self._cursor_pos > 0 and self._cmdline[self._cursor_pos-1] == ' ':
+            self._cursor_pos -= 1
+        while self._cursor_pos > 0 and self._cmdline[self._cursor_pos-1] != ' ':
+            self._cursor_pos -= 1
+
+        self._cmdline[self._cursor_pos:orig_cursor_pos] = []
+
     def clear(self):
         self._cmdline[:] = []
         self._cursor_pos = 0
@@ -683,6 +693,12 @@ class LfCli(object):
                         if not self._pattern:
                             continue
                         self._clearLeft()
+                        self._buildPattern()
+                        yield '<Shorten>'
+                    elif equal(cmd, '<C-W>'):
+                        if not self._pattern:
+                            continue
+                        self._delLeftWord()
                         self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<Del>'):
