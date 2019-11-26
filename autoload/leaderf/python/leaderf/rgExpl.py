@@ -625,7 +625,7 @@ class RgExplManager(Manager):
             if instance.getWinPos() == 'popup':
                 lfCmd("call win_execute(%d, 'setlocal cursorline')" % instance.getPopupWinId())
             elif instance.getWinPos() == 'floatwin':
-                lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % instance.getPopupWinId())
+                lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % instance.getPopupWinId())
             else:
                 instance.window.options["cursorline"] = True
 

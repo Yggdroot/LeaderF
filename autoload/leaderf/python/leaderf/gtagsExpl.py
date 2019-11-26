@@ -1080,7 +1080,13 @@ class GtagsExplManager(Manager):
                 instance.window.cursor = (min(instance.cursorRow, len(instance.buffer)), 0)
             else:
                 instance.window.cursor = (max(instance.cursorRow - instance.helpLength, 1), 0)
-            instance.window.options["cursorline"] = True
+
+            if instance.getWinPos() == 'popup':
+                lfCmd("call win_execute(%d, 'setlocal cursorline')" % instance.getPopupWinId())
+            elif instance.getWinPos() == 'floatwin':
+                lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % instance.getPopupWinId())
+            else:
+                instance.window.options["cursorline"] = True
 
     def deleteCurrentLine(self):
         instance = self._getInstance()
