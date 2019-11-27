@@ -1912,7 +1912,8 @@ class Manager(object):
                 or "-B" in arguments_dict or "-C" in arguments_dict):
             self._getInstance().ignoreReverse()
 
-        self._getInstance().enterBuffer(win_pos)
+        # clear the buffer only when the content is not a list
+        self._getInstance().enterBuffer(win_pos, not isinstance(content, list))
         self._initial_count = self._getInstance().getInitialWinHeight()
 
         self._getInstance().setStlCategory(self._getExplorer().getStlCategory())

@@ -626,7 +626,6 @@ class LfCli(object):
                 if lfEval("get(g:, 'Lf_NoAsync', 0)") == '0':
                     try:
                         callback()
-                        time.sleep(0.001) # cpu usage 100% without sleep
                     except Exception as e:
                         lfPrintError(e)
                         break

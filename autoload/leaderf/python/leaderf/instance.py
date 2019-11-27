@@ -303,7 +303,7 @@ class LfInstance(object):
                   .format(self.buffer.number, self._stl))
             lfCmd("augroup END")
 
-    def _createPopupWindow(self):
+    def _createPopupWindow(self, clear):
         # `type(self._window_object) != type(vim.current.window)` is necessary, error occurs if
         # `Leaderf file --popup` after `Leaderf file` without it.
         if self._window_object is not None and type(self._window_object) != type(vim.current.window)\
@@ -311,11 +311,12 @@ class LfInstance(object):
             if self._window_object.tabpage == vim.current.tabpage and lfEval("get(g:, 'Lf_Popup_VimResized', 0)") == '0':
                 if self._popup_winid > 0 and self._window_object.valid: # invalid if cleared by popup_clear()
                     # clear the buffer first to avoid a flash
-                    if lfEval("g:Lf_RememberLastSearch") == '0' \
+                    if clear and lfEval("g:Lf_RememberLastSearch") == '0' \
                             and "--append" not in self._arguments \
                             and "--recall" not in self._arguments:
                         self.buffer.options['modifiable'] = True
                         del self._buffer_object[:]
+                        self.refreshPopupStatusline()
 
                     self._popup_instance.show()
                     return
@@ -849,7 +850,7 @@ class LfInstance(object):
             self._running_status = 0
             lfCmd("let g:Lf_{}_StlRunning = ':'".format(self._category))
 
-    def enterBuffer(self, win_pos):
+    def enterBuffer(self, win_pos, clear):
         if self._enterOpeningBuffer():
             return
 
@@ -869,7 +870,7 @@ class LfInstance(object):
         if win_pos in ('popup', 'floatwin'):
             self._orig_win_nr = vim.current.window.number
             self._orig_win_id = lfWinId(self._orig_win_nr)
-            self._createPopupWindow()
+            self._createPopupWindow(clear)
         elif win_pos == 'fullScreen':
             self._orig_tabpage = vim.current.tabpage
             if len(vim.tabpages) < 2:
