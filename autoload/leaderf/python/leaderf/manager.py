@@ -777,6 +777,7 @@ class Manager(object):
     def _toUp(self):
         if self._getInstance().getWinPos() == 'popup':
             lfCmd("call win_execute(%d, 'norm! k')" % (self._getInstance().getPopupWinId()))
+            self._getInstance().refreshPopupStatusline()
             return
 
         adjust = False
@@ -800,6 +801,7 @@ class Manager(object):
     def _toDown(self):
         if self._getInstance().getWinPos() == 'popup':
             lfCmd("call win_execute(%d, 'norm! j')" % (self._getInstance().getPopupWinId()))
+            self._getInstance().refreshPopupStatusline()
             return
 
         if not self._getInstance().isReverseOrder() \
@@ -814,6 +816,7 @@ class Manager(object):
     def _pageUp(self):
         if self._getInstance().getWinPos() == 'popup':
             lfCmd("""call win_execute(%d, 'exec "norm! \<PageUp>"')""" % (self._getInstance().getPopupWinId()))
+            self._getInstance().refreshPopupStatusline()
             return
 
         if self._getInstance().isReverseOrder():
@@ -830,6 +833,7 @@ class Manager(object):
     def _pageDown(self):
         if self._getInstance().getWinPos() == 'popup':
             lfCmd("""call win_execute(%d, 'exec "norm! \<PageDown>"')""" % (self._getInstance().getPopupWinId()))
+            self._getInstance().refreshPopupStatusline()
             return
 
         if not self._getInstance().isReverseOrder():
