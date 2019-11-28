@@ -202,6 +202,8 @@ let g:Lf_CommonArguments = [
             \   {"name": ["--previous"], "nargs": 0, "help": "Jump to the previous result."},
             \ ],
             \ {"name": ["--recall"], "nargs": 0, "help": "Recall last search. If the result window is closed, reopen it."},
+            \ {"name": ["--popup-height"], "nargs": 1, "help": "specifies the maximum height of popup window, only available in popup mode."},
+            \ {"name": ["--popup-width"], "nargs": 1, "help": "specifies the width of popup window, only available in popup mode."},
             \]
 
 " arguments is something like g:Lf_CommonArguments

@@ -667,15 +667,21 @@ g:Lf_PopupWidth                                   *g:Lf_PopupWidth*
     The value should be a non-negative integer. If the value is 0, the width
     is 2/3 of the screen's width.
 
+    For example, set the width to 3/4 of the screen's width: >
+    let g:Lf_PopupWidth = &columns * 3 / 4
+<
     Default value is 0.
 
 g:Lf_PopupHeight                                   *g:Lf_PopupHeight*
     Specify the height of the popup window or floating window when LeaderF is
     in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
     is in the options list of `Leaderf` command.
-    The value should be a non-negative integer. If the value is
-    0, the height is 40% of the screen's height.
+    The value should be a non-negative integer. If the value is 0, the height is
+    40% of the screen's height.
 
+    For example, set the height to 30% of the screen's height: >
+    let g:Lf_PopupHeight = float2nr(&lines * 0.3)
+<
     Default value is 0.
 
 g:Lf_PopupPosition                                 *g:Lf_PopupPosition*

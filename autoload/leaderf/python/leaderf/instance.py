@@ -221,7 +221,6 @@ class LfInstance(object):
         self._ignore_cur_buffer_name = lfEval("get(g:, 'Lf_IgnoreCurrentBufferName', 0)") == '1' \
                                             and self._category in ["File"]
         self._popup_winid = 0
-        self._popup_maxheight = 0
         self._popup_instance = LfPopupInstance()
         self._win_pos = None
         self._stl_buf_namespace = None
@@ -308,7 +307,8 @@ class LfInstance(object):
         # `Leaderf file --popup` after `Leaderf file` without it.
         if self._window_object is not None and type(self._window_object) != type(vim.current.window)\
                 and isinstance(self._window_object, PopupWindow): # type is PopupWindow
-            if self._window_object.tabpage == vim.current.tabpage and lfEval("get(g:, 'Lf_Popup_VimResized', 0)") == '0':
+            if self._window_object.tabpage == vim.current.tabpage and lfEval("get(g:, 'Lf_Popup_VimResized', 0)") == '0' \
+                    and "--popup-width" not in self._arguments and "--popup-height" not in self._arguments:
                 if self._popup_winid > 0 and self._window_object.valid: # invalid if cleared by popup_clear()
                     # clear the buffer first to avoid a flash
                     if clear and lfEval("g:Lf_RememberLastSearch") == '0' \
@@ -326,13 +326,20 @@ class LfInstance(object):
 
         buf_number = int(lfEval("bufadd('{}')".format(escQuote(self._buffer_name))))
 
-        width = int(lfEval("get(g:, 'Lf_PopupWidth', 0)"))
+        width = lfEval("get(g:, 'Lf_PopupWidth', 0)")
+        width = self._arguments.get("--popup-width", [width])[0]
+        width = width.strip('"').strip("'")
+        width = int(lfEval(width))
         if width <= 0:
             maxwidth = int(int(lfEval("&columns")) * 2 // 3)
         else:
             maxwidth = min(width, int(lfEval("&columns")))
+            maxwidth = max(20, maxwidth)
 
-        height = int(lfEval("get(g:, 'Lf_PopupHeight', 0)"))
+        height = lfEval("get(g:, 'Lf_PopupHeight', 0)")
+        height = self._arguments.get("--popup-height", [height])[0]
+        height = height.strip('"').strip("'")
+        height = int(lfEval(height))
         if height <= 0:
             maxheight = int(int(lfEval("&lines")) * 0.4)
         else:
@@ -355,7 +362,7 @@ class LfInstance(object):
         if col <= 0:
             col = 1
 
-        self._popup_maxheight = max(maxheight - 1, 1) # there is an input window above
+        popup_maxheight = max(maxheight - 2, 1) # there is an input window above
 
         if lfEval("has('nvim')") == '1':
             self._win_pos = "floatwin"
@@ -363,7 +370,7 @@ class LfInstance(object):
             config = {
                     "relative": "editor",
                     "anchor"  : "NW",
-                    "height"  : self._popup_maxheight,
+                    "height"  : popup_maxheight,
                     "width"   : maxwidth,
                     "row"     : line + 1,
                     "col"     : col
@@ -416,7 +423,7 @@ class LfInstance(object):
                         "anchor"  : "NW",
                         "height"  : 1,
                         "width"   : maxwidth,
-                        "row"     : line + maxheight,
+                        "row"     : line + 1 + popup_maxheight,
                         "col"     : col
                         }
                 buf_number = int(lfEval("bufadd('')"))
@@ -447,7 +454,7 @@ class LfInstance(object):
             options = {
                     "maxwidth":        maxwidth,
                     "minwidth":        maxwidth,
-                    "maxheight":       self._popup_maxheight,
+                    "maxheight":       popup_maxheight,
                     "zindex":          20480,
                     "pos":             "topleft",
                     "line":            line + 1,      # there is an input window above
