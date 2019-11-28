@@ -377,7 +377,7 @@ License
 This plugin is released under the Apache License, Version 2.0 (the "License").
 
 
-  [1]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_1.gif
+  [1]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_popup.gif
   [2]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_2.gif
   [3]: https://github.com/gmarik/Vundle.vim
   [4]: https://github.com/Yggdroot/LeaderF/blob/master/doc/leaderf.txt#L189-L349
