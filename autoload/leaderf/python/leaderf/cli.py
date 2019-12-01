@@ -394,8 +394,12 @@ class LfCli(object):
         return regex
 
     def highlightMatches(self):
-        lfCmd("silent! syn clear Lf_hl_match")
-        lfCmd("silent! syn clear Lf_hl_match_refine")
+        if self._instance.getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'silent! syn clear Lf_hl_match')""" % self._instance.getPopupWinId())
+            lfCmd("""call win_execute(%d, 'silent! syn clear Lf_hl_match_refine')""" % self._instance.getPopupWinId())
+        else:
+            lfCmd("silent! syn clear Lf_hl_match")
+            lfCmd("silent! syn clear Lf_hl_match_refine")
         if not self._cmdline:
             return
         if self._is_fuzzy:
