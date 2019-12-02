@@ -692,6 +692,14 @@ class AnyHub(object):
                 win_pos = i
                 break
 
+        if win_pos == "--popup":
+            if lfEval("has('nvim')") == '1':
+                arguments["win_pos"] = "floatwin"
+            else:
+                arguments["win_pos"] = "popup"
+        else:
+            arguments["win_pos"] = win_pos[2:]
+
         if "--cword" in arguments:
             kwargs["pattern"] = lfEval("expand('<cword>')")
 
@@ -699,7 +707,6 @@ class AnyHub(object):
         kwargs["positional_args"] = positional_args
 
         manager.startExplorer(win_pos[2:], *args, **kwargs)
-
 
     def start(self, arg_line, *args, **kwargs):
         if self._parser is None:
