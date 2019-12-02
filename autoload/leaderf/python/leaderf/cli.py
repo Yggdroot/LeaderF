@@ -127,6 +127,12 @@ class LfCli(object):
         self._cmdline[:] = []
         self._cursor_pos = 0
         self._pattern = ''
+        if self._instance and self._instance.getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'silent! syn clear Lf_hl_match')""" % self._instance.getPopupWinId())
+            lfCmd("""call win_execute(%d, 'silent! syn clear Lf_hl_match_refine')""" % self._instance.getPopupWinId())
+        else:
+            lfCmd("silent! syn clear Lf_hl_match")
+            lfCmd("silent! syn clear Lf_hl_match_refine")
 
     def _toLeft(self):
         if self._cursor_pos > 0:
