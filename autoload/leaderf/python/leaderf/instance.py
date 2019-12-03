@@ -221,6 +221,7 @@ class LfInstance(object):
         self._ignore_cur_buffer_name = lfEval("get(g:, 'Lf_IgnoreCurrentBufferName', 0)") == '1' \
                                             and self._category in ["File"]
         self._popup_winid = 0
+        self._popup_maxheight = 0
         self._popup_instance = LfPopupInstance()
         self._win_pos = None
         self._stl_buf_namespace = None
@@ -362,7 +363,7 @@ class LfInstance(object):
         if col <= 0:
             col = 1
 
-        popup_maxheight = max(maxheight - 2, 1) # there is an input window above
+        self._popup_maxheight = max(maxheight - 2, 1) # there is an input window above
 
         if lfEval("has('nvim')") == '1':
             self._win_pos = "floatwin"
@@ -370,7 +371,7 @@ class LfInstance(object):
             config = {
                     "relative": "editor",
                     "anchor"  : "NW",
-                    "height"  : popup_maxheight,
+                    "height"  : self._popup_maxheight,
                     "width"   : maxwidth,
                     "row"     : line + 1,
                     "col"     : col
@@ -423,7 +424,7 @@ class LfInstance(object):
                         "anchor"  : "NW",
                         "height"  : 1,
                         "width"   : maxwidth,
-                        "row"     : line + 1 + popup_maxheight,
+                        "row"     : line + 1 + self._popup_maxheight,
                         "col"     : col
                         }
                 buf_number = int(lfEval("bufadd('')"))
@@ -454,7 +455,7 @@ class LfInstance(object):
             options = {
                     "maxwidth":        maxwidth,
                     "minwidth":        maxwidth,
-                    "maxheight":       popup_maxheight,
+                    "maxheight":       self._popup_maxheight,
                     "zindex":          20480,
                     "pos":             "topleft",
                     "line":            line + 1,      # there is an input window above
@@ -970,14 +971,18 @@ class LfInstance(object):
     def setBuffer(self, content, need_copy=False):
         self._cur_buffer_name_ignored = False
         if self._ignore_cur_buffer_name:
-            if self._orig_buffer_name in content[:self._window_object.height]:
+            if self._win_pos == 'popup':
+                end = self._popup_maxheight
+            else:
+                end = self._window_object.height
+            if self._orig_buffer_name in content[:end]:
                 self._cur_buffer_name_ignored = True
                 if need_copy:
                     content = content[:]
                 content.remove(self._orig_buffer_name)
             elif os.name == 'nt':
                 buffer_name = self._orig_buffer_name.replace('\\', '/')
-                if buffer_name in content[:self._window_object.height]:
+                if buffer_name in content[:end]:
                     self._cur_buffer_name_ignored = True
                     if need_copy:
                         content = content[:]
