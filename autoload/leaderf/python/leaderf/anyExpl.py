@@ -682,8 +682,9 @@ class AnyHub(object):
                 from .gtagsExpl import gtagsExplManager
                 manager = gtagsExplManager
             else:
-                lfCmd("call %s('%s')" % (lfEval("g:Lf_PythonExtensions['%s'].registerFunc" % category), category))
-                manager = self._pyext_manages[category]
+                import ctypes
+                manager_id = lfFunction(lfEval("g:Lf_PythonExtensions['%s'].manager_id" % category))()
+                manager = ctypes.cast(manager_id, ctypes.py_object).value
 
         positions = {"--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen", "--popup"}
         win_pos = "--" + lfEval("g:Lf_WindowPosition")
@@ -695,8 +696,10 @@ class AnyHub(object):
         if win_pos == "--popup":
             if lfEval("has('nvim')") == '1':
                 arguments["win_pos"] = "floatwin"
+                arguments["popup_winid"] = 0
             else:
                 arguments["win_pos"] = "popup"
+                arguments["popup_winid"] = 0
         else:
             arguments["win_pos"] = win_pos[2:]
 
@@ -796,10 +799,6 @@ class AnyHub(object):
         #     return
         except SystemExit:
             return
-
-    def addPythonExtension(self, name, extensionManager):
-        if name not in self._pyext_manages:
-            self._pyext_manages[name] = extensionManager
 
 
 #*****************************************************

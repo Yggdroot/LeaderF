@@ -565,6 +565,8 @@ class LfInstance(object):
             lfCmd("call leaderf#ResetPopupOptions(%d, 'callback', function('leaderf#PopupClosed', [%s]))"
                     % (self._popup_winid, str(self._popup_instance.getWinIdList())))
 
+        self._arguments["popup_winid"] = self._popup_winid
+
         if not self._is_colorscheme_autocmd_set:
             self._is_colorscheme_autocmd_set = True
             lfCmd("augroup Lf_Popup_{}_Colorscheme".format(self._category))
