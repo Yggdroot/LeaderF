@@ -1,12 +1,12 @@
 LeaderF
 =======
 
-This plugin is mainly used for locating files, buffers, mrus, ctags, gtags, etc. in large project.
+An efficient fuzzy finder that helps to locate files, buffers, mrus, gtags, etc. on the fly.
 
  - Written in Python.
  - Support fuzzy and regex searching.
- - Manage buffers and mrus.
- - Open multiple files at once.
+ - Full-featured.
+ - [Well-designed fuzzy matching algorithm](https://github.com/Yggdroot/testFuzzyMatch).
  - [Extensible](https://github.com/Yggdroot/LeaderF-marks).
 
 Changelog
@@ -14,18 +14,23 @@ Changelog
 
 Please see the [CHANGELOG](https://github.com/Yggdroot/LeaderF/blob/master/CHANGELOG.md) for a release history.
 
+Wiki
+----
+
+[Wiki](https://github.com/Yggdroot/LeaderF/wiki).
+
 Screenshots
 -----------
 
-![NameOnly Mode][1]
+![Popup Mode][1]
 
-![FullPath Mode][2]
+![And Mode][2]
 
 Requirements
 ------------
 
  - vim7.3 or higher. Only support vim7.4.330 or higher after [v1.01](https://github.com/Yggdroot/LeaderF/releases/tag/v1.01).
- - vim compiled with Python support, you can check by using `echo has('python')` or `echo has('python3')` to see if the result is `1`; Make sure that your python2 version is Python **2.7** or higher and python3 version is Python **3.1** or higher.
+ - Python2.7+ or Python3.1+.
  - To use the popup mode, neovim 0.42+ or vim 8.1.1615+ are required.
 
 Installation
@@ -77,16 +82,18 @@ To install the C extension, follow the below:
 
         Plug 'Yggdroot/LeaderF', { 'do': '.\install.bat' }
 
-After running any command of LeaderF, check the value of `echo g:Lf_fuzzyMatch_C`, if the value is 1, it means the C extension is loaded sucessfully.
+After running any command of LeaderF, check the value of `echo g:Lf_fuzzyEngine_C`, if the value is 1, it means the C extension is loaded sucessfully.
 
 Usage
 -----
 
 ```
 usage: Leaderf[!] [-h] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
-                  [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
-                  [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap]
-                  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer,rg,gtags}
+                  [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen | --popup]
+                  [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap] [--next | --previous]
+                  [--recall] [--popup-height <POPUP_HEIGHT>] [--popup-width <POPUP_WIDTH>]
+                  
+                  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,self,bufTag,buffer,rg}
                   ...
 
 optional arguments:
@@ -111,10 +118,14 @@ optional arguments:
   --next                Jump to the next result.
   --previous            Jump to the previous result.
   --recall              Recall last search. If the result window is closed, reopen it.
+  --popup-height <POPUP_HEIGHT>
+                        specifies the maximum height of popup window, only available in popup mode.
+  --popup-width <POPUP_WIDTH>
+                        specifies the width of popup window, only available in popup mode.
 
 subcommands:
 
-  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,self,bufTag,buffer,rg}
+  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,self,bufTag,buffer,rg}
     file                search files
     tag                 navigate tags using the tags file
     function            navigate functions or methods in the buffer
@@ -124,151 +135,17 @@ subcommands:
     help                navigate the help tags
     line                search a line in the buffer
     colorscheme         switch between colorschemes
+    gtags               navigate tags using the gtags
     self                execute the commands of itself
     bufTag              navigate tags in the buffer
     buffer              search buffers
-    rg                  grep using rg(ripgrep)
-    gtags               navigate tags using the gtags
+    rg                  grep using rg
 
 If [!] is given, enter normal mode directly.
 ```
 
-use `:Leaderf <subcommand> -h` to get specific help of subcommand, e.g., `:Leaderf rg -h`
+use `:Leaderf <subcommand> -h` to get specific help of subcommand, e.g., `:Leaderf rg -h`.
 
-```
-usage: Leaderf[!] rg [-h] [-A <NUM>] [-B <NUM>] [-C <NUM>] [--context-separator <SEPARATOR>]
-                     [-e <PATTERN>...] [-F] [-i] [-L] [-P] [-S] [-s] [-v] [-w] [-x] [--hidden]
-                     [--no-config] [--no-ignore] [--no-ignore-global] [--no-ignore-parent]
-                     [--no-ignore-vcs] [--no-messages] [--no-pcre2-unicode] [-E <ENCODING>] [-M <NUM>]
-                     [-m <NUM>] [--max-depth <NUM>] [--max-filesize <NUM+SUFFIX?>]
-                     [--path-separator <SEPARATOR>] [--sort <SORTBY>] [--sortr <SORTBY>]
-                     [-f <PATTERNFILE>...] [-g <GLOB>...] [--iglob <GLOB>...] [--ignore-file <PATH>...]
-                     [--type-add <TYPE_SPEC>...] [-t <TYPE>...] [-T <TYPE>...]
-                     [--current-buffer | --all-buffers] [--recall] [--append] [--match-path]
-                     [--wd-mode <MODE>] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
-                     [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen]
-                     [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap] [--next | --previous]
-                     [<PATH> [<PATH> ...]]
-
-optional arguments:
-  -h, --help            show this help message and exit
-
-specific arguments:
-  -A <NUM>, --after-context <NUM>
-                        Show NUM lines after each match.
-  -B <NUM>, --before-context <NUM>
-                        Show NUM lines before each match.
-  -C <NUM>, --context <NUM>
-                        Show NUM lines before and after each match.
-  --context-separator <SEPARATOR>
-                        The string used to separate non-contiguous context lines in the output.
-  -e <PATTERN>..., --regexp <PATTERN>...
-                        A pattern to search for. This option can be provided multiple times, where all
-                        patterns given are searched.
-  -F, --fixed-strings   Treat the pattern as a literal string instead of a regular expression.
-  -i, --ignore-case     Searches case insensitively.
-  -L, --follow          Follow symbolic links while traversing directories.
-  -P, --pcre2           When this flag is present, rg will use the PCRE2 regex engine instead of its
-                        default regex engine.
-  -S, --smart-case      Searches case insensitively if the pattern is all lowercase, case sensitively
-                        otherwise.
-  -s, --case-sensitive  Searches case sensitively.
-  -v, --invert-match    Invert matching. Show lines that do not match the given patterns.
-  -w, --word-regexp     Only show matches surrounded by word boundaries. This is roughly equivalent to
-                        putting \b before and after all of the search patterns.
-  -x, --line-regexp     Only show matches surrounded by line boundaries.
-  --hidden              Search hidden files and directories. By default, hidden files and directories are
-                        skipped.
-  --no-config           Never read configuration files. When this flag is present, rg will not respect
-                        the RIPGREP_CONFIG_PATH environment variable.
-  --no-ignore           Don't respect ignore files (.gitignore, .ignore, etc.). This implies
-                        --no-ignore-parent and --no-ignore-vcs.
-  --no-ignore-global    Don't respect ignore files that come from 'global' sources such as git's
-                        `core.excludesFile` configuration option (which defaults to
-                        `$HOME/.config/git/ignore`).
-  --no-ignore-parent    Don't respect ignore files (.gitignore, .ignore, etc.) in parent directories.
-  --no-ignore-vcs       Don't respect version control ignore files (.gitignore, etc.).
-  --no-messages         Suppress all error messages related to opening and reading files.
-  --no-pcre2-unicode    When PCRE2 matching is enabled, this flag will disable Unicode mode, which is
-                        otherwise enabled by default.
-  -E <ENCODING>, --encoding <ENCODING>
-                        Specify the text encoding that rg will use on all files searched.
-  -M <NUM>, --max-columns <NUM>
-                        Don't print lines longer than this limit in bytes.
-  -m <NUM>, --max-count <NUM>
-                        Limit the number of matching lines per file searched to NUM.
-  --max-depth <NUM>     Limit the depth of directory traversal to NUM levels beyond the paths given.
-  --max-filesize <NUM+SUFFIX?>
-                        Ignore files larger than NUM in size. This does not apply to directories.
-  --path-separator <SEPARATOR>
-                        Set the path separator to use when printing file paths.
-  --sort <SORTBY>       This flag enables sorting of results in ascending order.
-  --sortr <SORTBY>      This flag enables sorting of results in descending order.
-  -f <PATTERNFILE>..., --file <PATTERNFILE>...
-                        Search for patterns from the given file, with one pattern per line.(This option
-                        can be provided multiple times.)
-  -g <GLOB>..., --glob <GLOB>...
-                        Include or exclude files and directories for searching that match the given
-                        glob.(This option can be provided multiple times.)
-  --iglob <GLOB>...     Include or exclude files and directories for searching that match the given glob.
-                        Globs are matched case insensitively.(This option can be provided multiple times.)
-  --ignore-file <PATH>...
-                        Specifies a path to one or more .gitignore format rules files.
-  --type-add <TYPE_SPEC>...
-                        Add a new glob for a particular file type.
-  -t <TYPE>..., --type <TYPE>...
-                        Only search files matching TYPE. Multiple type flags may be provided.
-  -T <TYPE>..., --type-not <TYPE>...
-                        Do not search files matching TYPE. Multiple type-not flags may be provided.
-  <PATH>                A file or directory to search. Directories are searched recursively. Paths
-                        specified on the command line override glob and ignore rules.
-  --current-buffer      Searches in current buffer.
-  --all-buffers         Searches in all listed buffers.
-  --append              Append to the previous search results.
-  --match-path          Match the file path when fuzzy searching.
-  --wd-mode <MODE>      Specify the working directory mode, value has the same meaning as
-                        g:Lf_WorkingDirectoryMode.
-
-common arguments:
-  --reverse             show results in bottom-up order
-  --stayOpen            don't quit LeaderF after accepting an entry
-  --input <INPUT>       specifies INPUT as the pattern inputted in advance
-  --cword               current word under cursor is inputted in advance
-  --top                 the LeaderF window is at the top of the screen
-  --bottom              the LeaderF window is at the bottom of the screen
-  --left                the LeaderF window is at the left of the screen
-  --right               the LeaderF window is at the right of the screen
-  --belowright          the LeaderF window is at the belowright of the screen
-  --aboveleft           the LeaderF window is at the aboveleft of the screen
-  --fullScreen          the LeaderF window takes up the full screen
-  --popup               the LeaderF window is a popup window or floating window
-  --nameOnly            LeaderF is in NameOnly mode by default
-  --fullPath            LeaderF is in FullPath mode by default
-  --fuzzy               LeaderF is in Fuzzy mode by default
-  --regexMode           LeaderF is in Regex mode by default
-  --nowrap              long lines in the LeaderF window won't wrap
-  --next                Jump to the next result.
-  --previous            Jump to the previous result.
-  --recall              Recall last search. If the result window is closed, reopen it.
-
-If [!] is given, enter normal mode directly.
-```
-
-You can customize some handy maps, e.g.,
-
-```vim
-" search word under cursor, the pattern is treated as regex, and enter normal mode directly
-noremap <C-F> :<C-U><C-R>=printf("Leaderf! rg -e %s ", expand("<cword>"))<CR>
-" search word under cursor, the pattern is treated as regex,
-" append the result to previous search results.
-noremap <C-G> :<C-U><C-R>=printf("Leaderf! rg --append -e %s ", expand("<cword>"))<CR>
-" search word under cursor literally only in current buffer
-noremap <C-B> :<C-U><C-R>=printf("Leaderf! rg -F --current-buffer -e %s ", expand("<cword>"))<CR>
-" search visually selected text literally, don't quit LeaderF after accepting an entry
-xnoremap gf :<C-U><C-R>=printf("Leaderf! rg -F --stayOpen -e %s ", leaderf#Rg#visual())<CR>
-" recall last search. If the result window is closed, reopen it.
-noremap go :<C-U>Leaderf! rg --stayOpen --recall<CR>
-```
 Once LeaderF is launched:
 
 | Command                    | Description
@@ -345,6 +222,26 @@ And operator:
     ...gh...def...abc...
     ```
 
+Popup Mode
+----------
+
+Popup Mode is to open LeaderF in a popup window(vim 8.1.1615+) or floating window(nvim 0.4.2+). 
+
+To enable popup mode:  
+```vim
+let g:Lf_WindowPosition = 'popup'
+```  
+or add `--popup` after each subcommand, e.g.,  
+```
+Leaderf file --popup
+```
+
+It's better to set
+```vim
+let g:Lf_PreviewInPopup = 1
+```
+, so that you can also preview the result in a popup window.
+
 Customization
 -------------
 
@@ -356,20 +253,79 @@ Customization
 
     for more detail, please refer to `:h g:Lf_CommandMap`.
 
- * Customize the statusline
-
-    Please refer to [here][4].
-
- * Change the highlight of matched string
+ * Change the colors used in LeaderF
 
     ```vim
-    highlight Lf_hl_match gui=bold guifg=Blue cterm=bold ctermfg=21
-    highlight Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
+    let g:Lf_PopupPalette = {
+        \  'light': {
+        \      'Lf_hl_match': {
+        \                'gui': 'NONE',
+        \                'font': 'NONE',
+        \                'guifg': 'NONE',
+        \                'guibg': '#303136',
+        \                'cterm': 'NONE',
+        \                'ctermfg': 'NONE',
+        \                'ctermbg': '236'
+        \              },
+        \      'Lf_hl_cursorline': {
+        \                'gui': 'NONE',
+        \                'font': 'NONE',
+        \                'guifg': 'NONE',
+        \                'guibg': '#303136',
+        \                'cterm': 'NONE',
+        \                'ctermfg': 'NONE',
+        \                'ctermbg': '236'
+        \              },
+        \      },
+        \  'dark': {
+        \         ...
+        \         ...
+        \      }
+        \  }
     ```
+    All the highlight groups supported are defined in
+    [LeaderF/autoload/leaderf/colorscheme/popup/default.vim](https://github.com/Yggdroot/LeaderF/blob/master/autoload/leaderf/colorscheme/popup/default.vim).
 
  * Change the default mapping of searching files command
 
     e.g. `let g:Lf_ShortcutF = '<C-P>'`
+    
+Configuration examples
+----------------------
+
+```vim
+" don't show the help in normal mode
+let g:Lf_HideHelp = 1
+let g:Lf_UseCache = 0
+let g:Lf_UseVersionControlTool = 0
+let g:Lf_IgnoreCurrentBufferName = 1
+" popup mode
+let g:Lf_WindowPosition = 'popup'
+let g:Lf_PreviewInPopup = 1
+let g:Lf_StlSeparator = { 'left': "\ue0b0", 'right': "\ue0b2", 'font': "DejaVu Sans Mono for Powerline" }
+let g:Lf_PreviewResult = {'Function': 0, 'BufTag': 0 }
+
+let g:Lf_ShortcutF = "<leader>ff"
+noremap <leader>fb :<C-U><C-R>=printf("Leaderf buffer %s", "")<CR><CR>
+noremap <leader>fm :<C-U><C-R>=printf("Leaderf mru %s", "")<CR><CR>
+noremap <leader>ft :<C-U><C-R>=printf("Leaderf bufTag %s", "")<CR><CR>
+noremap <leader>fl :<C-U><C-R>=printf("Leaderf line %s", "")<CR><CR>
+
+noremap <C-B> :<C-U><C-R>=printf("Leaderf! rg --current-buffer -e %s ", expand("<cword>"))<CR>
+noremap <C-F> :<C-U><C-R>=printf("Leaderf! rg -e %s ", expand("<cword>"))<CR>
+" search visually selected text literally
+xnoremap gf :<C-U><C-R>=printf("Leaderf! rg -F -e %s ", leaderf#Rg#visual())<CR>
+noremap go :<C-U>Leaderf! rg --recall<CR>
+
+" should use `Leaderf gtags --update` first
+let g:Lf_GtagsAutoGenerate = 0
+let g:Lf_Gtagslabel = 'native-pygments'
+noremap <leader>fr :<C-U><C-R>=printf("Leaderf! gtags -r %s --auto-jump", expand("<cword>"))<CR><CR>
+noremap <leader>fd :<C-U><C-R>=printf("Leaderf! gtags -d %s --auto-jump", expand("<cword>"))<CR><CR>
+noremap <leader>fo :<C-U><C-R>=printf("Leaderf! gtags --recall %s", "")<CR><CR>
+noremap <leader>fn :<C-U><C-R>=printf("Leaderf gtags --next %s", "")<CR><CR>
+noremap <leader>fp :<C-U><C-R>=printf("Leaderf gtags --previous %s", "")<CR><CR>
+```
 
 License
 -------
