@@ -903,7 +903,7 @@ class LfInstance(object):
             self._popup_instance.hide()
             self._after_exit()
             return
-        if self._win_pos == 'floatwin':
+        elif self._win_pos == 'floatwin':
             self._popup_instance.close()
             self._after_exit()
             return

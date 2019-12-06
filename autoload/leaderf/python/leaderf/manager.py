@@ -147,6 +147,9 @@ class Manager(object):
                 file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
                 file = os.path.normpath(lfEncode(file))
 
+            if lfEval("has('nvim')") == '1':
+                orig_cursorline = lfEval("&cursorline")
+
             if kwargs.get("mode", '') != 't' or (lfEval("get(g:, 'Lf_DiscardEmptyBuffer', 0)") == '1'
                     and len(vim.tabpages) == 1 and len(vim.current.tabpage.windows) == 1
                     and vim.current.buffer.name == '' and len(vim.current.buffer) == 1
@@ -159,6 +162,11 @@ class Manager(object):
                 lfCmd("tab drop %s" % escSpecial(file))
         except vim.error as e: # E37
             lfPrintError(e)
+        finally:
+            if lfEval("has('nvim')") == '1':
+                lfCmd("setlocal winhighlight&")
+                if orig_cursorline == '0':
+                    lfCmd("setlocal nocursorline")
 
     def _getDigest(self, line, mode):
         """
@@ -861,6 +869,10 @@ class Manager(object):
                 lfCmd("call win_gotoid(%d)" % self._preview_winid)
                 lfCmd("exec v:mouse_lnum")
                 lfCmd("exec 'norm!'.v:mouse_col.'|'")
+
+                self._current_mode = 'NORMAL'
+                lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))
+                self._getInstance().setPopupStl(self._current_mode)
             exit_loop = True
         else:
             self.quit()
