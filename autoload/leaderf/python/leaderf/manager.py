@@ -148,7 +148,19 @@ class Manager(object):
                 file = os.path.normpath(lfEncode(file))
 
             if lfEval("has('nvim')") == '1':
-                orig_cursorline = lfEval("&cursorline")
+                lfCmd("let issue_422_list = nvim_win_get_option(0, 'list')")
+                lfCmd("let issue_422_number = nvim_win_get_option(0, 'number')")
+                lfCmd("let issue_422_relativenumber = nvim_win_get_option(0, 'relativenumber')")
+                lfCmd("let issue_422_spell = nvim_win_get_option(0, 'spell')")
+                lfCmd("let issue_422_wrap = nvim_win_get_option(0, 'wrap')")
+                lfCmd("let issue_422_foldenable = nvim_win_get_option(0, 'foldenable')")
+                lfCmd("let issue_422_foldmethod = nvim_win_get_option(0, 'foldmethod')")
+                lfCmd("let issue_422_foldcolumn = nvim_win_get_option(0, 'foldcolumn')")
+                lfCmd("let issue_422_cursorline = nvim_win_get_option(0, 'cursorline')")
+                lfCmd("let issue_422_signcolumn = nvim_win_get_option(0, 'signcolumn')")
+                lfCmd("let issue_422_colorcolumn = nvim_win_get_option(0, 'colorcolumn')")
+                lfCmd("let issue_422_winfixheight = nvim_win_get_option(0, 'winfixheight')")
+                lfCmd("let issue_422_winhighlight = nvim_win_get_option(0, 'winhighlight')")
 
             if kwargs.get("mode", '') != 't' or (lfEval("get(g:, 'Lf_DiscardEmptyBuffer', 0)") == '1'
                     and len(vim.tabpages) == 1 and len(vim.current.tabpage.windows) == 1
@@ -164,9 +176,19 @@ class Manager(object):
             lfPrintError(e)
         finally:
             if lfEval("has('nvim')") == '1':
-                lfCmd("setlocal winhighlight&")
-                if orig_cursorline == '0':
-                    lfCmd("setlocal nocursorline")
+                lfCmd("call nvim_win_set_option(0, 'list', issue_422_list)")
+                lfCmd("call nvim_win_set_option(0, 'number', issue_422_number)")
+                lfCmd("call nvim_win_set_option(0, 'relativenumber', issue_422_relativenumber)")
+                lfCmd("call nvim_win_set_option(0, 'spell', issue_422_spell)")
+                lfCmd("call nvim_win_set_option(0, 'wrap', issue_422_wrap)")
+                lfCmd("call nvim_win_set_option(0, 'foldenable', issue_422_foldenable)")
+                lfCmd("call nvim_win_set_option(0, 'foldmethod', issue_422_foldmethod)")
+                lfCmd("call nvim_win_set_option(0, 'foldcolumn', issue_422_foldcolumn)")
+                lfCmd("call nvim_win_set_option(0, 'cursorline', issue_422_cursorline)")
+                lfCmd("call nvim_win_set_option(0, 'signcolumn', issue_422_signcolumn)")
+                lfCmd("call nvim_win_set_option(0, 'colorcolumn', issue_422_colorcolumn)")
+                lfCmd("call nvim_win_set_option(0, 'winfixheight', issue_422_winfixheight)")
+                lfCmd("call nvim_win_set_option(0, 'winhighlight', issue_422_winhighlight)")
 
     def _getDigest(self, line, mode):
         """
@@ -461,7 +483,9 @@ class Manager(object):
                     }
             self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (buf_number, str(config))))
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._preview_winid)
             if buffer_len >= line_nr > 0:
                 lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
@@ -549,7 +573,7 @@ class Manager(object):
 
             lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, str(options)))
             self._preview_winid = int(lfEval("winid"))
-            lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber')" % self._preview_winid)
+            lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber colorcolumn= ')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
             if line_nr > 0:
                 lfCmd("""call win_execute(%d, "exec 'norm! %dG' | redraw")""" % (self._preview_winid, line_nr))
