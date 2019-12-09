@@ -67,7 +67,7 @@ class LineExplManager(Manager):
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
         line_nr, buf_number = line.rsplit(":", 1)[1].split()
         lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
-        lfCmd("norm! ^")
+        lfCmd("norm! ^zv")
         lfCmd("norm! zz")
 
         if vim.current.window not in self._cursorline_dict:
