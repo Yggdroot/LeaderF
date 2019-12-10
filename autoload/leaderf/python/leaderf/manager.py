@@ -138,6 +138,39 @@ class Manager(object):
         for file in files:
             lfCmd("argadd %s" % escSpecial(file))
 
+    def _issue_422_get_option(self):
+        if lfEval("has('nvim')") == '1':
+            lfCmd("let issue_422_list = nvim_win_get_option(0, 'list')")
+            lfCmd("let issue_422_number = nvim_win_get_option(0, 'number')")
+            lfCmd("let issue_422_relativenumber = nvim_win_get_option(0, 'relativenumber')")
+            lfCmd("let issue_422_spell = nvim_win_get_option(0, 'spell')")
+            lfCmd("let issue_422_wrap = nvim_win_get_option(0, 'wrap')")
+            lfCmd("let issue_422_foldenable = nvim_win_get_option(0, 'foldenable')")
+            lfCmd("let issue_422_foldmethod = nvim_win_get_option(0, 'foldmethod')")
+            lfCmd("let issue_422_foldcolumn = nvim_win_get_option(0, 'foldcolumn')")
+            lfCmd("let issue_422_cursorline = nvim_win_get_option(0, 'cursorline')")
+            lfCmd("let issue_422_signcolumn = nvim_win_get_option(0, 'signcolumn')")
+            lfCmd("let issue_422_colorcolumn = nvim_win_get_option(0, 'colorcolumn')")
+            lfCmd("let issue_422_winfixheight = nvim_win_get_option(0, 'winfixheight')")
+            lfCmd("let issue_422_winhighlight = nvim_win_get_option(0, 'winhighlight')")
+
+    def _issue_422_set_option(self):
+        if lfEval("has('nvim')") == '1':
+            lfCmd("call nvim_win_set_option(0, 'list', issue_422_list)")
+            lfCmd("call nvim_win_set_option(0, 'number', issue_422_number)")
+            lfCmd("call nvim_win_set_option(0, 'relativenumber', issue_422_relativenumber)")
+            lfCmd("call nvim_win_set_option(0, 'spell', issue_422_spell)")
+            lfCmd("call nvim_win_set_option(0, 'wrap', issue_422_wrap)")
+            lfCmd("call nvim_win_set_option(0, 'foldenable', issue_422_foldenable)")
+            lfCmd("call nvim_win_set_option(0, 'foldmethod', issue_422_foldmethod)")
+            lfCmd("call nvim_win_set_option(0, 'foldcolumn', issue_422_foldcolumn)")
+            lfCmd("call nvim_win_set_option(0, 'cursorline', issue_422_cursorline)")
+            lfCmd("call nvim_win_set_option(0, 'signcolumn', issue_422_signcolumn)")
+            lfCmd("call nvim_win_set_option(0, 'colorcolumn', issue_422_colorcolumn)")
+            lfCmd("call nvim_win_set_option(0, 'winfixheight', issue_422_winfixheight)")
+            lfCmd("call nvim_win_set_option(0, 'winhighlight', issue_422_winhighlight)")
+
+
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
@@ -146,21 +179,6 @@ class Manager(object):
             if not os.path.isabs(file):
                 file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
                 file = os.path.normpath(lfEncode(file))
-
-            if lfEval("has('nvim')") == '1':
-                lfCmd("let issue_422_list = nvim_win_get_option(0, 'list')")
-                lfCmd("let issue_422_number = nvim_win_get_option(0, 'number')")
-                lfCmd("let issue_422_relativenumber = nvim_win_get_option(0, 'relativenumber')")
-                lfCmd("let issue_422_spell = nvim_win_get_option(0, 'spell')")
-                lfCmd("let issue_422_wrap = nvim_win_get_option(0, 'wrap')")
-                lfCmd("let issue_422_foldenable = nvim_win_get_option(0, 'foldenable')")
-                lfCmd("let issue_422_foldmethod = nvim_win_get_option(0, 'foldmethod')")
-                lfCmd("let issue_422_foldcolumn = nvim_win_get_option(0, 'foldcolumn')")
-                lfCmd("let issue_422_cursorline = nvim_win_get_option(0, 'cursorline')")
-                lfCmd("let issue_422_signcolumn = nvim_win_get_option(0, 'signcolumn')")
-                lfCmd("let issue_422_colorcolumn = nvim_win_get_option(0, 'colorcolumn')")
-                lfCmd("let issue_422_winfixheight = nvim_win_get_option(0, 'winfixheight')")
-                lfCmd("let issue_422_winhighlight = nvim_win_get_option(0, 'winhighlight')")
 
             if kwargs.get("mode", '') != 't' or (lfEval("get(g:, 'Lf_DiscardEmptyBuffer', 0)") == '1'
                     and len(vim.tabpages) == 1 and len(vim.current.tabpage.windows) == 1
@@ -174,21 +192,6 @@ class Manager(object):
                 lfCmd("tab drop %s" % escSpecial(file))
         except vim.error as e: # E37
             lfPrintError(e)
-        finally:
-            if lfEval("has('nvim')") == '1':
-                lfCmd("call nvim_win_set_option(0, 'list', issue_422_list)")
-                lfCmd("call nvim_win_set_option(0, 'number', issue_422_number)")
-                lfCmd("call nvim_win_set_option(0, 'relativenumber', issue_422_relativenumber)")
-                lfCmd("call nvim_win_set_option(0, 'spell', issue_422_spell)")
-                lfCmd("call nvim_win_set_option(0, 'wrap', issue_422_wrap)")
-                lfCmd("call nvim_win_set_option(0, 'foldenable', issue_422_foldenable)")
-                lfCmd("call nvim_win_set_option(0, 'foldmethod', issue_422_foldmethod)")
-                lfCmd("call nvim_win_set_option(0, 'foldcolumn', issue_422_foldcolumn)")
-                lfCmd("call nvim_win_set_option(0, 'cursorline', issue_422_cursorline)")
-                lfCmd("call nvim_win_set_option(0, 'signcolumn', issue_422_signcolumn)")
-                lfCmd("call nvim_win_set_option(0, 'colorcolumn', issue_422_colorcolumn)")
-                lfCmd("call nvim_win_set_option(0, 'winfixheight', issue_422_winfixheight)")
-                lfCmd("call nvim_win_set_option(0, 'winhighlight', issue_422_winhighlight)")
 
     def _getDigest(self, line, mode):
         """
@@ -1586,11 +1589,13 @@ class Manager(object):
 
             kwargs["mode"] = mode
             tabpage_count = len(vim.tabpages)
+            self._issue_422_get_option()
             self._acceptSelection(file, *args, **kwargs)
             for k, v in self._cursorline_dict.items():
                 if k.valid:
                     k.options["cursorline"] = v
             self._cursorline_dict.clear()
+            self._issue_422_set_option()
             if mode == 't' and len(vim.tabpages) > tabpage_count:
                 tab_pos = int(lfEval("g:Lf_TabpagePosition"))
                 if tab_pos == 0:
