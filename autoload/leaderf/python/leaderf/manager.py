@@ -435,7 +435,7 @@ class Manager(object):
 
     #**************************************************************
 
-    def _createPopupModePreview(self, title, buf_number, line_nr):
+    def _createPopupModePreview(self, title, buf_number, line_nr, jump_cmd):
         if lfEval("has('nvim')") == '1':
             width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
             if width == 0:
@@ -485,13 +485,18 @@ class Manager(object):
                     "col"     : col
                     }
             self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (buf_number, str(config))))
+            if jump_cmd:
+                cur_winid = lfEval("win_getid()")
+                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+                lfCmd(jump_cmd)
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            if buffer_len >= line_nr > 0:
+                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._preview_winid)
-            if buffer_len >= line_nr > 0:
-                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
             lfCmd("redraw!")
         else:
             popup_window = self._getInstance().window
@@ -576,17 +581,19 @@ class Manager(object):
 
             lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, str(options)))
             self._preview_winid = int(lfEval("winid"))
+            if jump_cmd:
+                lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
+            elif line_nr > 0:
+                lfCmd("""call win_execute(%d, "exec 'norm! %dG' | redraw")""" % (self._preview_winid, line_nr))
             lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber colorcolumn= ')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
-            if line_nr > 0:
-                lfCmd("""call win_execute(%d, "exec 'norm! %dG' | redraw")""" % (self._preview_winid, line_nr))
 
-    def _createPopupPreview(self, title, buf_number, line_nr):
+    def _createPopupPreview(self, title, buf_number, line_nr, jump_cmd=''):
         buf_number = int(buf_number)
         line_nr = int(line_nr)
 
         if self._getInstance().getWinPos() in ('popup', 'floatwin'):
-            self._createPopupModePreview(title, buf_number, line_nr)
+            self._createPopupModePreview(title, buf_number, line_nr, jump_cmd)
             return
 
         if lfEval("has('nvim')") == '1':
@@ -632,11 +639,16 @@ class Manager(object):
                     "col"     : col
                     }
             self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (buf_number, str(config))))
+            if jump_cmd:
+                cur_winid = lfEval("win_getid()")
+                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+                lfCmd(jump_cmd)
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            if buffer_len >= line_nr > 0:
+                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
             lfCmd("call nvim_buf_set_option(%d, 'swapfile', v:false)" % buf_number)
-            if buffer_len >= line_nr > 0:
-                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
         else:
             preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
             if preview_pos.lower() == 'center':
@@ -685,9 +697,11 @@ class Manager(object):
 
             lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, str(options)))
             self._preview_winid = int(lfEval("winid"))
-            lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber')" % self._preview_winid)
-            if line_nr > 0:
+            if jump_cmd:
+                lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
+            elif line_nr > 0:
                 lfCmd("""call win_execute(%d, "exec 'norm! %dG' | redraw")""" % (self._preview_winid, line_nr))
+            lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber')" % self._preview_winid)
 
     def _needPreview(self, preview):
         """
