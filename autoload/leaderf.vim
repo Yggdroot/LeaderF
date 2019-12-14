@@ -537,9 +537,11 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
     return 1
 endfunction
 
-function! leaderf#PopupClosed(id_list, winid, result) abort
+function! leaderf#PopupClosed(id_list, manager_id, winid, result) abort
     " result is -1 if CTRL-C was pressed,
     if a:result == -1
+        exec g:Lf_py "import ctypes"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:manager_id)
         for id in a:id_list
             if id != a:winid
                 call popup_close(id)

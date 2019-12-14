@@ -190,11 +190,12 @@ class LfInstance(object):
     This class is used to indicate the LeaderF instance, which including
     the tabpage, the window, the buffer, the statusline, etc.
     """
-    def __init__(self, category, cli,
+    def __init__(self, manager, category, cli,
                  before_enter_cb,
                  after_enter_cb,
                  before_exit_cb,
                  after_exit_cb):
+        self._manager = manager
         self._category = category
         self._cli = cli
         self._cli.setInstance(self)
@@ -562,8 +563,8 @@ class LfInstance(object):
 
                 self._popup_instance.statusline_win = PopupWindow(winid, vim.buffers[buf_number], vim.current.tabpage, line + maxheight)
 
-            lfCmd("call leaderf#ResetPopupOptions(%d, 'callback', function('leaderf#PopupClosed', [%s]))"
-                    % (self._popup_winid, str(self._popup_instance.getWinIdList())))
+            lfCmd("call leaderf#ResetPopupOptions(%d, 'callback', function('leaderf#PopupClosed', [%s, %d]))"
+                    % (self._popup_winid, str(self._popup_instance.getWinIdList()), id(self._manager)))
 
         self._arguments["popup_winid"] = self._popup_winid
 

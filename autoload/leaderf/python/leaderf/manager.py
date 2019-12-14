@@ -738,7 +738,7 @@ class Manager(object):
 
     def _getInstance(self):
         if self._instance is None:
-            self._instance = LfInstance(self._getExplorer().getStlCategory(),
+            self._instance = LfInstance(self, self._getExplorer().getStlCategory(),
                                         self._cli,
                                         self._beforeEnter,
                                         self._afterEnter,
