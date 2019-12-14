@@ -38,6 +38,11 @@ function! leaderf#Mru#Maps()
     nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "mruExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "mruExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "mruExplManager._previewResult(False)"<CR>
+    if has("nvim")
+        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "mruExplManager._toUpInPopup()"<CR>
+        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "mruExplManager._toDownInPopup()"<CR>
+        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "mruExplManager._closePreviewPopup()"<CR>
+    endif
     if has_key(g:Lf_NormalMap, "Mru")
         for i in g:Lf_NormalMap["Mru"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -138,6 +143,10 @@ function! leaderf#Mru#NormalModeFilter(winid, key) abort
         exec g:Lf_py "mruExplManager._previewResult(True)"
     elseif key ==? "<F1>"
         exec g:Lf_py "mruExplManager.toggleHelp()"
+    elseif key ==? "<C-Up>"
+        exec g:Lf_py "mruExplManager._toUpInPopup()"
+    elseif key ==? "<C-Down>"
+        exec g:Lf_py "mruExplManager._toDownInPopup()"
     endif
 
     return 1

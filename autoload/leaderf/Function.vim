@@ -34,6 +34,11 @@ function! leaderf#Function#Maps()
     nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
+    if has("nvim")
+        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "functionExplManager._toUpInPopup()"<CR>
+        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "functionExplManager._toDownInPopup()"<CR>
+        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "functionExplManager._closePreviewPopup()"<CR>
+    endif
     if has_key(g:Lf_NormalMap, "Function")
         for i in g:Lf_NormalMap["Function"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

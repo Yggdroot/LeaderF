@@ -375,6 +375,7 @@ class Manager(object):
         else:
             if self._preview_winid:
                 lfCmd("call popup_close(%d)" % self._preview_winid)
+                self._preview_winid = 0
 
     def _previewResult(self, preview):
         if self._getInstance().getWinPos() == 'floatwin':
@@ -584,7 +585,7 @@ class Manager(object):
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
             elif line_nr > 0:
-                lfCmd("""call win_execute(%d, "exec 'norm! %dG' | redraw")""" % (self._preview_winid, line_nr))
+                lfCmd("""call win_execute(%d, "exec 'norm! %dG'")""" % (self._preview_winid, line_nr))
             lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber colorcolumn= ')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
 
@@ -700,7 +701,7 @@ class Manager(object):
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
             elif line_nr > 0:
-                lfCmd("""call win_execute(%d, "exec 'norm! %dG' | redraw")""" % (self._preview_winid, line_nr))
+                lfCmd("""call win_execute(%d, "exec 'norm! %dG'")""" % (self._preview_winid, line_nr))
             lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber')" % self._preview_winid)
 
     def _needPreview(self, preview):
@@ -822,6 +823,28 @@ class Manager(object):
             # When autochdir is set, Vim will change the current working directory
             # to the directory containing the file which was opened or selected.
             lfCmd("set autochdir")
+
+    def _toUpInPopup(self):
+        if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
+            if lfEval("has('nvim')") == '1':
+                cur_winid = lfEval("win_getid()")
+                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+                lfCmd("norm! k")
+                lfCmd("redraw")
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            else:
+                lfCmd("call win_execute(%d, 'norm! k')" % (self._preview_winid))
+
+    def _toDownInPopup(self):
+        if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
+            if lfEval("has('nvim')") == '1':
+                cur_winid = lfEval("win_getid()")
+                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+                lfCmd("norm! j")
+                lfCmd("redraw")
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            else:
+                lfCmd("call win_execute(%d, 'norm! j')" % (self._preview_winid))
 
     def _toUp(self):
         if self._getInstance().getWinPos() == 'popup':
@@ -2398,6 +2421,10 @@ class Manager(object):
             elif equal(cmd, '<PageDown>'):
                 self._pageDown()
                 self._previewResult(False)
+            elif equal(cmd, '<C-Up>'):
+                self._toUpInPopup()
+            elif equal(cmd, '<C-Down>'):
+                self._toDownInPopup()
             else:
                 if self._cmdExtension(cmd):
                     break

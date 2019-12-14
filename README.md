@@ -176,6 +176,8 @@ Once LeaderF is launched:
 | `<Left>`                   | move the cursor one character to the left in the prompt
 | `<Right>`                  | move the cursor one character to the right in the prompt
 | `<C-P>`                    | preview the result
+| `<C-Up>`                   | scroll up in the popup preview window
+| `<C-Down>`                 | scroll down in the popup preview window
 
 Input formats:
 

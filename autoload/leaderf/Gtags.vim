@@ -36,6 +36,11 @@ function! leaderf#Gtags#Maps()
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "gtagsExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "gtagsExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "gtagsExplManager.deleteCurrentLine()"<CR>
+    if has("nvim")
+        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "gtagsExplManager._toUpInPopup()"<CR>
+        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "gtagsExplManager._toDownInPopup()"<CR>
+        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "gtagsExplManager._closePreviewPopup()"<CR>
+    endif
     if has_key(g:Lf_NormalMap, "Gtags")
         for i in g:Lf_NormalMap["Gtags"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -154,6 +159,10 @@ function! leaderf#Gtags#NormalModeFilter(winid, key) abort
         exec g:Lf_py "gtagsExplManager.toggleHelp()"
     elseif key ==# "d"
         exec g:Lf_py "gtagsExplManager.deleteCurrentLine()"
+    elseif key ==? "<C-Up>"
+        exec g:Lf_py "gtagsExplManager._toUpInPopup()"
+    elseif key ==? "<C-Down>"
+        exec g:Lf_py "gtagsExplManager._toDownInPopup()"
     endif
 
     return 1

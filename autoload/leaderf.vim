@@ -183,8 +183,22 @@ let s:Lf_CommandMap = {
             \ '<End>':         ['<End>'],
             \ '<PageUp>':      ['<PageUp>'],
             \ '<PageDown>':    ['<PageDown>'],
+            \ '<C-Up>':        ['<C-Up>'],
+            \ '<C-Down>':      ['<C-Down>'],
+            \ '<C-Left>':      ['<C-Left>'],
+            \ '<C-Right>':     ['<C-Right>'],
+            \ '<C-Home>':      ['<C-Home>'],
+            \ '<C-End>':       ['<C-End>'],
+            \ '<C-PageUp>':    ['<C-PageUp>'],
+            \ '<C-PageDown>':  ['<C-PageDown>'],
+            \ '<S-Up>':        ['<S-Up>'],
+            \ '<S-Down>':      ['<S-Down>'],
             \ '<S-Left>':      ['<S-Left>'],
             \ '<S-Right>':     ['<S-Right>'],
+            \ '<S-Home>':      ['<S-Home>'],
+            \ '<S-End>':       ['<S-End>'],
+            \ '<S-PageUp>':    ['<S-PageUp>'],
+            \ '<S-PageDown>':  ['<S-PageDown>'],
             \ '<S-Insert>':    ['<S-Insert>'],
             \ '<LeftMouse>':   ['<LeftMouse>'],
             \ '<RightMouse>':  ['<RightMouse>'],
@@ -193,7 +207,7 @@ let s:Lf_CommandMap = {
             \ '<C-LeftMouse>': ['<C-LeftMouse>'],
             \ '<S-LeftMouse>': ['<S-LeftMouse>'],
             \ '<ScrollWheelUp>': ['<ScrollWheelUp>'],
-            \ '<ScrollWheelDown>': ['<ScrollWheelDown>']
+            \ '<ScrollWheelDown>': ['<ScrollWheelDown>'],
             \}
 
 let g:Lf_KeyMap = {
@@ -247,8 +261,22 @@ let g:Lf_KeyMap = {
             \ "\<END>":         '<END>',
             \ "\<PAGEUP>":      '<PAGEUP>',
             \ "\<PAGEDOWN>":    '<PAGEDOWN>',
+            \ "\<C-UP>":        '<C-UP>',
+            \ "\<C-DOWN>":      '<C-DOWN>',
+            \ "\<C-LEFT>":      '<C-LEFT>',
+            \ "\<C-RIGHT>":     '<C-RIGHT>',
+            \ "\<C-HOME>":      '<C-HOME>',
+            \ "\<C-END>":       '<C-END>',
+            \ "\<C-PAGEUP>":    '<C-PAGEUP>',
+            \ "\<C-PAGEDOWN>":  '<C-PAGEDOWN>',
+            \ "\<S-UP>":        '<S-UP>',
+            \ "\<S-DOWN>":      '<S-DOWN>',
             \ "\<S-LEFT>":      '<S-LEFT>',
             \ "\<S-RIGHT>":     '<S-RIGHT>',
+            \ "\<S-HOME>":      '<S-HOME>',
+            \ "\<S-END>":       '<S-END>',
+            \ "\<S-PAGEUP>":    '<S-PAGEUP>',
+            \ "\<S-PAGEDOWN>":  '<S-PAGEDOWN>',
             \ "\<S-INSERT>":    '<S-INSERT>',
             \ "\<LEFTMOUSE>":   '<LEFTMOUSE>',
             \ "\<RIGHTMOUSE>":  '<RIGHTMOUSE>',
@@ -391,6 +419,14 @@ function! leaderf#normalModePreviewFilter(winid, key) abort
         call win_execute(a:winid, "norm! 3j")
         redraw
         return 1
+    elseif key ==? "<C-Up>"
+        call win_execute(a:winid, "norm! k")
+        redraw
+        return 1
+    elseif key ==? "<C-Down>"
+        call win_execute(a:winid, "norm! j")
+        redraw
+        return 1
     endif
     return 0
 endfunction
@@ -492,6 +528,10 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(True)", a:id)
     elseif key ==? "<F1>"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.toggleHelp()", a:id)
+    elseif key ==? "<C-Up>"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._toUpInPopup()", a:id)
+    elseif key ==? "<C-Down>"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._toDownInPopup()", a:id)
     endif
 
     return 1

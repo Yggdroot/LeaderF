@@ -28,6 +28,11 @@ function! leaderf#Buffer#Maps()
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "bufExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "bufExplManager.deleteBuffer(1)"<CR>
     nnoremap <buffer> <silent> D             :exec g:Lf_py "bufExplManager.deleteBuffer()"<CR>
+    if has("nvim")
+        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "bufExplManager._toUpInPopup()"<CR>
+        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "bufExplManager._toDownInPopup()"<CR>
+        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "bufExplManager._closePreviewPopup()"<CR>
+    endif
     if has_key(g:Lf_NormalMap, "Buffer")
         for i in g:Lf_NormalMap["Buffer"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -119,6 +124,10 @@ function! leaderf#Buffer#NormalModeFilter(winid, key) abort
         exec g:Lf_py "bufExplManager.deleteBuffer(1)"
     elseif key ==# "D"
         exec g:Lf_py "bufExplManager.deleteBuffer()"
+    elseif key ==? "<C-Up>"
+        exec g:Lf_py "bufExplManager._toUpInPopup()"
+    elseif key ==? "<C-Down>"
+        exec g:Lf_py "bufExplManager._toDownInPopup()"
     endif
 
     return 1

@@ -38,6 +38,11 @@ function! leaderf#File#Maps()
     nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "fileExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "fileExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "fileExplManager._previewResult(False)"<CR>
+    if has("nvim")
+        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "fileExplManager._toUpInPopup()"<CR>
+        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "fileExplManager._toDownInPopup()"<CR>
+        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "fileExplManager._closePreviewPopup()"<CR>
+    endif
     if has_key(g:Lf_NormalMap, "File")
         for i in g:Lf_NormalMap["File"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -146,6 +151,10 @@ function! leaderf#File#NormalModeFilter(winid, key) abort
         exec g:Lf_py "fileExplManager.toggleHelp()"
     elseif key ==? "<F5>"
         exec g:Lf_py "fileExplManager.refresh()"
+    elseif key ==? "<C-Up>"
+        exec g:Lf_py "fileExplManager._toUpInPopup()"
+    elseif key ==? "<C-Down>"
+        exec g:Lf_py "fileExplManager._toDownInPopup()"
     endif
 
     return 1
