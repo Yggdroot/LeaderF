@@ -582,6 +582,7 @@ class Manager(object):
 
             lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, str(options)))
             self._preview_winid = int(lfEval("winid"))
+            lfCmd("call win_execute(%d, 'set buftype=popup')" % self._preview_winid)
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
             elif line_nr > 0:
@@ -698,6 +699,7 @@ class Manager(object):
 
             lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, str(options)))
             self._preview_winid = int(lfEval("winid"))
+            lfCmd("call win_execute(%d, 'set buftype=popup')" % self._preview_winid)
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
             elif line_nr > 0:
