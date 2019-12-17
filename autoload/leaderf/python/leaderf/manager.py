@@ -331,6 +331,7 @@ class Manager(object):
     def _bangEnter(self):
         self._current_mode = 'NORMAL'
         if self._getInstance().getWinPos() == 'popup':
+            self._cli.hideCursor()
             if lfEval("exists('*leaderf#%s#NormalModeFilter')" % self._getExplorer().getStlCategory()) == '1':
                 lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', '%s')" % (self._getInstance().getPopupWinId(),
                         'leaderf#%s#NormalModeFilter' % self._getExplorer().getStlCategory()))

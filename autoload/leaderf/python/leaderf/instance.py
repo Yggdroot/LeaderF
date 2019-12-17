@@ -879,6 +879,14 @@ class LfInstance(object):
         self._before_enter()
 
         if win_pos in ('popup', 'floatwin'):
+            if lfEval("exists('g:lf_gcr_stack')") == '0':
+                lfCmd("let g:lf_gcr_stack = []")
+            lfCmd("call add(g:lf_gcr_stack, &gcr)")
+            lfCmd("set gcr=a:invisible")
+            if lfEval("exists('g:lf_t_ve_stack')") == '0':
+                lfCmd("let g:lf_t_ve_stack = []")
+            lfCmd("call add(g:lf_t_ve_stack, &t_ve)")
+            lfCmd("set t_ve=")
             self._orig_win_nr = vim.current.window.number
             self._orig_win_id = lfWinId(self._orig_win_nr)
             self._createPopupWindow(clear)
@@ -901,10 +909,18 @@ class LfInstance(object):
         self._before_exit()
 
         if self._win_pos == 'popup':
+            lfCmd("set gcr&")
+            lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
+            lfCmd("set t_ve&")
+            lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
             self._popup_instance.hide()
             self._after_exit()
             return
         elif self._win_pos == 'floatwin':
+            lfCmd("set gcr&")
+            lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
+            lfCmd("set t_ve&")
+            lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
             self._popup_instance.close()
             self._after_exit()
             return
