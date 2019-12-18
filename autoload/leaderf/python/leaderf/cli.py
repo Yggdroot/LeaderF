@@ -178,6 +178,8 @@ class LfCli(object):
             lfCmd("hi! default link Lf_hl_cursor NONE")
 
     def _buildPopupPrompt(self):
+        self._instance.mimicCursor()
+
         if self._is_fuzzy:
             if self._is_full_path:
                 prompt = ' >F> '

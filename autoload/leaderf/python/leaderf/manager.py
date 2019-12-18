@@ -2280,6 +2280,7 @@ class Manager(object):
     @modifiableController
     def input(self):
         self._current_mode = 'INPUT'
+        self._getInstance().hideMimicCursor()
         if self._getInstance().getWinPos() in ('popup', 'floatwin'):
             self._cli._buildPopupPrompt()
             lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))

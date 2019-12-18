@@ -705,6 +705,16 @@ class LfInstance(object):
     def useLastReverseOrder(self):
         self._reverse_order = self._last_reverse_order
 
+    def hideMimicCursor(self):
+        lfCmd("""silent! call matchdelete(g:Lf_mimicedCursorId, %d)""" % self._popup_winid)
+
+    def mimicCursor(self):
+        if self._win_pos == 'popup' and self._manager._current_mode == 'NORMAL':
+            if self._popup_winid > 0 and self._window_object.valid:
+                self.hideMimicCursor()
+                lfCmd("""call win_execute(%d, "let cursor_pos = getcurpos()[1:2]")""" % (self._popup_winid))
+                lfCmd("""silent! call win_execute(%d, 'let g:Lf_mimicedCursorId = matchaddpos("Cursor", [cursor_pos])')""" % (self._popup_winid))
+
     def setPopupStl(self, current_mode):
         statusline_win = self._popup_instance.statusline_win
         if not statusline_win:
