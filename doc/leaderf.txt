@@ -855,6 +855,7 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <Tab> : switch to normal mode.
     <C-V>, <S-Insert> : paste from clipboard.
     <C-U> : clear the prompt.
+    <C-W> : delete the word before the cursor in the prompt.
     <C-J>, <C-K> : navigate the result list.
     <Up>, <Down> : recall last/next input pattern from history.
     <2-LeftMouse> or <CR> : open the file under cursor or selected(when
@@ -874,6 +875,8 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <Left>: move the cursor one character to the left.
     <Right> : move the cursor one character to the right.
     <C-P> : preview the result.
+    <C-Up> : scroll up in the popup preview window.
+    <C-Down> : scroll down in the popup preview window.
 ==============================================================================
 FAQ                                             *leaderf-faq*
 
