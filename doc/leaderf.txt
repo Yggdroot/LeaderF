@@ -875,6 +875,8 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <Left>: move the cursor one character to the left.
     <Right> : move the cursor one character to the right.
     <C-P> : preview the result.
+    <C-Up> : scroll up in the popup preview window.
+    <C-Down> : scroll down in the popup preview window.
 ==============================================================================
 FAQ                                             *leaderf-faq*
 
