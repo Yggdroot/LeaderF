@@ -683,11 +683,16 @@ g:Lf_PopupWidth                                   *g:Lf_PopupWidth*
     Specify the width of the popup window or floating window when LeaderF is
     in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
     is in the options list of `Leaderf` command.
-    The value should be a non-negative integer. If the value is 0, the width
-    is 2/3 of the screen's width.
+    The value is a non-negative integer. If the value is 0, the width is 2/3 of
+    vim's width.
+
+    If the value is a floating point number less than 1, it means the percentage
+    of the width of the vim window.
 
     For example, set the width to 3/4 of the screen's width: >
     let g:Lf_PopupWidth = &columns * 3 / 4
+    or
+    let g:Lf_PopupHeight = 0.75
 <
     Default value is 0.
 
@@ -695,11 +700,15 @@ g:Lf_PopupHeight                                   *g:Lf_PopupHeight*
     Specify the height of the popup window or floating window when LeaderF is
     in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
     is in the options list of `Leaderf` command.
-    The value should be a non-negative integer. If the value is 0, the height is
-    40% of the screen's height.
+    The value is a non-negative integer. If the value is 0, the height is 40% of
+    vim's height.
+    If the value is a floating point number less than 1, it means the percentage
+    of the height of the vim window.
 
-    For example, set the height to 30% of the screen's height: >
+    For example, set the height to 30% of the vim's height: >
     let g:Lf_PopupHeight = float2nr(&lines * 0.3)
+    or
+    let g:Lf_PopupHeight = 0.3
 <
     Default value is 0.
 

@@ -331,20 +331,29 @@ class LfInstance(object):
         width = lfEval("get(g:, 'Lf_PopupWidth', 0)")
         width = self._arguments.get("--popup-width", [width])[0]
         width = width.strip('"').strip("'")
-        width = int(lfEval(width))
+        width = float(lfEval(width))
         if width <= 0:
             maxwidth = int(int(lfEval("&columns")) * 2 // 3)
+        elif width < 1:
+            maxwidth = int(int(lfEval("&columns")) * width)
+            maxwidth = max(20, maxwidth)
         else:
+            width = int(width)
             maxwidth = min(width, int(lfEval("&columns")))
             maxwidth = max(20, maxwidth)
 
         height = lfEval("get(g:, 'Lf_PopupHeight', 0)")
         height = self._arguments.get("--popup-height", [height])[0]
         height = height.strip('"').strip("'")
-        height = int(lfEval(height))
+        height = float(lfEval(height))
         if height <= 0:
             maxheight = int(int(lfEval("&lines")) * 0.4)
+        elif height < 1:
+            maxheight = int(int(lfEval("&lines")) * height)
+            if maxheight < 1:
+                maxheight = 1
         else:
+            height = int(height)
             maxheight = min(height, int(lfEval("&lines")))
 
         line, col = [int(i) for i in lfEval("get(g:, 'Lf_PopupPosition', [0, 0])")]
