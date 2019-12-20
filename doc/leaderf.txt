@@ -545,7 +545,6 @@ g:Lf_HistoryExclude                              *g:Lf_HistoryExclude*
             \ 'search': []
             \}
 <
-
     This is specified with a Python regular expression.
 <
     For example, you can set as below: >
