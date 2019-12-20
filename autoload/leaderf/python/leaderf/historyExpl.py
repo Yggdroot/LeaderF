@@ -18,15 +18,19 @@ class HistoryExplorer(Explorer):
 
     def getContent(self, *args, **kwargs):
         result_list = []
+        pattern_exclude = []
+        history_pattern_exclude = lfEval("g:Lf_HistoryExclude")
         if "history" in kwargs:
             lfCmd("let tmp = @x")
             lfCmd("redir @x")
             if kwargs.get("history") == "cmd":
                 self._history_type = "Cmd_History"
                 lfCmd("silent history :")
+                pattern_exclude = history_pattern_exclude.get('cmd', [])
             elif kwargs.get("history") == "search":
                 self._history_type = "Search_History"
                 lfCmd("silent history /")
+                pattern_exclude = history_pattern_exclude.get('search', [])
             else:
                 self._history_type = "History"
                 lfCmd("let @x = ''")
@@ -35,6 +39,9 @@ class HistoryExplorer(Explorer):
             lfCmd("redir END")
             result_list = result.splitlines()[2:]
             result_list = [line[1:].lstrip().split('  ', 1)[1] for line in result_list]
+
+            compiled = [re.compile(p) for p in pattern_exclude]
+            result_list = [line for line in result_list if all(p.search(line) is None for p in compiled)]
 
         return result_list[::-1]
 

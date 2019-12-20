@@ -535,6 +535,26 @@ g:Lf_HistoryNumber                              *g:Lf_HistoryNumber*
     Specify the number of records in history.
     Default value is 100.
 
+g:Lf_HistoryExclude                              *g:Lf_HistoryExclude*
+    This option indicates that do not display the historires that matches the
+    patterns defined in it.
+
+    Default value is: >
+    let g:Lf_HistoryExclude = {
+            \ 'cmd': [],
+            \ 'search': []
+            \}
+<
+
+    This is specified with a Python regular expression.
+<
+    For example, you can set as below: >
+    let g:Lf_HistoryExclude = {
+            \ 'cmd': ['^w!?', '^q!?', '^.\s*$'],
+            \ 'search': ['^Plug']
+            \}
+<
+
 g:Lf_RgConfig                                   *g:Lf_RgConfig*
     Specify a list of ripgrep configurations. For example, >
     let g:Lf_RgConfig = [

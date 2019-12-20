@@ -89,6 +89,10 @@ call s:InitVar('g:Lf_MruWildIgnore', {
             \ 'dir': [],
             \ 'file': []
             \})
+call s:InitVar('g:Lf_HistoryExclude', {
+            \ 'cmd': [],
+            \ 'search': []
+            \})
 if &encoding ==? "utf-8"
     call s:InitVar('g:Lf_StlSeparator', {
                 \ 'left': '►',
