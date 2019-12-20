@@ -496,6 +496,7 @@ class Manager(object):
                 lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'foldlevel', 1000)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._preview_winid)
@@ -649,8 +650,10 @@ class Manager(object):
             if buffer_len >= line_nr > 0:
                 lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'foldlevel', 1000)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
-            lfCmd("call nvim_buf_set_option(%d, 'swapfile', v:false)" % buf_number)
+            lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
         else:
             preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
             if preview_pos.lower() == 'center':
