@@ -72,7 +72,7 @@ g:Lf_WindowHeight                               *g:Lf_WindowHeight*
     percentage of the height of the vim window.
     e.g., let g:Lf_WindowHeight = 0.30
     The option will be ignored if the value of |g:Lf_WindowPosition| is
-    not 'top' and 'bottom'.
+    not 'top' or 'bottom'.
     Default value is 0.5.
 
 g:Lf_TabpagePosition                            *g:Lf_TabpagePosition*
