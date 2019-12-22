@@ -215,7 +215,7 @@ class FileExplorer(Explorer):
             return cmd
 
         if lfEval("g:Lf_UseVersionControlTool") == '1':
-            if self._exists(dir, ".git"):
+            if self._exists(dir, ".git") and lfEval("executable('git')") == '1':
                 wildignore = lfEval("g:Lf_WildIgnore")
                 if ".git" in wildignore.get("dir", []):
                     wildignore.get("dir", []).remove(".git")
@@ -240,7 +240,7 @@ class FileExplorer(Explorer):
                 cmd = 'git ls-files %s "%s" && git ls-files --others %s %s "%s"' % (recurse_submodules, dir, no_ignore, ignore, dir)
                 self._external_cmd = cmd
                 return cmd
-            elif self._exists(dir, ".hg"):
+            elif self._exists(dir, ".hg") and lfEval("executable('hg')") == '1':
                 wildignore = lfEval("g:Lf_WildIgnore")
                 if ".hg" in wildignore.get("dir", []):
                     wildignore.get("dir", []).remove(".hg")
