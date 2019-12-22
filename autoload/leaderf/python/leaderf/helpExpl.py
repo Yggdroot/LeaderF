@@ -33,7 +33,6 @@ class HelpExplorer(Explorer):
                     lines = f.readlines()
                     for line in lines:
                         tag, file = line.split()[:2]
-                        tag = re.sub("'([^']+)'", r"\1", tag)    # remove ''
                         self._content.append("{:<40} {}".format(tag, file))
             except IOError:
                 pass
