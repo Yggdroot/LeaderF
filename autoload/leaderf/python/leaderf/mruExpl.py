@@ -35,8 +35,8 @@ class MruExplorer(Explorer):
 
         lines = [line.rstrip() for line in lines] # remove the '\n'
         wildignore = lfEval("g:Lf_MruWildIgnore")
-        lines = [name for name in lines if True not in (fnmatch(name, j) for j in wildignore['file'])
-                    and True not in (fnmatch(name, "*/" + j + "/*") for j in wildignore['dir'])]
+        lines = [name for name in lines if True not in (fnmatch(name, j) for j in wildignore.get('file', []))
+                    and True not in (fnmatch(name, "*/" + j + "/*") for j in wildignore.get('dir', []))]
 
         if len(lines) == 0:
             return lines
