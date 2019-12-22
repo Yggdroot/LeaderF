@@ -60,10 +60,10 @@ class FileExplorer(Explorer):
         for dir_path, dirs, files in os.walk(dir, followlinks = False
                 if lfEval("g:Lf_FollowLinks") == '0' else True):
             dirs[:] = [i for i in dirs if True not in (fnmatch.fnmatch(i,j)
-                       for j in wildignore['dir'])]
+                       for j in wildignore.get('dir', []))]
             for name in files:
                 if True not in (fnmatch.fnmatch(name, j)
-                                for j in wildignore['file']):
+                                for j in wildignore.get('file', [])):
                     file_list.append(lfEncode(os.path.join(dir_path,name)))
                 if time.time() - start_time > float(
                         lfEval("g:Lf_IndexTimeLimit")):
@@ -217,14 +217,14 @@ class FileExplorer(Explorer):
         if lfEval("g:Lf_UseVersionControlTool") == '1':
             if self._exists(dir, ".git"):
                 wildignore = lfEval("g:Lf_WildIgnore")
-                if ".git" in wildignore["dir"]:
-                    wildignore["dir"].remove(".git")
-                if ".git" in wildignore["file"]:
-                    wildignore["file"].remove(".git")
+                if ".git" in wildignore.get("dir", []):
+                    wildignore.get("dir", []).remove(".git")
+                if ".git" in wildignore.get("file", []):
+                    wildignore.get("file", []).remove(".git")
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     ignore += ' -x "%s"' % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     ignore += ' -x "%s"' % i
 
                 if "--no-ignore" in kwargs.get("arguments", {}):
@@ -242,14 +242,14 @@ class FileExplorer(Explorer):
                 return cmd
             elif self._exists(dir, ".hg"):
                 wildignore = lfEval("g:Lf_WildIgnore")
-                if ".hg" in wildignore["dir"]:
-                    wildignore["dir"].remove(".hg")
+                if ".hg" in wildignore.get("dir", []):
+                    wildignore.get("dir", []).remove(".hg")
                 if ".hg" in wildignore["file"]:
-                    wildignore["file"].remove(".hg")
+                    wildignore.get("file", []).remove(".hg")
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     ignore += ' -X "%s"' % self._expandGlob("dir", i)
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     ignore += ' -X "%s"' % self._expandGlob("file", i)
 
                 cmd = 'hg files %s "%s"' % (ignore, dir)
@@ -270,19 +270,19 @@ class FileExplorer(Explorer):
             if os.name == 'nt': # https://github.com/BurntSushi/ripgrep/issues/500
                 color = ""
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'): # rg does not show hidden files by default
                         ignore += ' -g "!%s"' % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                         ignore += ' -g "!%s"' % i
             else:
                 color = "--color never"
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                         ignore += " -g '!%s'" % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                         ignore += " -g '!%s'" % i
 
@@ -310,10 +310,10 @@ class FileExplorer(Explorer):
         elif default_tool["pt"] and lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
-            for i in wildignore["dir"]:
+            for i in wildignore.get("dir", []):
                 if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'): # pt does not show hidden files by default
                     ignore += " --ignore=%s" % i
-            for i in wildignore["file"]:
+            for i in wildignore.get("file", []):
                 if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                     ignore += " --ignore=%s" % i
 
@@ -336,10 +336,10 @@ class FileExplorer(Explorer):
         elif default_tool["ag"] and lfEval("executable('ag')") == '1' and os.name != 'nt': # https://github.com/vim/vim/issues/3236
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
-            for i in wildignore["dir"]:
+            for i in wildignore.get("dir", []):
                 if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'): # ag does not show hidden files by default
                     ignore += ' --ignore "%s"' % i
-            for i in wildignore["file"]:
+            for i in wildignore.get("file", []):
                 if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                     ignore += ' --ignore "%s"' % i
 
@@ -363,11 +363,11 @@ class FileExplorer(Explorer):
                 and lfEval("executable('sed')") == '1' and os.name != 'nt':
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore_dir = ""
-            for d in wildignore["dir"]:
+            for d in wildignore.get("dir", []):
                 ignore_dir += '-type d -name "%s" -prune -o ' % d
 
             ignore_file = ""
-            for f in wildignore["file"]:
+            for f in wildignore.get("file", []):
                     ignore_file += '-type f -name "%s" -o ' % f
 
             if lfEval("g:Lf_FollowLinks") == '1':

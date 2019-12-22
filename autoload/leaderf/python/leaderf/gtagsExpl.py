@@ -597,14 +597,14 @@ class GtagsExplorer(Explorer):
         if self._Lf_UseVersionControlTool:
             if self._exists(dir, ".git"):
                 wildignore = self._Lf_WildIgnore
-                if ".git" in wildignore["dir"]:
-                    wildignore["dir"].remove(".git")
-                if ".git" in wildignore["file"]:
-                    wildignore["file"].remove(".git")
+                if ".git" in wildignore.get("dir", []):
+                    wildignore.get("dir", []).remove(".git")
+                if ".git" in wildignore.get("file", []):
+                    wildignore.get("file", []).remove(".git")
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     ignore += ' -x "%s"' % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     ignore += ' -x "%s"' % i
 
                 if "--no-ignore" in arguments_dict:
@@ -621,14 +621,14 @@ class GtagsExplorer(Explorer):
                 return cmd
             elif self._exists(dir, ".hg"):
                 wildignore = self._Lf_WildIgnore
-                if ".hg" in wildignore["dir"]:
-                    wildignore["dir"].remove(".hg")
-                if ".hg" in wildignore["file"]:
-                    wildignore["file"].remove(".hg")
+                if ".hg" in wildignore.get("dir", []):
+                    wildignore.get("dir", []).remove(".hg")
+                if ".hg" in wildignore.get("file", []):
+                    wildignore.get("file", []).remove(".hg")
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     ignore += ' -X "%s"' % self._expandGlob("dir", i)
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     ignore += ' -X "%s"' % self._expandGlob("file", i)
 
                 cmd = 'hg files %s "%s"' % (ignore, dir)
@@ -641,19 +641,19 @@ class GtagsExplorer(Explorer):
             if os.name == 'nt': # https://github.com/BurntSushi/ripgrep/issues/500
                 color = ""
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     if self._Lf_ShowHidden or not i.startswith('.'): # rg does not show hidden files by default
                         ignore += ' -g "!%s"' % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     if self._Lf_ShowHidden or not i.startswith('.'):
                         ignore += ' -g "!%s"' % i
             else:
                 color = "--color never"
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     if self._Lf_ShowHidden or not i.startswith('.'):
                         ignore += " -g '!%s'" % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     if self._Lf_ShowHidden or not i.startswith('.'):
                         ignore += " -g '!%s'" % i
 
@@ -681,10 +681,10 @@ class GtagsExplorer(Explorer):
         elif default_tool["pt"] and self._is_pt_executable and os.name != 'nt': # there is bug on Windows
             wildignore = self._Lf_WildIgnore
             ignore = ""
-            for i in wildignore["dir"]:
+            for i in wildignore.get("dir", []):
                 if self._Lf_ShowHidden or not i.startswith('.'): # pt does not show hidden files by default
                     ignore += " --ignore=%s" % i
-            for i in wildignore["file"]:
+            for i in wildignore.get("file", []):
                 if self._Lf_ShowHidden or not i.startswith('.'):
                     ignore += " --ignore=%s" % i
 
@@ -707,10 +707,10 @@ class GtagsExplorer(Explorer):
         elif default_tool["ag"] and self._is_ag_executable and os.name != 'nt': # https://github.com/vim/vim/issues/3236
             wildignore = self._Lf_WildIgnore
             ignore = ""
-            for i in wildignore["dir"]:
+            for i in wildignore.get("dir", []):
                 if self._Lf_ShowHidden or not i.startswith('.'): # ag does not show hidden files by default
                     ignore += ' --ignore "%s"' % i
-            for i in wildignore["file"]:
+            for i in wildignore.get("file", []):
                 if self._Lf_ShowHidden or not i.startswith('.'):
                     ignore += ' --ignore "%s"' % i
 
@@ -733,11 +733,11 @@ class GtagsExplorer(Explorer):
         elif default_tool["find"] and self._is_find_executable and os.name != 'nt':
             wildignore = self._Lf_WildIgnore
             ignore_dir = ""
-            for d in wildignore["dir"]:
+            for d in wildignore.get("dir", []):
                 ignore_dir += '-type d -name "%s" -prune -o ' % d
 
             ignore_file = ""
-            for f in wildignore["file"]:
+            for f in wildignore.get("file", []):
                     ignore_file += '-type f -name "%s" -o ' % f
 
             if self._Lf_FollowLinks:
