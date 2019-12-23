@@ -104,6 +104,23 @@ class HistoryExplManager(Manager):
         """
         return 0
 
+    def editHistory(self):
+        instance = self._getInstance()
+
+        line = instance.currentLine
+        # XXX: option で空の場合、プロンプトの入力値を持ってくるかどうかを選択
+        if len(line.strip()) == 0:
+            # instance.getPopupInstance().input_win().
+            line = instance._cli.pattern
+
+        instance.exitBuffer()
+        cmd = ":"
+
+        if self._getExplorer().getHistoryType() == "Search_History":
+            cmd = "/"
+
+        lfCmd("call feedkeys('%s')" % (cmd + escQuote(line)))
+
 
 #*****************************************************
 # historyExplManager is a singleton
