@@ -104,6 +104,16 @@ class HistoryExplManager(Manager):
         """
         return 0
 
+    def _createHelp(self):
+        help = []
+        help.append('" <CR>/<double-click>/o : open file under cursor')
+        help.append('" i/<Tab> : switch to input mode')
+        help.append('" q : quit')
+        help.append('" e : edit command under cursor')
+        help.append('" <F1> : toggle this help')
+        help.append('" ---------------------------------------------------------')
+        return help
+
     def editHistory(self):
         instance = self._getInstance()
 

@@ -20,6 +20,7 @@ function! leaderf#History#Maps()
     " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "historyExplManager.quit()"<CR>
     nnoremap <buffer> <silent> <C-I>         :exec g:Lf_py "historyExplManager.input()"<CR>
     nnoremap <buffer> <silent> e             :exec g:Lf_py "historyExplManager.editHistory()"<CR>
+    nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "historyExplManager.toggleHelp()"<CR>
     if has_key(g:Lf_NormalMap, "History")
         for i in g:Lf_NormalMap["History"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -97,6 +98,8 @@ function! leaderf#History#NormalModeFilter(winid, key) abort
         exec g:Lf_py "historyExplManager.input()"
     elseif key ==# "o" || key ==? "<CR>" || key ==? "<2-LeftMouse>"
         exec g:Lf_py "historyExplManager.accept()"
+    elseif key ==? "<F1>"
+        exec g:Lf_py "historyExplManager.toggleHelp()"
     elseif key ==? "e"
         exec g:Lf_py "historyExplManager.editHistory()"
     endif
