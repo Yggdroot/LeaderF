@@ -80,6 +80,8 @@ class AnyExplorer(Explorer):
             try:
                 source = lfFunction(source)
                 result = source(kwargs["arguments"])
+                if lfEval("has('nvim')") == '0':    # result is vim.List
+                    result = list(result)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(source), err))
         elif isinstance(source, dict):
