@@ -118,9 +118,8 @@ class HistoryExplManager(Manager):
         instance = self._getInstance()
 
         line = instance.currentLine
-        # XXX: option で空の場合、プロンプトの入力値を持ってくるかどうかを選択
-        if len(line.strip()) == 0:
-            # instance.getPopupInstance().input_win().
+        edit_prompt = lfEval("g:Lf_HistoryEditPromptIfEmpty") == "1"
+        if edit_prompt and len(line.strip()) == 0:
             line = instance._cli.pattern
 
         instance.exitBuffer()
