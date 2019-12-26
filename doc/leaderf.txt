@@ -910,6 +910,10 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-P> : preview the result.
     <C-Up> : scroll up in the popup preview window.
     <C-Down> : scroll down in the popup preview window.
+
+    cmdHistory/searchHistory only mappings:
+        <C-o> : edit command under cursor.
+
 ==============================================================================
 FAQ                                             *leaderf-faq*
 

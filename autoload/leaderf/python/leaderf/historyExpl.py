@@ -114,6 +114,11 @@ class HistoryExplManager(Manager):
         help.append('" ---------------------------------------------------------')
         return help
 
+    def _cmdExtension(self, cmd):
+        if equal(cmd, '<C-o>'):
+            self.editHistory()
+        return True
+
     def editHistory(self):
         instance = self._getInstance()
 
