@@ -683,6 +683,9 @@ class AnyHub(object):
             elif category == "gtags":
                 from .gtagsExpl import gtagsExplManager
                 manager = gtagsExplManager
+            elif category == "filetype":
+                from .filetypeExpl import filetypeExplManager
+                manager = filetypeExplManager
             else:
                 import ctypes
                 manager_id = lfFunction(lfEval("g:Lf_PythonExtensions['%s'].manager_id" % category))()
