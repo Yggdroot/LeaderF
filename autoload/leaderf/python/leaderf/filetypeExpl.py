@@ -13,16 +13,24 @@ from leaderf.manager import *
 # *****************************************************
 class FiletypeExplorer(Explorer):
     def __init__(self):
-        pass
+        self._content = []
 
     def getContent(self, *args, **kwargs):
+        if self._content:
+            return self._content
+        else:
+            return self.getFreshContent()
+
+    def getFreshContent(self, *args, **kwargs):
         result = [
             os.path.basename(f).replace(".vim", "")
             for f in lfEval("globpath(&rtp, 'syntax/*.vim')").split("\n")
         ]
 
         # to unique
-        return sorted(set(x for x in result))
+        self._content = sorted(set(x for x in result))
+
+        return self._content
 
     def getStlCategory(self):
         return "Filetype"
