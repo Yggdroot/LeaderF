@@ -852,6 +852,9 @@ USAGE                                           *leaderf-usage*
 :LeaderfColorscheme                             *LeaderfColorscheme*
     Launch LeaderF to switch between colorschemes.
 
+:LeaderfFiletype                                *LeaderfFiletype*
+    Launch LeaderF to navigate the filetype.
+
 :LeaderfRgInteractive                           *LeaderfRgInteractive*
     Launch LeaderF to use rg interactively.
 

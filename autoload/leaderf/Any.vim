@@ -49,6 +49,7 @@ let g:Lf_Helps = {
             \ "self":           "execute the commands of itself",
             \ "rg":             "grep using rg",
             \ "gtags":          "navigate tags using the gtags",
+            \ "filetype":       "navigate the filetype",
             \ }
 
 let g:Lf_Arguments = {
@@ -171,6 +172,7 @@ let g:Lf_Arguments = {
             \           {"name": ["--result"], "nargs": 1, "choices": ["ctags", "ctags-x", "ctags-mod"], "metavar": "<FORMAT>", "help": "Show result using format, which may be one of: `ctags`(default), `ctags-x`,  `ctags-mod`."},
             \           {"name": ["--auto-jump"], "nargs": "?", "metavar": "<TYPE>", "help": "Jump to the tag directly when there is only one match. <TYPE> can be 'h', 'v' or 't', which mean jump to a horizontally, vertically split window, or a new tabpage respectively. If <TYPE> is omitted, jump to a position in current window."},
             \   ],
+            \ "filetype": [],
             \}
 
 let g:Lf_CommonArguments = [

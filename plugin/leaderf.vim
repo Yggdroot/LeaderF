@@ -173,6 +173,8 @@ command! -bar -nargs=0 LeaderfColorscheme Leaderf colorscheme
 command! -bar -nargs=0 LeaderfRgInteractive call leaderf#Rg#Interactive()
 command! -bar -nargs=0 LeaderfRgRecall exec "Leaderf! rg --recall"
 
+command! -bar -nargs=0 LeaderfFiletype Leaderf filetype
+
 try
     if g:Lf_ShortcutF != ""
         exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
