@@ -57,7 +57,7 @@ class FiletypeExplManager(Manager):
 
     def _createHelp(self):
         help = []
-        help.append('" <CR>/<double-click>/o : execute command under cursor')
+        help.append('" <CR>/o : set filetype under cursor')
         help.append('" q : quit')
         help.append('" i : switch to input mode')
         help.append('" <F1> : toggle this help')
