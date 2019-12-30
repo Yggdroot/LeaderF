@@ -104,6 +104,37 @@ class HistoryExplManager(Manager):
         """
         return 0
 
+    def _createHelp(self):
+        help = []
+        help.append('" <CR>/<double-click>/o : open file under cursor')
+        help.append('" i/<Tab> : switch to input mode')
+        help.append('" q : quit')
+        help.append('" e : edit command under cursor')
+        help.append('" <F1> : toggle this help')
+        help.append('" ---------------------------------------------------------')
+        return help
+
+    def _cmdExtension(self, cmd):
+        if equal(cmd, '<C-o>'):
+            self.editHistory()
+        return True
+
+    def editHistory(self):
+        instance = self._getInstance()
+
+        line = instance.currentLine
+        edit_prompt = lfEval("g:Lf_HistoryEditPromptIfEmpty") == "1"
+        if edit_prompt and len(line.strip()) == 0:
+            line = instance._cli.pattern
+
+        instance.exitBuffer()
+        cmd = ":"
+
+        if self._getExplorer().getHistoryType() == "Search_History":
+            cmd = "/"
+
+        lfCmd("call feedkeys('%s')" % (cmd + escQuote(line)))
+
 
 #*****************************************************
 # historyExplManager is a singleton

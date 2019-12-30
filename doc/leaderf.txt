@@ -553,6 +553,12 @@ g:Lf_HistoryExclude                              *g:Lf_HistoryExclude*
             \ 'search': ['^Plug']
             \}
 <
+g:Lf_HistoryEditPromptIfEmpty                   *g:Lf_HistoryEditPromptIfEmpty*
+    This option is used when the history (cmdHistory or searchHistory).
+    If set to 1, when editing is started when there are 0 results, the text of
+    the entered prompt is edited.
+    Default value is 1.
+
 g:Lf_RgConfig                                   *g:Lf_RgConfig*
     Specify a list of ripgrep configurations. For example, >
     let g:Lf_RgConfig = [
@@ -904,6 +910,10 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-P> : preview the result.
     <C-Up> : scroll up in the popup preview window.
     <C-Down> : scroll down in the popup preview window.
+
+    cmdHistory/searchHistory only mappings:
+        <C-o> : edit command under cursor.
+
 ==============================================================================
 FAQ                                             *leaderf-faq*
 

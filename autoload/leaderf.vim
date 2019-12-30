@@ -135,6 +135,7 @@ call s:InitDict('g:Lf_GtagsfilesCmd', {
             \ '.hg': 'hg files',
             \ 'default': 'rg --no-messages --files'
             \})
+call s:InitVar('g:Lf_HistoryEditPromptIfEmpty', 1)
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
