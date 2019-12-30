@@ -125,7 +125,7 @@ optional arguments:
 
 subcommands:
 
-  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,self,bufTag,buffer,rg}
+  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,self,bufTag,buffer,rg,filetype}
     file                search files
     tag                 navigate tags using the tags file
     function            navigate functions or methods in the buffer
@@ -140,6 +140,7 @@ subcommands:
     bufTag              navigate tags in the buffer
     buffer              search buffers
     rg                  grep using rg
+    filetype            navigate the filetype
 
 If [!] is given, enter normal mode directly.
 ```
