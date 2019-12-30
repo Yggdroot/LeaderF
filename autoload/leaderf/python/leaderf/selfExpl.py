@@ -34,7 +34,8 @@ class SelfExplorer(Explorer):
             '15 LeaderfHistoryCmd       "execute the command in the history"',
             '16 LeaderfHistorySearch    "execute the search command in the history"',
             '17 LeaderfHelp             "navigate the help tags"',
-            '18 LeaderfColorscheme      "switch between colorschemes"'
+            '18 LeaderfColorscheme      "switch between colorschemes"',
+            '19 LeaderfFiletype         "navigate the filetype"',
             ]
 
     def getContent(self, *args, **kwargs):
