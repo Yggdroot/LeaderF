@@ -855,6 +855,9 @@ USAGE                                           *leaderf-usage*
 :LeaderfFiletype                                *LeaderfFiletype*
     Launch LeaderF to navigate the filetype.
 
+:LeaderfCommand                                 *LeaderfCommand*
+    Launch LeaderF to execute user-defined/built-in Ex commands.
+
 :LeaderfRgInteractive                           *LeaderfRgInteractive*
     Launch LeaderF to use rg interactively.
 
@@ -914,7 +917,7 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-Up> : scroll up in the popup preview window.
     <C-Down> : scroll down in the popup preview window.
 
-    cmdHistory/searchHistory only mappings:
+    cmdHistory/searchHistory/command only mappings:
         <C-o> : edit command under cursor.
 
 ==============================================================================

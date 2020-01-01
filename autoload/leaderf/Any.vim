@@ -50,6 +50,7 @@ let g:Lf_Helps = {
             \ "rg":             "grep using rg",
             \ "gtags":          "navigate tags using the gtags",
             \ "filetype":       "navigate the filetype",
+            \ "command":        "execute built-in/user-defined Ex commands",
             \ }
 
 let g:Lf_Arguments = {
@@ -173,6 +174,7 @@ let g:Lf_Arguments = {
             \           {"name": ["--auto-jump"], "nargs": "?", "metavar": "<TYPE>", "help": "Jump to the tag directly when there is only one match. <TYPE> can be 'h', 'v' or 't', which mean jump to a horizontally, vertically split window, or a new tabpage respectively. If <TYPE> is omitted, jump to a position in current window."},
             \   ],
             \ "filetype": [],
+            \ "command": [],
             \}
 
 let g:Lf_CommonArguments = [
