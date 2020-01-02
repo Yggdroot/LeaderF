@@ -75,6 +75,7 @@ class CommandExplManager(Manager):
         cmd = args[0]
         try:
             lfCmd(cmd)
+            lfCmd("call histadd(':', '%s')" % escQuote(cmd))
         except vim.error as e:
             error = lfEncode(str(repr(e)))
             if "E471" in error:
