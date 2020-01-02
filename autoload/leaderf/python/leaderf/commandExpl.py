@@ -48,7 +48,7 @@ class CommandExplorer(Explorer):
                 result_list.append(match.group(1))
 
         # built-in Ex commands
-        index_file = lfEval("globpath(&rtp, '*/index.txt')")
+        index_file = lfEval("$VIMRUNTIME/doc/index.txt")
         with lfOpen(index_file, 'r', errors="ignore") as f:
             for line in f:
                 match = RE_BUILT_IN_COMMAND.search(line)
