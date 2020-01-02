@@ -686,6 +686,9 @@ class AnyHub(object):
             elif category == "filetype":
                 from .filetypeExpl import filetypeExplManager
                 manager = filetypeExplManager
+            elif category == "command":
+                from .commandExpl import commandExplManager
+                manager = commandExplManager
             else:
                 import ctypes
                 manager_id = lfFunction(lfEval("g:Lf_PythonExtensions['%s'].manager_id" % category))()
