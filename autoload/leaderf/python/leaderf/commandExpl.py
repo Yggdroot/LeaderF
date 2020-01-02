@@ -33,14 +33,7 @@ class CommandExplorer(Explorer):
         result_list = []
 
         # user-defined Ex commands
-        lfCmd("let tmp = @x")
-        lfCmd("redir @x")
-        lfCmd("silent command")
-
-        result = lfEval("@x")
-
-        lfCmd("let @x = tmp")
-        lfCmd("redir END")
+        result = lfEval("execute('command')")
 
         for line in result.splitlines()[2:]:
             match = RE_USER_DEFINED_COMMAND.match(line)
