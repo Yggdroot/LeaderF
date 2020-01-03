@@ -125,7 +125,7 @@ class HistoryExplManager(Manager):
         line = instance.currentLine
         edit_prompt = lfEval("g:Lf_HistoryEditPromptIfEmpty") == "1"
         if edit_prompt and len(line.strip()) == 0:
-            line = instance._cli.pattern
+            line = ''.join(instance._cli._cmdline)
 
         instance.exitBuffer()
         cmd = ":"
