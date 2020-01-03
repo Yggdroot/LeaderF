@@ -22,8 +22,10 @@ RE_BUILT_IN_COMMAND = re.compile(r"^\|:([^|]+)\|")
 class CommandExplorer(Explorer):
     def __init__(self):
         self._content = []
+        self._run_immediately = False
 
     def getContent(self, *args, **kwargs):
+        self._run_immediately = "--run-immediately" in kwargs["arguments"]
         if self._content:
             return self._content
         else:
@@ -73,16 +75,20 @@ class CommandExplManager(Manager):
     def _acceptSelection(self, *args, **kwargs):
         """"""
         cmd = args[0]
-        try:
-            lfCmd(cmd)
-            lfCmd("call histadd(':', '%s')" % escQuote(cmd))
-        except vim.error as e:
-            error = lfEncode(str(repr(e)))
-            if "E471" in error:
-                # Arguments mandatory
-                lfCmd("call feedkeys(':%s ')" % escQuote(cmd))
-            else:
-                lfPrintError(e)
+
+        if self._getExplorer()._run_immediately:
+            try:
+                lfCmd(cmd)
+                lfCmd("call histadd(':', '%s')" % escQuote(cmd))
+            except vim.error as e:
+                error = lfEncode(str(repr(e)))
+                if "E471" in error:
+                    # Arguments mandatory
+                    lfCmd("call feedkeys(':%s ')" % escQuote(cmd))
+                else:
+                    lfPrintError(e)
+        else:
+            lfCmd("call feedkeys(':%s')" % escQuote(cmd))
 
     def _getDigest(self, line, mode):
         return line

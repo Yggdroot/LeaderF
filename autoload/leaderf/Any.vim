@@ -174,7 +174,9 @@ let g:Lf_Arguments = {
             \           {"name": ["--auto-jump"], "nargs": "?", "metavar": "<TYPE>", "help": "Jump to the tag directly when there is only one match. <TYPE> can be 'h', 'v' or 't', which mean jump to a horizontally, vertically split window, or a new tabpage respectively. If <TYPE> is omitted, jump to a position in current window."},
             \   ],
             \ "filetype": [],
-            \ "command": [],
+            \ "command": [
+            \           {"name": ["--run-immediately"], "nargs": 0, "help": "Immediately execute the command on the current line in the result window"},
+            \   ],
             \}
 
 let g:Lf_CommonArguments = [
