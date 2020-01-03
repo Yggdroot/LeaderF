@@ -868,7 +868,7 @@ class LfInstance(object):
             lfCmd("redrawstatus")
 
         if self._win_pos in ('popup', 'floatwin'):
-            self._cli._buildPopupPrompt()
+            self._cli.buildPopupPrompt()
 
     def setStlRunning(self, running):
         if self._win_pos in ('popup', 'floatwin'):

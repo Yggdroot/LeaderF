@@ -354,7 +354,7 @@ class Manager(object):
 
     def _previewResult(self, preview):
         if self._getInstance().getWinPos() == 'floatwin':
-            self._cli._buildPopupPrompt()
+            self._cli.buildPopupPrompt()
 
         if int(lfEval("win_id2win(%d)" % self._preview_winid)) != vim.current.window.number:
             self._closePreviewPopup()
@@ -1635,7 +1635,7 @@ class Manager(object):
                     lfCmd("norm! j")
 
                 if self._getInstance().getWinPos() in ('popup', 'floatwin'):
-                    self._cli._buildPopupPrompt()
+                    self._cli.buildPopupPrompt()
 
                 return
 
@@ -2259,7 +2259,7 @@ class Manager(object):
         self._current_mode = 'INPUT'
         self._getInstance().hideMimicCursor()
         if self._getInstance().getWinPos() in ('popup', 'floatwin'):
-            self._cli._buildPopupPrompt()
+            self._cli.buildPopupPrompt()
             lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))
             self._getInstance().setPopupStl(self._current_mode)
 
@@ -2374,7 +2374,7 @@ class Manager(object):
                     self._highlight_method()
 
                 if self._getInstance().getWinPos() in ('popup', 'floatwin'):
-                    self._cli._buildPopupPrompt()
+                    self._cli.buildPopupPrompt()
                     lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))
                     self._getInstance().setPopupStl(self._current_mode)
 

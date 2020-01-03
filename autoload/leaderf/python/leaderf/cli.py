@@ -268,8 +268,6 @@ class LfCli(object):
             if spin != "":
                 lfCmd("""call win_execute(%d, "call prop_add(1, %d, {'length': %d, 'type': 'Lf_hl_popup_spin'})")"""
                         % (input_window.id, lfBytesLen(text[:spin_start]) + 1, lfBytesLen(spin)))
-
-            lfCmd("redraw")
         else:
             input_window.buffer[0] = text
 
@@ -312,7 +310,9 @@ class LfCli(object):
                         % (input_window.buffer.number, self._input_buf_namespace,
                             lfBytesLen(text[:spin_start]), lfBytesLen(text[:spin_start]) + lfBytesLen(spin)))
 
-            lfCmd("redraw")
+    def buildPopupPrompt(self):
+        self._buildPopupPrompt()
+        lfCmd("redraw")
 
     def _buildPrompt(self):
         if lfEval("has('nvim')") == '1' and self._instance.getWinPos() != 'floatwin':
@@ -337,7 +337,7 @@ class LfCli(object):
                 return
 
         if self._instance.getWinPos() in ('popup', 'floatwin'):
-            self._buildPopupPrompt()
+            self.buildPopupPrompt()
             return
 
         if self._is_fuzzy:

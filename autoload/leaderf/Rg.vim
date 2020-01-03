@@ -110,13 +110,13 @@ function! leaderf#Rg#NormalModeFilter(winid, key) abort
     if key ==# "j" || key ==? "<Down>"
         call win_execute(a:winid, "norm! j")
         exec g:Lf_py "rgExplManager._cli._buildPopupPrompt()"
-        redraw
+        "redraw
         exec g:Lf_py "rgExplManager._getInstance().refreshPopupStatusline()"
         exec g:Lf_py "rgExplManager._previewResult(False)"
     elseif key ==# "k" || key ==? "<Up>"
         call win_execute(a:winid, "norm! k")
         exec g:Lf_py "rgExplManager._cli._buildPopupPrompt()"
-        redraw
+        "redraw
         exec g:Lf_py "rgExplManager._getInstance().refreshPopupStatusline()"
         exec g:Lf_py "rgExplManager._previewResult(False)"
     elseif key ==? "<PageUp>" || key ==? "<C-B>"

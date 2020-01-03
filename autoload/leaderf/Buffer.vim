@@ -50,12 +50,12 @@ function! leaderf#Buffer#NormalModeFilter(winid, key) abort
     if key ==# "j" || key ==? "<Down>"
         call win_execute(a:winid, "norm! j")
         exec g:Lf_py "bufExplManager._cli._buildPopupPrompt()"
-        redraw
+        "redraw
         exec g:Lf_py "bufExplManager._getInstance().refreshPopupStatusline()"
     elseif key ==# "k" || key ==? "<Up>"
         call win_execute(a:winid, "norm! k")
         exec g:Lf_py "bufExplManager._cli._buildPopupPrompt()"
-        redraw
+        "redraw
         exec g:Lf_py "bufExplManager._getInstance().refreshPopupStatusline()"
     elseif key ==? "<PageUp>" || key ==? "<C-B>"
         call win_execute(a:winid, "norm! \<PageUp>")
