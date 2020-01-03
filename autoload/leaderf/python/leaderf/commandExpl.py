@@ -22,10 +22,8 @@ RE_BUILT_IN_COMMAND = re.compile(r"^\|:([^|]+)\|")
 class CommandExplorer(Explorer):
     def __init__(self):
         self._content = []
-        self._run_immediately = False
 
     def getContent(self, *args, **kwargs):
-        self._run_immediately = "--run-immediately" in kwargs["arguments"]
         if self._content:
             return self._content
         else:
@@ -76,7 +74,7 @@ class CommandExplManager(Manager):
         """"""
         cmd = args[0]
 
-        if self._getExplorer()._run_immediately:
+        if "--run-immediately" in self.getArguments():
             try:
                 lfCmd(cmd)
                 lfCmd("call histadd(':', '%s')" % escQuote(cmd))
