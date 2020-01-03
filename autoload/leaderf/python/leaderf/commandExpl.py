@@ -82,11 +82,11 @@ class CommandExplManager(Manager):
                 error = lfEncode(str(repr(e)))
                 if "E471" in error:
                     # Arguments mandatory
-                    lfCmd("call feedkeys(':%s ')" % escQuote(cmd))
+                    lfCmd("call feedkeys(':%s ', 'n')" % escQuote(cmd))
                 else:
                     lfPrintError(e)
         else:
-            lfCmd("call feedkeys(':%s')" % escQuote(cmd))
+            lfCmd("call feedkeys(':%s', 'n')" % escQuote(cmd))
 
     def _getDigest(self, line, mode):
         return line
