@@ -113,7 +113,7 @@ class CommandExplManager(Manager):
         instance = self._getInstance()
         line = instance.currentLine
         instance.exitBuffer()
-        lfCmd("call feedkeys(':%s')" % escQuote(line))
+        lfCmd("call feedkeys(':%s', 'n')" % escQuote(line))
 
 
 # *****************************************************

@@ -133,7 +133,7 @@ class HistoryExplManager(Manager):
         if self._getExplorer().getHistoryType() == "Search_History":
             cmd = "/"
 
-        lfCmd("call feedkeys('%s')" % (cmd + escQuote(line)))
+        lfCmd("call feedkeys('%s', 'n')" % (cmd + escQuote(line)))
 
 
 #*****************************************************
