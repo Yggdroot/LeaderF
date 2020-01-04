@@ -73,16 +73,20 @@ class CommandExplManager(Manager):
     def _acceptSelection(self, *args, **kwargs):
         """"""
         cmd = args[0]
-        try:
-            lfCmd(cmd)
-            lfCmd("call histadd(':', '%s')" % escQuote(cmd))
-        except vim.error as e:
-            error = lfEncode(str(repr(e)))
-            if "E471" in error:
-                # Arguments mandatory
-                lfCmd("call feedkeys(':%s ')" % escQuote(cmd))
-            else:
-                lfPrintError(e)
+
+        if "--run-immediately" in self.getArguments():
+            try:
+                lfCmd(cmd)
+                lfCmd("call histadd(':', '%s')" % escQuote(cmd))
+            except vim.error as e:
+                error = lfEncode(str(repr(e)))
+                if "E471" in error:
+                    # Arguments mandatory
+                    lfCmd("call feedkeys(':%s', 'n')" % escQuote(cmd))
+                else:
+                    lfPrintError(e)
+        else:
+            lfCmd("call feedkeys(':%s', 'n')" % escQuote(cmd))
 
     def _getDigest(self, line, mode):
         return line
@@ -109,7 +113,7 @@ class CommandExplManager(Manager):
         instance = self._getInstance()
         line = instance.currentLine
         instance.exitBuffer()
-        lfCmd("call feedkeys(':%s')" % escQuote(line))
+        lfCmd("call feedkeys(':%s', 'n')" % escQuote(line))
 
 
 # *****************************************************
