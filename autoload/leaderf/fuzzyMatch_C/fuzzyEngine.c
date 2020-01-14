@@ -698,9 +698,9 @@ static PyObject* fuzzyEngine_fuzzyMatch(PyObject* self, PyObject* args, PyObject
     for ( i = 0; i < results_count; ++i )
     {
         /* PyList_SET_ITEM() steals a reference to item.     */
-        /* PySequence_GetItem() return value: New reference. */
+        /* PySequence_ITEM() return value: New reference. */
         PyList_SET_ITEM(weight_list, i, Py_BuildValue("f", results[i].weight));
-        PyList_SET_ITEM(text_list, i, PySequence_GetItem(py_source, results[i].index));
+        PyList_SET_ITEM(text_list, i, PySequence_ITEM(py_source, results[i].index));
     }
 
     free(pEngine->source);
@@ -894,7 +894,6 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
     for ( i = 0; i < results_count; ++i )
     {
         /* PyList_SET_ITEM() steals a reference to item.     */
-        /* PySequence_GetItem() return value: New reference. */
         PyList_SET_ITEM(weight_list, i, Py_BuildValue("f", results[i].weight));
         PyList_SET_ITEM(index_list, i, Py_BuildValue("I", results[i].index));
     }
@@ -907,6 +906,80 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
     return Py_BuildValue("(NN)", weight_list, index_list);
 }
 
+/**
+ * merge(tuple_a, tuple_b)
+ * tuple_a, tuple_b are the return value of fuzzyEngine_fuzzyMatch
+ */
+static PyObject* fuzzyEngine_merge(PyObject* self, PyObject* args)
+{
+    PyObject* weight_list_a = NULL;
+    PyObject* text_list_a = NULL;
+    PyObject* weight_list_b = NULL;
+    PyObject* text_list_b = NULL;
+    if ( !PyArg_ParseTuple(args, "(OO)(OO):merge", &weight_list_a, &text_list_a,  &weight_list_b, &text_list_b) )
+        return NULL;
+
+    uint32_t size_a = (uint32_t)PyList_Size(weight_list_a);
+    if ( size_a == 0 )
+    {
+        return Py_BuildValue("(OO)", weight_list_b, text_list_b);
+    }
+    uint32_t size_b = (uint32_t)PyList_Size(weight_list_b);
+    if ( size_b == 0 )
+    {
+        return Py_BuildValue("(OO)", weight_list_a, text_list_a);
+    }
+
+    PyObject* weight_list = PyList_New(size_a + size_b);
+    PyObject* text_list = PyList_New(size_a + size_b);
+
+    uint32_t i = 0;
+    uint32_t j = 0;
+    PyObject* item_a = PyList_GET_ITEM(weight_list_a, i);
+    double w_a = PyFloat_AsDouble(item_a);
+    PyObject* item_b = PyList_GET_ITEM(weight_list_b, j);
+    double w_b = PyFloat_AsDouble(item_b);
+    while ( i < size_a && j < size_b )
+    {
+        if ( w_a > w_b )
+        {
+            Py_INCREF(item_a);
+            PyList_SET_ITEM(weight_list, i + j, item_a);
+            PyList_SET_ITEM(text_list, i + j, PySequence_ITEM(text_list_a, i));
+            ++i;
+            if ( i < size_a )
+            {
+                item_a = PyList_GET_ITEM(weight_list_a, i);
+                w_a = PyFloat_AsDouble(item_a);
+            }
+        }
+        else
+        {
+            Py_INCREF(item_b);
+            PyList_SET_ITEM(weight_list, i + j, item_b);
+            PyList_SET_ITEM(text_list, i + j, PySequence_ITEM(text_list_b, j));
+            ++j;
+            if ( j < size_b )
+            {
+                item_b = PyList_GET_ITEM(weight_list_b, j);
+                w_b = PyFloat_AsDouble(item_b);
+            }
+        }
+    }
+    while ( i < size_a )
+    {
+        PyList_SET_ITEM(weight_list, i + j, PySequence_ITEM(weight_list_a, i));
+        PyList_SET_ITEM(text_list, i + j, PySequence_ITEM(text_list_a, i));
+        ++i;
+    }
+    while ( j < size_b )
+    {
+        PyList_SET_ITEM(weight_list, i + j, PySequence_ITEM(weight_list_b, j));
+        PyList_SET_ITEM(text_list, i + j, PySequence_ITEM(text_list_b, j));
+        ++j;
+    }
+    return Py_BuildValue("(NN)", weight_list, text_list);
+}
 /**
  * getHighlights(engine, source, pattern, is_name_only=False)
  *
@@ -1221,9 +1294,9 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
     for ( i = 0; i < source_size; ++i )
     {
         /* PyList_SET_ITEM() steals a reference to item.     */
-        /* PySequence_GetItem() return value: New reference. */
+        /* PySequence_ITEM() return value: New reference. */
         PyList_SET_ITEM(weight_list, i, Py_BuildValue("I", results[i].path_weight));
-        PyList_SET_ITEM(text_list, i, PySequence_GetItem(py_source, results[i].index));
+        PyList_SET_ITEM(text_list, i, PySequence_ITEM(py_source, results[i].index));
     }
 
     free(pEngine->source);
@@ -1243,6 +1316,7 @@ static PyMethodDef fuzzyEngine_Methods[] =
     { "fuzzyMatchEx", (PyCFunction)fuzzyEngine_fuzzyMatchEx, METH_VARARGS | METH_KEYWORDS, "" },
     { "getHighlights", (PyCFunction)fuzzyEngine_getHighlights, METH_VARARGS | METH_KEYWORDS, "" },
     { "guessMatch", (PyCFunction)fuzzyEngine_guessMatch, METH_VARARGS | METH_KEYWORDS, "" },
+    { "merge", (PyCFunction)fuzzyEngine_merge, METH_VARARGS, "" },
     { NULL, NULL, 0, NULL }
 };
 

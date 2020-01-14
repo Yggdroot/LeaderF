@@ -964,7 +964,10 @@ class Manager(object):
             cur_content = content[:self._index]
         else:
             if not is_continue and self._result_content:
-                self._cb_content += self._result_content
+                if self._cb_content:
+                    self._cb_content += self._result_content
+                else:
+                    self._cb_content = self._result_content
 
             if len(self._cb_content) >= step:
                 cur_content = self._cb_content[:step]
@@ -997,11 +1000,9 @@ class Manager(object):
                 result = filter_method(source=cur_content)
 
             if is_continue:
-                self._previous_result = (self._previous_result[0] + result[0],
-                                         self._previous_result[1] + result[1])
-                result = self._previous_result
-            else:
-                self._previous_result = result
+                result = fuzzyEngine.merge(self._previous_result, result)
+
+            self._previous_result = result
         else:
             result = list(filter_method(cur_content))
             if is_continue:
@@ -1141,7 +1142,7 @@ class Manager(object):
                     return_index = True
                     pattern = fuzzyEngine.initPattern(self._cli.pattern[0])
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine,
-                                            pattern=pattern, is_name_only=True, sort_results=not is_continue)
+                                            pattern=pattern, is_name_only=True, sort_results=True)
                     getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                             pattern=pattern, is_name_only=True)
                     highlight_method = partial(self._highlight, True, getHighlights, True)
@@ -1164,7 +1165,7 @@ class Manager(object):
                     return_index = True
                     pattern = fuzzyEngine.initPattern(self._cli.pattern[1])
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine,
-                                            pattern=pattern, is_name_only=False, sort_results=not is_continue)
+                                            pattern=pattern, is_name_only=False, sort_results=True)
                     getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                             pattern=pattern, is_name_only=False)
                     highlight_method = partial(self._highlight, True, getHighlights, True)
@@ -1215,26 +1216,26 @@ class Manager(object):
                 if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
                     return_index = False
                     filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=False, sort_results=not is_continue)
+                                            is_name_only=False, sort_results=True)
                 elif self._getExplorer().getStlCategory() in ["Rg"]:
                     if "--match-path" in self._arguments:
                         return_index = False
                         filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
-                                                is_name_only=True, sort_results=not is_continue)
+                                                is_name_only=True, sort_results=True)
                     else:
                         return_index = True
                         filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                                is_name_only=True, sort_results=not is_continue)
+                                                is_name_only=True, sort_results=True)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History", "Tag", "Filetype",
                         "Command"]:
                     return_index = True
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=True, sort_results=not is_continue)
+                                            is_name_only=True, sort_results=True)
                 else:
                     return_index = True
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=not self._cli.isFullPath, sort_results=not is_continue)
+                                            is_name_only=not self._cli.isFullPath, sort_results=True)
 
                 getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                         pattern=pattern, is_name_only=not self._cli.isFullPath)
@@ -1288,12 +1289,7 @@ class Manager(object):
                 else:
                     step = 40000 * cpu_count
 
-            pair = self._filter(step, filter_method, content, is_continue, True, return_index)
-            if is_continue: # result is not sorted
-                pairs = sorted(zip(*pair), key=operator.itemgetter(0), reverse=True)
-                self._result_content = self._getList(pairs)
-            else:
-                self._result_content = pair[1]
+            _, self._result_content = self._filter(step, filter_method, content, is_continue, True, return_index)
         else:
             if step == 0:
                 if use_fuzzy_match_c:
@@ -1342,15 +1338,10 @@ class Manager(object):
         filename, suffix = os.path.splitext(basename)
         if self._fuzzy_engine:
             filter_method = partial(fuzzyEngine.guessMatch, engine=self._fuzzy_engine, filename=filename,
-                                    suffix=suffix, dirname=dirname, sort_results=not is_continue)
+                                    suffix=suffix, dirname=dirname, sort_results=True)
             step = len(content)
 
-            pair = self._filter(step, filter_method, content, is_continue, True)
-            if is_continue: # result is not sorted
-                pairs = sorted(zip(*pair), key=operator.itemgetter(0), reverse=True)
-                self._result_content = self._getList(pairs)
-            else:
-                self._result_content = pair[1]
+            _, self._result_content = self._filter(step, filter_method, content, is_continue, True)
         else:
             step = len(content)
             filter_method = partial(self._guessFilter, filename, suffix, dirname)
@@ -2200,7 +2191,7 @@ class Manager(object):
             if self._cli.pattern:
                 if self._index < len(self._content) or len(self._cb_content) > 0:
                     if self._fuzzy_engine:
-                        step = 10000 * cpu_count
+                        step = 20000 * cpu_count
                     elif is_fuzzyMatch_C:
                         step = 10000
                     else:
@@ -2229,7 +2220,7 @@ class Manager(object):
             if self._cli.pattern:
                 if self._index < cur_len or len(self._cb_content) > 0:
                     if self._fuzzy_engine:
-                        step = 10000 * cpu_count
+                        step = 20000 * cpu_count
                     elif is_fuzzyMatch_C:
                         step = 10000
                     else:
