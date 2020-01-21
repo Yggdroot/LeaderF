@@ -227,6 +227,7 @@ class LfInstance(object):
         self._win_pos = None
         self._stl_buf_namespace = None
         self._highlightStl()
+        self._auto_resize = lfEval("get(g:, 'Lf_AutoResize', 0)") == '1'
 
     def _initStlVar(self):
         if int(lfEval("!exists('g:Lf_{}_StlCategory')".format(self._category))):
@@ -1062,7 +1063,23 @@ class LfInstance(object):
 
                 self.setLineNumber()
             else:
+                orig_row = self._window_object.cursor[0]
                 self._buffer_object[:] = content
+
+                if self._auto_resize:
+                    buffer_len = len(self._buffer_object)
+                    if buffer_len < self._initial_win_height:
+                        if "--nowrap" not in self._arguments:
+                            self._window_object.height = min(self._initial_win_height, self._actualLength(self._buffer_object))
+                        else:
+                            self._window_object.height = buffer_len
+                    elif self._window_object.height < self._initial_win_height:
+                        self._window_object.height = self._initial_win_height
+
+                    try:
+                        self._window_object.cursor = (orig_row, 0)
+                    except vim.error:
+                        self._window_object.cursor = (1, 0)
 
                 # I don't know how to minimize the steps to reproduce the issue,
                 # I believe there must be a bug in vim
@@ -1115,10 +1132,27 @@ class LfInstance(object):
 
                 self.setLineNumber()
             else:
+                orig_row = self._window_object.cursor[0]
                 if self.empty():
                     self._buffer_object[:] = content
                 else:
                     self._buffer_object.append(content)
+
+                if self._auto_resize:
+                    buffer_len = len(self._buffer_object)
+                    if buffer_len < self._initial_win_height:
+                        if "--nowrap" not in self._arguments:
+                            self._window_object.height = min(self._initial_win_height, self._actualLength(self._buffer_object))
+                        else:
+                            self._window_object.height = buffer_len
+                    elif self._window_object.height < self._initial_win_height:
+                        self._window_object.height = self._initial_win_height
+
+                    try:
+                        self._window_object.cursor = (orig_row, 0)
+                    except vim.error:
+                        self._window_object.cursor = (1, 0)
+
         finally:
             self.refreshPopupStatusline()
             self.buffer.options['modifiable'] = False
