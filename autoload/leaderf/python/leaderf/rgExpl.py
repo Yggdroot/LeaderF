@@ -610,6 +610,15 @@ class RgExplManager(Manager):
                 k.options["cursorline"] = v
         self._cursorline_dict.clear()
 
+        reg = lfEval("get(g:, 'Lf_RgStorePattern', '')")
+        if reg == '':
+            return
+        patterns = self._getExplorer().getPatternRegex()[:1]
+        # \v\cRegex
+        # ^^^^---->
+        patterns.extend([x[4:] for x in self._getExplorer().getPatternRegex()[1:]])
+        lfCmd("call setreg('%s', '%s')" % (reg, '|'.join(patterns)))
+
     def _bangEnter(self):
         super(RgExplManager, self)._bangEnter()
         if lfEval("exists('*timer_start')") == '0':
