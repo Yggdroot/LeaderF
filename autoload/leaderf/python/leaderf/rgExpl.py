@@ -618,11 +618,7 @@ class RgExplManager(Manager):
         # ^^^^---->
         patterns.extend([x[4:] for x in self._getExplorer().getPatternRegex()[1:]])
         regexp = '|'.join(patterns)
-        if reg == "/":
-            # no highlight
-            lfCmd("let @/ = '%s'" % regexp)
-        else:
-            lfCmd("call setreg('%s', '%s')" % (reg, regexp))
+        lfCmd("let @%s = '%s'" % (reg, regexp))
 
     def _bangEnter(self):
         super(RgExplManager, self)._bangEnter()
