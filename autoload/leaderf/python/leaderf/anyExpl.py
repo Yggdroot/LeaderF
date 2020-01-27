@@ -420,9 +420,6 @@ class LfShlex(shlex.shlex):
                         break   # emit current token
                     else:
                         continue
-                elif nextchar in self.commenters:
-                    self.instream.readline()
-                    self.lineno = self.lineno + 1
                 elif self.posix and nextchar in self.escape:
                     escapedstate = 'a'
                     self.state = nextchar
@@ -490,15 +487,6 @@ class LfShlex(shlex.shlex):
                         break   # emit current token
                     else:
                         continue
-                elif nextchar in self.commenters:
-                    self.instream.readline()
-                    self.lineno = self.lineno + 1
-                    if self.posix:
-                        self.state = ' '
-                        if self.token or (self.posix and quoted):
-                            break   # emit current token
-                        else:
-                            continue
                 elif self.posix and nextchar in self.quotes:
                     self.state = nextchar
                 elif self.posix and nextchar in self.escape:
