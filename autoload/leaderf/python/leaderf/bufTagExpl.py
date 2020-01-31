@@ -149,6 +149,8 @@ class BufTagExplorer(Explorer):
         tag_len = min(max_tag_len, ave_taglen * 2)
 
         tab_len = buffer.options["shiftwidth"]
+        if tab_len == 0:
+            tab_len = 4
         std_tag_kind_len = tag_len // tab_len * tab_len + tab_len + max_kind_len
 
         tag_list = []
