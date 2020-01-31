@@ -1545,7 +1545,7 @@ class Manager(object):
                 return iter([])
             else:
                 return (line for line in iterable
-                        if noErrMatch(escQuote(self._getDigest(line, 0).strip()), escQuote(self._cli.pattern)))
+                        if noErrMatch(escQuote(self._getDigest(line, 0)), escQuote(self._cli.pattern)))
         except vim.error:
             return iter([])
 
