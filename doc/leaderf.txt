@@ -798,6 +798,11 @@ g:Lf_PopupPalette                                  *g:Lf_PopupPalette*
 
     It is not defined by default.
 
+g:Lf_AutoResize                                 *g:Lf_AutoResize*
+    Auto resize the LeaderF window height automatically.
+
+    Default value is 0.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
