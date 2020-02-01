@@ -1138,7 +1138,7 @@ class LfInstance(object):
                 else:
                     self._buffer_object.append(content)
 
-                if self._auto_resize and self._win_pos != 'popup':
+                if self._auto_resize and self._win_pos not in ('popup', 'floatwin'):
                     buffer_len = len(self._buffer_object)
                     if buffer_len < self._initial_win_height:
                         if "--nowrap" not in self._arguments:
