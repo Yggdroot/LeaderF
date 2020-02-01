@@ -216,6 +216,8 @@ class LfInstance(object):
         self._window_object = None
         self._buffer_object = None
         self._buffer_name = lfEval("expand('$VIMRUNTIME/')") + category + '/LeaderF'
+        self._input_buffer_number = -1
+        self._stl_buffer_number = -1
         self._win_height = float(lfEval("g:Lf_WindowHeight"))
         self._show_tabline = int(lfEval("&showtabline"))
         self._is_autocmd_set = False
@@ -416,7 +418,11 @@ class LfInstance(object):
                     "row"     : line,
                     "col"     : col
                     }
-            buf_number = int(lfEval("bufadd('')"))
+
+            if self._input_buffer_number == -1:
+                self._input_buffer_number = int(lfEval("bufadd('')"))
+
+            buf_number = self._input_buffer_number
             lfCmd("silent let winid = nvim_open_win(%d, 0, %s)" % (buf_number, str(input_win_config)))
             winid = int(lfEval("winid"))
             lfCmd("call nvim_buf_set_option(%d, 'buflisted', v:false)" % buf_number)
@@ -454,7 +460,11 @@ class LfInstance(object):
                         "row"     : line + 1 + floatwin_height,
                         "col"     : col
                         }
-                buf_number = int(lfEval("bufadd('')"))
+
+                if self._stl_buffer_number == -1:
+                    self._stl_buffer_number = int(lfEval("bufadd('')"))
+
+                buf_number = self._stl_buffer_number
                 lfCmd("silent let winid = nvim_open_win(%d, 0, %s)" % (buf_number, str(stl_win_config)))
                 winid = int(lfEval("winid"))
                 lfCmd("call nvim_buf_set_option(%d, 'buflisted', v:false)" % buf_number)
@@ -530,7 +540,10 @@ class LfInstance(object):
                     "mapping":         0,
                     }
 
-            buf_number = int(lfEval("bufadd('')"))
+            if self._input_buffer_number == -1:
+                self._input_buffer_number = int(lfEval("bufadd('')"))
+
+            buf_number = self._input_buffer_number
             lfCmd("silent let winid = popup_create(%d, %s)" % (buf_number, str(input_win_options)))
             winid = int(lfEval("winid"))
             lfCmd("call win_execute(%d, 'setlocal nobuflisted')" % winid)
@@ -566,7 +579,10 @@ class LfInstance(object):
                         "mapping":         0,
                         }
 
-                buf_number = int(lfEval("bufadd('')"))
+                if self._stl_buffer_number == -1:
+                    self._stl_buffer_number = int(lfEval("bufadd('')"))
+
+                buf_number = self._stl_buffer_number
                 lfCmd("silent let winid = popup_create(%d, %s)" % (buf_number, str(statusline_win_options)))
                 winid = int(lfEval("winid"))
                 lfCmd("call win_execute(%d, 'setlocal nobuflisted')" % winid)
