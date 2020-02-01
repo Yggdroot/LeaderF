@@ -11,11 +11,12 @@ from .utils import *
 
 
 class FloatWindow(object):
-    def __init__(self, winid, window, buffer, tabpage):
+    def __init__(self, winid, window, buffer, tabpage, init_line):
         self._winid = winid
         self._window = window
         self._buffer = buffer
         self._tabpage = tabpage
+        self._init_line = init_line
 
     @property
     def id(self):
@@ -49,6 +50,10 @@ class FloatWindow(object):
     def height(self):
         return self._window.height
 
+    @height.setter
+    def height(self, height):
+        self._window.height = height
+
     @property
     def width(self):
         return self._window.width
@@ -60,6 +65,10 @@ class FloatWindow(object):
     @property
     def valid(self):
         return self._window.valid
+
+    @property
+    def initialLine(self):
+        return self._init_line
 
     def close(self):
         lfCmd("call nvim_win_close(%d, 0)" % self._winid)
@@ -378,11 +387,12 @@ class LfInstance(object):
 
         if lfEval("has('nvim')") == '1':
             self._win_pos = "floatwin"
+            floatwin_height = 1
 
             config = {
                     "relative": "editor",
                     "anchor"  : "NW",
-                    "height"  : self._popup_maxheight,
+                    "height"  : floatwin_height,
                     "width"   : maxwidth,
                     "row"     : line + 1,
                     "col"     : col
@@ -395,7 +405,7 @@ class LfInstance(object):
 
             self._tabpage_object = vim.current.tabpage
             self._buffer_object = vim.buffers[buf_number]
-            self._window_object = FloatWindow(self._popup_winid, vim.current.window, self._buffer_object, self._tabpage_object)
+            self._window_object = FloatWindow(self._popup_winid, vim.current.window, self._buffer_object, self._tabpage_object, line + 1)
             self._popup_instance.content_win = self._window_object
 
             input_win_config = {
@@ -433,7 +443,7 @@ class LfInstance(object):
                         return w
                 return vim.current.window
 
-            self._popup_instance.input_win = FloatWindow(winid, getWindow(int(lfEval("win_id2win(%d)" % winid))), vim.buffers[buf_number], vim.current.tabpage)
+            self._popup_instance.input_win = FloatWindow(winid, getWindow(int(lfEval("win_id2win(%d)" % winid))), vim.buffers[buf_number], vim.current.tabpage, line)
 
             if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
                 stl_win_config = {
@@ -441,7 +451,7 @@ class LfInstance(object):
                         "anchor"  : "NW",
                         "height"  : 1,
                         "width"   : maxwidth,
-                        "row"     : line + 1 + self._popup_maxheight,
+                        "row"     : line + 1 + floatwin_height,
                         "col"     : col
                         }
                 buf_number = int(lfEval("bufadd('')"))
@@ -465,7 +475,7 @@ class LfInstance(object):
                 lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_blank')" % winid)
-                self._popup_instance.statusline_win = FloatWindow(winid, getWindow(int(lfEval("win_id2win(%d)" % winid))), vim.buffers[buf_number], vim.current.tabpage)
+                self._popup_instance.statusline_win = FloatWindow(winid, getWindow(int(lfEval("win_id2win(%d)" % winid))), vim.buffers[buf_number], vim.current.tabpage, line + 1 + floatwin_height)
         else:
             self._win_pos = "popup"
 
@@ -577,7 +587,7 @@ class LfInstance(object):
                 lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_blank')" % winid)
                 lfCmd("call win_execute(%d, 'silent! setlocal filetype=leaderf')" % winid)
 
-                self._popup_instance.statusline_win = PopupWindow(winid, vim.buffers[buf_number], vim.current.tabpage, line + maxheight)
+                self._popup_instance.statusline_win = PopupWindow(winid, vim.buffers[buf_number], vim.current.tabpage, line + 1 + self._window_object.height)
 
             lfCmd("call leaderf#ResetPopupOptions(%d, 'callback', function('leaderf#PopupClosed', [%s, %d]))"
                     % (self._popup_winid, str(self._popup_instance.getWinIdList()), id(self._manager)))
@@ -1096,6 +1106,25 @@ class LfInstance(object):
             expected_line = self._window_object.initialLine + self._window_object.height
             if expected_line != int(lfEval("popup_getpos(%d).line" % statusline_win.id)):
                 lfCmd("call leaderf#ResetPopupOptions(%d, 'line', %d)" % (statusline_win.id, expected_line))
+        elif self._win_pos == 'floatwin':
+            buffer_len = len(self._buffer_object)
+            if buffer_len < self._popup_maxheight:
+                if "--nowrap" not in self._arguments:
+                    self._window_object.height = min(self._popup_maxheight, self._actualLength(self._buffer_object))
+                else:
+                    self._window_object.height = buffer_len
+
+                if statusline_win:
+                    expected_line = self._window_object.initialLine + self._window_object.height
+                    if expected_line != int(float(lfEval("nvim_win_get_config(%d).row" % statusline_win.id))):
+                        lfCmd("call leaderf#ResetFloatwinOptions(%d, 'row', %d)" % (statusline_win.id, expected_line))
+            elif self._window_object.height < self._popup_maxheight:
+                self._window_object.height = self._popup_maxheight
+
+                if statusline_win:
+                    expected_line = self._window_object.initialLine + self._window_object.height
+                    if expected_line != int(float(lfEval("nvim_win_get_config(%d).row" % statusline_win.id))):
+                        lfCmd("call leaderf#ResetFloatwinOptions(%d, 'row', %d)" % (statusline_win.id, expected_line))
 
     def appendBuffer(self, content):
         self.buffer.options['modifiable'] = True

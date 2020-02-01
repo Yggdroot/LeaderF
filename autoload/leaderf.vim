@@ -564,6 +564,12 @@ function! leaderf#ResetPopupOptions(winid, option, value) abort
     call popup_setoptions(a:winid, opts)
 endfunction
 
+function! leaderf#ResetFloatwinOptions(winid, option, value) abort
+    let opts = nvim_win_get_config(a:winid)
+    let opts[a:option] = a:value
+    call nvim_win_set_config(a:winid, opts)
+endfunction
+
 " `pos` - A list with three numbers, e.g., [23, 11, 3]. As above, but
 " the third number gives the length of the highlight in bytes.
 function! leaderf#matchaddpos(group, pos) abort
