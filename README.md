@@ -32,6 +32,7 @@ Requirements
  - vim7.3 or higher. Only support vim7.4.330 or higher after [v1.01](https://github.com/Yggdroot/LeaderF/releases/tag/v1.01).
  - Python2.7+ or Python3.1+.
  - To use the popup mode, neovim 0.42+ or vim 8.1.1615+ are required.
+ - [optional]A sub-function of LeaderF is based on [ripgrep](https://github.com/BurntSushi/ripgrep)
 
 Installation
 ------------
