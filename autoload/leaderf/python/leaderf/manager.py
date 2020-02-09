@@ -2120,7 +2120,7 @@ class Manager(object):
         if self._is_content_list:
             if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
                 if self._fuzzy_engine:
-                    step = 10000 * cpu_count
+                    step = 40000 * cpu_count
                 elif is_fuzzyMatch_C:
                     step = 10000
                 else:
@@ -2191,7 +2191,7 @@ class Manager(object):
             if self._cli.pattern:
                 if self._index < len(self._content) or len(self._cb_content) > 0:
                     if self._fuzzy_engine:
-                        step = 20000 * cpu_count
+                        step = 40000 * cpu_count
                     elif is_fuzzyMatch_C:
                         step = 10000
                     else:
@@ -2220,7 +2220,7 @@ class Manager(object):
             if self._cli.pattern:
                 if self._index < cur_len or len(self._cb_content) > 0:
                     if self._fuzzy_engine:
-                        step = 20000 * cpu_count
+                        step = 40000 * cpu_count
                     elif is_fuzzyMatch_C:
                         step = 10000
                     else:
