@@ -570,6 +570,21 @@ g:Lf_RgConfig                                   *g:Lf_RgConfig*
 <
     Default value is [].
 
+g:Lf_RgStorePattern                             *g:Lf_RgStorePattern*
+    Specify the register to store the search pattern when you exit LeaderF.
+    The pattern entered with `-e` of the `Leaderf rg` command is stored. Also,
+    patterns are converted to Vim's regexp.
+
+    For example, When there is one pattern:
+        When executed in `Leaderf rg -e "pat1"`, `/\v\cpat1` is stored.
+
+    For example, When there are multiple patterns:
+        If multiple patterns are specified, they will be joined with `|`.
+        When executed in `Leaderf rg -e "pat1" -e "pat2"`, `/\v\cpat1|pat2` is
+        stored.
+
+    Default value is "".
+
 g:Lf_MaxCount                                   *g:Lf_MaxCount*
     Specify the limit of the number of source entries. LeaderF will stop
     producing the source entries if the limit is hit. There is no limit if the

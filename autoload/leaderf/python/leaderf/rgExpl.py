@@ -6,6 +6,7 @@ import re
 import os
 import os.path
 import tempfile
+import json
 from functools import wraps
 from .utils import *
 from .explorer import *
@@ -535,6 +536,8 @@ class RgExplManager(Manager):
         help.append('" t : open file under cursor in a new tabpage')
         help.append('" p : preview the result')
         help.append('" d : delete the line under the cursor')
+        help.append('" Q : output result quickfix list ')
+        help.append('" L : output result location list ')
         help.append('" i/<Tab> : switch to input mode')
         help.append('" q : quit')
         help.append('" <F1> : toggle this help')
@@ -606,6 +609,16 @@ class RgExplManager(Manager):
             if k.valid:
                 k.options["cursorline"] = v
         self._cursorline_dict.clear()
+
+        reg = lfEval("get(g:, 'Lf_RgStorePattern', '')")
+        if reg == '':
+            return
+        patterns = self._getExplorer().getPatternRegex()[:1]
+        # \v\cRegex
+        # ^^^^---->
+        patterns.extend([x[4:] for x in self._getExplorer().getPatternRegex()[1:]])
+        regexp = '|'.join(patterns)
+        lfCmd("let @%s = '%s'" % (reg, regexp))
 
     def _bangEnter(self):
         super(RgExplManager, self)._bangEnter()
@@ -768,6 +781,30 @@ class RgExplManager(Manager):
 
         self._createPopupPreview("", buf_number, line_num)
 
+    def outputToQflist(self, *args, **kwargs):
+        items = self._getFormatedContents()
+        lfCmd("call setqflist(%s, 'r')" % json.dumps(items))
+        lfCmd("echohl WarningMsg | redraw | echo ' Output result to quickfix list.' | echohl NONE")
+
+    def outputToLoclist(self, *args, **kwargs):
+        items = self._getFormatedContents()
+        winnr = lfEval('bufwinnr(%s)' % self._cur_buffer.number)
+        lfCmd("call setloclist(%d, %s, 'r')" % (int(winnr), json.dumps(items)))
+        lfCmd("echohl WarningMsg | redraw | echo ' Output result to location list.' | echohl NONE")
+
+    def _getFormatedContents(self):
+        items = []
+        for line in self._instance._buffer_object:
+            m = re.match(r'^(?:\.[\\/])?([^:]+):(\d+):(.*)$', line)
+            if m:
+                fpath, lnum, text = m.group(1, 2, 3)
+                items.append({
+                    "filename": fpath,
+                    "lnum": lnum,
+                    "col": 1,
+                    "text": text,
+                })
+        return items
 
 #*****************************************************
 # rgExplManager is a singleton

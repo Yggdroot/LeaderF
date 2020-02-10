@@ -35,6 +35,8 @@ function! leaderf#Rg#Maps()
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "rgExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "rgExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "rgExplManager.deleteCurrentLine()"<CR>
+    nnoremap <buffer> <silent> Q             :exec g:Lf_py "rgExplManager.outputToQflist()"<CR>
+    nnoremap <buffer> <silent> L             :exec g:Lf_py "rgExplManager.outputToLoclist()"<CR>
     if has("nvim")
         nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "rgExplManager._toUpInPopup()"<CR>
         nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "rgExplManager._toDownInPopup()"<CR>
@@ -187,6 +189,10 @@ function! leaderf#Rg#NormalModeFilter(winid, key) abort
         exec g:Lf_py "rgExplManager.toggleHelp()"
     elseif key ==# "d"
         exec g:Lf_py "rgExplManager.deleteCurrentLine()"
+    elseif key ==# "Q"
+        exec g:Lf_py "rgExplManager.outputToQflist()"
+    elseif key ==# "L"
+        exec g:Lf_py "rgExplManager.outputToLoclist()"
     elseif key ==? "<C-Up>"
         exec g:Lf_py "rgExplManager._toUpInPopup()"
     elseif key ==? "<C-Down>"
