@@ -470,7 +470,7 @@ class GtagsExplorer(Explorer):
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, filename, dbpath)
                 env = os.environ
-                env["GTAGSFORCECPP"] = ""
+                # env["GTAGSFORCECPP"] = "" # lead to issue #489
                 subprocess.Popen(cmd, shell=True, env=env)
         elif not auto:
             self._executeCmd(root, dbpath)
@@ -495,7 +495,7 @@ class GtagsExplorer(Explorer):
             self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
 
         env = os.environ
-        env["GTAGSFORCECPP"] = ""
+        # env["GTAGSFORCECPP"] = "" # lead to issue #489
         for path in self._gtagslibpath:
             if not os.path.exists(path):
                 continue
@@ -803,7 +803,7 @@ class GtagsExplorer(Explorer):
                         self._gtagslabel, dbpath)
 
         env = os.environ
-        env["GTAGSFORCECPP"] = ""
+        # env["GTAGSFORCECPP"] = "" # lead to issue #489
         proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stderr=subprocess.PIPE, env=env)
         _, error = proc.communicate()
 
@@ -827,8 +827,8 @@ class GtagsExplorer(Explorer):
 
         if self._has_nvim:
             vim.async_call(lfCmd, "let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
-        else:
-            lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
+        # else:
+        #     lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd)) # may cause crash
 
     def getStlCategory(self):
         return 'Gtags'
