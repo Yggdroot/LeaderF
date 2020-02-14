@@ -222,17 +222,17 @@ class LfCli(object):
         part2_start = sep2_start - 2 - len(part2)
         sep1_start = part2_start - len(sep)
         spin_start = sep1_start - 1 - len(spin)
-        part1_width = spin_start - 1
+        part1_width = spin_start - 1 #change EYAL
         text = "{:<{part1_width}} {} {:>{sep_width}} {:>{part2_width}} {:>{sep_width}} {:>{part3_width}} ".format(part1,
-                                                                               spin,
-                                                                               sep,
-                                                                               part2,
-                                                                               sep,
-                                                                               part3,
-                                                                               sep_width=len(sep),
-                                                                               part1_width=part1_width,
-                                                                               part2_width=len(part2),
-                                                                               part3_width=len(part3))
+                                                                                                                  spin,
+                                                                                                                  sep,
+                                                                                                                  part2,
+                                                                                                                  sep,
+                                                                                                                  part3,
+                                                                                                                  sep_width=min(len(sep),1),
+                                                                                                                  part1_width=part1_width,
+                                                                                                                  part2_width=min(len(part2),10),
+                                                                                                                  part3_width=min(len(part3),10))
         if self._instance.getWinPos() == 'popup':
             lfCmd("""call popup_settext(%d, '%s')""" % (input_window.id, escQuote(text)))
 
