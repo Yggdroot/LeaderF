@@ -105,6 +105,7 @@ class Manager(object):
         self._empty_query = lfEval("get(g:, 'Lf_EmptyQuery', 1)") == '1'
         self._preview_in_popup = lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1'
         self._preview_winid = 0
+        self._is_previewed = False
         self._match_ids = []
         self._vim_file_autoloaded = False
         self._getExplClass()
@@ -137,10 +138,9 @@ class Manager(object):
             lfCmd("argadd %s" % escSpecial(file))
 
     def _issue_422_set_option(self):
-        if lfEval("has('nvim')") == '1':
+        if lfEval("has('nvim')") == '1' and self._is_previewed:
             lfCmd("silent! setlocal number<")
             lfCmd("silent! setlocal relativenumber<")
-            lfCmd("silent! setlocal foldlevel<")
             lfCmd("silent! setlocal cursorline<")
             lfCmd("silent! setlocal colorcolumn<")
             lfCmd("silent! setlocal winhighlight<")
@@ -412,6 +412,7 @@ class Manager(object):
     #**************************************************************
 
     def _createPopupModePreview(self, title, buf_number, line_nr, jump_cmd):
+        self._is_previewed = True
         if lfEval("has('nvim')") == '1':
             width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
             if width == 0:
@@ -471,10 +472,13 @@ class Manager(object):
 
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
-            lfCmd("call nvim_win_set_option(%d, 'foldlevel', 1000)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._preview_winid)
+            cur_winid = lfEval("win_getid()")
+            lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            lfCmd("%foldopen!")
+            lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
             lfCmd("redraw!")
         else:
             popup_window = self._getInstance().window
@@ -567,6 +571,7 @@ class Manager(object):
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
 
     def _createPopupPreview(self, title, buf_number, line_nr, jump_cmd=''):
+        self._is_previewed = True
         buf_number = int(buf_number)
         line_nr = int(line_nr)
 
@@ -626,9 +631,12 @@ class Manager(object):
                 lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
-            lfCmd("call nvim_win_set_option(%d, 'foldlevel', 1000)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
+            cur_winid = lfEval("win_getid()")
+            lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            lfCmd("%foldopen!")
+            lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
         else:
             preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
             if preview_pos.lower() == 'center':
