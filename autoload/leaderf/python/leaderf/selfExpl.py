@@ -37,6 +37,7 @@ class SelfExplorer(Explorer):
             '18 LeaderfColorscheme      "switch between colorschemes"',
             '19 LeaderfFiletype         "navigate the filetype"',
             '20 LeaderfCommand          "execute built-in/user-defined Ex commands"',
+            '21 LeaderfWindow           "search windows"',
             ]
 
     def getContent(self, *args, **kwargs):
