@@ -477,7 +477,7 @@ class Manager(object):
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._preview_winid)
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
-            lfCmd("%foldopen!")
+            lfCmd("silent! %foldopen!")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
             lfCmd("redraw!")
         else:
@@ -635,7 +635,7 @@ class Manager(object):
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
-            lfCmd("%foldopen!")
+            lfCmd("silent! %foldopen!")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
         else:
             preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
