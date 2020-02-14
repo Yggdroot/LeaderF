@@ -677,6 +677,9 @@ class AnyHub(object):
             elif category == "command":
                 from .commandExpl import commandExplManager
                 manager = commandExplManager
+            elif category == "window":
+                from .windowExpl import windowExplManager
+                manager = windowExplManager
             else:
                 import ctypes
                 manager_id = lfFunction(lfEval("g:Lf_PythonExtensions['%s'].manager_id" % category))()

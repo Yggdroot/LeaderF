@@ -51,6 +51,7 @@ let g:Lf_Helps = {
             \ "gtags":          "navigate tags using the gtags",
             \ "filetype":       "navigate the filetype",
             \ "command":        "execute built-in/user-defined Ex commands",
+            \ "window":         "search windows",
             \ }
 
 let g:Lf_Arguments = {
@@ -177,6 +178,7 @@ let g:Lf_Arguments = {
             \ "command": [
             \           {"name": ["--run-immediately"], "nargs": 0, "help": "Immediately execute the command on the current line in the result window"},
             \   ],
+            \ "window": []
             \}
 
 let g:Lf_CommonArguments = [

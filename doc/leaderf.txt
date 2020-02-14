@@ -878,6 +878,9 @@ USAGE                                           *leaderf-usage*
 :LeaderfCommand                                 *LeaderfCommand*
     Launch LeaderF to execute user-defined/built-in Ex commands.
 
+:LeaderfWindow                                  *LeaderfWindow*
+    Launch LeaderF to search windows.
+
 :LeaderfRgInteractive                           *LeaderfRgInteractive*
     Launch LeaderF to use rg interactively.
 

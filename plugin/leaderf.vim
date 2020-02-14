@@ -177,6 +177,8 @@ command! -bar -nargs=0 LeaderfFiletype Leaderf filetype
 
 command! -bar -nargs=0 LeaderfCommand Leaderf command
 
+command! -bar -nargs=0 LeaderfWindow Leaderf window
+
 try
     if g:Lf_ShortcutF != ""
         exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
