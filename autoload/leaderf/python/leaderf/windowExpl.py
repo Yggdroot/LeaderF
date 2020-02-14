@@ -41,7 +41,7 @@ class WindowExplorer(Explorer):
 
                 # e,g,. ` 1  1 %+- windowExpl.py ".\"`
                 lines.append(
-                    '{:>2d} {:>2d} {:1s}{:1s}{:1s}{:1s}{:s} "{:s}"'.format(
+                    '{:>2d} {:>2d} {:1s}{:1s}{:1s} {:s}{:s} "{:s}"'.format(
                         tab.number,
                         win.number,
                         "%"
@@ -96,7 +96,7 @@ class WindowExplorer(Explorer):
 class WindowExplManager(Manager):
     def __init__(self):
         super(WindowExplManager, self).__init__()
-        self._prefix_len = 9
+        self._prefix_len = 10
 
     def _getExplClass(self):
         return WindowExplorer
@@ -183,19 +183,19 @@ class WindowExplManager(Manager):
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
             lfCmd(
-                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winIndicators'', ''^\v\s?\d+ \s?\d+\s*\zs[#%%]=.\ze '')')"""
+                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winIndicators'', ''^\v\s?\d+ \s?\d+\s*\zs[#%%]=..\ze '')')"""
                 % self._getInstance().getPopupWinId()
             )
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
             lfCmd(
-                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winModified'', ''^\v\s?\d+ \s?\d+\s*[#%%]=\+ \zs.*$'')')"""
+                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winModified'', ''^\v\s?\d+ \s?\d+\s*[#%%]=\+. \zs.*$'')')"""
                 % self._getInstance().getPopupWinId()
             )
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
             lfCmd(
-                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winNomodifiable'', ''^\v\s?\d+ \s?\d+\s*[#%%]=- \zs.*$'')')"""
+                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winNomodifiable'', ''^\v\s?\d+ \s?\d+\s*[#%%]=.- \zs.*$'')')"""
                 % self._getInstance().getPopupWinId()
             )
             id = int(lfEval("matchid"))
@@ -215,19 +215,19 @@ class WindowExplManager(Manager):
             self._match_ids.append(id)
             id = int(
                 lfEval(
-                    r"matchadd('Lf_hl_winIndicators',   '^\v\s?\d+ \s?\d+\s*\zs[#%%]=.\ze ')"
+                    r"matchadd('Lf_hl_winIndicators',   '^\v\s?\d+ \s?\d+\s*\zs[#%%]=..\ze ')"
                 )
             )
             self._match_ids.append(id)
             id = int(
                 lfEval(
-                    r"matchadd('Lf_hl_winModified',     '^\v\s?\d+ \s?\d+\s*[#%%]=\+ \zs.*$')"
+                    r"matchadd('Lf_hl_winModified',     '^\v\s?\d+ \s?\d+\s*[#%%]=\+. \zs.*$')"
                 )
             )
             self._match_ids.append(id)
             id = int(
                 lfEval(
-                    r"matchadd('Lf_hl_winNomodifiable', '^\v\s?\d+ \s?\d+\s*[#%%]=- *\zs.*$')"
+                    r"matchadd('Lf_hl_winNomodifiable', '^\v\s?\d+ \s?\d+\s*[#%%]=.- *\zs.*$')"
                 )
             )
             self._match_ids.append(id)
