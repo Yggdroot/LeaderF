@@ -486,6 +486,9 @@ class LfInstance(object):
                 lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_blank')" % winid)
                 self._popup_instance.statusline_win = FloatWindow(winid, getWindow(int(lfEval("win_id2win(%d)" % winid))), vim.buffers[buf_number], vim.current.tabpage, line + 1 + floatwin_height)
+
+            if "--recall" in self._arguments:
+                self.refreshPopupStatusline()
         else:
             self._win_pos = "popup"
 
