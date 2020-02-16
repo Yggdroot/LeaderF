@@ -71,7 +71,7 @@ class FloatWindow(object):
         return self._init_line
 
     def close(self):
-        lfCmd("call nvim_win_close(%d, 0)" % self._winid)
+        lfCmd("silent! call nvim_win_close(%d, 0)" % self._winid)
 
 class PopupWindow(object):
     def __init__(self, winid, buffer, tabpage, init_line):
@@ -451,7 +451,9 @@ class LfInstance(object):
 
             self._popup_instance.input_win = FloatWindow(winid, getWindow(int(lfEval("win_id2win(%d)" % winid))), vim.buffers[buf_number], vim.current.tabpage, line)
 
+            show_stl = 0
             if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+                show_stl = 1
                 stl_win_config = {
                         "relative": "editor",
                         "anchor"  : "NW",
@@ -489,6 +491,13 @@ class LfInstance(object):
 
             if "--recall" in self._arguments:
                 self.refreshPopupStatusline()
+
+            lfCmd("augroup Lf_Floatwin_Close")
+            lfCmd("autocmd! WinEnter * call leaderf#closeAllFloatwin(%d, %d, %d, %d)" % (self._popup_instance.input_win.id,
+                                                                                         self._popup_instance.content_win.id,
+                                                                                         self._popup_instance.statusline_win.id if show_stl else -1,
+                                                                                         show_stl))
+            lfCmd("augroup END")
         else:
             self._win_pos = "popup"
 
