@@ -910,6 +910,15 @@ Some handy maps for `Leaderf rg`:
 | `<Plug>LeaderfRgVisualRegexBoundary`         | search visually selected text treated as regex with `-w` option
 | `<Plug>LeaderfRgBangVisualRegexBoundary`     | like `<Plug>LeaderfRgVisualRegexBoundary`, but with a bang(`!`)
 
+Some handy maps for `Leaderf gtags`:
+
+| Map                                        | Description
+| ---                                        | -----------
+| `<Plug>LeaderfGtagsDefinition`               | Show <cword> or selected text locations of definitions.
+| `<Plug>LeaderfGtagsReference`                | Show <cword> or selected text reference to a symbol which has definitions.
+| `<Plug>LeaderfGtagsSymbol`                   | Show <cword> or selected text reference to a symbol which has no definition.
+| `<Plug>LeaderfGtagsGrep`                     | Show all lines which match to the <cword> or selected text .
+
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C>, <ESC> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.

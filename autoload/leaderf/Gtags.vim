@@ -48,6 +48,40 @@ function! leaderf#Gtags#Maps()
     endif
 endfunction
 
+" return the visually selected text and quote it with double quote
+function! leaderf#Gtags#visual()
+    try
+        let x_save = @x
+        norm! gv"xy
+        return '"' . escape(@x, '"') . '"'
+    finally
+        let @x = x_save
+    endtry
+endfunction
+
+" type: 0, word under cursor
+"       1, WORD under cursor
+"       2, text visually selected
+function! leaderf#Gtags#getPattern(type)
+    if a:type == 0
+        return expand('<cword>')
+    elseif a:type == 1
+        return escape(expand('<cWORD>'))
+    elseif a:type == 2
+        return leaderf#Gtags#visual()
+    else
+        return ''
+    endif
+endfunction
+
+" type: 0, word under cursor
+"       1, WORD under cursor
+"       2, text visually selected
+function! leaderf#Gtags#startCmdline(type, is_bang, param)
+    return printf("Leaderf%s gtags -%s %s --literal --auto-jump", a:is_bang ? '!' : '',
+                \ a:param, leaderf#Gtags#getPattern(a:type))
+endfunction
+
 function! leaderf#Gtags#cleanup()
 exec g:Lf_py "<< EOF"
 gtagsExplManager._beforeExit()
