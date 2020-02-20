@@ -709,25 +709,25 @@ class LfCli(object):
                         self._buildPattern()
                         yield '<Mode>'
                     elif equal(cmd, '<BS>') or equal(cmd, '<C-H>'):
-                        if not self._pattern:
+                        if not self._pattern and self._refine == False:
                             continue
                         self._backspace()
                         self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<C-U>'):
-                        if not self._pattern:
+                        if not self._pattern and self._refine == False:
                             continue
                         self._clearLeft()
                         self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<C-W>'):
-                        if not self._pattern:
+                        if not self._pattern and self._refine == False:
                             continue
                         self._delLeftWord()
                         self._buildPattern()
                         yield '<Shorten>'
                     elif equal(cmd, '<Del>'):
-                        if not self._pattern:
+                        if not self._pattern and self._refine == False:
                             continue
                         self._delete()
                         self._buildPattern()
