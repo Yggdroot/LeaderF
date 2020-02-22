@@ -2282,6 +2282,7 @@ class Manager(object):
             lfCmd("call timer_stop(%s)" % self._timer_id)
             self._timer_id = None
 
+        self.clearSelections()
         self._hideHelp()
         self._resetHighlights()
 
