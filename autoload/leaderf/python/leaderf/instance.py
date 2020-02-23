@@ -632,6 +632,7 @@ class LfInstance(object):
 
     def _createBufWindow(self, win_pos):
         self._win_pos = win_pos
+        lfCmd("let g:Lf_VimResized = 0")
 
         saved_eventignore = vim.options['eventignore']
         vim.options['eventignore'] = 'all'
