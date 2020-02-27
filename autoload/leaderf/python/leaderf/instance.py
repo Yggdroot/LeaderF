@@ -988,6 +988,8 @@ class LfInstance(object):
             lfCmd("set t_ve&")
             lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
             self._popup_instance.close()
+            if self._orig_win_id is not None:
+                lfCmd("call win_gotoid(%d)" % self._orig_win_id)
             self._after_exit()
             return
         elif self._win_pos == 'fullScreen':
