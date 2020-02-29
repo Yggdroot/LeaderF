@@ -158,10 +158,13 @@ class Manager(object):
                     and len(vim.tabpages) == 1 and len(vim.current.tabpage.windows) == 1
                     and vim.current.buffer.name == '' and len(vim.current.buffer) == 1
                     and vim.current.buffer[0] == '' and not vim.current.buffer.options["modified"]):
-                if vim.current.buffer.options["modified"]:
-                    lfCmd("hide edit %s" % escSpecial(file))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 0)") == '1':
+                    lfCmd("hide drop %s" % escSpecial(file))
                 else:
-                    lfCmd("edit %s" % escSpecial(file))
+                    if vim.current.buffer.options["modified"]:
+                        lfCmd("hide edit %s" % escSpecial(file))
+                    else:
+                        lfCmd("edit %s" % escSpecial(file))
             else:
                 lfCmd("tab drop %s" % escSpecial(file))
         except vim.error as e: # E37
@@ -1597,6 +1600,8 @@ class Manager(object):
 
     def _accept(self, file, mode, *args, **kwargs):
         if file:
+            lfCmd("norm! m'")
+
             if mode == '':
                 pass
             elif mode == 'h':

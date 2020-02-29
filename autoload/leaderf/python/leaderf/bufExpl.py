@@ -121,7 +121,11 @@ class BufExplManager(Manager):
             buf_name = lfEval("bufname(%s)" % buf_number)
             lfCmd("tab drop %s" % escSpecial(buf_name))
         else:
-            lfCmd("hide buffer %d" % buf_number)
+            if lfEval("get(g:, 'Lf_JumpToExistingWindow', 0)") == '1':
+                buf_name = lfEval("bufname(%s)" % buf_number)
+                lfCmd("hide drop %s" % escSpecial(buf_name))
+            else:
+                lfCmd("hide buffer %d" % buf_number)
 
     def _getDigest(self, line, mode):
         """

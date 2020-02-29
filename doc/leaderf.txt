@@ -818,6 +818,12 @@ g:Lf_AutoResize                                 *g:Lf_AutoResize*
 
     Default value is 0.
 
+g:Lf_JumpToExistingWindow                       *g:Lf_JumpToExistingWindow*
+    Jump to existing window if the selected file is already opened in a
+    window.
+
+    Default value is 0.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

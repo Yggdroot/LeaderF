@@ -886,7 +886,10 @@ class GtagsExplManager(Manager):
             if kwargs.get("mode", '') == 't':
                 lfCmd("silent! tab drop %s | %s" % (escSpecial(file), line_num))
             else:
-                lfCmd("silent! hide edit +%s %s" % (line_num, escSpecial(file)))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 0)") == '1':
+                    lfCmd("silent! hide drop %s | %s" % (escSpecial(file), line_num))
+                else:
+                    lfCmd("silent! hide edit +%s %s" % (line_num, escSpecial(file)))
             lfCmd("norm! zz")
 
             if vim.current.window not in self._cursorline_dict:
