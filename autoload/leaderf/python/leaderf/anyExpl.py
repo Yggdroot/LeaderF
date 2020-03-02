@@ -288,9 +288,17 @@ class AnyExplManager(Manager):
             lfCmd(cmd)
 
         highlights_def = self._config.get("highlights_def", {})
-        for group, pattern in highlights_def.items():
-            id = int(lfEval("matchadd('%s', '%s')" % (group, escQuote(pattern))))
-            self._match_ids.append(id)
+
+        if self._getInstance().getWinPos() == 'popup':
+            for group, pattern in highlights_def.items():
+                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''%s'', ''%s'')')"""
+                        % (self._getInstance().getPopupWinId(), group, escQuote(pattern)))
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+        else:
+            for group, pattern in highlights_def.items():
+                id = int(lfEval("matchadd('%s', '%s')" % (group, escQuote(pattern))))
+                self._match_ids.append(id)
 
         highlight = self._config.get("highlight")
         if highlight:
