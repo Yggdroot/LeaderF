@@ -621,8 +621,6 @@ class LfInstance(object):
             lfCmd("call leaderf#ResetPopupOptions(%d, 'callback', function('leaderf#PopupClosed', [%s, %d]))"
                     % (self._popup_winid, str(self._popup_instance.getWinIdList()), id(self._manager)))
 
-        self._arguments["popup_winid"] = self._popup_winid
-
         if not self._is_colorscheme_autocmd_set:
             self._is_colorscheme_autocmd_set = True
             lfCmd("augroup Lf_Popup_{}_Colorscheme".format(self._category))
@@ -956,6 +954,7 @@ class LfInstance(object):
             self._orig_win_nr = vim.current.window.number
             self._orig_win_id = lfWinId(self._orig_win_nr)
             self._createPopupWindow(clear)
+            self._arguments["popup_winid"] = self._popup_winid
         elif win_pos == 'fullScreen':
             self._orig_tabpage = vim.current.tabpage
             if len(vim.tabpages) < 2:
