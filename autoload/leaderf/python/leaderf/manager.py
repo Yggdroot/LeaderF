@@ -2040,6 +2040,7 @@ class Manager(object):
                     self._cli._buildPrompt()
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
+                self._getInstance().mimicCursor()
 
                 if not self._cli.pattern and empty_query:
                     self._gotoFirstLine()
@@ -2092,6 +2093,7 @@ class Manager(object):
                 lfCmd("echo")
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
+                self._getInstance().mimicCursor()
         else:
             self._is_content_list = False
             self._callback = partial(self._workInIdle, content)
@@ -2110,6 +2112,7 @@ class Manager(object):
                 lfCmd("echo")
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
+                self._getInstance().mimicCursor()
 
     def _readContent(self, content):
         try:

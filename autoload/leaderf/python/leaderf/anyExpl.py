@@ -278,8 +278,12 @@ class AnyExplManager(Manager):
             orig_buf_nr = self._getInstance().getOriginalPos()[2].number
             line, col = self._getInstance().getOriginalCursor()
             try:
-                after_enter = lfFunction(after_enter)
-                after_enter(orig_buf_nr, [line, col+1], self._arguments)
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("""call win_execute(%d, "call %s(%d, [%d, %d], %s)")"""
+                            % (self._getInstance().getPopupWinId(), after_enter, orig_buf_nr, line, col+1, str(self._arguments)))
+                else:
+                    after_enter = lfFunction(after_enter)
+                    after_enter(orig_buf_nr, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(after_enter), err))
 
@@ -303,8 +307,13 @@ class AnyExplManager(Manager):
         highlight = self._config.get("highlight")
         if highlight:
             try:
-                highlight = lfFunction(highlight)
-                self._match_ids += highlight(self._arguments)
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("""call win_execute(%d, "let matchids = %s(%s)")"""
+                            % (self._getInstance().getPopupWinId(), highlight, str(self._arguments)))
+                    self._match_ids += [int(i) for i in lfEval("matchids")]
+                else:
+                    highlight = lfFunction(highlight)
+                    self._match_ids += highlight(self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(highlight), err))
 
@@ -315,8 +324,12 @@ class AnyExplManager(Manager):
             orig_buf_nr = self._getInstance().getOriginalPos()[2].number
             line, col = self._getInstance().getOriginalCursor()
             try:
-                bang_enter = lfFunction(bang_enter)
-                bang_enter(orig_buf_nr, [line, col+1], self._arguments)
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("""call win_execute(%d, "call %s(%d, [%d, %d], %s)")"""
+                            % (self._getInstance().getPopupWinId(), bang_enter, orig_buf_nr, line, col+1, str(self._arguments)))
+                else:
+                    bang_enter = lfFunction(bang_enter)
+                    bang_enter(orig_buf_nr, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(bang_enter), err))
 
@@ -327,8 +340,12 @@ class AnyExplManager(Manager):
             orig_buf_nr = self._getInstance().getOriginalPos()[2].number
             line, col = self._getInstance().getOriginalCursor()
             try:
-                before_exit = lfFunction(before_exit)
-                before_exit(orig_buf_nr, [line, col+1], self._arguments)
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("""call win_execute(%d, "call %s(%d, [%d, %d], %s)")"""
+                            % (self._getInstance().getPopupWinId(), before_exit, orig_buf_nr, line, col+1, str(self._arguments)))
+                else:
+                    before_exit = lfFunction(before_exit)
+                    before_exit(orig_buf_nr, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(before_exit), err))
 
@@ -342,28 +359,6 @@ class AnyExplManager(Manager):
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(after_exit), err))
 
-    def _previewResult(self, preview):
-        if not self._needPreview(preview):
-            return
-
-        cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
-
-        saved_eventignore = vim.options['eventignore']
-        vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
-        try:
-            preview = self._config.get("preview")
-            if preview:
-                orig_buf_nr = self._getInstance().getOriginalPos()[2].number
-                line, col = self._getInstance().getOriginalCursor()
-                try:
-                    preview = lfFunction(preview)
-                    preview(orig_buf_nr, [line, col+1], self._arguments)
-                except vim.error as err:
-                    raise Exception("Error occurred in user defined %s: %s" % (str(preview), err))
-        finally:
-            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
-            vim.options['eventignore'] = saved_eventignore
-
     def _supportsRefine(self):
         return bool(int(self._config.get("supports_refine", False)))
 
@@ -371,6 +366,21 @@ class AnyExplManager(Manager):
         self._arguments = kwargs["arguments"]
         super(AnyExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
+    def _previewInPopup(self, *args, **kwargs):
+        line = args[0]
+
+        preview = self._config.get("preview")
+        if preview:
+            orig_buf_nr = self._getInstance().getOriginalPos()[2].number
+            l, c = self._getInstance().getOriginalCursor()
+            try:
+                preview = lfFunction(preview)
+                result = preview(orig_buf_nr, [l, c+1], line, self._arguments)
+                if result:
+                    buf_number, line_num, jump_cmd = result
+                    self._createPopupPreview("", buf_number, line_num, lfBytes2Str(jump_cmd) if not self._has_nvim else jump_cmd)
+            except vim.error as err:
+                raise Exception("Error occurred in user defined %s: %s" % (str(preview), err))
 
 class OptionalAction(argparse.Action):
     def __init__(self,
