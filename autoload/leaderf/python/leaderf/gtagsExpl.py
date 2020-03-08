@@ -395,7 +395,10 @@ class GtagsExplorer(Explorer):
         else:
             db_folder = path.replace('/', '%')
 
-        return os.path.join(self._db_location, db_folder)
+        if lfEval("get(g:, 'Lf_GtagsStoreInProject', 0)") == '1':
+            return path
+        else:
+            return os.path.join(self._db_location, db_folder)
 
     def _root_dbpath(self, filename):
         """
@@ -439,8 +442,17 @@ class GtagsExplorer(Explorer):
         root, dbpath, exists = self._root_dbpath(filename)
         try:
             lfCmd("echohl Question")
-            if lfEval('input("Are you sure you want to remove directory `{}`?[Ny] ")'.format(lfEncode(dbpath.replace('\\', r'\\')))) in ["Y","y"]:
+            if lfEval("get(g:, 'Lf_GtagsStoreInProject', 0)") == '1':
+                if lfEval('input("Are you sure you want to remove GTAGS files?[Ny] ")') in ["Y","y"]:
+                    os.remove(os.path.join(dbpath, "GTAGS"))
+                    os.remove(os.path.join(dbpath, "GPATH"))
+                    os.remove(os.path.join(dbpath, "GRTAGS"))
+                    if os.path.exists(os.path.join(dbpath, "GTAGSLIBPATH")):
+                        os.remove(os.path.join(dbpath, "GTAGSLIBPATH"))
+            elif lfEval('input("Are you sure you want to remove directory `{}`?[Ny] ")'.format(lfEncode(dbpath.replace('\\', r'\\')))) in ["Y","y"]:
                 shutil.rmtree(dbpath)
+
+            lfCmd("redraw | echo 'Done!'")
         except Exception as e:
             lfPrintError(e)
         finally:

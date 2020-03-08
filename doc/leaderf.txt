@@ -659,6 +659,12 @@ g:Lf_Gtagslabel                                   *g:Lf_Gtagslabel*
     set this option as "native-pygments".
     Default value is "default".
 
+g:Lf_GtagsStoreInProject                          *g:Lf_GtagsStoreInProject*
+    This option specifies whether to store the gtags database files in the
+    root directory of the project.
+
+    Default value is 0.
+
 g:Lf_EmptyQuery                                   *g:Lf_EmptyQuery*
     This option specifies whether to enable the empty query, i.e., if no
     pattern is input, sort the result according to the best match of current
