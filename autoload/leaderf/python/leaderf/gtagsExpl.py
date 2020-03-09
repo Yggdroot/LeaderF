@@ -32,6 +32,7 @@ class GtagsExplorer(Explorer):
         self._db_location = os.path.join(lfEval("g:Lf_CacheDirectory"),
                                      '.LfCache',
                                      'gtags')
+        self._store_in_project = lfEval("get(g:, 'Lf_GtagsStoreInProject', 0)") == '1'
         self._project_root = ""
         self._gtagslibpath = []
         self._result_format = None
@@ -395,7 +396,7 @@ class GtagsExplorer(Explorer):
         else:
             db_folder = path.replace('/', '%')
 
-        if lfEval("get(g:, 'Lf_GtagsStoreInProject', 0)") == '1':
+        if self._store_in_project:
             return path
         else:
             return os.path.join(self._db_location, db_folder)
@@ -442,7 +443,7 @@ class GtagsExplorer(Explorer):
         root, dbpath, exists = self._root_dbpath(filename)
         try:
             lfCmd("echohl Question")
-            if lfEval("get(g:, 'Lf_GtagsStoreInProject', 0)") == '1':
+            if self._store_in_project:
                 if lfEval('input("Are you sure you want to remove GTAGS files?[Ny] ")') in ["Y","y"]:
                     os.remove(os.path.join(dbpath, "GTAGS"))
                     os.remove(os.path.join(dbpath, "GPATH"))
