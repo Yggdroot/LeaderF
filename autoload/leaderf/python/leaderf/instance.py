@@ -403,7 +403,10 @@ class LfInstance(object):
             lfCmd("silent let winid = nvim_open_win(%d, 1, %s)" % (buf_number, str(config)))
             self._popup_winid = int(lfEval("winid"))
             self._setAttributes()
-            lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 1)" % self._popup_winid)
+            try:
+                lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 1)" % self._popup_winid)
+            except vim.error:
+                lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '1')" % self._popup_winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._popup_winid)
 
             self._tabpage_object = vim.current.tabpage
@@ -439,7 +442,10 @@ class LfInstance(object):
             lfCmd("call nvim_win_set_option(%d, 'spell', v:false)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'foldenable', v:false)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'foldmethod', 'manual')" % winid)
-            lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % winid)
+            try:
+                lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % winid)
+            except vim.error:
+                lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '0')" % winid)
             # lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
@@ -483,7 +489,10 @@ class LfInstance(object):
                 lfCmd("call nvim_win_set_option(%d, 'spell', v:false)" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'foldenable', v:false)" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'foldmethod', 'manual')" % winid)
-                lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % winid)
+                try:
+                    lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % winid)
+                except vim.error:
+                    lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '0')" % winid)
                 # lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
