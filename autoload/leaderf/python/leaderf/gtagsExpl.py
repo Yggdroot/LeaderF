@@ -81,7 +81,7 @@ class GtagsExplorer(Explorer):
             self._gtagslabel = arguments_dict["--gtagslabel"][0]
 
         if self._gtagsconf == '' and os.name == 'nt':
-            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
+            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf")).join('""')
 
         if "--gtagslibpath" in arguments_dict:
             self._gtagslibpath = [os.path.abspath(os.path.expanduser(p)) for p in arguments_dict["--gtagslibpath"]]
@@ -464,7 +464,7 @@ class GtagsExplorer(Explorer):
             return
 
         if self._gtagsconf == '' and os.name == 'nt':
-            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
+            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf")).join('""')
 
         root, dbpath, exists = self._root_dbpath(filename)
         if not filename.startswith(root):
@@ -505,7 +505,7 @@ class GtagsExplorer(Explorer):
                 f.writelines(libpaths)
 
         if self._gtagsconf == '' and os.name == 'nt':
-            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf"))
+            self._gtagsconf = os.path.normpath(os.path.join(self._which("gtags.exe"), "..", "share", "gtags", "gtags.conf")).join('""')
 
         env = os.environ
         # env["GTAGSFORCECPP"] = "" # lead to issue #489
@@ -539,6 +539,8 @@ class GtagsExplorer(Explorer):
         self._skip_symlink = "--skip-symlink%s " % ('=' + lfEval("get(g:, 'Lf_GtagsSkipSymlink', '')")
                                 if lfEval("get(g:, 'Lf_GtagsSkipSymlink', '')") != '' else "")
         self._gtagsconf = lfEval("get(g:, 'Lf_Gtagsconf', '')")
+        if self._gtagsconf:
+            self._gtagsconf = self._gtagsconf.join('""')
         self._gtagslabel = lfEval("get(g:, 'Lf_Gtagslabel', 'default')")
 
         self._Lf_GtagsSource = int(lfEval("get(g:, 'Lf_GtagsSource', 0)"))
