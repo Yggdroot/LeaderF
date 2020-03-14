@@ -942,7 +942,6 @@ class GtagsExplManager(Manager):
                 return line[line.find('\t')+1:]
             else:
                 return line[:line.find('\t')]
-            return line
         elif self._getExplorer().getResultFormat() == "ctags-x":
             if mode == 2:
                 return line[line.find(' ') + 1:]

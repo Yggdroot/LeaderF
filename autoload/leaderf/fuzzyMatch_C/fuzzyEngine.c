@@ -17,6 +17,7 @@
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(_MSC_VER)
 #include <windows.h>
@@ -1307,6 +1308,489 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
     return Py_BuildValue("(NN)", weight_list, text_list);
 }
 
+enum
+{
+    Category_Rg = 0,
+    Category_Tag,
+    Category_File,
+    Category_Gtags,
+};
+
+typedef struct RgParameter
+{
+    uint32_t display_multi;
+    const char* separator;
+    uint32_t separator_len;
+    uint32_t has_column;
+}RgParameter;
+
+typedef struct Parameter
+{
+    uint32_t mode;
+}Parameter;
+
+typedef struct GtagsParameter
+{
+    uint32_t mode;
+    uint32_t format;
+    uint32_t match_path;
+}GtagsParameter;
+
+static void delParamObj(PyObject* obj)
+{
+    free(PyCapsule_GetPointer(obj, NULL));
+}
+
+/**
+ * createRgParameter(display_multi, separator, has_column)
+ */
+static PyObject* fuzzyEngine_createRgParameter(PyObject* self, PyObject* args)
+{
+    uint32_t display_multi = 0;
+    const char* separator;
+    Py_ssize_t separator_len;
+    uint32_t has_column = 0;
+
+    if ( !PyArg_ParseTuple(args, "Is#I:createRgParameter", &display_multi, &separator, &separator_len, &has_column) )
+        return NULL;
+
+    RgParameter* param = (RgParameter*)malloc(sizeof(RgParameter));
+    if ( !param )
+    {
+        return NULL;
+    }
+    param->display_multi = display_multi;
+    param->separator = separator;
+    param->separator_len = separator_len;
+    param->has_column = has_column;
+
+    return PyCapsule_New(param, NULL, delParamObj);
+}
+
+/**
+ * createParameter(mode)
+ */
+static PyObject* fuzzyEngine_createParameter(PyObject* self, PyObject* args)
+{
+    uint32_t mode = 0;
+
+    if ( !PyArg_ParseTuple(args, "I:createParameter", &mode) )
+        return NULL;
+
+    Parameter* param = (Parameter*)malloc(sizeof(Parameter));
+    if ( !param )
+    {
+        return NULL;
+    }
+
+    param->mode = mode;
+
+    return PyCapsule_New(param, NULL, delParamObj);
+}
+
+/**
+ * createGtagsParameter(mode, format, match_path)
+ */
+static PyObject* fuzzyEngine_createGtagsParameter(PyObject* self, PyObject* args)
+{
+    uint32_t mode;
+    uint32_t format;
+    uint32_t match_path;
+
+    if ( !PyArg_ParseTuple(args, "III:createGtagsParameter", &mode, &format, &match_path) )
+        return NULL;
+
+    GtagsParameter* param = (GtagsParameter*)malloc(sizeof(GtagsParameter));
+    if ( !param )
+    {
+        return NULL;
+    }
+
+    param->mode = mode;
+    param->format = format;
+    param->match_path = match_path;
+
+    return PyCapsule_New(param, NULL, delParamObj);
+}
+
+static void rg_getDigest(char** str, uint32_t* length, RgParameter* param)
+{
+    char* s = *str;
+    uint32_t len = *length;
+
+    if ( param->display_multi )
+    {
+        if ( len == param->separator_len && strncmp(s, param->separator, len) == 0 )
+        {
+            *length = 0;
+            return;
+        }
+        else
+        {
+            uint8_t colon = 0;
+            uint8_t minus = 0;
+            for ( char *p = s; p < s + len; ++p )
+            {
+                if ( *p == ':' )
+                {
+                    ++colon;
+                    if ( (colon == 2 && !param->has_column) || colon == 3 )
+                    {
+                        *str = p + 1;
+                        *length -= *str - s;
+                        return;
+                    }
+                }
+                else if ( *p == '-' )
+                {
+                    ++minus;
+                    if ( minus == 2 )
+                    {
+                        *str = p + 1;
+                        *length -= *str - s;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        uint8_t colon = 0;
+        for ( char *p = s; p < s + len; ++p )
+        {
+            if ( *p == ':' )
+            {
+                ++colon;
+                if ( (colon == 2 && !param->has_column) || colon == 3 )
+                {
+                    *str = p + 1;
+                    *length -= *str - s;
+                    return;
+                }
+            }
+        }
+    }
+}
+
+static void tag_getDigest(char** str, uint32_t* length, Parameter* param)
+{
+    char* s = *str;
+    uint32_t len = *length;
+    for ( char *p = s; p < s + len; ++p )
+    {
+        if ( *p == '\t' )
+        {
+            *length = p - s;
+            return;
+        }
+    }
+    /* if there is no '\t', the text is invalid */
+    *length = 0;
+}
+
+static void file_getDigest(char** str, uint32_t* length, Parameter* param)
+{
+    char* s = *str;
+    for ( char *p = s + *length - 1; p >= s; --p )
+    {
+        if ( *p == '/' || *p == '\\' )
+        {
+            *str = p + 1;
+            *length -= *str - s;
+            return;
+        }
+    }
+}
+
+static void gtags_getDigest(char** str, uint32_t* length, GtagsParameter* param)
+{
+    char* s = *str;
+    uint32_t len = *length;
+
+    if ( param->format == 0 ) /* ctags-mod */
+    {
+        if ( param->match_path )
+            return;
+
+        uint8_t tab = 0;
+        for ( char *p = s; p < s + len; ++p )
+        {
+            if ( *p == '\t' )
+            {
+                ++tab;
+                if ( tab == 2 )
+                {
+                    *str = p + 1;
+                    *length -= *str - s;
+                    return;
+                }
+            }
+        }
+    }
+    else if ( param->format == 1 ) /* ctags */
+    {
+        for ( char *p = s; p < s + len; ++p )
+        {
+            if ( *p == '\t' )
+            {
+                *length = p - s;
+                return;
+            }
+        }
+    }
+    else if ( param->format == 2 ) /* ctags-x */
+    {
+        for ( char *p = s; p < s + len; ++p )
+        {
+            if ( *p == ' ' )
+            {
+                *length = p - s;
+                return;
+            }
+        }
+    }
+}
+
+/**
+ * fuzzyMatchPart(engine, source, pattern, category, param, is_name_only=False, sort_results=True)
+ *
+ * `is_name_only` is optional, it defaults to `False`, which indicates using the full path matching algorithm.
+ * `sort_results` is optional, it defineds to `True`, which indicates whether to sort the results.
+ *
+ * return a tuple, (a list of corresponding weight, a sorted list of items from `source` that match `pattern`).
+ */
+static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyObject* kwargs)
+{
+    PyObject* py_engine = NULL;
+    PyObject* py_source = NULL;
+    PyObject* py_patternCtxt = NULL;
+    PyObject* py_param = NULL;
+    uint32_t category;
+    uint8_t is_name_only = 0;
+    uint8_t sort_results = 1;
+    static char* kwlist[] = {"engine", "source", "pattern", "category", "param", "is_name_only", "sort_results", NULL};
+
+    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "OOOIO|bb:fuzzyMatch", kwlist, &py_engine, &py_source,
+                                      &py_patternCtxt, &category, &py_param, &is_name_only, &sort_results) )
+        return NULL;
+
+    FuzzyEngine* pEngine = (FuzzyEngine*)PyCapsule_GetPointer(py_engine, NULL);
+    if ( !pEngine )
+        return NULL;
+
+    if ( !PyList_Check(py_source) )
+    {
+        PyErr_SetString(PyExc_TypeError, "parameter `source` must be a list.");
+        return NULL;
+    }
+
+    uint32_t source_size = (uint32_t)PyList_Size(py_source);
+    if ( source_size == 0 )
+    {
+        return Py_BuildValue("([],[])");
+    }
+
+    pEngine->pPattern_ctxt = (PatternContext*)PyCapsule_GetPointer(py_patternCtxt, NULL);
+    if ( !pEngine->pPattern_ctxt )
+        return NULL;
+
+    pEngine->is_name_only = is_name_only;
+
+    uint32_t max_task_count  = MAX_TASK_COUNT(pEngine->cpu_count);
+    uint32_t chunk_size = (source_size + max_task_count - 1) / max_task_count;
+    uint32_t task_count = (source_size + chunk_size - 1) / chunk_size;
+
+    pEngine->source = (FeString*)malloc(source_size * sizeof(FeString));
+    if ( !pEngine->source )
+    {
+        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+        return NULL;
+    }
+
+    pEngine->tasks = (FeTaskItem*)malloc(task_count * sizeof(FeTaskItem));
+    if ( !pEngine->tasks )
+    {
+        free(pEngine->source);
+        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+        return NULL;
+    }
+
+    pEngine->weights = (weight_t*)malloc(source_size * sizeof(weight_t));
+    if ( !pEngine->weights )
+    {
+        free(pEngine->source);
+        free(pEngine->tasks);
+        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+        return NULL;
+    }
+
+    FeResult* results = (FeResult*)malloc(source_size * sizeof(FeResult));
+    if ( !results )
+    {
+        free(pEngine->source);
+        free(pEngine->tasks);
+        free(pEngine->weights);
+        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+        return NULL;
+    }
+
+    if ( !pEngine->threads )
+    {
+#if defined(_MSC_VER)
+        pEngine->threads = (HANDLE*)malloc(pEngine->cpu_count * sizeof(HANDLE));
+#else
+        pEngine->threads = (pthread_t*)malloc(pEngine->cpu_count * sizeof(pthread_t));
+#endif
+        if ( !pEngine->threads )
+        {
+            free(pEngine->source);
+            free(pEngine->tasks);
+            free(pEngine->weights);
+            free(results);
+            fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+            return NULL;
+        }
+
+        uint32_t i = 0;
+        for ( ; i < pEngine->cpu_count; ++i)
+        {
+#if defined(_MSC_VER)
+            pEngine->threads[i] = CreateThread(NULL, 0, _worker, pEngine, 0, NULL);
+            if ( !pEngine->threads[i] )
+#else
+            int ret = pthread_create(&pEngine->threads[i], NULL, _worker, pEngine);
+            if ( ret != 0 )
+#endif
+            {
+                free(pEngine->source);
+                free(pEngine->tasks);
+                free(pEngine->weights);
+                free(results);
+                free(pEngine->threads);
+                fprintf(stderr, "pthread_create error!\n");
+                return NULL;
+            }
+        }
+    }
+
+#if defined(_MSC_VER)
+    QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
+#endif
+
+    uint32_t i = 0;
+    for ( ; i < task_count; ++i )
+    {
+        uint32_t offset = i * chunk_size;
+        uint32_t length = MIN(chunk_size, source_size - offset);
+
+        pEngine->tasks[i].offset = offset;
+        pEngine->tasks[i].length = length;
+        pEngine->tasks[i].function = GETWEIGHT;
+
+        uint32_t j = 0;
+        for ( ; j < length; ++j )
+        {
+            FeString *s = pEngine->source + offset + j;
+            PyObject* item = PyList_GET_ITEM(py_source, offset + j);
+            if ( pyObject_ToStringAndSize(item, &s->str, &s->len) < 0 )
+            {
+                free(pEngine->source);
+                free(pEngine->tasks);
+                free(pEngine->weights);
+                free(results);
+                fprintf(stderr, "pyObject_ToStringAndSize error!\n");
+                return NULL;
+            }
+            switch ( category )
+            {
+            case Category_Rg:
+            {
+                RgParameter* param = (RgParameter*)PyCapsule_GetPointer(py_param, NULL);
+                if ( !param )
+                {
+                    free(pEngine->source);
+                    free(pEngine->tasks);
+                    free(pEngine->weights);
+                    free(results);
+                    fprintf(stderr, "PyCapsule_GetPointer error!\n");
+                    return NULL;
+                }
+                rg_getDigest(&s->str, &s->len, param);
+                break;
+            }
+            case Category_Tag:
+                tag_getDigest(&s->str, &s->len, (Parameter*)PyCapsule_GetPointer(py_param, NULL));
+                break;
+            case Category_File:
+                file_getDigest(&s->str, &s->len, (Parameter*)PyCapsule_GetPointer(py_param, NULL));
+                break;
+            case Category_Gtags:
+            {
+                GtagsParameter* param = (GtagsParameter*)PyCapsule_GetPointer(py_param, NULL);
+                if ( !param )
+                {
+                    free(pEngine->source);
+                    free(pEngine->tasks);
+                    free(pEngine->weights);
+                    free(results);
+                    fprintf(stderr, "PyCapsule_GetPointer error!\n");
+                    return NULL;
+                }
+                gtags_getDigest(&s->str, &s->len, param);
+                break;
+            }
+            }
+        }
+
+        QUEUE_PUT(pEngine->task_queue, pEngine->tasks + i);
+    }
+
+    QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+    uint32_t results_count = 0;
+    for ( i = 0; i < source_size; ++i )
+    {
+        if ( pEngine->weights[i] > MIN_WEIGHT )
+        {
+            results[results_count].weight = pEngine->weights[i];
+            results[results_count].index = i;
+            ++results_count;
+        }
+    }
+
+    if ( results_count == 0 )
+    {
+        free(pEngine->source);
+        free(pEngine->tasks);
+        free(pEngine->weights);
+        free(results);
+        return Py_BuildValue("([],[])");
+    }
+
+    if ( sort_results )
+    {
+        qsort(results, results_count, sizeof(FeResult), compare);
+    }
+
+    PyObject* weight_list = PyList_New(results_count);
+    PyObject* text_list = PyList_New(results_count);
+    for ( i = 0; i < results_count; ++i )
+    {
+        /* PyList_SET_ITEM() steals a reference to item.     */
+        /* PySequence_ITEM() return value: New reference. */
+        PyList_SET_ITEM(weight_list, i, Py_BuildValue("f", results[i].weight));
+        PyList_SET_ITEM(text_list, i, PySequence_ITEM(py_source, results[i].index));
+    }
+
+    free(pEngine->source);
+    free(pEngine->tasks);
+    free(pEngine->weights);
+    free(results);
+
+    return Py_BuildValue("(NN)", weight_list, text_list);
+}
+
 static PyMethodDef fuzzyEngine_Methods[] =
 {
     { "createFuzzyEngine", (PyCFunction)fuzzyEngine_createFuzzyEngine, METH_VARARGS | METH_KEYWORDS, "" },
@@ -1314,9 +1798,13 @@ static PyMethodDef fuzzyEngine_Methods[] =
     { "initPattern", (PyCFunction)fuzzyEngine_initPattern, METH_VARARGS, "initialize the pattern." },
     { "fuzzyMatch", (PyCFunction)fuzzyEngine_fuzzyMatch, METH_VARARGS | METH_KEYWORDS, "" },
     { "fuzzyMatchEx", (PyCFunction)fuzzyEngine_fuzzyMatchEx, METH_VARARGS | METH_KEYWORDS, "" },
+    { "fuzzyMatchPart", (PyCFunction)fuzzyEngine_fuzzyMatchPart, METH_VARARGS | METH_KEYWORDS, "" },
     { "getHighlights", (PyCFunction)fuzzyEngine_getHighlights, METH_VARARGS | METH_KEYWORDS, "" },
     { "guessMatch", (PyCFunction)fuzzyEngine_guessMatch, METH_VARARGS | METH_KEYWORDS, "" },
     { "merge", (PyCFunction)fuzzyEngine_merge, METH_VARARGS, "" },
+    { "createRgParameter", (PyCFunction)fuzzyEngine_createRgParameter, METH_VARARGS, "" },
+    { "createParameter", (PyCFunction)fuzzyEngine_createParameter, METH_VARARGS, "" },
+    { "createGtagsParameter", (PyCFunction)fuzzyEngine_createGtagsParameter, METH_VARARGS, "" },
     { NULL, NULL, 0, NULL }
 };
 
@@ -1333,14 +1821,73 @@ static struct PyModuleDef fuzzyEngine_module =
 
 PyMODINIT_FUNC PyInit_fuzzyEngine(void)
 {
-    return PyModule_Create(&fuzzyEngine_module);
+    PyObject* module = NULL;
+    module = PyModule_Create(&fuzzyEngine_module);
+
+    if ( !module )
+        return NULL;
+
+    if ( PyModule_AddObject(module, "Category_Rg", Py_BuildValue("I", Category_Rg)) )
+    {
+        Py_DECREF(module);
+        return NULL;
+    }
+
+    if ( PyModule_AddObject(module, "Category_Tag", Py_BuildValue("I", Category_Tag)) )
+    {
+        Py_DECREF(module);
+        return NULL;
+    }
+
+    if ( PyModule_AddObject(module, "Category_File", Py_BuildValue("I", Category_File)) )
+    {
+        Py_DECREF(module);
+        return NULL;
+    }
+
+    if ( PyModule_AddObject(module, "Category_Gtags", Py_BuildValue("I", Category_Gtags)) )
+    {
+        Py_DECREF(module);
+        return NULL;
+    }
+
+    return module;
 }
 
 #else
 
 PyMODINIT_FUNC initfuzzyEngine(void)
 {
-    Py_InitModule("fuzzyEngine", fuzzyEngine_Methods);
+    PyObject* module = NULL;
+    module = Py_InitModule("fuzzyEngine", fuzzyEngine_Methods);
+
+    if ( !module )
+        return;
+
+    if ( PyModule_AddObject(module, "Category_Rg", Py_BuildValue("I", Category_Rg)) )
+    {
+        Py_DECREF(module);
+        return;
+    }
+
+    if ( PyModule_AddObject(module, "Category_Tag", Py_BuildValue("I", Category_Tag)) )
+    {
+        Py_DECREF(module);
+        return;
+    }
+
+    if ( PyModule_AddObject(module, "Category_File", Py_BuildValue("I", Category_File)) )
+    {
+        Py_DECREF(module);
+        return;
+    }
+
+    if ( PyModule_AddObject(module, "Category_Gtags", Py_BuildValue("I", Category_Gtags)) )
+    {
+        Py_DECREF(module);
+        return;
+    }
+
 }
 
 #endif

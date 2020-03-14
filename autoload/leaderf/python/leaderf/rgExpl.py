@@ -462,8 +462,7 @@ class RgExplManager(Manager):
     def setArguments(self, arguments):
         self._arguments = arguments
         self._match_path = "--match-path" in arguments
-        if "--recall" not in self._arguments:
-            self._has_column = "--column" in lfEval("get(g:, 'Lf_RgConfig', [])")
+        self._has_column = "--column" in lfEval("get(g:, 'Lf_RgConfig', [])")
 
     def _getDigest(self, line, mode):
         """

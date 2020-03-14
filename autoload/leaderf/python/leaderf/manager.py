@@ -108,6 +108,7 @@ class Manager(object):
         self._is_previewed = False
         self._match_ids = []
         self._vim_file_autoloaded = False
+        self._arguments = {}
         self._getExplClass()
 
     #**************************************************************
@@ -1224,21 +1225,39 @@ class Manager(object):
             if self._fuzzy_engine and isAscii(self._cli.pattern) and self._getUnit() == 1: # currently, only BufTag's _getUnit() is 2
                 use_fuzzy_engine = True
                 pattern = fuzzyEngine.initPattern(self._cli.pattern)
-                if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                if self._getExplorer().getStlCategory() == "File":
                     return_index = False
-                    filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=False, sort_results=True)
+                    if self._cli.isFullPath:
+                        filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
+                                                is_name_only=False, sort_results=True)
+                    else:
+                        filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_File,
+                                                param=fuzzyEngine.createParameter(1), is_name_only=True, sort_results=True)
                 elif self._getExplorer().getStlCategory() in ["Rg"]:
+                    return_index = False
                     if "--match-path" in self._arguments:
-                        return_index = False
                         filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
                                                 is_name_only=True, sort_results=True)
                     else:
-                        return_index = True
-                        filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                                is_name_only=True, sort_results=True)
+                        filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_Rg,
+                                param=fuzzyEngine.createRgParameter(self._getExplorer().displayMulti(), self._getExplorer().getContextSeparator(), self._has_column),
+                                is_name_only=True, sort_results=True)
+                elif self._getExplorer().getStlCategory() == "Tag":
+                    return_index = False
+                    mode = 0 if self._cli.isFullPath else 1
+                    filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_Tag,
+                                            param=fuzzyEngine.createParameter(mode), is_name_only=True, sort_results=True)
+                elif self._getExplorer().getStlCategory() == "Gtags":
+                    return_index = False
+                    result_format = 1
+                    if self._getExplorer().getResultFormat() in [None, "ctags-mod"]:
+                        result_format = 0
+                    elif self._getExplorer().getResultFormat() == "ctags-x":
+                        result_format = 2
+                    filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_Gtags,
+                                            param=fuzzyEngine.createGtagsParameter(0, result_format, self._match_path), is_name_only=True, sort_results=True)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
-                        "Function", "History", "Cmd_History", "Search_History", "Tag", "Filetype",
+                        "Function", "History", "Cmd_History", "Search_History", "Filetype",
                         "Command", "Window"]:
                     return_index = True
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
@@ -1933,7 +1952,10 @@ class Manager(object):
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
-        self.setArguments(arguments_dict)
+        if "--recall" in arguments_dict:
+            self._arguments["--recall"] = arguments_dict["--recall"]
+        else:
+            self.setArguments(arguments_dict)
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
 
