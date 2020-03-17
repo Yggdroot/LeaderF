@@ -24,14 +24,10 @@ if os.name == 'nt':
 
 
 module1 = Extension("fuzzyMatchC",
-                    sources = ["fuzzyMatch.c"],
-                    extra_compile_args = ["-std=c99"]
-                    )
+                    sources = ["fuzzyMatch.c"])
 
 module2 = Extension("fuzzyEngine",
-                    sources = ["fuzzyMatch.c", "fuzzyEngine.c"],
-                    extra_compile_args = ["-std=c99"]
-                    )
+                    sources = ["fuzzyMatch.c", "fuzzyEngine.c"])
 
 
 setup(name = "fuzzyEngine",
