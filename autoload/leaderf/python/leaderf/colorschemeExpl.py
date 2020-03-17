@@ -4,6 +4,7 @@
 import vim
 import os
 import os.path
+import glob
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
@@ -14,9 +15,15 @@ from leaderf.manager import *
 #*****************************************************
 class ColorschemeExplorer(Explorer):
     def __init__(self):
-        pass
+        self._content = []
 
     def getContent(self, *args, **kwargs):
+        if self._content:
+            return self._content
+        else:
+            return self.getFreshContent()
+
+    def getFreshContent(self, *args, **kwargs):
         content = []
         for dir in lfEval("&rtp").split(','):
             try:
@@ -25,7 +32,21 @@ class ColorschemeExplorer(Explorer):
             except:
                 pass
 
-        return content
+        # packpath
+        if lfEval("exists('+packpath')") == "1":
+            for dir in lfEval("&packpath").split(","):
+                for pack_path in [
+                    "{}/pack/*/start/*/colors/*.vim",
+                    "{}/pack/*/opt/*/colors/*.vim",
+                ]:
+                    colors = [
+                        os.path.basename(f)[:-4]
+                        for f in glob.glob(pack_path.format(dir))
+                    ]
+                    content.extend(colors)
+
+        self._content = list(set(content)).sort()
+        return self._content
 
     def getStlCategory(self):
         return "Colorscheme"
