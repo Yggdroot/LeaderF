@@ -147,29 +147,7 @@ class Manager(object):
             lfCmd("silent! setlocal winhighlight<")
 
     def _acceptSelection(self, *args, **kwargs):
-        if len(args) == 0:
-            return
-        file = args[0]
-        try:
-            if not os.path.isabs(file):
-                file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
-                file = os.path.normpath(lfEncode(file))
-
-            if kwargs.get("mode", '') != 't' or (lfEval("get(g:, 'Lf_DiscardEmptyBuffer', 0)") == '1'
-                    and len(vim.tabpages) == 1 and len(vim.current.tabpage.windows) == 1
-                    and vim.current.buffer.name == '' and len(vim.current.buffer) == 1
-                    and vim.current.buffer[0] == '' and not vim.current.buffer.options["modified"]):
-                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 0)") == '1':
-                    lfCmd("hide drop %s" % escSpecial(file))
-                else:
-                    if vim.current.buffer.options["modified"]:
-                        lfCmd("hide edit %s" % escSpecial(file))
-                    else:
-                        lfCmd("edit %s" % escSpecial(file))
-            else:
-                lfCmd("tab drop %s" % escSpecial(file))
-        except vim.error as e: # E37
-            lfPrintError(e)
+        pass
 
     def _getDigest(self, line, mode):
         """

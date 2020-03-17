@@ -552,10 +552,9 @@ class GtagsExplorer(Explorer):
             return
 
         if lfEval("exists('g:Lf_ExternalCommand')") == '1':
-            self._Lf_ExternalCommand = lfEval("g:Lf_ExternalCommand") % dir.join('""')
+            self._Lf_ExternalCommand = lfEval("g:Lf_ExternalCommand")
             return
 
-        self._Lf_ExternalCommand = None
         self._Lf_UseVersionControlTool = lfEval("g:Lf_UseVersionControlTool") == '1'
         self._Lf_WildIgnore = lfEval("g:Lf_WildIgnore")
         self._Lf_RecurseSubmodules = lfEval("get(g:, 'Lf_RecurseSubmodules', 0)") == '1'
@@ -606,7 +605,7 @@ class GtagsExplorer(Explorer):
             return None
 
         if self._Lf_ExternalCommand:
-            return self._Lf_ExternalCommand
+            return self._Lf_ExternalCommand.replace('"%s"', '%s') % dir.join('""')
 
         arguments_dict = kwargs.get("arguments", {})
         if self._Lf_UseVersionControlTool:
