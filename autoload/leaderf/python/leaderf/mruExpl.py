@@ -226,6 +226,8 @@ class MruExplManager(Manager):
         else:
             lfCmd("setlocal modifiable")
         line = instance._buffer_object[instance.window.cursor[0] - 1]
+        if line == '':
+            return
 
         dirname = self._getDigest(line, 2)
         basename = self._getDigest(line, 1)
