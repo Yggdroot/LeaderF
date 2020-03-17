@@ -718,7 +718,8 @@ class FileExplManager(Manager):
             self._timer_id = lfEval("timer_start(1, 'leaderf#File#TimerCallback', {'repeat': -1})")
 
     def startExplorer(self, win_pos, *args, **kwargs):
-        if kwargs.get("arguments", {}).get("directory"): # behavior no change for `LeaderfFile <directory>`
+        directory = kwargs.get("arguments", {}).get("directory")
+        if directory and directory[0] not in ['""', "''"]: # behavior no change for `LeaderfFile <directory>`
             self._orig_cwd = None
             super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
             return
