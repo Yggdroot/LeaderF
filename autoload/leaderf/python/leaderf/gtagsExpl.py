@@ -554,6 +554,8 @@ class GtagsExplorer(Explorer):
         if lfEval("exists('g:Lf_ExternalCommand')") == '1':
             self._Lf_ExternalCommand = lfEval("g:Lf_ExternalCommand")
             return
+        else:
+            self._Lf_ExternalCommand = None
 
         self._Lf_UseVersionControlTool = lfEval("g:Lf_UseVersionControlTool") == '1'
         self._Lf_WildIgnore = lfEval("g:Lf_WildIgnore")
