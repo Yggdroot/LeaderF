@@ -45,7 +45,9 @@ class ColorschemeExplorer(Explorer):
                     ]
                     content.extend(colors)
 
-        self._content = list(set(content)).sort()
+        self._content = list(set(content))
+        self._content.sort()
+
         return self._content
 
     def getStlCategory(self):
