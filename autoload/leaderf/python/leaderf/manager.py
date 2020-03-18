@@ -1658,6 +1658,9 @@ class Manager(object):
             for i in sorted(self._selections.keys()):
                 files.append(self._getInstance().buffer[i-1])
             if "--stayOpen" in self._arguments:
+                if self._getInstance().window.valid:
+                    self._getInstance().cursorRow = self._getInstance().window.cursor[0]
+                self._getInstance().helpLength = self._help_length
                 try:
                     vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
                 except vim.error: # error if original buffer is an No Name buffer
@@ -1691,6 +1694,9 @@ class Manager(object):
             need_exit = self._needExit(file, self._arguments)
             if need_exit:
                 if "--stayOpen" in self._arguments:
+                    if self._getInstance().window.valid:
+                        self._getInstance().cursorRow = self._getInstance().window.cursor[0]
+                    self._getInstance().helpLength = self._help_length
                     try:
                         vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
                     except vim.error: # error if original buffer is an No Name buffer

@@ -47,6 +47,14 @@ class FloatWindow(object):
         self._window.cursor = cursor
 
     @property
+    def options(self):
+        return self._window.options
+
+    @options.setter
+    def options(self, options):
+        self._window.options = options
+
+    @property
     def height(self):
         return self._window.height
 
