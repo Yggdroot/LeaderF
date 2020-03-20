@@ -13,6 +13,7 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .asyncExecutor import AsyncExecutor
+from .devicons import getWebDevIconsGetFileTypeSymbol, removeDevIcons, isStartDevIcons
 
 def showRelativePath(func):
     @wraps(func)
@@ -33,11 +34,14 @@ def showDevIcons(func):
     def deco(*args, **kwargs):
         if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
             return (
-                "{}{}".format(getWebDevIconsGetFileTypeSymbol(line), line)
+                line
+                if isStartDevIcons(line)
+                else "{}{}".format(getWebDevIconsGetFileTypeSymbol(line), line)
                 for line in func(*args, **kwargs)
             )
         else:
             return func(*args, **kwargs)
+
     return deco
 
 #*****************************************************

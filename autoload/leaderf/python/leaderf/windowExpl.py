@@ -7,6 +7,7 @@ import re
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
+from .devicons import getWebDevIconsGetFileTypeSymbol, removeDevIcons
 
 
 # *****************************************************

@@ -10,6 +10,7 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .mru import *
+from .devicons import getWebDevIconsGetFileTypeSymbol
 
 
 #*****************************************************
