@@ -7,6 +7,7 @@ import re
 import os
 import os.path
 import locale
+from functools import wraps
 
 lfCmd = vim.command
 lfEval = vim.eval
@@ -158,3 +159,18 @@ def lfActualLineCount(buffer, start, end, col_width):
     for i in buffer[start:end]:
         num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + col_width - 1) // col_width
     return num
+
+def getWebDevIconsGetFileTypeSymbol(file, isdir=False):
+    isdir = 1 if isdir else 0
+    return lfEval('WebDevIconsGetFileTypeSymbol("{}", {})'.format(file, isdir))
+
+def removeDevIcons(func):
+    @wraps(func)
+    def deco(*args, **kwargs):
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
+            _args = list(args)
+            line = _args[1]
+            _args[1] = line[line.find(' ')+1:]
+            args = tuple(_args)
+        return func(*args, **kwargs)
+    return deco

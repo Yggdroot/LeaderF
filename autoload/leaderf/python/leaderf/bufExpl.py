@@ -65,15 +65,20 @@ class BufferExplorer(Explorer):
                 dirname = getDirname(buf_name)
                 space_num = self._max_bufname_len \
                             - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
-                # e.g., 12 u %a+- aaa.txt
-                buf_name = '{:{width}d} {:1s} {:1s}{:1s}{:1s}{:1s} {}{} "{}"'.format(nr,
+                # vim-devicons
+                if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+                    icon = getWebDevIconsGetFileTypeSymbol(basename)
+                else:
+                    icon = ''
+                # e.g., 12 u %a+-  aaa.txt
+                buf_name = '{:{width}d} {:1s} {:1s}{:1s}{:1s}{:1s} {}{}{} "{}"'.format(nr,
                             '' if buffers[nr].options["buflisted"] else 'u',
                             '%' if int(lfEval("bufnr('%')")) == nr
                                 else '#' if int(lfEval("bufnr('#')")) == nr else '',
                             'a' if lfEval("bufwinnr(%d)" % nr) != '-1' else 'h',
                             '+' if buffers[nr].options["modified"] else '',
                             '-' if not buffers[nr].options["modifiable"] else '',
-                            basename, ' ' * space_num,
+                            icon, basename, ' ' * space_num,
                             dirname if dirname else '.' + os.sep,
                             width=bufnr_len)
                 bufnames.append(buf_name)

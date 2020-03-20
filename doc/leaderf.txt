@@ -830,6 +830,14 @@ g:Lf_JumpToExistingWindow                       *g:Lf_JumpToExistingWindow*
 
     Default value is 0.
 
+g:Lf_ShowDevIcons                               *g:Lf_ShowDevIcons*
+    Use vim-devicons to display icons.
+    NOTE: https://github.com/ryanoasis/vim-devicons is required.
+    
+    Support commands: buffer,file,mru,window
+
+    Default value: 0
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

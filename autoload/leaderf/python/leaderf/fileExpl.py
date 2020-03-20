@@ -28,6 +28,17 @@ def showRelativePath(func):
             return func(*args, **kwargs)
     return deco
 
+def showDevIcons(func):
+    @wraps(func)
+    def deco(*args, **kwargs):
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
+            return (
+                "{}{}".format(getWebDevIconsGetFileTypeSymbol(line), line)
+                for line in func(*args, **kwargs)
+            )
+        else:
+            return func(*args, **kwargs)
+    return deco
 
 #*****************************************************
 # FileExplorer
@@ -549,6 +560,7 @@ class FileExplorer(Explorer):
         if lfEval("g:Lf_UseCache") == '1':
             self._writeCache(content)
 
+    @showDevIcons
     def getContent(self, *args, **kwargs):
         files = kwargs.get("arguments", {}).get("--file", [])
         if files:
@@ -770,11 +782,13 @@ class FileExplManager(Manager):
 
         super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
+    @removeDevIcons
     def _previewInPopup(self, *args, **kwargs):
         line = args[0]
         buf_number = lfEval("bufadd('{}')".format(escQuote(line)))
         self._createPopupPreview(line, buf_number, 0)
 
+    @removeDevIcons
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return

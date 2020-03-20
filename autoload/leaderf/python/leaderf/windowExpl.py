@@ -39,9 +39,15 @@ class WindowExplorer(Explorer):
                     lfEval("strdisplaywidth('%s')" % escQuote(basename))
                 )
 
-                # e,g,. ` 1  1 %+- windowExpl.py ".\"`
+                # vim-devicons
+                if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+                    icon = getWebDevIconsGetFileTypeSymbol(basename)
+                else:
+                    icon = ""
+
+                # e,g,. ` 1  1 %+-  windowExpl.py ".\"`
                 lines.append(
-                    '{:>2d} {:>2d} {:1s}{:1s}{:1s} {:s}{:s} "{:s}"'.format(
+                    '{:>2d} {:>2d} {:1s}{:1s}{:1s} {:s}{:s}{:s} "{:s}"'.format(
                         tab.number,
                         win.number,
                         "%"
@@ -51,6 +57,7 @@ class WindowExplorer(Explorer):
                         else "",
                         "+" if buf.options["modified"] else "",
                         "-" if not buf.options["modifiable"] else "",
+                        icon,
                         basename,
                         " " * space_num,
                         dirname if dirname else "." + os.sep,
@@ -104,6 +111,7 @@ class WindowExplManager(Manager):
     def _defineMaps(self):
         lfCmd("call leaderf#Window#Maps()")
 
+    @removeDevIcons
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
@@ -183,7 +191,7 @@ class WindowExplManager(Manager):
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
             lfCmd(
-                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winIndicators'', ''^\v\s?\d+ \s?\d+\s*\zs[#%%]=..\ze '')')"""
+                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winIndicators'', ''^\v\s?\d+ \s?\d+ \zs[#%% ]=..\ze '')')"""
                 % self._getInstance().getPopupWinId()
             )
             id = int(lfEval("matchid"))
@@ -215,7 +223,7 @@ class WindowExplManager(Manager):
             self._match_ids.append(id)
             id = int(
                 lfEval(
-                    r"matchadd('Lf_hl_winIndicators',   '^\v\s?\d+ \s?\d+\s*\zs[#%%]=..\ze ')"
+                    r"matchadd('Lf_hl_winIndicators',   '^\v\s?\d+ \s?\d+ \zs[#%% ]=..\ze ')"
                 )
             )
             self._match_ids.append(id)
