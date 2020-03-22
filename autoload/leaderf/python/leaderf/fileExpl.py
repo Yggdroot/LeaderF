@@ -13,7 +13,7 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .asyncExecutor import AsyncExecutor
-from .devicons import getWebDevIconsGetFileTypeSymbol, removeDevIcons, isStartDevIcons
+from .devicons import WebDevIconsGetFileTypeSymbol, removeDevIcons, isStartDevIcons
 
 def showRelativePath(func):
     @wraps(func)
@@ -33,16 +33,28 @@ def showDevIcons(func):
     @wraps(func)
     def deco(*args, **kwargs):
         if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
-            return (
-                line
-                if isStartDevIcons(line)
-                else "{}{}".format(getWebDevIconsGetFileTypeSymbol(line), line)
-                for line in func(*args, **kwargs)
-            )
+            content = func(*args, **kwargs)
+            # The cache contains an icon
+            if not isinstance(content, AsyncExecutor.Result) and lfEval("g:Lf_UseCache") == '0':
+                return [
+                    line
+                    if isStartDevIcons(line)
+                    else "{}{}".format(WebDevIconsGetFileTypeSymbol(line), line)
+                    for line in content
+                ]
+            else:
+                return content
         else:
             return func(*args, **kwargs)
 
     return deco
+
+def format_line(line):
+    return (
+        line
+        if isStartDevIcons(line)
+        else "{}{}".format(WebDevIconsGetFileTypeSymbol(line), line)
+    )
 
 #*****************************************************
 # FileExplorer
@@ -558,7 +570,6 @@ class FileExplorer(Explorer):
             else:
                 return None
 
-
     def setContent(self, content):
         self._content = content
         if lfEval("g:Lf_UseCache") == '1':
@@ -617,9 +628,9 @@ class FileExplorer(Explorer):
                 executor = AsyncExecutor()
                 self._executor.append(executor)
                 if cmd.split(None, 1)[0] == "dir":
-                    content = executor.execute(cmd)
+                    content = executor.execute(cmd, format_line)
                 else:
-                    content = executor.execute(cmd, encoding=lfEval("&encoding"))
+                    content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=format_line)
                 self._cmd_start_time = time.time()
                 return content
             else:
@@ -627,6 +638,7 @@ class FileExplorer(Explorer):
 
         return self._content
 
+    @showDevIcons
     def getFreshContent(self, *args, **kwargs):
         if self._external_cmd:
             self._content = []

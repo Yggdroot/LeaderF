@@ -10,7 +10,7 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .mru import *
-from .devicons import getWebDevIconsGetFileTypeSymbol
+from .devicons import WebDevIconsGetFileTypeSymbol
 
 
 #*****************************************************
@@ -68,7 +68,7 @@ class BufferExplorer(Explorer):
                             - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
                 # vim-devicons
                 if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
-                    icon = getWebDevIconsGetFileTypeSymbol(basename)
+                    icon = WebDevIconsGetFileTypeSymbol(basename)
                 else:
                     icon = ''
                 # e.g., 12 u %a+-  aaa.txt

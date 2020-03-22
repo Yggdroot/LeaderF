@@ -9,7 +9,7 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .mru import *
-from .devicons import getWebDevIconsGetFileTypeSymbol, removeDevIcons
+from .devicons import WebDevIconsGetFileTypeSymbol, removeDevIcons
 
 
 #*****************************************************
@@ -61,7 +61,7 @@ class MruExplorer(Explorer):
 
             # vim-devicons
             if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
-                icon = getWebDevIconsGetFileTypeSymbol(basename)
+                icon = WebDevIconsGetFileTypeSymbol(basename)
             else:
                 icon = ""
 

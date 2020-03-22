@@ -1,30 +1,79 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import os
+import re
 from functools import wraps
 from .utils import *
 
-_icons = set(lfEval("values(get(g:, 'WebDevIconsUnicodeDecorateFileNodesPatternSymbols', {}))"))
-_icons = _icons.union(set(lfEval("values(get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', {}))")))
-_icons = _icons.union(set(lfEval("values(get(g:, 'WebDevIconsUnicodeDecorateFileNodesExtensionSymbols', {}))")))
+enableFolderPatternMatching = lfEval("get(g:, 'DevIconsEnableFolderPatternMatching', 0)") == "1"
+enableFolderExtensionPatternMatching = lfEval("get(g:, 'DevIconsEnableFolderExtensionPatternMatching', 0)") == "1"
+appendArtifactFix = lfEval("get(g:, 'DevIconsAppendArtifactFix', 0)") == "1"
+artifactFixChar = lfEval("get(g:, 'DevIconsArtifactFixChar', '')")
 
-_icons.add(lfEval("get(g:, 'WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol', '')"))
-_icons.add(lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesDefaultSymbol', '')"))
+folderNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol', '')")
+fileNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesDefaultSymbol', '')")
 
-def getWebDevIconsGetFileTypeSymbol(file, isdir=False):
-    isdir = 1 if isdir else 0
-    return lfEval('WebDevIconsGetFileTypeSymbol("{}", {})'.format(file, isdir))
+fileNodesExactSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', '{}')")
+fileNodesPatternSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesPatternSymbols', '{}')")
+fileNodesExtensionSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExtensionSymbols', '{}')")
+
+_icons = set()
+_icons = _icons.union(set(fileNodesExactSymbols.values()))
+_icons = _icons.union(set(fileNodesPatternSymbols.values()))
+_icons = _icons.union(set(fileNodesExtensionSymbols.values()))
+_icons.add(fileNodesDefaultSymbol)
+_icons.add(folderNodesDefaultSymbol)
+
 
 def removeDevIcons(func):
     @wraps(func)
     def deco(*args, **kwargs):
-        line = args[1]
-        if isStartDevIcons(line):
-            _args = list(args)
-            _args[1] = line[1:].lstrip()
-            args = tuple(_args)
+        is_list = isinstance(args[1], list)
+
+        lines = args[1] if is_list else [args[1]]
+
+        lines = [
+            line if not isStartDevIcons(line) else line[1:].lstrip() for line in lines
+        ]
+
+        _args = list(args)
+        _args[1] = lines if is_list else lines[0]
+
+        args = tuple(_args)
         return func(*args, **kwargs)
     return deco
 
 def isStartDevIcons(line):
     return any(map(lambda x: line.startswith(x), _icons))
+
+# from vim-devicons
+# To use asynchronously
+def WebDevIconsGetFileTypeSymbol(file, isdir=False):
+    fileNode = getBasename(file).lower()
+    fileNodeExt = os.path.splitext(file)[-1][1:].lower()
+
+    if not isdir or enableFolderPatternMatching:
+        symbol = fileNodesDefaultSymbol
+
+        for [pattern, glyph] in fileNodesPatternSymbols.items():
+            if re.search(pattern, fileNode):
+                symbol = glyph
+                break
+
+        if symbol == fileNodesDefaultSymbol:
+            if fileNode in fileNodesExactSymbols:
+                symbol = fileNodesExactSymbols[fileNode]
+            elif ((isdir and enableFolderExtensionPatternMatching) or not isdir) and fileNodeExt in fileNodesExtensionSymbols:
+                symbol = fileNodesExtensionSymbols[fileNodeExt]
+            elif isdir:
+                symbol = folderNodesDefaultSymbol
+    else:
+        symbol = folderNodesDefaultSymbol
+
+    if appendArtifactFix:
+        artifactFix = artifactFixChar
+    else:
+        artifactFix = ''
+
+    return symbol + artifactFix
