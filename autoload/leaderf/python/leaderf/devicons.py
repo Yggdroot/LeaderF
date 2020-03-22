@@ -36,12 +36,16 @@ def removeDevIcons(func):
 
         lines = args[1] if is_list else [args[1]]
 
-        lines = [
-            line if not isStartDevIcons(line) else line[1:].lstrip() for line in lines
-        ]
+        res_lines = []
+        for line in lines:
+            b_line = lfByteArray(line)
+            if isStartDevIcons(lfBytes2Str(b_line)):
+                b_line = b_line[webDevIconsBytesLen():]
+                line = lfBytes2Str(b_line)
+            res_lines.append(line)
 
         _args = list(args)
-        _args[1] = lines if is_list else lines[0]
+        _args[1] = res_lines if is_list else res_lines[0]
 
         args = tuple(_args)
         return func(*args, **kwargs)
