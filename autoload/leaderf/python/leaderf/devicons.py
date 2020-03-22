@@ -37,9 +37,9 @@ def removeDevIcons(func):
         res_lines = []
         for line in lines:
             b_line = lfByteArray(line)
-            if isStartDevIcons(lfBytes2Str(b_line)):
+            if isStartDevIcons(lfBytes2Str(b_line, encoding="utf-8")):
                 b_line = b_line[webDevIconsBytesLen():]
-                line = lfBytes2Str(b_line)
+                line = lfBytes2Str(b_line, encoding="utf-8")
             res_lines.append(line)
 
         _args = list(args)
