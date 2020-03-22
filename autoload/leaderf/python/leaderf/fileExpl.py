@@ -13,7 +13,7 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .asyncExecutor import AsyncExecutor
-from .devicons import WebDevIconsGetFileTypeSymbol, removeDevIcons, isStartDevIcons
+from .devicons import webDevIconsGetFileTypeSymbol, removeDevIcons, isStartDevIcons
 
 def showRelativePath(func):
     @wraps(func)
@@ -48,7 +48,7 @@ def format_line(line):
     return (
         line
         if isStartDevIcons(line)
-        else "{}{}".format(WebDevIconsGetFileTypeSymbol(line), line)
+        else "{}{}".format(webDevIconsGetFileTypeSymbol(line), line)
     )
 
 #*****************************************************

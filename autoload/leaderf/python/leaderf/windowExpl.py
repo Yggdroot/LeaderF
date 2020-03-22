@@ -7,7 +7,7 @@ import re
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
-from .devicons import WebDevIconsGetFileTypeSymbol, removeDevIcons, webDevIconsBytesLen
+from .devicons import webDevIconsGetFileTypeSymbol, removeDevIcons, webDevIconsBytesLen
 
 
 # *****************************************************
@@ -46,7 +46,7 @@ class WindowExplorer(Explorer):
 
                 # vim-devicons
                 if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
-                    icon = WebDevIconsGetFileTypeSymbol(basename)
+                    icon = webDevIconsGetFileTypeSymbol(basename)
                 else:
                     icon = ""
 

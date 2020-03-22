@@ -52,7 +52,7 @@ def isStartDevIcons(line):
 
 # from vim-devicons
 # To use asynchronously
-def WebDevIconsGetFileTypeSymbol(file, isdir=False):
+def webDevIconsGetFileTypeSymbol(file, isdir=False):
     fileNode = getBasename(file).lower()
     fileNodeExt = os.path.splitext(file)[-1][1:].lower()
 
@@ -84,5 +84,5 @@ def WebDevIconsGetFileTypeSymbol(file, isdir=False):
 def webDevIconsBytesLen():
     global _iconBytesLen
     if _iconBytesLen == 0:
-        _iconBytesLen = lfBytesLen(WebDevIconsGetFileTypeSymbol('', True))
+        _iconBytesLen = lfBytesLen(webDevIconsGetFileTypeSymbol('', True))
     return _iconBytesLen
