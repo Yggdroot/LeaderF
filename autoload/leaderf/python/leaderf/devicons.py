@@ -25,6 +25,7 @@ _icons = _icons.union(set(fileNodesExtensionSymbols.values()))
 _icons.add(fileNodesDefaultSymbol)
 _icons.add(folderNodesDefaultSymbol)
 
+_iconBytesLen = 0
 
 _iconBytesLen = 0
 
