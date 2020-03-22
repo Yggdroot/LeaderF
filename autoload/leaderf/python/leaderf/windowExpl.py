@@ -21,6 +21,10 @@ class WindowExplorer(Explorer):
         lines = []
         self._max_bufname_len = self._get_max_bufname_len()
 
+        self._prefix_length = 10
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+            self._prefix_length += lfBytesLen(WebDevIconsGetFileTypeSymbol('', 1))
+
         for tab in vim.tabpages:
 
             for win in tab.windows:
@@ -97,6 +101,9 @@ class WindowExplorer(Explorer):
             or [0]
         )
 
+    def getPrefixLength(self):
+        return self._prefix_length
+
 
 # *****************************************************
 # WindowExplManager
@@ -104,7 +111,6 @@ class WindowExplorer(Explorer):
 class WindowExplManager(Manager):
     def __init__(self):
         super(WindowExplManager, self).__init__()
-        self._prefix_len = 10
 
     def _getExplClass(self):
         return WindowExplorer
@@ -147,14 +153,22 @@ class WindowExplManager(Manager):
         if not line:
             return ""
 
-        pref_len = self._prefix_len
-        if mode == 0:
-            return line[pref_len:]
-        elif mode == 1:
-            return line[pref_len: line.find(' "', pref_len)].strip()
+        pref_len = self._getExplorer().getPrefixLength()
+        if sys.version_info >= (3, 0):
+            b_line = bytearray(line, encoding="utf8")
         else:
-            start_pos = line.find(' "')
-            return line[start_pos+2:-1]
+            b_line = line
+        if mode == 0:
+            b_line = b_line[pref_len:]
+            return lfBytes2Str(b_line, encoding="utf8")
+        elif mode == 1:
+            end_pos = b_line.find(b' "', pref_len)
+            b_line = b_line[pref_len: end_pos]
+            return lfBytes2Str(b_line, encoding="utf8").strip()
+        else:
+            start_pos = b_line.find(b' "', pref_len)
+            b_line = b_line[start_pos+2:-1]
+            return lfBytes2Str(b_line, encoding="utf8")
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -167,7 +181,7 @@ class WindowExplManager(Manager):
         if not line:
             return 0
 
-        pref_len = self._prefix_len
+        pref_len = self._getExplorer().getPrefixLength()
         if mode == 0:
             return pref_len
         elif mode == 1:

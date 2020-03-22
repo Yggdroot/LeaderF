@@ -46,9 +46,11 @@ class BufferExplorer(Explorer):
                            if os.path.basename(w.buffer.name) != "LeaderF"}
 
 
-        # e.g., 12 u %a+- aaa.txt
+        # e.g., 12 u %a+-  aaa.txt
         bufnr_len = len(lfEval("bufnr('$')"))
         self._prefix_length = bufnr_len + 8
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+            self._prefix_length += lfBytesLen(WebDevIconsGetFileTypeSymbol('', True))
 
         self._max_bufname_len = max([int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(buffers[nr].name))))
@@ -144,15 +146,21 @@ class BufExplManager(Manager):
         if not line:
             return ''
         prefix_len = self._getExplorer().getPrefixLength()
+        if sys.version_info >= (3, 0):
+            b_line = bytearray(line, encoding="utf8")
+        else:
+            b_line = line
         if mode == 0:
-            return line[prefix_len:]
+            b_line = b_line[prefix_len:]
+            return lfBytes2Str(b_line, encoding="utf8")
         elif mode == 1:
             buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
             basename = getBasename(vim.buffers[buf_number].name)
             return basename if basename else "[No Name]"
         else:
-            start_pos = line.find(' "')
-            return line[start_pos+2 : -1]
+            start_pos = b_line.find(b' "', prefix_len)
+            b_line = b_line[start_pos+2:-1]
+            return lfBytes2Str(b_line, encoding="utf8")
 
     def _getDigestStartPos(self, line, mode):
         """

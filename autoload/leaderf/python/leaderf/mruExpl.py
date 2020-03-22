@@ -48,6 +48,9 @@ class MruExplorer(Explorer):
         if "--no-split-path" in kwargs.get("arguments", {}):
             return lines
 
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+            self._prefix_length = lfBytesLen(WebDevIconsGetFileTypeSymbol('', True))
+
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(line))))
                                     for line in lines)
@@ -162,14 +165,21 @@ class MruExplManager(Manager):
                 return getDirname(line)
         else:
             prefix_len = self._getExplorer().getPrefixLength()
+            if sys.version_info >= (3, 0):
+                b_line = bytearray(line, encoding="utf8")
+            else:
+                b_line = line
             if mode == 0:
-                return line[prefix_len:]
+                b_line = b_line[prefix_len:]
+                return lfBytes2Str(b_line, encoding="utf8")
             elif mode == 1:
-                start_pos = line.find(' "') # what if there is " in file name?
-                return line[prefix_len:start_pos].rstrip()
+                start_pos = b_line.find(b' "', prefix_len) # what if there is " in file name?
+                b_line = b_line[prefix_len:start_pos]
+                return lfBytes2Str(b_line, encoding="utf8").rstrip()
             else:
                 start_pos = line.find(' "') # what if there is " in file name?
-                return line[start_pos+2 : -1]
+                b_line = b_line[start_pos+2 : -1]
+                return lfBytes2Str(b_line, encoding="utf8")
 
     def _getDigestStartPos(self, line, mode):
         """
