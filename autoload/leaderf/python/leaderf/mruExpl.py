@@ -9,7 +9,7 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .mru import *
-from .devicons import WebDevIconsGetFileTypeSymbol, removeDevIcons
+from .devicons import WebDevIconsGetFileTypeSymbol, removeDevIcons, webDevIconsBytesLen
 
 
 #*****************************************************
@@ -49,7 +49,7 @@ class MruExplorer(Explorer):
             return lines
 
         if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
-            self._prefix_length = lfBytesLen(WebDevIconsGetFileTypeSymbol('', True))
+            self._prefix_length = webDevIconsBytesLen()
 
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(line))))

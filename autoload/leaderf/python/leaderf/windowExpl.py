@@ -7,7 +7,7 @@ import re
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
-from .devicons import WebDevIconsGetFileTypeSymbol, removeDevIcons
+from .devicons import WebDevIconsGetFileTypeSymbol, removeDevIcons, webDevIconsBytesLen
 
 
 # *****************************************************
@@ -23,7 +23,7 @@ class WindowExplorer(Explorer):
 
         self._prefix_length = 10
         if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
-            self._prefix_length += lfBytesLen(WebDevIconsGetFileTypeSymbol('', 1))
+            self._prefix_length += webDevIconsBytesLen()
 
         for tab in vim.tabpages:
 

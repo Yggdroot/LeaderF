@@ -26,6 +26,8 @@ _icons.add(fileNodesDefaultSymbol)
 _icons.add(folderNodesDefaultSymbol)
 
 
+_iconBytesLen = 0
+
 def removeDevIcons(func):
     @wraps(func)
     def deco(*args, **kwargs):
@@ -77,3 +79,9 @@ def WebDevIconsGetFileTypeSymbol(file, isdir=False):
         artifactFix = ''
 
     return symbol + artifactFix
+
+def webDevIconsBytesLen():
+    global _iconBytesLen
+    if _iconBytesLen == 0:
+        _iconBytesLen = lfBytesLen(WebDevIconsGetFileTypeSymbol('', True))
+    return _iconBytesLen

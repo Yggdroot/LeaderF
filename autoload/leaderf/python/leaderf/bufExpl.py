@@ -10,7 +10,7 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .mru import *
-from .devicons import WebDevIconsGetFileTypeSymbol
+from .devicons import WebDevIconsGetFileTypeSymbol, webDevIconsBytesLen
 
 
 #*****************************************************
@@ -50,7 +50,7 @@ class BufferExplorer(Explorer):
         bufnr_len = len(lfEval("bufnr('$')"))
         self._prefix_length = bufnr_len + 8
         if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
-            self._prefix_length += lfBytesLen(WebDevIconsGetFileTypeSymbol('', True))
+            self._prefix_length += webDevIconsBytesLen()
 
         self._max_bufname_len = max([int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(buffers[nr].name))))
