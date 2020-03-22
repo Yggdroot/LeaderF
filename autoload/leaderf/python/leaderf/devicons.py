@@ -27,8 +27,6 @@ _icons.add(folderNodesDefaultSymbol)
 
 _iconBytesLen = 0
 
-_iconBytesLen = 0
-
 def removeDevIcons(func):
     @wraps(func)
     def deco(*args, **kwargs):
