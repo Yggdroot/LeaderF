@@ -122,7 +122,6 @@ class MruExplManager(Manager):
             basename = self._getDigest(file, 1)
             lfCmd("argadd %s" % escSpecial(dirname + basename))
 
-    @removeDevIcons
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
@@ -169,15 +168,16 @@ class MruExplManager(Manager):
                 b_line = bytearray(line, encoding="utf8")
             else:
                 b_line = line
+
             if mode == 0:
                 b_line = b_line[prefix_len:]
                 return lfBytes2Str(b_line, encoding="utf8")
             elif mode == 1:
-                start_pos = b_line.find(b' "', prefix_len) # what if there is " in file name?
+                start_pos = b_line.find(b' "') # what if there is " in file name?
                 b_line = b_line[prefix_len:start_pos]
                 return lfBytes2Str(b_line, encoding="utf8").rstrip()
             else:
-                start_pos = line.find(' "') # what if there is " in file name?
+                start_pos = b_line.find(b' "') # what if there is " in file name?
                 b_line = b_line[start_pos+2 : -1]
                 return lfBytes2Str(b_line, encoding="utf8")
 
@@ -198,13 +198,18 @@ class MruExplManager(Manager):
                 return lfBytesLen(getDirname(line))
         else:
             prefix_len = self._getExplorer().getPrefixLength()
+            if sys.version_info >= (3, 0):
+                b_line = bytearray(line, encoding="utf8")
+            else:
+                b_line = line
+
             if mode == 0:
                 return prefix_len
             elif mode == 1:
                 return prefix_len
             else:
-                start_pos = line.find(' "') # what if there is " in file name?
-                return lfBytesLen(line[:start_pos+2])
+                start_pos = b_line.find(b' "') # what if there is " in file name?
+                return lfBytesLen(b_line[:start_pos+2])
 
     def _createHelp(self):
         help = []
