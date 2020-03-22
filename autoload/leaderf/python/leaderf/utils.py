@@ -44,6 +44,10 @@ if sys.version_info >= (3, 0):
         except UnicodeDecodeError:
             return bytes.decode(errors="ignore")
 
+    def lfByteArray(str, encoding=None):
+        _encoding = encoding or lf_encoding
+        return bytearray(str, encoding=_encoding, errors="ignore")
+
 else: # python 2.x
 
     range = xrange
@@ -81,6 +85,9 @@ else: # python 2.x
 
     def lfBytes2Str(bytes, encoding=None):
         return bytes
+
+    def lfByteArray(str, encoding=None):
+        return str
 
 #-----------------------------------------------------------------------------
 

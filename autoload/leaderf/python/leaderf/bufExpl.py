@@ -146,10 +146,8 @@ class BufExplManager(Manager):
         if not line:
             return ''
         prefix_len = self._getExplorer().getPrefixLength()
-        if sys.version_info >= (3, 0):
-            b_line = bytearray(line, encoding="utf8")
-        else:
-            b_line = line
+        b_line = lfByteArray(line)
+
         if mode == 0:
             b_line = b_line[prefix_len:]
             return lfBytes2Str(b_line, encoding="utf8")
