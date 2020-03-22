@@ -36,12 +36,7 @@ def showDevIcons(func):
             content = func(*args, **kwargs)
             # The cache contains an icon
             if not isinstance(content, AsyncExecutor.Result) and lfEval("g:Lf_UseCache") == '0':
-                return [
-                    line
-                    if isStartDevIcons(line)
-                    else "{}{}".format(WebDevIconsGetFileTypeSymbol(line), line)
-                    for line in content
-                ]
+                return [format_line(line) for line in content]
             else:
                 return content
         else:
