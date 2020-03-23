@@ -624,7 +624,10 @@ class FileExplorer(Explorer):
                 if cmd.split(None, 1)[0] == "dir":
                     content = executor.execute(cmd, format_line)
                 else:
-                    content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=format_line)
+                    if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
+                        content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=format_line)
+                    else:
+                        content = executor.execute(cmd, encoding=lfEval("&encoding"))
                 self._cmd_start_time = time.time()
                 return content
             else:
