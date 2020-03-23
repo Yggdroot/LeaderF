@@ -14,9 +14,9 @@ artifactFixChar = lfEval("get(g:, 'DevIconsArtifactFixChar', '')")
 folderNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol', '')")
 fileNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesDefaultSymbol', '')")
 
-fileNodesExactSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', '{}')")
-fileNodesPatternSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesPatternSymbols', '{}')")
-fileNodesExtensionSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExtensionSymbols', '{}')")
+fileNodesExactSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', {})")
+fileNodesPatternSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesPatternSymbols', {})")
+fileNodesExtensionSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExtensionSymbols', {})")
 
 _icons = set()
 _icons = _icons.union(set(fileNodesExactSymbols.values()))
