@@ -1211,7 +1211,7 @@ class Manager(object):
                     else:
                         filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_File,
                                                 param=fuzzyEngine.createParameter(1), is_name_only=True, sort_results=True)
-                elif self._getExplorer().getStlCategory() in ["Rg"]:
+                elif self._getExplorer().getStlCategory() == "Rg":
                     return_index = False
                     if "--match-path" in self._arguments:
                         filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
@@ -1234,6 +1234,10 @@ class Manager(object):
                         result_format = 2
                     filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_Gtags,
                                             param=fuzzyEngine.createGtagsParameter(0, result_format, self._match_path), is_name_only=True, sort_results=True)
+                elif self._getExplorer().getStlCategory() == "Line":
+                    return_index = False
+                    filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_Line,
+                                            param=fuzzyEngine.createParameter(1), is_name_only=True, sort_results=True)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History", "Filetype",
                         "Command", "Window"]:
