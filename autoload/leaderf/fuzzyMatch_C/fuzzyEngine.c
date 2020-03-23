@@ -1314,6 +1314,7 @@ enum
     Category_Tag,
     Category_File,
     Category_Gtags,
+    Category_Line,
 };
 
 typedef struct RgParameter
@@ -1556,6 +1557,20 @@ static void gtags_getDigest(char** str, uint32_t* length, GtagsParameter* param)
     }
 }
 
+static void line_getDigest(char** str, uint32_t* length, Parameter* param)
+{
+    char* s = *str;
+    char *p = s + *length - 1;
+    for ( ; p >= s; --p )
+    {
+        if ( *p == '\t' )
+        {
+            *length = p - s;
+            return;
+        }
+    }
+}
+
 /**
  * fuzzyMatchPart(engine, source, pattern, category, param, is_name_only=False, sort_results=True)
  *
@@ -1744,6 +1759,9 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
                 gtags_getDigest(&s->str, &s->len, param);
                 break;
             }
+            case Category_Line:
+                line_getDigest(&s->str, &s->len, (Parameter*)PyCapsule_GetPointer(py_param, NULL));
+                break;
             }
         }
 
@@ -1855,6 +1873,12 @@ PyMODINIT_FUNC PyInit_fuzzyEngine(void)
         return NULL;
     }
 
+    if ( PyModule_AddObject(module, "Category_Line", Py_BuildValue("I", Category_Line)) )
+    {
+        Py_DECREF(module);
+        return NULL;
+    }
+
     return module;
 }
 
@@ -1887,6 +1911,12 @@ PyMODINIT_FUNC initfuzzyEngine(void)
     }
 
     if ( PyModule_AddObject(module, "Category_Gtags", Py_BuildValue("I", Category_Gtags)) )
+    {
+        Py_DECREF(module);
+        return;
+    }
+
+    if ( PyModule_AddObject(module, "Category_Line", Py_BuildValue("I", Category_Line)) )
     {
         Py_DECREF(module);
         return;
