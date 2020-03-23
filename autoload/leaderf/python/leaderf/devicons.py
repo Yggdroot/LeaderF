@@ -1,17 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os
 import re
 from functools import wraps
 from .utils import *
 
-enableFolderPatternMatching = lfEval("get(g:, 'DevIconsEnableFolderPatternMatching', 0)") == "1"
-enableFolderExtensionPatternMatching = lfEval("get(g:, 'DevIconsEnableFolderExtensionPatternMatching', 0)") == "1"
 appendArtifactFix = lfEval("get(g:, 'DevIconsAppendArtifactFix', 0)") == "1"
 artifactFixChar = lfEval("get(g:, 'DevIconsArtifactFixChar', '')")
 
-folderNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol', '')")
 fileNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesDefaultSymbol', '')")
 
 fileNodesExactSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', {})")
@@ -23,9 +19,14 @@ _icons = _icons.union(set(fileNodesExactSymbols.values()))
 _icons = _icons.union(set(fileNodesPatternSymbols.values()))
 _icons = _icons.union(set(fileNodesExtensionSymbols.values()))
 _icons.add(fileNodesDefaultSymbol)
-_icons.add(folderNodesDefaultSymbol)
 
 _iconBytesLen = 0
+
+# compile
+compiledFileNodesPatternSymbols = {}
+for [pattern, glyph] in fileNodesPatternSymbols.items():
+    compiledFileNodesPatternSymbols[re.compile(pattern)] = glyph
+
 
 def removeDevIcons(func):
     @wraps(func)
@@ -50,31 +51,30 @@ def removeDevIcons(func):
     return deco
 
 def isStartDevIcons(line):
-    return any(map(lambda x: line.startswith(x), _icons))
+    return line[0] in _icons
+
+def _getExt(file):
+    idx = file.rfind('.')
+    return '' if idx == -1 else file[idx+1:].lower()
 
 # from vim-devicons
 # To use asynchronously
-def webDevIconsGetFileTypeSymbol(file, isdir=False):
+def webDevIconsGetFileTypeSymbol(file):
     fileNode = getBasename(file).lower()
-    fileNodeExt = os.path.splitext(file)[-1][1:].lower()
+    fileNodeExt = _getExt(file)
 
-    if not isdir or enableFolderPatternMatching:
-        symbol = fileNodesDefaultSymbol
+    symbol = fileNodesDefaultSymbol
 
-        for [pattern, glyph] in fileNodesPatternSymbols.items():
-            if re.search(pattern, fileNode):
-                symbol = glyph
-                break
+    for [pattern, glyph] in compiledFileNodesPatternSymbols.items():
+        if pattern.search(fileNode):
+            symbol = glyph
+            break
 
-        if symbol == fileNodesDefaultSymbol:
-            if fileNode in fileNodesExactSymbols:
-                symbol = fileNodesExactSymbols[fileNode]
-            elif ((isdir and enableFolderExtensionPatternMatching) or not isdir) and fileNodeExt in fileNodesExtensionSymbols:
-                symbol = fileNodesExtensionSymbols[fileNodeExt]
-            elif isdir:
-                symbol = folderNodesDefaultSymbol
-    else:
-        symbol = folderNodesDefaultSymbol
+    if symbol == fileNodesDefaultSymbol:
+        if fileNode in fileNodesExactSymbols:
+            symbol = fileNodesExactSymbols[fileNode]
+        elif fileNodeExt in fileNodesExtensionSymbols:
+            symbol = fileNodesExtensionSymbols[fileNodeExt]
 
     if appendArtifactFix:
         artifactFix = artifactFixChar
@@ -86,5 +86,5 @@ def webDevIconsGetFileTypeSymbol(file, isdir=False):
 def webDevIconsBytesLen():
     global _iconBytesLen
     if _iconBytesLen == 0:
-        _iconBytesLen = lfBytesLen(webDevIconsGetFileTypeSymbol('', True))
+        _iconBytesLen = lfBytesLen(webDevIconsGetFileTypeSymbol('txt'))
     return _iconBytesLen

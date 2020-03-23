@@ -34,22 +34,20 @@ def showDevIcons(func):
     def deco(*args, **kwargs):
         if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
             content = func(*args, **kwargs)
-            # The cache contains an icon
-            if not isinstance(content, AsyncExecutor.Result) and lfEval("g:Lf_UseCache") == '0':
-                return [format_line(line) for line in content]
-            else:
+            if isinstance(content, AsyncExecutor.Result):
                 return content
+            else:
+                return [
+                    line if isStartDevIcons(line) else format_line(line)
+                    for line in content
+                ]
         else:
             return func(*args, **kwargs)
 
     return deco
 
 def format_line(line):
-    return (
-        line
-        if isStartDevIcons(line)
-        else "{}{}".format(webDevIconsGetFileTypeSymbol(line), line)
-    )
+    return webDevIconsGetFileTypeSymbol(line) + line
 
 #*****************************************************
 # FileExplorer
@@ -565,6 +563,7 @@ class FileExplorer(Explorer):
             else:
                 return None
 
+    @removeDevIcons
     def setContent(self, content):
         self._content = content
         if lfEval("g:Lf_UseCache") == '1':
