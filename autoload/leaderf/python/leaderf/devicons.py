@@ -5,28 +5,17 @@ import re
 from functools import wraps
 from .utils import *
 
-appendArtifactFix = lfEval("get(g:, 'DevIconsAppendArtifactFix', 0)") == "1"
-artifactFixChar = lfEval("get(g:, 'DevIconsArtifactFixChar', '')")
-
 fileNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesDefaultSymbol', '')")
 
 fileNodesExactSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', {})")
-fileNodesPatternSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesPatternSymbols', {})")
 fileNodesExtensionSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExtensionSymbols', {})")
 
 _icons = set()
 _icons = _icons.union(set(fileNodesExactSymbols.values()))
-_icons = _icons.union(set(fileNodesPatternSymbols.values()))
 _icons = _icons.union(set(fileNodesExtensionSymbols.values()))
 _icons.add(fileNodesDefaultSymbol)
 
 _iconBytesLen = 0
-
-# compile
-compiledFileNodesPatternSymbols = {}
-for [pattern, glyph] in fileNodesPatternSymbols.items():
-    compiledFileNodesPatternSymbols[re.compile(pattern)] = glyph
-
 
 def removeDevIcons(func):
     @wraps(func)
@@ -64,11 +53,6 @@ def webDevIconsGetFileTypeSymbol(file):
     fileNodeExt = _getExt(file)
 
     symbol = fileNodesDefaultSymbol
-
-    for [pattern, glyph] in compiledFileNodesPatternSymbols.items():
-        if pattern.search(fileNode):
-            symbol = glyph
-            break
 
     if symbol == fileNodesDefaultSymbol:
         if fileNode in fileNodesExactSymbols:
