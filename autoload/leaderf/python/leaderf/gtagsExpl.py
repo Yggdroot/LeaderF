@@ -392,9 +392,9 @@ class GtagsExplorer(Explorer):
 
     def _generateDbpath(self, path):
         if os.name == 'nt':
-            db_folder = re.sub(r'[\\/]', '%', path.replace(':\\', '%', 1))
+            db_folder = re.sub(r'[\\/]', '_', path.replace(':\\', '_', 1))
         else:
-            db_folder = path.replace('/', '%')
+            db_folder = path.replace('/', '_')
 
         if self._store_in_project:
             return path
