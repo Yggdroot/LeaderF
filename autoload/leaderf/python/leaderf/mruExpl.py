@@ -203,7 +203,7 @@ class MruExplManager(Manager):
                 return prefix_len
             else:
                 start_pos = b_line.find(b' "') # what if there is " in file name?
-                return lfBytesLen(b_line[:start_pos+2])
+                return len(b_line[:start_pos+2])
 
     def _createHelp(self):
         help = []
