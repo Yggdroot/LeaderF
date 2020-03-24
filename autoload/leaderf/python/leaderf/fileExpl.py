@@ -37,8 +37,9 @@ def showDevIcons(func):
             if isinstance(content, AsyncExecutor.Result):
                 return content
             else:
+                # In case of Windows, line feeds may be included when reading from the cache.
                 return [
-                    line if isStartDevIcons(line) else format_line(line)
+                    line if isStartDevIcons(line) else format_line(line.rstrip())
                     for line in content
                 ]
         else:
