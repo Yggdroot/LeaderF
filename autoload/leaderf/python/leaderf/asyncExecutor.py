@@ -33,7 +33,7 @@ class AsyncExecutor(object):
         finally:
             queue.put(None)
 
-    def execute(self, cmd, encoding=None, cleanup=None, env=None, raise_except=True, format_line=lambda x: x):
+    def execute(self, cmd, encoding=None, cleanup=None, env=None, raise_except=True, format_line=None):
         if os.name == 'nt':
             self._process = subprocess.Popen(cmd, bufsize=-1,
                                              stdin=subprocess.PIPE,
@@ -66,9 +66,15 @@ class AsyncExecutor(object):
                         for line in source:
                             try:
                                 line.decode("ascii")
-                                yield format_line(line.rstrip(b"\r\n").decode())
+                                yield (
+                                    format_line(line.rstrip(b"\r\n").decode())
+                                ) if format_line else line.rstrip(b"\r\n").decode()
                             except UnicodeDecodeError:
-                                yield format_line(lfBytes2Str(line.rstrip(b"\r\n"), encoding))
+                                yield (
+                                    format_line(lfBytes2Str(line.rstrip(b"\r\n"), encoding))
+                                ) if format_line else (
+                                    lfBytes2Str(line.rstrip(b"\r\n"), encoding)
+                                )
                             if self._max_count > 0:
                                 count += 1
                                 if count >= self._max_count:
@@ -78,9 +84,13 @@ class AsyncExecutor(object):
                         for line in source:
                             try:
                                 line.decode("ascii")
-                                yield format_line(line.rstrip(b"\r\n").decode())
+                                yield (
+                                    format_line(line.rstrip(b"\r\n").decode())
+                                ) if format_line else line.rstrip(b"\r\n").decode()
                             except UnicodeDecodeError:
-                                yield format_line(lfBytes2Str(line.rstrip(b"\r\n")))
+                                yield (
+                                    format_line(lfBytes2Str(line.rstrip(b"\r\n")))
+                                ) if format_line else lfBytes2Str(line.rstrip(b"\r\n"))
                             if self._max_count > 0:
                                 count += 1
                                 if count >= self._max_count:
@@ -109,7 +119,9 @@ class AsyncExecutor(object):
                     count = 0
                     if encoding:
                         for line in source:
-                            yield format_line(line.rstrip(b"\r\n"))
+                            yield (
+                                format_line(line.rstrip(b"\r\n"))
+                            ) if format_line else line.rstrip(b"\r\n")
                             if self._max_count > 0:
                                 count += 1
                                 if count >= self._max_count:
@@ -119,9 +131,13 @@ class AsyncExecutor(object):
                         for line in source:
                             try:
                                 line.decode("ascii")
-                                yield format_line(line.rstrip(b"\r\n"))
+                                yield (
+                                    format_line(line.rstrip(b"\r\n"))
+                                ) if format_line else line.rstrip(b"\r\n")
                             except UnicodeDecodeError:
-                                yield format_line(lfEncode(line.rstrip(b"\r\n")))
+                                yield (
+                                    format_line(lfEncode(line.rstrip(b"\r\n")))
+                                ) if format_line else lfEncode(line.rstrip(b"\r\n"))
                             if self._max_count > 0:
                                 count += 1
                                 if count >= self._max_count:
