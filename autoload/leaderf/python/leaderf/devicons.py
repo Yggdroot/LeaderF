@@ -44,13 +44,13 @@ def isStartDevIcons(line):
 
 def _getExt(file):
     idx = file.rfind('.')
-    return '' if idx == -1 else file[idx+1:].lower()
+    return '' if idx == -1 else file[idx+1:]
 
 # from vim-devicons
 # To use asynchronously
 def webDevIconsGetFileTypeSymbol(file):
     fileNode = getBasename(file).lower()
-    fileNodeExt = _getExt(file)
+    fileNodeExt = _getExt(fileNode)
 
     symbol = fileNodesDefaultSymbol
 
