@@ -54,18 +54,18 @@ def webDevIconsGetFileTypeSymbol(file):
 
     symbol = fileNodesDefaultSymbol
 
-    if symbol == fileNodesDefaultSymbol:
-        if fileNode in fileNodesExactSymbols:
-            symbol = fileNodesExactSymbols[fileNode]
-        elif fileNodeExt in fileNodesExtensionSymbols:
-            symbol = fileNodesExtensionSymbols[fileNodeExt]
+    if fileNode in fileNodesExactSymbols:
+        symbol = fileNodesExactSymbols[fileNode]
+    elif fileNodeExt in fileNodesExtensionSymbols:
+        symbol = fileNodesExtensionSymbols[fileNodeExt]
 
-    if appendArtifactFix:
-        artifactFix = artifactFixChar
+    if lfEval('&ambiwidth') == 'single':
+        # Required to display the font correctly.
+        spaces = '  '
     else:
-        artifactFix = ''
+        spaces = ' '
 
-    return symbol + artifactFix
+    return symbol + spaces
 
 def webDevIconsBytesLen():
     global _iconBytesLen
