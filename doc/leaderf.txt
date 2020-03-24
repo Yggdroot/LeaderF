@@ -836,7 +836,13 @@ g:Lf_ShowDevIcons                               *g:Lf_ShowDevIcons*
     
     Support commands: buffer,file,mru,window
 
-    Default value: 0
+    Default value is 0.
+
+g:Lf_DevIconsFont                               *g:Lf_DevIconsFont*
+    Specifies the font used to display the vim-devicons icon.
+    If it is empty, use the default font.
+
+    Default value is `''`.
 
 ==============================================================================
 USAGE                                           *leaderf-usage*
