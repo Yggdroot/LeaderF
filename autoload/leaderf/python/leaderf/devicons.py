@@ -65,11 +65,11 @@ def webDevIconsGetFileTypeSymbol(file):
     elif fileNodeExt in fileNodesExtensionSymbols:
         symbol = fileNodesExtensionSymbols[fileNodeExt]
 
-    if _ambiwidth == 'single':
+    if _ambiwidth == 'double':
+        spaces = ' '
+    else:
         # Required to display the font correctly.
         spaces = '  '
-    else:
-        spaces = ' '
 
     return symbol + spaces
 
