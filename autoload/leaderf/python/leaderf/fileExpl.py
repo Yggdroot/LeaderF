@@ -35,10 +35,7 @@ def showDevIcons(func):
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
             content = func(*args, **kwargs)
             # In case of Windows, line feeds may be included when reading from the cache.
-            return [
-                line if isStartDevIcons(line) else format_line(line.rstrip())
-                for line in content or []
-            ]
+            return [format_line(line.rstrip()) for line in content or []]
         else:
             return func(*args, **kwargs)
 
