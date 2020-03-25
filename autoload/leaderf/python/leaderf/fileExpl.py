@@ -100,8 +100,8 @@ class FileExplorer(Explorer):
                     return file_list
         return file_list
 
-    @showRelativePath
     @showDevIcons
+    @showRelativePath
     def _getFileList(self, dir):
         dir = dir if dir.endswith(os.sep) else dir + os.sep
         with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
