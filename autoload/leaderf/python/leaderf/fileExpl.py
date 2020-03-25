@@ -43,20 +43,6 @@ def showDevIcons(func):
 def format_line(line):
     return webDevIconsGetFileTypeSymbol(line) + line
 
-def readFromFileList(func):
-    @wraps(func)
-    def deco(*args, **kwargs):
-        files = kwargs.get("arguments", {}).get("--file", [])
-        if files:
-            result = []
-            for file in files:
-                with lfOpen(file, 'r', errors='ignore') as f:
-                    result += f.readlines()
-            return [format_line(file.rstrip()) for file in result]
-        else:
-            return func(*args, **kwargs)
-    return deco
-
 
 #*****************************************************
 # FileExplorer
@@ -170,6 +156,14 @@ class FileExplorer(Explorer):
                         for line in file_list:
                             cache_file.write(line + '\n')
                 return file_list
+
+    @showDevIcons
+    def _readFromFileList(self, files):
+        result = []
+        for file in files:
+            with lfOpen(file, 'r', errors='ignore') as f:
+                result += f.readlines()
+        return result
 
     def _refresh(self):
         dir = os.path.abspath(self._cur_dir)
@@ -580,8 +574,11 @@ class FileExplorer(Explorer):
         if lfEval("g:Lf_UseCache") == '1':
             self._writeCache(content)
 
-    @readFromFileList
     def getContent(self, *args, **kwargs):
+        files = kwargs.get("arguments", {}).get("--file", [])
+        if files:
+            return self._readFromFileList(files)
+
         dir = os.getcwd()
 
         self._cmd_work_dir = ""
