@@ -605,3 +605,12 @@ function! leaderf#closeAllFloatwin(input_win_id, content_win_id, statusline_win_
 endfunction
 
 autocmd FileType leaderf let b:coc_enabled = 0 | let b:coc_suggest_disable = 1
+
+
+" for devicons
+autocmd OptionSet ambiwidth call leaderf#setAmbiwidth(v:option_new)
+
+function! leaderf#setAmbiwidth(val) abort
+    exec g:Lf_py "from leaderf.devicons import setAmbiwidth"
+    exec g:Lf_py printf("setAmbiwidth('%s')", a:val)
+endfunction

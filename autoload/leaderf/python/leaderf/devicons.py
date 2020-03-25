@@ -10,6 +10,8 @@ fileNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesDef
 fileNodesExactSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', {})")
 fileNodesExtensionSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExtensionSymbols', {})")
 
+_ambiwidth = lfEval('&ambiwidth')
+
 _icons = set()
 _icons = _icons.union(set(fileNodesExactSymbols.values()))
 _icons = _icons.union(set(fileNodesExtensionSymbols.values()))
@@ -46,6 +48,10 @@ def _getExt(file):
     idx = file.rfind('.')
     return '' if idx == -1 else file[idx+1:]
 
+def setAmbiwidth(val):
+    global _ambiwidth
+    _ambiwidth = val
+
 # from vim-devicons
 # To use asynchronously
 def webDevIconsGetFileTypeSymbol(file):
@@ -59,7 +65,7 @@ def webDevIconsGetFileTypeSymbol(file):
     elif fileNodeExt in fileNodesExtensionSymbols:
         symbol = fileNodesExtensionSymbols[fileNodeExt]
 
-    if lfEval('&ambiwidth') == 'single':
+    if _ambiwidth == 'single':
         # Required to display the font correctly.
         spaces = '  '
     else:
