@@ -34,14 +34,11 @@ def showDevIcons(func):
     def deco(*args, **kwargs):
         if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
             content = func(*args, **kwargs)
-            if isinstance(content, AsyncExecutor.Result):
-                return content
-            else:
-                # In case of Windows, line feeds may be included when reading from the cache.
-                return [
-                    line if isStartDevIcons(line) else format_line(line.rstrip())
-                    for line in content
-                ]
+            # In case of Windows, line feeds may be included when reading from the cache.
+            return [
+                line if isStartDevIcons(line) else format_line(line.rstrip())
+                for line in content or []
+            ]
         else:
             return func(*args, **kwargs)
 
@@ -93,6 +90,7 @@ class FileExplorer(Explorer):
         return file_list
 
     @showRelativePath
+    @showDevIcons
     def _getFileList(self, dir):
         dir = dir if dir.endswith(os.sep) else dir + os.sep
         with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
@@ -460,6 +458,7 @@ class FileExplorer(Explorer):
 
         return cmd
 
+    @removeDevIcons
     def _writeCache(self, content):
         dir = self._cur_dir if self._cur_dir.endswith(os.sep) else self._cur_dir + os.sep
         with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
@@ -522,6 +521,7 @@ class FileExplorer(Explorer):
                     for line in content:
                         cache_file.write(line + '\n')
 
+    @showDevIcons
     def _getFilesFromCache(self):
         dir = self._cur_dir if self._cur_dir.endswith(os.sep) else self._cur_dir + os.sep
         with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
@@ -564,13 +564,11 @@ class FileExplorer(Explorer):
             else:
                 return None
 
-    @removeDevIcons
     def setContent(self, content):
         self._content = content
         if lfEval("g:Lf_UseCache") == '1':
             self._writeCache(content)
 
-    @showDevIcons
     def getContent(self, *args, **kwargs):
         files = kwargs.get("arguments", {}).get("--file", [])
         if files:
@@ -636,7 +634,6 @@ class FileExplorer(Explorer):
 
         return self._content
 
-    @showDevIcons
     def getFreshContent(self, *args, **kwargs):
         if self._external_cmd:
             self._content = []
