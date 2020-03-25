@@ -22,7 +22,7 @@ class WindowExplorer(Explorer):
         self._max_bufname_len = self._get_max_bufname_len()
 
         self._prefix_length = 10
-        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
             self._prefix_length += webDevIconsBytesLen()
 
         for tab in vim.tabpages:
@@ -45,7 +45,7 @@ class WindowExplorer(Explorer):
                 )
 
                 # vim-devicons
-                if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+                if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
                     icon = webDevIconsGetFileTypeSymbol(basename)
                 else:
                     icon = ""

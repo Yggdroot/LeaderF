@@ -49,7 +49,7 @@ class BufferExplorer(Explorer):
         # e.g., 12 u %a+-  aaa.txt
         bufnr_len = len(lfEval("bufnr('$')"))
         self._prefix_length = bufnr_len + 8
-        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
             self._prefix_length += webDevIconsBytesLen()
 
         self._max_bufname_len = max([int(lfEval("strdisplaywidth('%s')"
@@ -69,7 +69,7 @@ class BufferExplorer(Explorer):
                 space_num = self._max_bufname_len \
                             - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
                 # vim-devicons
-                if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+                if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
                     icon = webDevIconsGetFileTypeSymbol(basename)
                 else:
                     icon = ''

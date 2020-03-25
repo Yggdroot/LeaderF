@@ -32,7 +32,7 @@ def showRelativePath(func):
 def showDevIcons(func):
     @wraps(func)
     def deco(*args, **kwargs):
-        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
             content = func(*args, **kwargs)
             # In case of Windows, line feeds may be included when reading from the cache.
             return [
@@ -623,7 +623,7 @@ class FileExplorer(Explorer):
                 if cmd.split(None, 1)[0] == "dir":
                     content = executor.execute(cmd, format_line)
                 else:
-                    if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
+                    if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
                         content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=format_line)
                     else:
                         content = executor.execute(cmd, encoding=lfEval("&encoding"))

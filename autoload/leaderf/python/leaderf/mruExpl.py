@@ -48,7 +48,7 @@ class MruExplorer(Explorer):
         if "--no-split-path" in kwargs.get("arguments", {}):
             return lines
 
-        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
             self._prefix_length = webDevIconsBytesLen()
 
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
@@ -63,7 +63,7 @@ class MruExplorer(Explorer):
                         - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
 
             # vim-devicons
-            if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
                 icon = webDevIconsGetFileTypeSymbol(basename)
             else:
                 icon = ""
@@ -116,7 +116,7 @@ class MruExplManager(Manager):
         # It will raise E480 without 'silent!'
         lfCmd("silent! argdelete *")
         for file in files:
-            if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == "1":
+            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
                 file = file[file.find(' ')+1:]
             dirname = self._getDigest(file, 2)
             basename = self._getDigest(file, 1)
@@ -249,7 +249,7 @@ class MruExplManager(Manager):
         orig_line = line
 
         # remove devicons
-        if lfEval("get(g:, 'Lf_ShowDevIcons', 0)") == '1':
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
             line = line[line.find(' ')+1:]
 
         if line == '':
