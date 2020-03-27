@@ -45,11 +45,18 @@ class MruExplorer(Explorer):
         if kwargs["cb_name"] == lines[0]:
             lines = lines[1:] + lines[0:1]
 
-        if "--no-split-path" in kwargs.get("arguments", {}):
-            return lines
-
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
             self._prefix_length = webDevIconsBytesLen()
+
+        if "--no-split-path" in kwargs.get("arguments", {}):
+            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "0":
+                return lines
+
+            for line in lines:
+                return [
+                    webDevIconsGetFileTypeSymbol(getBasename(line)) + line
+                    for line in lines
+                ]
 
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(line))))
@@ -155,17 +162,19 @@ class MruExplManager(Manager):
         if not line:
             return ''
 
-        if "--no-split-path" in self._arguments:
-            if mode == 0:
-                return line
-            elif mode == 1:
-                return getBasename(line)
-            else:
-                return getDirname(line)
-        else:
-            prefix_len = self._getExplorer().getPrefixLength()
-            b_line = lfByteArray(line)
+        prefix_len = self._getExplorer().getPrefixLength()
+        b_line = lfByteArray(line)
 
+        if "--no-split-path" in self._arguments:
+            b_line = b_line[prefix_len:]
+            s_line = lfBytes2Str(b_line, encoding="utf8")
+            if mode == 0:
+                return s_line
+            elif mode == 1:
+                return getBasename(s_line)
+            else:
+                return getDirname(s_line)
+        else:
             if mode == 0:
                 b_line = b_line[prefix_len:]
                 return lfBytes2Str(b_line, encoding="utf8")
