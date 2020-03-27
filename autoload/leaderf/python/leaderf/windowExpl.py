@@ -7,7 +7,14 @@ import re
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
-from .devicons import webDevIconsGetFileTypeSymbol, removeDevIcons, webDevIconsBytesLen
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    removeDevIcons,
+    webDevIconsBytesLen,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 
 # *****************************************************
@@ -189,6 +196,9 @@ class WindowExplManager(Manager):
 
     def _afterEnter(self):
         super(WindowExplManager, self)._afterEnter()
+
+        winid = None
+
         if self._getInstance().getWinPos() == "popup":
             lfCmd(
                 r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winNumber'', ''^\v\s?\zs\d+'')')"""
@@ -226,6 +236,7 @@ class WindowExplManager(Manager):
             )
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
+            winid = self._getInstance().getPopupWinId()
         else:
             id = int(lfEval(r"matchadd('Lf_hl_winNumber',       '^\v\s?\zs\d+')"))
             self._match_ids.append(id)
@@ -253,6 +264,12 @@ class WindowExplManager(Manager):
             self._match_ids.append(id)
             id = int(lfEval(r"""matchadd('Lf_hl_winDirname', ' \zs".*"$')"""))
             self._match_ids.append(id)
+
+        # devicons
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self._match_ids.extend(matchaddDevIconsExtension(r'__icon__\ze\s\+\S\+\.__name__\($\|\s\)', winid))
+            self._match_ids.extend(matchaddDevIconsExact(r'__icon__\ze\s\+__name__\($\|\s\)', winid))
+            self._match_ids.extend(matchaddDevIconsDefault(r'__icon__\ze\s\+\S\+\($\|\s\)', winid))
 
 
 # *****************************************************

@@ -12,12 +12,35 @@ fileNodesExtensionSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodes
 
 _ambiwidth = lfEval('&ambiwidth')
 
-_icons = set()
-_icons = _icons.union(set(fileNodesExactSymbols.values()))
-_icons = _icons.union(set(fileNodesExtensionSymbols.values()))
-_icons.add(fileNodesDefaultSymbol)
-
 _iconBytesLen = 0
+
+_default_palette = {
+    "gui": "NONE",
+    "guifg": "NONE",
+    "guibg": "NONE",
+    "cterm": "NONE",
+    "ctermfg": "NONE",
+    "ctermbg": "NONE",
+}
+
+RE_CANNOT_USE_FOR_HIGHLIGHT = re.compile(r'[^a-zA-Z0-9_]+')
+
+def _icons_setup():
+    symbols = set()
+    symbols = symbols.union(set(fileNodesExactSymbols.values()))
+    symbols = symbols.union(set(fileNodesExtensionSymbols.values()))
+    symbols.add(fileNodesDefaultSymbol)
+
+    names = set()
+    names = names.union(set(fileNodesExactSymbols.keys()))
+    names = names.union(set(fileNodesExtensionSymbols.keys()))
+    names.add('default')
+
+    return {'names': names, 'symbols': symbols}
+
+
+_icons = _icons_setup()
+
 
 def removeDevIcons(func):
     @wraps(func)
@@ -42,7 +65,7 @@ def removeDevIcons(func):
     return deco
 
 def isStartDevIcons(line):
-    return line[0] in _icons
+    return line[0] in _icons.symbols
 
 def _getExt(file):
     idx = file.rfind('.')
@@ -78,3 +101,94 @@ def webDevIconsBytesLen():
     if _iconBytesLen == 0:
         _iconBytesLen = lfBytesLen(webDevIconsGetFileTypeSymbol('txt'))
     return _iconBytesLen
+
+def _normalize_name(val):
+    # Replace unavailable characters for highlights with __
+    # [^a-zA-Z0-9_]
+    return RE_CANNOT_USE_FOR_HIGHLIGHT.sub('__', val)
+
+def _matchadd(icons, pattern, priority, winid):
+    """
+    Enable ignore case (\c flag)
+    """
+    ids = []
+    pattern = r'\c' + pattern
+    for [name, glyph] in icons.items():
+        tmp_pattern = pattern.replace("__icon__", glyph)
+        tmp_pattern = tmp_pattern.replace("__name__", name.replace(".", r"\."))
+
+        group_name = "Lf_hl_devIcons_" + _normalize_name(name)
+
+        if winid:
+            lfCmd(
+                """call win_execute({:d}, 'let matchid = matchadd(''{:s}'', ''{:s}'')')""".format(
+                    winid, group_name, tmp_pattern
+                )
+            )
+            id = int(lfEval("matchid"))
+        else:
+            id = int(lfEval("matchadd('{:s}', '{:s}')".format(group_name, tmp_pattern)))
+        ids.append(id)
+    return ids
+
+def matchaddDevIconsDefault(pattern, winid=None):
+    """
+    pattern:
+        It will be converted to the following
+          __icon__ => icon
+
+    e,g,.: "__icon__\ze\s\+\S\+\($\|\s\)"
+           "\ze\s\+\S\+\($\|\s\)"
+    """
+    def convertor(pattern, _, glyph):
+        return pattern.replace('__icon__', glyph)
+
+    return _matchadd({'default': fileNodesDefaultSymbol}, pattern, 9, winid)
+
+def matchaddDevIconsExact(pattern, winid=None):
+    """
+    pattern:
+        It will be converted to the following
+          __icon__  => icon
+          __name__  => exact string
+
+    e,g,.: r"__icon__\ze\s\+__name__\($\|\s\)"
+           r"\ze\s\+\.vimrc\($\|\s\)"
+    """
+    return _matchadd(fileNodesExactSymbols, pattern, 8, winid)
+
+def matchaddDevIconsExtension(pattern, winid=None):
+    """
+    pattern:
+        It will be converted to the following
+          __icon__  => icon
+          __name__  => extension string
+
+    e,g,.: r"__icon__\ze\s\+\S\+\.__name__\($\|\s\)"
+           r"__icon__\ze\s\+\S\+\.vim\($\|\s\)"
+    """
+    return _matchadd(fileNodesExtensionSymbols, pattern, 7, winid)
+
+def highlightDevIcons():
+    for icon_name in _icons['names']:
+        name = _normalize_name(icon_name)
+
+        palette = lfEval("get(g:, 'Lf_DevIconsPallete', {})")
+        if icon_name in palette:
+            plt = palette[icon_name]
+        else:
+            plt = palette.get("_", _default_palette)
+
+        hi_cmd = "hi def Lf_hl_devIcons_{name} gui={gui} guifg={guifg} guibg={guibg} cterm={cterm} ctermfg={ctermfg} ctermbg={ctermbg}".format(
+            name=name,
+            gui=plt.get("gui", "NONE"),
+            guifg=plt.get("guifg", "NONE"),
+            guibg=plt.get("guibg", "NONE"),
+            cterm=plt.get("cterm", "NONE"),
+            ctermfg=plt.get("ctermfg", "NONE"),
+            ctermbg=plt.get("ctermbg", "NONE"),
+        )
+        if 'font' in plt:
+            hi_cmd += ' font={}'.format(plt.get('font'))
+
+        lfCmd(hi_cmd)

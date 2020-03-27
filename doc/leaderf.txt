@@ -838,11 +838,37 @@ g:Lf_ShowDevIcons                               *g:Lf_ShowDevIcons*
 
     Default value is 1.
 
-g:Lf_DevIconsFont                               *g:Lf_DevIconsFont*
-    Specifies the font used to display the vim-devicons icon.
-    If it is empty, use the default font.
+g:Lf_DevIconsPalette                            *g:Lf_DevIconsPalette*
+    This is a dictionary with customizable vim-devicons highlights.
 
-    Default value is `''`.
+    Its structure is like below: >
+    let g:Lf_DevIconsPallete = {
+        \  '_': {
+        \          'gui': 'NONE',
+        \          'font': 'NONE',
+        \          'guifg': 'NONE',
+        \          'guibg': '#303136',
+        \          'cterm': 'NONE',
+        \          'ctermfg': 'NONE',
+        \          'ctermbg': '236'
+        \      },
+        \  'default': {
+        \          'guifg': '#0a0a0a',
+        \      },
+        \  '.gitignore': {
+        \          'guifg': '#00ff00',
+        \      },
+        \  'vim': {
+        \          'guifg': '#00e5a0',
+        \      }
+        \  }
+<
+    Key Description:
+        `'_'` :       All icons with no customized highlights.
+        `'default'` : General Icons.
+        Other Keys: Icons of the file type and the specified file name.
+
+    It is not defined by default.
 
 ==============================================================================
 USAGE                                           *leaderf-usage*

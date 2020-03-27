@@ -10,7 +10,13 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .mru import *
-from .devicons import webDevIconsGetFileTypeSymbol, webDevIconsBytesLen
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    webDevIconsBytesLen,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 
 #*****************************************************
@@ -198,6 +204,8 @@ class BufExplManager(Manager):
 
     def _afterEnter(self):
         super(BufExplManager, self)._afterEnter()
+
+        winid = None
         if self._getInstance().getWinPos() == 'popup':
             lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufNumber'', ''^\s*\zs\d\+'')')"""
                     % self._getInstance().getPopupWinId())
@@ -219,6 +227,7 @@ class BufExplManager(Manager):
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
+            winid = self._getInstance().getPopupWinId()
         else:
             id = int(lfEval("matchadd('Lf_hl_bufNumber', '^\s*\zs\d\+')"))
             self._match_ids.append(id)
@@ -230,6 +239,12 @@ class BufExplManager(Manager):
             self._match_ids.append(id)
             id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
             self._match_ids.append(id)
+
+        # devicons
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self._match_ids.extend(matchaddDevIconsExtension(r'__icon__\ze\s\+\S\+\.__name__\($\|\s\)', winid))
+            self._match_ids.extend(matchaddDevIconsExact(r'__icon__\ze\s\+__name__\($\|\s\)', winid))
+            self._match_ids.extend(matchaddDevIconsDefault(r'__icon__\ze\s\+\S\+\($\|\s\)', winid))
 
     def _beforeExit(self):
         super(BufExplManager, self)._beforeExit()

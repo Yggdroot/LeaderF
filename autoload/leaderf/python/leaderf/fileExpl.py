@@ -13,7 +13,14 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .asyncExecutor import AsyncExecutor
-from .devicons import webDevIconsGetFileTypeSymbol, removeDevIcons, isStartDevIcons
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    removeDevIcons,
+    isStartDevIcons,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 def showRelativePath(func):
     @wraps(func)
@@ -724,6 +731,13 @@ class FileExplManager(Manager):
         lfCmd("autocmd!")
         lfCmd("autocmd VimLeavePre * call leaderf#File#cleanup()")
         lfCmd("augroup END")
+
+        winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
+
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self._match_ids.extend(matchaddDevIconsExtension(r'^__icon__\ze\s\+\S\+\.__name__$', winid))
+            self._match_ids.extend(matchaddDevIconsExact(r'^__icon__\ze\s\S*__name__$', winid))
+            self._match_ids.extend(matchaddDevIconsDefault(r'^__icon__', winid))
 
     def _beforeExit(self):
         super(FileExplManager, self)._beforeExit()

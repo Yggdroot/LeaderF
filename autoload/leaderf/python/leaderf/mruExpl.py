@@ -9,7 +9,14 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .mru import *
-from .devicons import webDevIconsGetFileTypeSymbol, removeDevIcons, webDevIconsBytesLen
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    removeDevIcons,
+    webDevIconsBytesLen,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 
 #*****************************************************
@@ -233,6 +240,13 @@ class MruExplManager(Manager):
 
     def _afterEnter(self):
         super(MruExplManager, self)._afterEnter()
+
+        icon_extension_pattern = ''
+        icon_exact_pattern = ''
+        icon_default_pattern = ''
+
+        winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
+
         if "--no-split-path" not in self._arguments:
             if self._getInstance().getWinPos() == 'popup':
                 lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
@@ -242,6 +256,19 @@ class MruExplManager(Manager):
             else:
                 id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
                 self._match_ids.append(id)
+
+            icon_extension_pattern = r'^__icon__\ze\s\+\S\+\.__name__\s'
+            icon_exact_pattern = r'^__icon__\ze\s\+__name__\s'
+            icon_default_pattern = r'^__icon__'
+        else:
+            icon_extension_pattern = r'^__icon__\ze\s\+\S\+\.__name__$'
+            icon_exact_pattern = r'^__icon__\ze\s\+\S*__name__$'
+            icon_default_pattern = r'^__icon__'
+
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self._match_ids.extend(matchaddDevIconsExtension(icon_extension_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsExact(icon_exact_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsDefault(icon_default_pattern, winid))
 
     def _beforeExit(self):
         super(MruExplManager, self)._beforeExit()

@@ -14,36 +14,6 @@ if exists("b:current_syntax")
 endif
 
 
-let s:icons = []
-
-
-function! s:get_all_icons() abort
-    if !exists('s:icons') || empty(s:icons)
-        let l:icons = []
-
-        let l:exact_icons = values(get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', {}))
-        let l:ext_icons = values(get(g:, 'WebDevIconsUnicodeDecorateFileNodesExtensionSymbols', {}))
-        let l:default_icon = get(g:, 'WebDevIconsUnicodeDecorateFileNodesDefaultSymbol', '')
-
-        call extend(l:icons, l:exact_icons + l:ext_icons)
-        call add(l:icons, l:default_icon)
-        let s:icons = uniq(l:icons)
-    endif
-    return s:icons
-endfunction
-
-
-function! s:add_syntax_hi_devicons() abort
-    let l:group = 'Lf_hl_icon'
-    for l:icon in s:get_all_icons()
-        execute printf('syntax match %s /%s/', l:group, l:icon)
-    endfor
-
-    let l:font = get(g:, 'Lf_DevIconsFont', 'NONE')
-    execute printf("hi %s font='%s' gui=NONE guifg=NONE guibg=NONE cterm=NONE ctermfg=NONE ctermbg=NONE", l:group, l:font)
-endfunction
-
-
 if has("syntax")
     syn clear
     syn match Lf_hl_help     display '^".*'
@@ -56,9 +26,6 @@ if has("syntax")
         syn match Lf_hl_filename display '[^/]*$' containedin=Lf_hl_nonHelp contained
         syn match Lf_hl_dirname  display '^.*/'   containedin=Lf_hl_nonHelp contained
     endif
-
-    " devicons
-    call s:add_syntax_hi_devicons()
 
     highlight def Lf_hl_selection guibg=#A5EB84 guifg=Black ctermbg=156 ctermfg=Black
     highlight def Lf_hl_cursorline guifg=Yellow ctermfg=226
