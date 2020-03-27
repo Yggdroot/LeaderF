@@ -65,7 +65,7 @@ def removeDevIcons(func):
     return deco
 
 def isStartDevIcons(line):
-    return line[0] in _icons.symbols
+    return line[0] in _icons['symbols']
 
 def _getExt(file):
     idx = file.rfind('.')
