@@ -16,7 +16,6 @@ from .asyncExecutor import AsyncExecutor
 from .devicons import (
     webDevIconsGetFileTypeSymbol,
     removeDevIcons,
-    isStartDevIcons,
     matchaddDevIconsDefault,
     matchaddDevIconsExact,
     matchaddDevIconsExtension,
