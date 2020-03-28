@@ -79,7 +79,7 @@ def setAmbiwidth(val):
 # from vim-devicons
 # To use asynchronously
 def webDevIconsGetFileTypeSymbol(file):
-    if 'loaded_webdevicons' in vim.vars:
+    if 'loaded_webdevicons' not in vim.vars:
         return ''
     fileNode = getBasename(file).lower()
     fileNodeExt = _getExt(fileNode)
