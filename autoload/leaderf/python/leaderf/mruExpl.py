@@ -11,7 +11,6 @@ from .manager import *
 from .mru import *
 from .devicons import (
     webDevIconsGetFileTypeSymbol,
-    removeDevIcons,
     webDevIconsBytesLen,
     matchaddDevIconsDefault,
     matchaddDevIconsExact,
@@ -130,8 +129,6 @@ class MruExplManager(Manager):
         # It will raise E480 without 'silent!'
         lfCmd("silent! argdelete *")
         for file in files:
-            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
-                file = file[file.find(' ')+1:]
             dirname = self._getDigest(file, 2)
             basename = self._getDigest(file, 1)
             lfCmd("argadd %s" % escSpecial(dirname + basename))
@@ -282,11 +279,6 @@ class MruExplManager(Manager):
         else:
             lfCmd("setlocal modifiable")
         line = instance._buffer_object[instance.window.cursor[0] - 1]
-        orig_line = line
-
-        # remove devicons
-        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
-            line = line[line.find(' ')+1:]
 
         if line == '':
             return
@@ -295,7 +287,7 @@ class MruExplManager(Manager):
         basename = self._getDigest(line, 1)
         self._explorer.delFromCache(dirname + basename)
         if len(self._content) > 0:
-            self._content.remove(orig_line)
+            self._content.remove(line)
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
             self._getInstance().setStlResultsCount(len(self._content)//self._getUnit())
         # `del vim.current.line` does not work in neovim
@@ -307,7 +299,6 @@ class MruExplManager(Manager):
         else:
             lfCmd("setlocal nomodifiable")
 
-    @removeDevIcons
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0:
             return
