@@ -46,27 +46,24 @@ _icons = _icons_setup()
 def removeDevIcons(func):
     @wraps(func)
     def deco(*args, **kwargs):
-        is_list = isinstance(args[1], list)
+        if vim.vars.get('Lf_ShowDevIcons', True) and 'loaded_webdevicons' in vim.vars:
+            is_list = isinstance(args[1], list)
 
-        lines = args[1] if is_list else [args[1]]
+            lines = args[1] if is_list else [args[1]]
 
-        res_lines = []
-        for line in lines:
-            b_line = lfByteArray(line)
-            if isStartDevIcons(b_line):
+            res_lines = []
+            for line in lines:
+                b_line = lfByteArray(line)
                 b_line = b_line[webDevIconsBytesLen():]
                 line = lfBytes2Str(b_line, encoding="utf-8")
-            res_lines.append(line)
+                res_lines.append(line)
 
-        _args = list(args)
-        _args[1] = res_lines if is_list else res_lines[0]
+            _args = list(args)
+            _args[1] = res_lines if is_list else res_lines[0]
 
-        args = tuple(_args)
+            args = tuple(_args)
         return func(*args, **kwargs)
     return deco
-
-def isStartDevIcons(line):
-    return lfBytes2Str(line[:webDevIconsBytesLen()-1], encoding="utf-8") in _icons['symbols']
 
 def _getExt(file):
     idx = file.rfind('.')
