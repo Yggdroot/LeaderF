@@ -13,7 +13,6 @@ if exists("b:current_syntax")
     finish
 endif
 
-
 if has("syntax")
     syn clear
     syn match Lf_hl_help     display '^".*'
