@@ -7,6 +7,7 @@ from functools import wraps
 from .utils import *
 
 fileNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesDefaultSymbol', '')")
+folderNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFolderNodesDefaultSymbol', '')")
 
 fileNodesExactSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', {})")
 fileNodesExtensionSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExtensionSymbols', {})")
@@ -75,18 +76,22 @@ def setAmbiwidth(val):
 
 # from vim-devicons
 # To use asynchronously
-def webDevIconsGetFileTypeSymbol(file):
     if 'loaded_webdevicons' not in vim.vars:
+def webDevIconsGetFileTypeSymbol(file, isdir=False):
         return ''
-    fileNode = getBasename(file).lower()
-    fileNodeExt = _getExt(fileNode)
 
-    symbol = fileNodesDefaultSymbol
+    if isdir:
+        symbol = folderNodesDefaultSymbol
+    else:
+        fileNode = getBasename(file).lower()
+        fileNodeExt = _getExt(fileNode)
 
-    if fileNode in fileNodesExactSymbols:
-        symbol = fileNodesExactSymbols[fileNode]
-    elif fileNodeExt in fileNodesExtensionSymbols:
-        symbol = fileNodesExtensionSymbols[fileNodeExt]
+        symbol = fileNodesDefaultSymbol
+
+        if fileNode in fileNodesExactSymbols:
+            symbol = fileNodesExactSymbols[fileNode]
+        elif fileNodeExt in fileNodesExtensionSymbols:
+            symbol = fileNodesExtensionSymbols[fileNodeExt]
 
     if _ambiwidth == 'double':
         spaces = ' '
