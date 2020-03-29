@@ -170,10 +170,12 @@ def matchaddDevIconsExtension(pattern, winid=None):
     return _matchadd(fileNodesExtensionSymbols, pattern, 7, winid)
 
 def highlightDevIcons():
+    icon_font = lfEval("get(g:, 'Lf_DevIconsFont', '')")
+    palette = lfEval("get(g:, 'Lf_DevIconsPallete', {})")
+
     for icon_name in _icons['names']:
         name = _normalize_name(icon_name)
 
-        palette = lfEval("get(g:, 'Lf_DevIconsPallete', {})")
         if icon_name in palette:
             plt = palette[icon_name]
         else:
@@ -189,6 +191,8 @@ def highlightDevIcons():
             ctermbg=plt.get("ctermbg", "NONE"),
         )
         if 'font' in plt:
-            hi_cmd += ' font={}'.format(plt.get('font'))
+            hi_cmd += " font='{}'".format(plt.get('font'))
+        elif icon_font != '':
+            hi_cmd += " font='{}'".format(icon_font)
 
         lfCmd(hi_cmd)

@@ -838,6 +838,14 @@ g:Lf_ShowDevIcons                               *g:Lf_ShowDevIcons*
 
     Default value is 1.
 
+Lf_DevIconsFont                                 *g:Lf_DevIconsFont*
+    Specifies the font used to display the vim-devicons icon.
+    If it is empty, use the default font.
+
+    Also, the value of |g:Lf_DevIconsPallete| takes precedence.
+
+    Default value is `''`.
+
 g:Lf_DevIconsPalette                            *g:Lf_DevIconsPalette*
     This is a dictionary with customizable vim-devicons highlights.
 
