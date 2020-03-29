@@ -76,8 +76,8 @@ def setAmbiwidth(val):
 
 # from vim-devicons
 # To use asynchronously
-    if 'loaded_webdevicons' not in vim.vars:
 def webDevIconsGetFileTypeSymbol(file, isdir=False):
+    if 'loaded_webdevicons' not in vim.vars:
         return ''
 
     if isdir:
