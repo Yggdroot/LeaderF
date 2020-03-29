@@ -171,7 +171,9 @@ def matchaddDevIconsExtension(pattern, winid=None):
 
 def highlightDevIcons():
     icon_font = lfEval("get(g:, 'Lf_DevIconsFont', '')")
-    palette = lfEval("get(g:, 'Lf_DevIconsPallete', {})")
+
+    devicons_palette = lfEval("get(g:, 'Lf_DevIconsPallete', {})")
+    palette = devicons_palette.get(lfEval('&background'), {})
 
     for icon_name in _icons['names']:
         name = _normalize_name(icon_name)
