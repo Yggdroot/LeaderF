@@ -226,7 +226,7 @@ class AnyExplManager(Manager):
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(get_digest), err))
         else:
-            return super(AnyExplManager, self)._getDigest(line, mode)
+            return line
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -247,7 +247,7 @@ class AnyExplManager(Manager):
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(get_digest), err))
         else:
-            return super(AnyExplManager, self)._getDigestStartPos(line, mode)
+            return 0
 
     def _createHelp(self):
         help = []
