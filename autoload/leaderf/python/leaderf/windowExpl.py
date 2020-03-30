@@ -125,7 +125,6 @@ class WindowExplManager(Manager):
     def _defineMaps(self):
         lfCmd("call leaderf#Window#Maps()")
 
-    @removeDevIcons
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
