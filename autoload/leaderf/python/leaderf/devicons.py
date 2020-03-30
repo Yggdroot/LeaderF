@@ -12,6 +12,8 @@ folderNodesDefaultSymbol = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFolderNode
 fileNodesExactSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExactSymbols', {})")
 fileNodesExtensionSymbols = lfEval("get(g:, 'WebDevIconsUnicodeDecorateFileNodesExtensionSymbols', {})")
 
+_loaded_webdevicons = 'loaded_webdevicons' in vim.vars
+
 _ambiwidth = lfEval('&ambiwidth')
 
 _iconBytesLen = 0
@@ -47,7 +49,7 @@ _icons = _icons_setup()
 def removeDevIcons(func):
     @wraps(func)
     def deco(*args, **kwargs):
-        if vim.vars.get('Lf_ShowDevIcons', True) and 'loaded_webdevicons' in vim.vars:
+        if vim.vars.get('Lf_ShowDevIcons', True) and _loaded_webdevicons:
             is_list = isinstance(args[1], list)
 
             lines = args[1] if is_list else [args[1]]
@@ -77,7 +79,7 @@ def setAmbiwidth(val):
 # from vim-devicons
 # To use asynchronously
 def webDevIconsGetFileTypeSymbol(file, isdir=False):
-    if 'loaded_webdevicons' not in vim.vars:
+    if not _loaded_webdevicons:
         return ''
 
     if isdir:
