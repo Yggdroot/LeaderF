@@ -61,7 +61,7 @@ class BufferExplorer(Explorer):
 
         self._max_bufname_len = max([int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(buffers[nr].name))))
-                                    for nr in mru.getMruBufnrs() if nr in buffers] or [0])
+                                    for nr in mru.getMruBufnrs() if nr in buffers] + [len('[No Name]')] or [0])
 
         bufnames = []
         for nr in mru.getMruBufnrs():
