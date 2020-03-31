@@ -831,15 +831,12 @@ g:Lf_JumpToExistingWindow                       *g:Lf_JumpToExistingWindow*
     Default value is 0.
 
 g:Lf_ShowDevIcons                               *g:Lf_ShowDevIcons*
-    Use vim-devicons to display icons.
-    NOTE: https://github.com/ryanoasis/vim-devicons is required.
-    
     Support commands: buffer,file,mru,window
 
     Default value is 1.
 
-Lf_DevIconsFont                                 *g:Lf_DevIconsFont*
-    Specifies the font used to display the vim-devicons icon.
+g:Lf_DevIconsFont                                 *g:Lf_DevIconsFont*
+    Specifies the font used to display the icon.
     If it is empty, use the default font.
 
     Also, the value of |g:Lf_DevIconsPalette| takes precedence.
@@ -847,7 +844,7 @@ Lf_DevIconsFont                                 *g:Lf_DevIconsFont*
     Default value is `''`.
 
 g:Lf_DevIconsPalette                            *g:Lf_DevIconsPalette*
-    This is a dictionary with customizable vim-devicons highlights.
+    This is a dictionary with customizable icons highlights.
 
     Its structure is like below: >
     let g:Lf_DevIconsPalette = {

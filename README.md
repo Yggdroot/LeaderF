@@ -295,19 +295,18 @@ Customization
 
     e.g. `let g:Lf_ShortcutF = '<C-P>'`
 
- * Show icons (use [vim-devicons](https://github.com/ryanoasis/vim-devicons))
+ * Show icons
 
     Support commands: buffer,file,mru,window
 
     ```vim
-    Plug 'ryanoasis/vim-devicons'
-
-    " Show icons
+    " Show icons, icons are shown by default
     let g:Lf_ShowDevIcons = 1
+    " For GUI vim, the icon font can be specify like this, for example
+    let g:Lf_DevIconsFont = "DejaVuSansMono Nerd Font Mono"
     " If needs
     set ambiwidth=double
     ```
-
 
     
 Configuration examples

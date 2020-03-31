@@ -10,6 +10,7 @@ from leaderf.manager import *
 from .devicons import (
     webDevIconsGetFileTypeSymbol,
     removeDevIcons,
+    webDevIconsStrLen,
     webDevIconsBytesLen,
     matchaddDevIconsDefault,
     matchaddDevIconsExact,
@@ -30,7 +31,7 @@ class WindowExplorer(Explorer):
 
         self._prefix_length = 10
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
-            self._prefix_length += webDevIconsBytesLen()
+            self._prefix_length += webDevIconsStrLen()
 
         for tab in vim.tabpages:
 
@@ -51,7 +52,6 @@ class WindowExplorer(Explorer):
                     lfEval("strdisplaywidth('%s')" % escQuote(basename))
                 )
 
-                # vim-devicons
                 if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
                     icon = webDevIconsGetFileTypeSymbol(basename)
                 else:
@@ -159,19 +159,15 @@ class WindowExplManager(Manager):
         if not line:
             return ""
 
-        pref_len = self._getExplorer().getPrefixLength()
-        b_line = lfByteArray(line)
+        prefix_len = self._getExplorer().getPrefixLength()
         if mode == 0:
-            b_line = b_line[pref_len:]
-            return lfBytes2Str(b_line, encoding="utf8")
+            return line[prefix_len:]
         elif mode == 1:
-            end_pos = b_line.find(b' "', pref_len)
-            b_line = b_line[pref_len: end_pos]
-            return lfBytes2Str(b_line, encoding="utf8").strip()
+            end_pos = line.find(' "', prefix_len)
+            return line[prefix_len: end_pos]
         else:
-            start_pos = b_line.find(b' "', pref_len)
-            b_line = b_line[start_pos+2:-1]
-            return lfBytes2Str(b_line, encoding="utf8")
+            start_pos = line.find(' "', prefix_len)
+            return line[start_pos+2:-1]
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -184,14 +180,14 @@ class WindowExplManager(Manager):
         if not line:
             return 0
 
-        pref_len = self._getExplorer().getPrefixLength()
+        prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
         if mode == 0:
-            return pref_len
+            return prefix_len
         elif mode == 1:
-            return pref_len
+            return prefix_len
         else:
             start_pos = line.find(' "')
-            return lfBytesLen(line[:start_pos+3])
+            return lfBytesLen(line[:start_pos+2])
 
     def _afterEnter(self):
         super(WindowExplManager, self)._afterEnter()

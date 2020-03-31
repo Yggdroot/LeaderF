@@ -11,6 +11,7 @@ from .manager import *
 from .mru import *
 from .devicons import (
     webDevIconsGetFileTypeSymbol,
+    webDevIconsStrLen,
     webDevIconsBytesLen,
     matchaddDevIconsDefault,
     matchaddDevIconsExact,
@@ -52,7 +53,7 @@ class MruExplorer(Explorer):
             lines = lines[1:] + lines[0:1]
 
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
-            self._prefix_length = webDevIconsBytesLen()
+            self._prefix_length = webDevIconsStrLen()
 
         if "--no-split-path" in kwargs.get("arguments", {}):
             if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "0":
@@ -75,7 +76,6 @@ class MruExplorer(Explorer):
             space_num = self._max_bufname_len \
                         - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
 
-            # vim-devicons
             if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
                 icon = webDevIconsGetFileTypeSymbol(basename)
             else:
@@ -167,29 +167,23 @@ class MruExplManager(Manager):
             return ''
 
         prefix_len = self._getExplorer().getPrefixLength()
-        b_line = lfByteArray(line)
-
         if "--no-split-path" in self._arguments:
-            b_line = b_line[prefix_len:]
-            s_line = lfBytes2Str(b_line, encoding="utf8")
+            line = line[prefix_len:]
             if mode == 0:
-                return s_line
+                return line
             elif mode == 1:
-                return getBasename(s_line)
+                return getBasename(line)
             else:
-                return getDirname(s_line)
+                return getDirname(line)
         else:
             if mode == 0:
-                b_line = b_line[prefix_len:]
-                return lfBytes2Str(b_line, encoding="utf8")
+                return line[prefix_len:]
             elif mode == 1:
-                start_pos = b_line.find(b' "') # what if there is " in file name?
-                b_line = b_line[prefix_len:start_pos]
-                return lfBytes2Str(b_line, encoding="utf8").rstrip()
+                start_pos = line.find(' "') # what if there is " in file name?
+                return line[prefix_len:start_pos].rstrip()
             else:
-                start_pos = b_line.find(b' "') # what if there is " in file name?
-                b_line = b_line[start_pos+2 : -1]
-                return lfBytes2Str(b_line, encoding="utf8")
+                start_pos = line.find(' "') # what if there is " in file name?
+                return line[start_pos+2 : -1]
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -203,20 +197,18 @@ class MruExplManager(Manager):
             return 0
         if "--no-split-path" in self._arguments:
             if mode == 0 or mode == 2:
-                return 0
+                return webDevIconsBytesLen()
             else:
                 return lfBytesLen(getDirname(line))
         else:
-            prefix_len = self._getExplorer().getPrefixLength()
-            b_line = lfByteArray(line)
-
+            prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
             if mode == 0:
                 return prefix_len
             elif mode == 1:
                 return prefix_len
             else:
-                start_pos = b_line.find(b' "') # what if there is " in file name?
-                return len(b_line[:start_pos+2])
+                start_pos = line.find(' "') # what if there is " in file name?
+                return lfBytesLen(line[:start_pos+2])
 
     def _createHelp(self):
         help = []

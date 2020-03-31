@@ -12,6 +12,7 @@ from .manager import *
 from .mru import *
 from .devicons import (
     webDevIconsGetFileTypeSymbol,
+    webDevIconsStrLen,
     webDevIconsBytesLen,
     matchaddDevIconsDefault,
     matchaddDevIconsExact,
@@ -56,7 +57,7 @@ class BufferExplorer(Explorer):
         bufnr_len = len(lfEval("bufnr('$')"))
         self._prefix_length = bufnr_len + 8
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
-            self._prefix_length += webDevIconsBytesLen()
+            self._prefix_length += webDevIconsStrLen()
 
         self._max_bufname_len = max([int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(buffers[nr].name))))
@@ -74,7 +75,6 @@ class BufferExplorer(Explorer):
                 dirname = getDirname(buf_name)
                 space_num = self._max_bufname_len \
                             - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
-                # vim-devicons
                 if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
                     icon = webDevIconsGetFileTypeSymbol(basename)
                 else:
@@ -152,19 +152,15 @@ class BufExplManager(Manager):
         if not line:
             return ''
         prefix_len = self._getExplorer().getPrefixLength()
-        b_line = lfByteArray(line)
-
         if mode == 0:
-            b_line = b_line[prefix_len:]
-            return lfBytes2Str(b_line, encoding="utf8")
+            return line[prefix_len:]
         elif mode == 1:
             buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
             basename = getBasename(vim.buffers[buf_number].name)
             return basename if basename else "[No Name]"
         else:
-            start_pos = b_line.find(b' "', prefix_len)
-            b_line = b_line[start_pos+2:-1]
-            return lfBytes2Str(b_line, encoding="utf8")
+            start_pos = line.find(' "')
+            return line[start_pos+2 : -1]
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -176,7 +172,7 @@ class BufExplManager(Manager):
         """
         if not line:
             return 0
-        prefix_len = self._getExplorer().getPrefixLength()
+        prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
         if mode == 0:
             return prefix_len
         elif mode == 1:
