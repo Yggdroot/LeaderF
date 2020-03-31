@@ -856,7 +856,6 @@ function! leaderf#setAmbiwidth(val) abort
     exec g:Lf_py printf("setAmbiwidth('%s')", a:val)
 endfunction
 
-autocmd ColorScheme * call leaderf#highlightDevIcons()
 function! leaderf#highlightDevIcons() abort
     exec g:Lf_py 'from leaderf.devicons import highlightDevIcons'
     exec g:Lf_py 'highlightDevIcons()'
