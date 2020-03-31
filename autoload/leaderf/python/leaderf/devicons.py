@@ -251,6 +251,9 @@ def matchaddDevIconsExtension(pattern, winid=None):
     return _matchadd(fileNodesExtensionSymbols, pattern, 7, winid)
 
 def highlightDevIcons():
+    if not vim.vars.get('Lf_ShowDevIcons', True):
+        return
+
     icon_font = lfEval("get(g:, 'Lf_DevIconsFont', '')")
 
     devicons_palette = lfEval("get(g:, 'Lf_DevIconsPallete', {})")
