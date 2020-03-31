@@ -13,6 +13,13 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .asyncExecutor import AsyncExecutor
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    removeDevIcons,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 def showRelativePath(func):
     @wraps(func)
@@ -27,6 +34,20 @@ def showRelativePath(func):
         else:
             return func(*args, **kwargs)
     return deco
+
+def showDevIcons(func):
+    @wraps(func)
+    def deco(*args, **kwargs):
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
+            content = func(*args, **kwargs)
+            # In case of Windows, line feeds may be included when reading from the cache.
+            return [format_line(line.rstrip()) for line in content or []]
+        else:
+            return func(*args, **kwargs)
+    return deco
+
+def format_line(line):
+    return webDevIconsGetFileTypeSymbol(line) + line
 
 
 #*****************************************************
@@ -71,6 +92,7 @@ class FileExplorer(Explorer):
                     return file_list
         return file_list
 
+    @showDevIcons
     @showRelativePath
     def _getFileList(self, dir):
         dir = dir if dir.endswith(os.sep) else dir + os.sep
@@ -140,6 +162,14 @@ class FileExplorer(Explorer):
                         for line in file_list:
                             cache_file.write(line + '\n')
                 return file_list
+
+    @showDevIcons
+    def _readFromFileList(self, files):
+        result = []
+        for file in files:
+            with lfOpen(file, 'r', errors='ignore') as f:
+                result += f.readlines()
+        return result
 
     def _refresh(self):
         dir = os.path.abspath(self._cur_dir)
@@ -439,6 +469,7 @@ class FileExplorer(Explorer):
 
         return cmd
 
+    @removeDevIcons
     def _writeCache(self, content):
         dir = self._cur_dir if self._cur_dir.endswith(os.sep) else self._cur_dir + os.sep
         with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
@@ -501,6 +532,7 @@ class FileExplorer(Explorer):
                     for line in content:
                         cache_file.write(line + '\n')
 
+    @showDevIcons
     def _getFilesFromCache(self):
         dir = self._cur_dir if self._cur_dir.endswith(os.sep) else self._cur_dir + os.sep
         with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
@@ -543,7 +575,6 @@ class FileExplorer(Explorer):
             else:
                 return None
 
-
     def setContent(self, content):
         self._content = content
         if lfEval("g:Lf_UseCache") == '1':
@@ -552,11 +583,7 @@ class FileExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         files = kwargs.get("arguments", {}).get("--file", [])
         if files:
-            result = []
-            for file in files:
-                with lfOpen(file, 'r', errors='ignore') as f:
-                    result += f.readlines()
-            return result
+            return self._readFromFileList(files)
 
         dir = os.getcwd()
 
@@ -601,9 +628,12 @@ class FileExplorer(Explorer):
                 executor = AsyncExecutor()
                 self._executor.append(executor)
                 if cmd.split(None, 1)[0] == "dir":
-                    content = executor.execute(cmd)
+                    content = executor.execute(cmd, format_line)
                 else:
-                    content = executor.execute(cmd, encoding=lfEval("&encoding"))
+                    if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
+                        content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=format_line)
+                    else:
+                        content = executor.execute(cmd, encoding=lfEval("&encoding"))
                 self._cmd_start_time = time.time()
                 return content
             else:
@@ -701,6 +731,12 @@ class FileExplManager(Manager):
         lfCmd("autocmd VimLeavePre * call leaderf#File#cleanup()")
         lfCmd("augroup END")
 
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
+            self._match_ids.extend(matchaddDevIconsExtension(r'^__icon__\ze\s\+\S\+\.__name__$', winid))
+            self._match_ids.extend(matchaddDevIconsExact(r'^__icon__\ze\s\S*__name__$', winid))
+            self._match_ids.extend(matchaddDevIconsDefault(r'^__icon__', winid))
+
     def _beforeExit(self):
         super(FileExplManager, self)._beforeExit()
         if self._timer_id is not None:
@@ -770,11 +806,13 @@ class FileExplManager(Manager):
 
         super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
+    @removeDevIcons
     def _previewInPopup(self, *args, **kwargs):
         line = args[0]
         buf_number = lfEval("bufadd('{}')".format(escQuote(line)))
         self._createPopupPreview(line, buf_number, 0)
 
+    @removeDevIcons
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return

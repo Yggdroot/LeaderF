@@ -9,6 +9,13 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .mru import *
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    webDevIconsBytesLen,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 
 #*****************************************************
@@ -44,8 +51,18 @@ class MruExplorer(Explorer):
         if kwargs["cb_name"] == lines[0]:
             lines = lines[1:] + lines[0:1]
 
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self._prefix_length = webDevIconsBytesLen()
+
         if "--no-split-path" in kwargs.get("arguments", {}):
-            return lines
+            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "0":
+                return lines
+
+            for line in lines:
+                return [
+                    webDevIconsGetFileTypeSymbol(getBasename(line)) + line
+                    for line in lines
+                ]
 
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(line))))
@@ -57,7 +74,14 @@ class MruExplorer(Explorer):
             dirname = getDirname(line)
             space_num = self._max_bufname_len \
                         - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
-            lines[i] = '{}{} "{}"'.format(getBasename(line), ' ' * space_num,
+
+            # vim-devicons
+            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+                icon = webDevIconsGetFileTypeSymbol(basename)
+            else:
+                icon = ""
+
+            lines[i] = '{}{}{} "{}"'.format(icon, getBasename(line), ' ' * space_num,
                                           dirname if dirname else '.' + os.sep)
         return lines
 
@@ -142,23 +166,30 @@ class MruExplManager(Manager):
         if not line:
             return ''
 
+        prefix_len = self._getExplorer().getPrefixLength()
+        b_line = lfByteArray(line)
+
         if "--no-split-path" in self._arguments:
+            b_line = b_line[prefix_len:]
+            s_line = lfBytes2Str(b_line, encoding="utf8")
             if mode == 0:
-                return line
+                return s_line
             elif mode == 1:
-                return getBasename(line)
+                return getBasename(s_line)
             else:
-                return getDirname(line)
+                return getDirname(s_line)
         else:
-            prefix_len = self._getExplorer().getPrefixLength()
             if mode == 0:
-                return line[prefix_len:]
+                b_line = b_line[prefix_len:]
+                return lfBytes2Str(b_line, encoding="utf8")
             elif mode == 1:
-                start_pos = line.find(' "') # what if there is " in file name?
-                return line[prefix_len:start_pos].rstrip()
+                start_pos = b_line.find(b' "') # what if there is " in file name?
+                b_line = b_line[prefix_len:start_pos]
+                return lfBytes2Str(b_line, encoding="utf8").rstrip()
             else:
-                start_pos = line.find(' "') # what if there is " in file name?
-                return line[start_pos+2 : -1]
+                start_pos = b_line.find(b' "') # what if there is " in file name?
+                b_line = b_line[start_pos+2 : -1]
+                return lfBytes2Str(b_line, encoding="utf8")
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -177,13 +208,15 @@ class MruExplManager(Manager):
                 return lfBytesLen(getDirname(line))
         else:
             prefix_len = self._getExplorer().getPrefixLength()
+            b_line = lfByteArray(line)
+
             if mode == 0:
                 return prefix_len
             elif mode == 1:
                 return prefix_len
             else:
-                start_pos = line.find(' "') # what if there is " in file name?
-                return lfBytesLen(line[:start_pos+2])
+                start_pos = b_line.find(b' "') # what if there is " in file name?
+                return len(b_line[:start_pos+2])
 
     def _createHelp(self):
         help = []
@@ -204,6 +237,13 @@ class MruExplManager(Manager):
 
     def _afterEnter(self):
         super(MruExplManager, self)._afterEnter()
+
+        icon_extension_pattern = ''
+        icon_exact_pattern = ''
+        icon_default_pattern = ''
+
+        winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
+
         if "--no-split-path" not in self._arguments:
             if self._getInstance().getWinPos() == 'popup':
                 lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
@@ -213,6 +253,19 @@ class MruExplManager(Manager):
             else:
                 id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
                 self._match_ids.append(id)
+
+            icon_extension_pattern = r'^__icon__\ze\s\+\S\+\.__name__\s'
+            icon_exact_pattern = r'^__icon__\ze\s\+__name__\s'
+            icon_default_pattern = r'^__icon__'
+        else:
+            icon_extension_pattern = r'^__icon__\ze\s\+\S\+\.__name__$'
+            icon_exact_pattern = r'^__icon__\ze\s\+\S*__name__$'
+            icon_default_pattern = r'^__icon__'
+
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self._match_ids.extend(matchaddDevIconsExtension(icon_extension_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsExact(icon_exact_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsDefault(icon_default_pattern, winid))
 
     def _beforeExit(self):
         super(MruExplManager, self)._beforeExit()
@@ -226,6 +279,7 @@ class MruExplManager(Manager):
         else:
             lfCmd("setlocal modifiable")
         line = instance._buffer_object[instance.window.cursor[0] - 1]
+
         if line == '':
             return
 

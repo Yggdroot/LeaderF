@@ -7,6 +7,14 @@ import re
 from leaderf.utils import *
 from leaderf.explorer import *
 from leaderf.manager import *
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    removeDevIcons,
+    webDevIconsBytesLen,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 
 # *****************************************************
@@ -19,6 +27,10 @@ class WindowExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         lines = []
         self._max_bufname_len = self._get_max_bufname_len()
+
+        self._prefix_length = 10
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self._prefix_length += webDevIconsBytesLen()
 
         for tab in vim.tabpages:
 
@@ -39,9 +51,15 @@ class WindowExplorer(Explorer):
                     lfEval("strdisplaywidth('%s')" % escQuote(basename))
                 )
 
-                # e,g,. ` 1  1 %+- windowExpl.py ".\"`
+                # vim-devicons
+                if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+                    icon = webDevIconsGetFileTypeSymbol(basename)
+                else:
+                    icon = ""
+
+                # e,g,. ` 1  1 %+-  windowExpl.py ".\"`
                 lines.append(
-                    '{:>2d} {:>2d} {:1s}{:1s}{:1s} {:s}{:s} "{:s}"'.format(
+                    '{:>2d} {:>2d} {:1s}{:1s}{:1s} {:s}{:s}{:s} "{:s}"'.format(
                         tab.number,
                         win.number,
                         "%"
@@ -51,6 +69,7 @@ class WindowExplorer(Explorer):
                         else "",
                         "+" if buf.options["modified"] else "",
                         "-" if not buf.options["modifiable"] else "",
+                        icon,
                         basename,
                         " " * space_num,
                         dirname if dirname else "." + os.sep,
@@ -89,6 +108,9 @@ class WindowExplorer(Explorer):
             or [0]
         )
 
+    def getPrefixLength(self):
+        return self._prefix_length
+
 
 # *****************************************************
 # WindowExplManager
@@ -96,7 +118,6 @@ class WindowExplorer(Explorer):
 class WindowExplManager(Manager):
     def __init__(self):
         super(WindowExplManager, self).__init__()
-        self._prefix_len = 10
 
     def _getExplClass(self):
         return WindowExplorer
@@ -138,14 +159,19 @@ class WindowExplManager(Manager):
         if not line:
             return ""
 
-        pref_len = self._prefix_len
+        pref_len = self._getExplorer().getPrefixLength()
+        b_line = lfByteArray(line)
         if mode == 0:
-            return line[pref_len:]
+            b_line = b_line[pref_len:]
+            return lfBytes2Str(b_line, encoding="utf8")
         elif mode == 1:
-            return line[pref_len: line.find(' "', pref_len)].strip()
+            end_pos = b_line.find(b' "', pref_len)
+            b_line = b_line[pref_len: end_pos]
+            return lfBytes2Str(b_line, encoding="utf8").strip()
         else:
-            start_pos = line.find(' "')
-            return line[start_pos+2:-1]
+            start_pos = b_line.find(b' "', pref_len)
+            b_line = b_line[start_pos+2:-1]
+            return lfBytes2Str(b_line, encoding="utf8")
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -158,7 +184,7 @@ class WindowExplManager(Manager):
         if not line:
             return 0
 
-        pref_len = self._prefix_len
+        pref_len = self._getExplorer().getPrefixLength()
         if mode == 0:
             return pref_len
         elif mode == 1:
@@ -169,6 +195,9 @@ class WindowExplManager(Manager):
 
     def _afterEnter(self):
         super(WindowExplManager, self)._afterEnter()
+
+        winid = None
+
         if self._getInstance().getWinPos() == "popup":
             lfCmd(
                 r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winNumber'', ''^\v\s?\zs\d+'')')"""
@@ -183,7 +212,7 @@ class WindowExplManager(Manager):
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
             lfCmd(
-                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winIndicators'', ''^\v\s?\d+ \s?\d+\s*\zs[#%%]=..\ze '')')"""
+                r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_winIndicators'', ''^\v\s?\d+ \s?\d+ \zs[#%% ]=..\ze '')')"""
                 % self._getInstance().getPopupWinId()
             )
             id = int(lfEval("matchid"))
@@ -206,6 +235,7 @@ class WindowExplManager(Manager):
             )
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
+            winid = self._getInstance().getPopupWinId()
         else:
             id = int(lfEval(r"matchadd('Lf_hl_winNumber',       '^\v\s?\zs\d+')"))
             self._match_ids.append(id)
@@ -215,7 +245,7 @@ class WindowExplManager(Manager):
             self._match_ids.append(id)
             id = int(
                 lfEval(
-                    r"matchadd('Lf_hl_winIndicators',   '^\v\s?\d+ \s?\d+\s*\zs[#%%]=..\ze ')"
+                    r"matchadd('Lf_hl_winIndicators',   '^\v\s?\d+ \s?\d+ \zs[#%% ]=..\ze ')"
                 )
             )
             self._match_ids.append(id)
@@ -233,6 +263,12 @@ class WindowExplManager(Manager):
             self._match_ids.append(id)
             id = int(lfEval(r"""matchadd('Lf_hl_winDirname', ' \zs".*"$')"""))
             self._match_ids.append(id)
+
+        # devicons
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self._match_ids.extend(matchaddDevIconsExtension(r'__icon__\ze\s\+\S\+\.__name__\($\|\s\)', winid))
+            self._match_ids.extend(matchaddDevIconsExact(r'__icon__\ze\s\+__name__\($\|\s\)', winid))
+            self._match_ids.extend(matchaddDevIconsDefault(r'__icon__\ze\s\+\S\+\($\|\s\)', winid))
 
 
 # *****************************************************

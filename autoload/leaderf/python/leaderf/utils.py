@@ -7,6 +7,7 @@ import re
 import os
 import os.path
 import locale
+from functools import wraps
 
 lfCmd = vim.command
 lfEval = vim.eval
@@ -42,6 +43,10 @@ if sys.version_info >= (3, 0):
             return bytes.decode(errors="ignore")
         except UnicodeDecodeError:
             return bytes.decode(errors="ignore")
+
+    def lfByteArray(str, encoding=None):
+        _encoding = encoding or lf_encoding
+        return bytearray(str, encoding=_encoding, errors="ignore")
 
 else: # python 2.x
 
@@ -80,6 +85,9 @@ else: # python 2.x
 
     def lfBytes2Str(bytes, encoding=None):
         return bytes
+
+    def lfByteArray(str, encoding=None):
+        return str
 
 #-----------------------------------------------------------------------------
 

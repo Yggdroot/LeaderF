@@ -8,6 +8,7 @@ import os.path
 import time
 import itertools
 from .utils import *
+from .devicons import highlightDevIcons
 
 
 class FloatWindow(object):
@@ -246,6 +247,7 @@ class LfInstance(object):
         self._win_pos = None
         self._stl_buf_namespace = None
         self._highlightStl()
+        highlightDevIcons()
         self._auto_resize = lfEval("get(g:, 'Lf_AutoResize', 0)") == '1'
 
     def _initStlVar(self):

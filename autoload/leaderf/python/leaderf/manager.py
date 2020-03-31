@@ -16,6 +16,7 @@ from .cli import LfCli
 from .utils import *
 from .fuzzyMatch import FuzzyMatch
 from .asyncExecutor import AsyncExecutor
+from .devicons import removeDevIcons
 
 is_fuzzyEngine_C = False
 try:
@@ -132,6 +133,7 @@ class Manager(object):
         """
         pass
 
+    @removeDevIcons
     def _argaddFiles(self, files):
         # It will raise E480 without 'silent!'
         lfCmd("silent! argdelete *")

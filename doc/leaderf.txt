@@ -830,6 +830,69 @@ g:Lf_JumpToExistingWindow                       *g:Lf_JumpToExistingWindow*
 
     Default value is 0.
 
+g:Lf_ShowDevIcons                               *g:Lf_ShowDevIcons*
+    Use vim-devicons to display icons.
+    NOTE: https://github.com/ryanoasis/vim-devicons is required.
+    
+    Support commands: buffer,file,mru,window
+
+    Default value is 1.
+
+Lf_DevIconsFont                                 *g:Lf_DevIconsFont*
+    Specifies the font used to display the vim-devicons icon.
+    If it is empty, use the default font.
+
+    Also, the value of |g:Lf_DevIconsPalette| takes precedence.
+
+    Default value is `''`.
+
+g:Lf_DevIconsPalette                            *g:Lf_DevIconsPalette*
+    This is a dictionary with customizable vim-devicons highlights.
+
+    Its structure is like below: >
+    let g:Lf_DevIconsPalette = {
+        \  'light': {
+        \      '_': {
+        \                'gui': 'NONE',
+        \                'font': 'NONE',
+        \                'guifg': '#505050',
+        \                'guibg': 'NONE',
+        \                'cterm': 'NONE',
+        \                'ctermfg': '238',
+        \                'ctermbg': 'NONE'
+        \              },
+        \      'default': {
+        \                'guifg': '#505050',
+        \                'ctermfg': '238',
+        \              },
+        \      },
+        \      'vim': {
+        \                'guifg': '#007F00',
+        \                'ctermfg': '28',
+        \              },
+        \      },
+        \      '.gitignore': {
+        \                'guifg': '#dd4c35',
+        \                'ctermfg': '166',
+        \              },
+        \      },
+        \  'dark': {
+        \         ...
+        \         ...
+        \      }
+        \  }
+<
+    Key Description:
+        `'_'` :       All icons with no customized highlights.
+        `'default'` : General Icons.
+        Other Keys: Icons of the file type and the specified file name.
+
+    The default values are written in the following:
+    `LeaderF/autoload/leaderf.vim`
+
+    The default value is set by referring to
+    https://github.com/vscode-icons/vscode-icons
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

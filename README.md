@@ -294,6 +294,21 @@ Customization
  * Change the default mapping of searching files command
 
     e.g. `let g:Lf_ShortcutF = '<C-P>'`
+
+ * Show icons (use [vim-devicons](https://github.com/ryanoasis/vim-devicons))
+
+    Support commands: buffer,file,mru,window
+
+    ```vim
+    Plug 'ryanoasis/vim-devicons'
+
+    " Show icons
+    let g:Lf_ShowDevIcons = 1
+    " If needs
+    set ambiwidth=double
+    ```
+
+
     
 Configuration examples
 ----------------------
