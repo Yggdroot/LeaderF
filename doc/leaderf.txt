@@ -890,6 +890,22 @@ g:Lf_DevIconsPalette                            *g:Lf_DevIconsPalette*
     The default value is set by referring to
     https://github.com/vscode-icons/vscode-icons
 
+g:Lf_DevIconsExactSymbols                       *g:Lf_DevIconsExactSymbols*
+    Dictionary mappings for exact file node matches
+
+    e.g.: >
+    let g:Lf_DevIconsExactSymbols = { 'tags': '󿧸' }
+<
+    Default value is `{}`
+
+g:Lf_DevIconsExtensionSymbols                   *g:Lf_DevIconsExtensionSymbols*
+    Dictionary mappings for file extension matches
+
+    e.g.: >
+    let g:Lf_DevIconsExtensionSymbols = { 'tmp': '󿦨' }
+<
+    Default value is `{}`
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

@@ -40,6 +40,7 @@ fileNodesExactSymbols = {
         'dockerfile'                       : '',
         'docker-compose.yml'               : '',
         }
+fileNodesExactSymbols.update(lfEval("get(g:, 'Lf_DevIconsExactSymbols', {})"))
 
 fileNodesExtensionSymbols = {
         'L'          : '', 'erl'       : '', 'ksh'     : '',  'rbw'         : '',
@@ -85,6 +86,7 @@ fileNodesExtensionSymbols = {
         'yaml'       : '', 'yaws'      : '', 'yml'     : '',  'zip'         : '',
         'zsh'        : '',
         }
+fileNodesExtensionSymbols.update(lfEval("get(g:, 'Lf_DevIconsExtensionSymbols', {})"))
 
 _ambiwidth = lfEval('&ambiwidth')
 
