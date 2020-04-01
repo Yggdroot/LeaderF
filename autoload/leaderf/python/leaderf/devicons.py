@@ -88,10 +88,6 @@ fileNodesExtensionSymbols = {
         }
 fileNodesExtensionSymbols.update(lfEval("get(g:, 'Lf_DevIconsExtensionSymbols', {})"))
 
-_ambiwidth = lfEval('&ambiwidth')
-
-_iconBytesLen = 0
-
 _default_palette = {
     "gui": "NONE",
     "guifg": "NONE",
@@ -120,19 +116,13 @@ def _icons_setup():
 _icons = _icons_setup()
 
 def webDevIconsString():
-    if _ambiwidth == 'double':
-        return ' ' + fileNodesDefaultSymbol
-    else:
-        return '  ' + fileNodesDefaultSymbol
+    return fileNodesDefaultSymbol + ' '
 
 def webDevIconsStrLen():
     return len(webDevIconsString())
 
 def webDevIconsBytesLen():
-    global _iconBytesLen
-    if _iconBytesLen == 0:
-        _iconBytesLen = lfBytesLen(webDevIconsString())
-    return _iconBytesLen
+    return lfBytesLen(webDevIconsString())
 
 def removeDevIcons(func):
     @wraps(func)
@@ -157,11 +147,6 @@ def _getExt(file):
     idx = file.rfind('.')
     return '' if idx == -1 else file[idx+1:]
 
-def setAmbiwidth(val):
-    global _ambiwidth
-    _ambiwidth = val
-    _iconBytesLen = lfBytesLen(webDevIconsString())
-
 # To use asynchronously
 def webDevIconsGetFileTypeSymbol(file, isdir=False):
     if isdir:
@@ -177,13 +162,7 @@ def webDevIconsGetFileTypeSymbol(file, isdir=False):
         elif fileNodeExt in fileNodesExtensionSymbols:
             symbol = fileNodesExtensionSymbols[fileNodeExt]
 
-    if _ambiwidth == 'double':
-        spaces = ' '
-    else:
-        # Required to display the font correctly.
-        spaces = '  '
-
-    return symbol + spaces
+    return symbol + ' '
 
 def _normalize_name(val):
     # Replace unavailable characters for highlights with __
@@ -256,6 +235,7 @@ def highlightDevIcons():
     if not vim.vars.get('Lf_ShowDevIcons', True):
         return
 
+    lfCmd("let g:Lf_highlightDevIconsLoad = 1")
     icon_font = lfEval("get(g:, 'Lf_DevIconsFont', '')")
 
     devicons_palette = lfEval("get(g:, 'Lf_DevIconsPallete', {})")

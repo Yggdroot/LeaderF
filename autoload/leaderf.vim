@@ -848,14 +848,6 @@ endfunction
 autocmd FileType leaderf let b:coc_enabled = 0 | let b:coc_suggest_disable = 1
 
 
-" for devicons
-autocmd OptionSet ambiwidth call leaderf#setAmbiwidth(v:option_new)
-
-function! leaderf#setAmbiwidth(val) abort
-    exec g:Lf_py "from leaderf.devicons import setAmbiwidth"
-    exec g:Lf_py printf("setAmbiwidth('%s')", a:val)
-endfunction
-
 function! leaderf#highlightDevIcons() abort
     exec g:Lf_py 'from leaderf.devicons import highlightDevIcons'
     exec g:Lf_py 'highlightDevIcons()'

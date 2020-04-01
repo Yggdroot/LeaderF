@@ -231,6 +231,8 @@ class LfInstance(object):
         self._show_tabline = int(lfEval("&showtabline"))
         self._is_autocmd_set = False
         self._is_colorscheme_autocmd_set = False
+        self._is_popup_colorscheme_autocmd_set = False
+        self._is_icon_colorscheme_autocmd_set = False
         self._reverse_order = lfEval("get(g:, 'Lf_ReverseOrder', 0)") == '1'
         self._last_reverse_order = self._reverse_order
         self._orig_pos = () # (tabpage, window, buffer)
@@ -246,8 +248,6 @@ class LfInstance(object):
         self._popup_instance = LfPopupInstance()
         self._win_pos = None
         self._stl_buf_namespace = None
-        self._highlightStl()
-        highlightDevIcons()
         self._auto_resize = lfEval("get(g:, 'Lf_AutoResize', 0)") == '1'
 
     def _initStlVar(self):
@@ -278,10 +278,6 @@ class LfInstance(object):
         stl += "%#Lf_hl_{0}_stlSeparator5#%{{g:Lf_StlSeparator.right}}"
         stl += "%#Lf_hl_stlTotal# Total%{{g:Lf_{0}_StlRunning}} %{{g:Lf_{0}_StlTotal}} "
         self._stl = stl.format(self._category)
-
-    def _highlightStl(self):
-        lfCmd("call leaderf#colorscheme#highlight('{}')".format(self._category))
-        lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')".format(self._category, lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
     def _setAttributes(self):
         lfCmd("setlocal nobuflisted")
@@ -640,8 +636,9 @@ class LfInstance(object):
             lfCmd("call leaderf#ResetPopupOptions(%d, 'callback', function('leaderf#PopupClosed', [%s, %d]))"
                     % (self._popup_winid, str(self._popup_instance.getWinIdList()), id(self._manager)))
 
-        if not self._is_colorscheme_autocmd_set:
-            self._is_colorscheme_autocmd_set = True
+        if not self._is_popup_colorscheme_autocmd_set:
+            self._is_popup_colorscheme_autocmd_set = True
+            lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')".format(self._category, lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
             lfCmd("augroup Lf_Popup_{}_Colorscheme".format(self._category))
             lfCmd("autocmd ColorScheme * call leaderf#colorscheme#popup#load('{}', '{}')".format(self._category,
                     lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
@@ -724,16 +721,16 @@ class LfInstance(object):
 
         if self._buffer_object is None or not self._buffer_object.valid:
             self._buffer_object = vim.current.buffer
+
+        if not self._is_colorscheme_autocmd_set:
+            self._is_colorscheme_autocmd_set = True
+            lfCmd("call leaderf#colorscheme#highlight('{}')".format(self._category))
             lfCmd("augroup Lf_{}_Colorscheme".format(self._category))
             lfCmd("autocmd!")
-            lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlight('{}')"
-                  .format(self._category))
-            lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlightMode('{0}', g:Lf_{0}_StlMode)"
-                  .format(self._category))
-            lfCmd("autocmd ColorScheme * call leaderf#highlightDevIcons()")
+            lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlight('{}')".format(self._category))
+            lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlightMode('{0}', g:Lf_{0}_StlMode)".format(self._category))
             lfCmd("autocmd ColorScheme <buffer> doautocmd syntax")
-            lfCmd("autocmd CursorMoved <buffer> let g:Lf_{}_StlLineNumber = 1 + line('$') - line('.')"
-                  .format(self._category))
+            lfCmd("autocmd CursorMoved <buffer> let g:Lf_{}_StlLineNumber = 1 + line('$') - line('.')".format(self._category))
             lfCmd("autocmd VimResized * let g:Lf_VimResized = 1")
             lfCmd("augroup END")
 
@@ -986,6 +983,14 @@ class LfInstance(object):
             self._orig_win_id = lfWinId(self._orig_win_nr)
             self._createBufWindow(win_pos)
             self._setAttributes()
+
+        if not self._is_icon_colorscheme_autocmd_set:
+            self._is_icon_colorscheme_autocmd_set = True
+            if lfEval("get(g:, 'Lf_highlightDevIconsLoad', 0)") == '0':
+                highlightDevIcons()
+            lfCmd("augroup Lf_DevIcons_Colorscheme")
+            lfCmd("autocmd! ColorScheme * call leaderf#highlightDevIcons()")
+            lfCmd("augroup END")
 
         self._setStatusline()
         self._after_enter()

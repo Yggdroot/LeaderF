@@ -204,7 +204,7 @@ class LfCli(object):
         part2 = "{}/{}".format(line_num, result_count)
         part3 = total
         sep = lfEval("g:Lf_StlSeparator.right")
-        flag = ('+', '×')
+        flag = ('✚', '✖')
         if lfEval("g:Lf_{}_IsRunning".format(self._instance._category)) == '1':
             spin = "{}".format(flag[self._running_status])
             self._running_status = (self._running_status + 1) & 1
@@ -212,11 +212,10 @@ class LfCli(object):
             spin = ""
             self._running_status = 0
 
-        if sys.version_info < (3, 0):
-            input_win_width += 2 * (len(sep) - int(lfEval("strdisplaywidth('%s')" % escQuote(sep))))
-            input_win_width += len(pattern) - int(lfEval("strdisplaywidth('%s')" % escQuote(pattern)))
-            if spin == '×':
-                input_win_width += len(spin) - int(lfEval("strdisplaywidth('%s')" % spin))
+        input_win_width += 2 * (len(sep) - int(lfEval("strdisplaywidth('%s')" % escQuote(sep))))
+        input_win_width += len(pattern) - int(lfEval("strdisplaywidth('%s')" % escQuote(pattern)))
+        input_win_width += len(spin) - int(lfEval("strdisplaywidth('%s')" % spin))
+
         part3_start = input_win_width - len(part3) - 2
         sep2_start = part3_start - len(sep)
         part2_start = sep2_start - 2 - len(part2)
