@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+import os
 import vim
 from functools import wraps
 from .utils import *
@@ -88,6 +89,11 @@ fileNodesExtensionSymbols = {
         }
 fileNodesExtensionSymbols.update(lfEval("get(g:, 'Lf_DevIconsExtensionSymbols', {})"))
 
+if  os.name == 'nt' or lfEval('&ambiwidth') == "double":
+    _spaces = ' '
+else:
+    _spaces = '  '
+
 _default_palette = {
     "gui": "NONE",
     "guifg": "NONE",
@@ -116,7 +122,7 @@ def _icons_setup():
 _icons = _icons_setup()
 
 def webDevIconsString():
-    return fileNodesDefaultSymbol + ' '
+    return fileNodesDefaultSymbol + _spaces
 
 def webDevIconsStrLen():
     return len(webDevIconsString())
@@ -147,6 +153,12 @@ def _getExt(file):
     idx = file.rfind('.')
     return '' if idx == -1 else file[idx+1:]
 
+def setAmbiwidth(val):
+    if os.name == 'nt' or val == "double":
+        _spaces = ' '
+    else:
+        _spaces = '  '
+
 # To use asynchronously
 def webDevIconsGetFileTypeSymbol(file, isdir=False):
     if isdir:
@@ -162,7 +174,7 @@ def webDevIconsGetFileTypeSymbol(file, isdir=False):
         elif fileNodeExt in fileNodesExtensionSymbols:
             symbol = fileNodesExtensionSymbols[fileNodeExt]
 
-    return symbol + ' '
+    return symbol + _spaces
 
 def _normalize_name(val):
     # Replace unavailable characters for highlights with __
