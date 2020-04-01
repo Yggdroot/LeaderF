@@ -595,7 +595,7 @@ g:Lf_NoChdir                                    *g:Lf_NoChdir*
     Don't change the current working directory when using `LeaderfFile dir` if
     the value is 1, otherwise the current working directory will be changed
     to `dir`.
-    Default value is 0.
+    Default value is 1.
 
 g:Lf_GtagsAutoGenerate                          *g:Lf_GtagsAutoGenerate*
     If the value is 1 and there is a rootmark defined by |g:Lf_RootMarkers|

@@ -592,7 +592,7 @@ class FileExplorer(Explorer):
         if directory and directory[0] not in ['""', "''"]:
             dir = directory[0].strip('"').rstrip('\\/')
             if os.path.exists(os.path.expanduser(lfDecode(dir))):
-                if lfEval("get(g:, 'Lf_NoChdir', 0)") == '0':
+                if lfEval("get(g:, 'Lf_NoChdir', 1)") == '0':
                     lfCmd("silent cd %s" % dir)
                     dir = os.getcwd()
                 else:
