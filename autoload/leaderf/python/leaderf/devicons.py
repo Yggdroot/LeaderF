@@ -154,6 +154,7 @@ def _getExt(file):
     return '' if idx == -1 else file[idx+1:]
 
 def setAmbiwidth(val):
+    global _spaces
     if os.name == 'nt' or val == "double":
         _spaces = ' '
     else:
