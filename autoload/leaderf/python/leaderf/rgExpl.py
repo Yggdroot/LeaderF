@@ -719,7 +719,7 @@ class RgExplManager(Manager):
 
     def deleteCurrentLine(self):
         instance = self._getInstance()
-        if instance.window.cursor[0] <= self._help_length:
+        if self._inHelpLines():
             return
         if instance.getWinPos() == 'popup':
             lfCmd("call win_execute(%d, 'setlocal modifiable')" % instance.getPopupWinId())

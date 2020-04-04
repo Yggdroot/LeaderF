@@ -775,6 +775,14 @@ class Manager(object):
         self._help_length = 0
         self._getInstance().refreshPopupStatusline()
 
+    def _inHelpLines(self):
+        if self._getInstance().isReverseOrder():
+            if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
+                return True
+        elif self._getInstance().window.cursor[0] <= self._help_length:
+            return True
+        return False
+
     def _getExplorer(self):
         if self._explorer is None:
             self._explorer = self._getExplClass()()
