@@ -986,7 +986,7 @@ class LfInstance(object):
 
         if not self._is_icon_colorscheme_autocmd_set:
             self._is_icon_colorscheme_autocmd_set = True
-            if lfEval("get(g:, 'Lf_highlightDevIconsLoad', 0)") == '0':
+            if lfEval("get(g:, 'Lf_highlightDevIconsLoad', 0)") == '0' or lfEval("hlexists('Lf_hl_devIcons_c')") == '0':
                 highlightDevIcons()
             lfCmd("augroup Lf_DevIcons_Colorscheme")
             lfCmd("autocmd! ColorScheme * call leaderf#highlightDevIcons()")
