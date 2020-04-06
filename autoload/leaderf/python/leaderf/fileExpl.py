@@ -81,8 +81,8 @@ class FileExplorer(Explorer):
         file_list = []
         for dir_path, dirs, files in os.walk(dir, followlinks = False
                 if lfEval("g:Lf_FollowLinks") == '0' else True):
-            dirs[:] = [i for i in dirs if True not in (fnmatch.fnmatch(i,j)
-                       for j in wildignore.get('dir', []))]
+            if True in (fnmatch.fnmatch(dir_path, j) for j in wildignore.get('dir', [])):
+                continue
             for name in files:
                 if True not in (fnmatch.fnmatch(name, j)
                                 for j in wildignore.get('file', [])):
