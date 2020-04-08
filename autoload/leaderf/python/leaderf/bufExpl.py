@@ -249,11 +249,15 @@ class BufExplManager(Manager):
         instance = self._getInstance()
         if self._inHelpLines():
             return
+
+        line = instance._buffer_object[instance.window.cursor[0] - 1]
+        if line == '':
+            return
+
         if instance.getWinPos() == 'popup':
             lfCmd("call win_execute(%d, 'setlocal modifiable')" % instance.getPopupWinId())
         else:
             lfCmd("setlocal modifiable")
-        line = instance._buffer_object[instance.window.cursor[0] - 1]
         if len(self._content) > 0:
             self._content.remove(line)
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
