@@ -58,6 +58,7 @@ class LfCli(object):
         self._running_status = 0
         self._input_buf_namespace = None
         self._setDefaultMode()
+        self._additional_prompt_string = ''
 
     def setInstance(self, instance):
         self._instance = instance
@@ -160,11 +161,11 @@ class LfCli(object):
         lfCmd("redraw")
         if self._is_fuzzy:
             if self._is_full_path:
-                lfCmd("echohl Constant | echon '>F> ' | echohl NONE")
+                lfCmd("echohl Constant | echon '>F> {}' | echohl NONE".format(self._additional_prompt_string))
             else:
-                lfCmd("echohl Constant | echon '>>> ' | echohl NONE")
+                lfCmd("echohl Constant | echon '>>> {}' | echohl NONE".format(self._additional_prompt_string))
         else:
-            lfCmd("echohl Constant | echon 'R>> ' | echohl NONE")
+            lfCmd("echohl Constant | echon 'R>> {}' | echohl NONE".format(self._additional_prompt_string))
 
         lfCmd("echohl Normal | echon '%s' | echohl NONE" %
               escQuote(''.join(self._cmdline[:self._cursor_pos])))
@@ -182,11 +183,11 @@ class LfCli(object):
 
         if self._is_fuzzy:
             if self._is_full_path:
-                prompt = ' >F> '
+                prompt = ' >F> {}'.format(self._additional_prompt_string)
             else:
-                prompt = ' >>> '
+                prompt = ' >>> {}'.format(self._additional_prompt_string)
         else:
-            prompt = ' R>> '
+            prompt = ' R>> {}'.format(self._additional_prompt_string)
 
         pattern = ''.join(self._cmdline)
         input_window = self._instance.getPopupInstance().input_win
@@ -341,11 +342,11 @@ class LfCli(object):
 
         if self._is_fuzzy:
             if self._is_full_path:
-                lfCmd("echohl Constant | echon '>F> ' | echohl NONE")
+                lfCmd("echohl Constant | echon '>F> {}' | echohl NONE".format(self._additional_prompt_string))
             else:
-                lfCmd("echohl Constant | echon '>>> ' | echohl NONE")
+                lfCmd("echohl Constant | echon '>>> {}' | echohl NONE".format(self._additional_prompt_string))
         else:
-            lfCmd("echohl Constant | echon 'R>> ' | echohl NONE")
+            lfCmd("echohl Constant | echon 'R>> {}' | echohl NONE".format(self._additional_prompt_string))
 
         lfCmd("echohl Normal | echon '%s' | echohl NONE" %
               escQuote(''.join(self._cmdline[:self._cursor_pos])))
