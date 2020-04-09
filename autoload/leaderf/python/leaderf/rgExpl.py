@@ -450,6 +450,7 @@ class RgExplManager(Manager):
                         lfCmd("silent hide edit +%s %s" % (line_num, escSpecial(file)))
             else:
                 lfCmd("silent hide buffer +%s %s" % (line_num, buf_number))
+            lfCmd("norm! ^zv")
             lfCmd("norm! zz")
 
             if vim.current.window not in self._cursorline_dict:

@@ -243,6 +243,7 @@ class BufTagExplManager(Manager):
         if "preview" not in kwargs:
             lfCmd("norm! ^")
             lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
+        lfCmd("norm! zv")
         lfCmd("norm! zz")
 
         if vim.current.window not in self._cursorline_dict:

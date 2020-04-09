@@ -906,6 +906,7 @@ class GtagsExplManager(Manager):
                     lfCmd("silent! hide drop %s | %s" % (escSpecial(file), line_num))
                 else:
                     lfCmd("silent! hide edit +%s %s" % (line_num, escSpecial(file)))
+            lfCmd("norm! ^zv")
             lfCmd("norm! zz")
 
             if vim.current.window not in self._cursorline_dict:

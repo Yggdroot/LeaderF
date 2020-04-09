@@ -112,6 +112,7 @@ class TagExplManager(Manager):
 
         if lfEval("search('\V%s', 'wc')" % escQuote(tagname)) == '0':
             lfCmd("norm! ^")
+        lfCmd("norm! zv")
         lfCmd("norm! zz")
 
         if vim.current.window not in self._cursorline_dict:

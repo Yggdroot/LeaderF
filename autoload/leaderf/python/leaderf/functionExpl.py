@@ -227,7 +227,7 @@ class FunctionExplManager(Manager):
             lfCmd("tab drop %s | %s" % (escSpecial(buf_name), line_nr))
         else:
             lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
-        lfCmd("norm! ^")
+        lfCmd("norm! ^zv")
         lfCmd("norm! zz")
 
         if vim.current.window not in self._cursorline_dict:
