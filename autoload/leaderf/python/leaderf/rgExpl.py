@@ -442,14 +442,14 @@ class RgExplManager(Manager):
         try:
             if buf_number == -1:
                 if kwargs.get("mode", '') == 't':
-                    lfCmd("silent tab drop %s | %s" % (escSpecial(file), line_num))
+                    lfCmd("tab drop %s | %s" % (escSpecial(file), line_num))
                 else:
                     if lfEval("get(g:, 'Lf_JumpToExistingWindow', 0)") == '1':
-                        lfCmd("silent hide drop %s | %s" % (escSpecial(file), line_num))
+                        lfCmd("hide drop %s | %s" % (escSpecial(file), line_num))
                     else:
-                        lfCmd("silent hide edit +%s %s" % (line_num, escSpecial(file)))
+                        lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
             else:
-                lfCmd("silent hide buffer +%s %s" % (line_num, buf_number))
+                lfCmd("hide buffer +%s %s" % (line_num, buf_number))
             lfCmd("norm! ^zv")
             lfCmd("norm! zz")
 
