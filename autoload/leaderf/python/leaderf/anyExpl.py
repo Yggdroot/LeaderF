@@ -137,12 +137,12 @@ class AnyExplorer(Explorer):
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(format_list), err))
 
+        if lfEval("has('nvim')") != '1' and isinstance(result, vim.List):
+            result = list(result)
+
         if sys.version_info >= (3, 0):
             if isinstance(result, list) and result and isinstance(result[0], bytes):
                 result = [lfBytes2Str(i) for i in result]
-
-        if lfEval("has('nvim')") != '1' and isinstance(result, vim.List):
-            result = list(result)
 
         return result
 
