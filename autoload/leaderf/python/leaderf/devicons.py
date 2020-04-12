@@ -251,7 +251,7 @@ def highlightDevIcons():
     lfCmd("let g:Lf_highlightDevIconsLoad = 1")
     icon_font = lfEval("get(g:, 'Lf_DevIconsFont', '')")
 
-    devicons_palette = lfEval("get(g:, 'Lf_DevIconsPallete', {})")
+    devicons_palette = lfEval("get(g:, 'Lf_DevIconsPalette', {})")
     palette = devicons_palette.get(lfEval('&background'), {})
 
     for icon_name in _icons['names']:
