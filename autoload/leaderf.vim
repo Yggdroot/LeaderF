@@ -293,7 +293,7 @@ let g:Lf_KeyMap = {
             \ "\<SCROLLWHEELDOWN>": '<SCROLLWHEELDOWN>'
             \}
 
-let g:Lf_DevIconsPallete = {
+let g:Lf_DevIconsPalette = {
             \   'light': {
             \       '_':            { 'guifg': 'NONE',    'ctermfg': 'NONE' },
             \       'default':      { 'guifg': 'NONE',    'ctermfg': 'NONE' },
