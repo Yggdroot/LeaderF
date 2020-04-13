@@ -40,7 +40,6 @@ class GtagsExplorer(Explorer):
         self._evalVimVar()
         self._has_nvim = lfEval("has('nvim')") == '1'
         self._db_timestamp = 0
-        self._manager = None
         self._last_command = ""
 
         self._task_queue = Queue.Queue()
@@ -62,8 +61,9 @@ class GtagsExplorer(Explorer):
             except Exception as e:
                 print(e)
 
-    def setManager(self, manager):
-        self._manager = manager
+    def setContent(self, content):
+        if self._last_command == "--all":
+            self._content = content
 
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -172,13 +172,13 @@ class GtagsExplorer(Explorer):
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, pattern_option, path_style, self._result_format)
 
-            if not self._isDBModified(dbpath) and self._manager._content and self._last_command == cmd:
-                return self._manager._content
+            if not self._isDBModified(dbpath) and self._content:
+                return self._content
 
             executor = AsyncExecutor()
             self._executor.append(executor)
             lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
-            self._last_command = cmd
+            self._last_command = "--all"
             content = executor.execute(cmd, env=env, raise_except=False)
             return content
 
@@ -238,6 +238,7 @@ class GtagsExplorer(Explorer):
         executor = AsyncExecutor()
         self._executor.append(executor)
         lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
+        self._last_command = "others"
         content = executor.execute(cmd, env=env)
 
         libdb = os.path.join(dbpath, "GTAGSLIBPATH")
@@ -1158,8 +1159,6 @@ class GtagsExplManager(Manager):
                 project_root = self._getExplorer()._nearestAncestor(root_markers, os.getcwd())
             if project_root:
                 chdir(project_root)
-
-        self._getExplorer().setManager(self);
 
         super(GtagsExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
