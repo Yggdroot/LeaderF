@@ -41,6 +41,7 @@ class GtagsExplorer(Explorer):
         self._has_nvim = lfEval("has('nvim')") == '1'
         self._db_timestamp = 0
         self._last_command = ""
+        self._content = []
 
         self._task_queue = Queue.Queue()
         self._worker_thread = threading.Thread(target=self._processTask)
