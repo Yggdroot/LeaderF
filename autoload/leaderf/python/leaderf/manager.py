@@ -126,6 +126,17 @@ class Manager(object):
     def _defineMaps(self):
         pass
 
+    def _defineCommonMaps(self):
+        normal_map = lfEval("get(g:, 'Lf_NormalMap', {})")
+        if "_" not in normal_map: 
+            return
+
+        for [lhs, rhs] in normal_map["_"]:
+            # If a buffer-local mapping does not exist, map it
+            maparg = lfEval("maparg('{}', 'n', 0, 1)".format(lhs))
+            if maparg == {} or maparg.get("buffer", "0") == "0" :
+                lfCmd("nnoremap <buffer> <silent> {} {}".format(lhs, rhs))
+
     def _cmdExtension(self, cmd):
         """
         this function can be overridden to add new cmd
@@ -248,6 +259,7 @@ class Manager(object):
 
         if self._getInstance().getWinPos() != 'popup':
             self._defineMaps()
+            self._defineCommonMaps()
 
             id = int(lfEval("matchadd('Lf_hl_cursorline', '.*\%#.*', 9)"))
             self._match_ids.append(id)
