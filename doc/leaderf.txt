@@ -906,6 +906,12 @@ g:Lf_DevIconsExtensionSymbols                   *g:Lf_DevIconsExtensionSymbols*
 <
     Default value is `{}`
 
+g:Lf_SpinSymbols                                *g:Lf_SpinSymbols*
+    Specify a list of spin symbols at the top right corner.
+
+    For Linux platform, the default value is ['△', '▲', '▷', '▶', '▽', '▼', '◁', '◀'],
+    for Windows and MacOS, the default value is ['🌘', '🌗', '🌖', '🌕', '🌔', '🌓', '🌒', '🌑']
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

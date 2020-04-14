@@ -5,6 +5,7 @@ import vim
 import re
 import sys
 import time
+import platform
 from datetime import datetime
 from datetime import timedelta
 from functools import wraps
@@ -59,6 +60,12 @@ class LfCli(object):
         self._input_buf_namespace = None
         self._setDefaultMode()
         self._additional_prompt_string = ''
+        self._spin_symbols = lfEval("get(g:, 'Lf_SpinSymbols', [])")
+        if not self._spin_symbols:
+            if platform.system() == "Linux":
+                self._spin_symbols = ['△', '▲', '▷', '▶', '▽', '▼', '◁', '◀']
+            else:
+                self._spin_symbols = ['🌘', '🌗', '🌖', '🌕', '🌔', '🌓', '🌒', '🌑']
 
     def setInstance(self, instance):
         self._instance = instance
@@ -205,10 +212,9 @@ class LfCli(object):
         part2 = "{}/{}".format(line_num, result_count)
         part3 = total
         sep = lfEval("g:Lf_StlSeparator.right")
-        flag = ('✚', '✖')
         if lfEval("g:Lf_{}_IsRunning".format(self._instance._category)) == '1':
-            spin = "{}".format(flag[self._running_status])
-            self._running_status = (self._running_status + 1) & 1
+            spin = "{}".format(self._spin_symbols[self._running_status])
+            self._running_status = (self._running_status + 1) % len(self._spin_symbols)
         else:
             spin = ""
             self._running_status = 0
