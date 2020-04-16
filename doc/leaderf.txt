@@ -439,8 +439,13 @@ g:Lf_UseCache                                   *g:Lf_UseCache*
 
 g:Lf_NormalMap                                  *g:Lf_NormalMap*
     Use this option to customize the mappings in normal mode.
+    The mapping with the key `"_"` applies to all categories.
+    Also, `"_"` is overridden by the mapping of each category.
     e.g., >
     let g:Lf_NormalMap = {
+        \ "_":      [["<C-j>", "j"],
+        \            ["<C-k>", "k"]
+        \           ],
         \ "File":   [["<ESC>", ':exec g:Lf_py "fileExplManager.quit()"<CR>'],
         \            ["<F6>", ':exec g:Lf_py "fileExplManager.quit()"<CR>']
         \           ],
