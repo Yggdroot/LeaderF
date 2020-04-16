@@ -102,6 +102,47 @@ function! leaderf#Rg#TimerCallback(id)
     call leaderf#LfPy("rgExplManager._workInIdle(bang=True)")
 endfunction
 
+
+let s:type_list = []
+function! s:rg_type_list() abort
+    if len(s:type_list) > 0
+        return s:type_list
+    endif
+
+    let l:ret = {}
+    let l:output = systemlist('rg --type-list')
+
+    for l:line in l:output
+        " e,g,. 'c: *.[chH], *.[chH].in, *.cats'
+        let [l:type, l:pattern_str] = split(l:line, ': ')
+        let l:pattern_list = split(l:pattern_str, ', ')
+
+        let l:ret[l:type] = map(l:pattern_list, 'glob2regpat(v:val)')
+    endfor
+
+    let s:type_list = l:ret
+    return s:type_list
+endfunction
+
+function! s:getType(fname) abort
+    for [l:type, l:pattern_list] in items(s:rg_type_list())
+        for l:pattern in l:pattern_list
+            if a:fname =~# l:pattern
+                return l:type
+            endif
+        endfor
+    endfor
+    return ''
+endfunction
+
+" Returns the type of rg matching the filename.
+" e,g,: nnoremap <Leader>fg :<C-u><C-r>=printf('Leaderf rg %s ', leaderf#Rg#getTypeByFileName(expand('%')))<CR>
+function! leaderf#Rg#getTypeByFileName(fname) abort
+    let l:type = s:getType(a:fname)
+    return empty(l:type) ? '' : printf('-t "%s"', l:type)
+endfunction
+
+
 function! leaderf#Rg#NormalModeFilter(winid, key) abort
     let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
 
