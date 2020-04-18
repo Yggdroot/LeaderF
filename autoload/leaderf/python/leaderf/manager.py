@@ -376,7 +376,8 @@ class Manager(object):
             lfCmd("autocmd! BufwinEnter <buffer> setlocal cursorline<")
             lfCmd("augroup END")
         finally:
-            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
+            if self._getInstance().getWinPos() != 'popup':
+                vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
             vim.options['eventignore'] = saved_eventignore
 
     def _restoreOrigCwd(self):
