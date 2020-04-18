@@ -266,6 +266,39 @@ class WindowExplManager(Manager):
             self._match_ids.extend(matchaddDevIconsExact(r'__icon__\ze\s\+__name__\($\|\s\)', winid))
             self._match_ids.extend(matchaddDevIconsDefault(r'__icon__\ze\s\+\S\+\($\|\s\)', winid))
 
+    def deleteWindow(self):
+        instance = self._getInstance()
+        if self._inHelpLines():
+            return
+
+        line = instance._buffer_object[instance.window.cursor[0] - 1]
+        if line == '':
+            return
+
+        if instance.getWinPos() == 'popup':
+            lfCmd("call win_execute(%d, 'setlocal modifiable')" % instance.getPopupWinId())
+        else:
+            lfCmd("setlocal modifiable")
+        if len(self._content) > 0:
+            self._content.remove(line)
+            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+            self._getInstance().setStlResultsCount(len(self._content)//self._getUnit())
+
+        # current_bufnr = lfEval('bufnr()')
+        match = re.search(r"^\s?(\d+) \s?(\d+)", line)
+
+        tab = match.group(1)
+        win = match.group(2)
+        winid = lfEval("win_getid({}, {})".format(win, tab))
+        lfCmd("call win_execute({}, 'confirm close')".format(winid))
+
+        del instance._buffer_object[instance.window.cursor[0] - 1]
+        if instance.getWinPos() == 'popup':
+            instance.refreshPopupStatusline()
+            lfCmd("call win_execute(%d, 'setlocal nomodifiable')" % instance.getPopupWinId())
+        else:
+            lfCmd("setlocal nomodifiable")
+
 
 # *****************************************************
 # windowExplManager is a singleton
