@@ -733,7 +733,7 @@ class FileExplManager(Manager):
 
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
             winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
-            icon_pattern = r'^__icon__\s'
+            icon_pattern = r'^__icon__'
             self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
             self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
             self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
