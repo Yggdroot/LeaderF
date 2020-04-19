@@ -4,6 +4,7 @@
 import vim
 import os
 import sys
+import json
 import time
 import operator
 import itertools
@@ -558,7 +559,7 @@ class Manager(object):
                 options["maxheight"] = maxheight
                 options["minheight"] = maxheight
 
-            lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, str(options)))
+            lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, json.dumps(options)))
             self._preview_winid = int(lfEval("winid"))
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
@@ -680,7 +681,7 @@ class Manager(object):
                 options["maxheight"] = maxheight
                 options["minheight"] = maxheight
 
-            lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, str(options)))
+            lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, json.dumps(options)))
             self._preview_winid = int(lfEval("winid"))
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
