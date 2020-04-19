@@ -23,6 +23,7 @@ function! leaderf#Window#Maps()
     nnoremap <buffer> <silent> i             :exec g:Lf_py "windowExplManager.input()"<CR>
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "windowExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "windowExplManager.toggleHelp()"<CR>
+    nnoremap <buffer> <silent> d             :exec g:Lf_py "windowExplManager.deleteWindow()"<CR>
     if has_key(g:Lf_NormalMap, "Window")
         for i in g:Lf_NormalMap["Window"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -107,6 +108,8 @@ function! leaderf#Window#NormalModeFilter(winid, key) abort
         exec g:Lf_py "windowExplManager.accept()"
     elseif key ==? "<F1>"
         exec g:Lf_py "windowExplManager.toggleHelp()"
+    elseif key ==? "d"
+        exec g:Lf_py "windowExplManager.deleteWindow()"
     endif
 
     return 1
