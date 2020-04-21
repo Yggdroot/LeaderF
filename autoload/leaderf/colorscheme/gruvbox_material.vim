@@ -82,6 +82,15 @@ if &background ==# 'light'
                 \       'ctermfg': '241',
                 \       'ctermbg': '223'
                 \   },
+                \   'stlSpin': {
+                \       'gui': 'NONE',
+                \       'font': 'NONE',
+                \       'guifg': '#984c93',
+                \       'guibg': '#ebdbb2',
+                \       'cterm': 'NONE',
+                \       'ctermfg': '96',
+                \       'ctermbg': '223'
+                \   },
                 \   'stlLineInfo': {
                 \       'gui': 'NONE',
                 \       'font': 'NONE',
@@ -174,6 +183,15 @@ else
                 \       'cterm': 'NONE',
                 \       'ctermfg': '223',
                 \       'ctermbg': '237'
+                \   },
+                \   'stlSpin': {
+                \       'gui': 'NONE',
+                \       'font': 'NONE',
+                \       'guifg': '#E6E666',
+                \       'guibg': '#3c3836',
+                \       'cterm': 'NONE',
+                \       'ctermfg': '185',
+                \       'ctermbg': '227'
                 \   },
                 \   'stlLineInfo': {
                 \       'gui': 'NONE',

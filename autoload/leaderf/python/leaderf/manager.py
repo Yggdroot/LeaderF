@@ -2039,7 +2039,6 @@ class Manager(object):
 
         self._start_time = time.time()
         self._bang_start_time = self._start_time
-        self._status_start_time = self._start_time
         self._bang_count = 0
 
         self._read_content_exception = None
@@ -2267,9 +2266,7 @@ class Manager(object):
             if time.time() - self._start_time > 0.1:
                 self._start_time = time.time()
                 self._getInstance().setStlTotal(cur_len//self._getUnit())
-                if time.time() - self._status_start_time > 0.45:
-                    self._status_start_time = time.time()
-                    self._getInstance().setStlRunning(True)
+                self._getInstance().setStlRunning(True)
 
                 if self._cli.pattern:
                     self._getInstance().setStlResultsCount(len(self._result_content))

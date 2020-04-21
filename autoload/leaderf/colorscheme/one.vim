@@ -81,6 +81,15 @@ let s:palette = {
             \       'ctermfg': '145',
             \       'ctermbg': '235'
             \   },
+            \   'stlSpin': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#E6E666',
+            \       'guibg': '#3E4452',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '185',
+            \       'ctermbg': '235'
+            \   },
             \   'stlLineInfo': {
             \       'gui': 'NONE',
             \       'font': 'NONE',

@@ -255,7 +255,7 @@ class LfInstance(object):
             lfCmd("let g:Lf_{}_StlCategory = '-'".format(self._category))
             lfCmd("let g:Lf_{}_StlMode = '-'".format(self._category))
             lfCmd("let g:Lf_{}_StlCwd= '-'".format(self._category))
-            lfCmd("let g:Lf_{}_StlRunning = ':'".format(self._category))
+            lfCmd("let g:Lf_{}_StlRunning = ''".format(self._category))
             lfCmd("let g:Lf_{}_IsRunning = 0".format(self._category))
             lfCmd("let g:Lf_{}_StlTotal = '0'".format(self._category))
             lfCmd("let g:Lf_{}_StlLineNumber = '1'".format(self._category))
@@ -270,13 +270,14 @@ class LfInstance(object):
         stl += "%#Lf_hl_stlCwd# %<%{{g:Lf_{0}_StlCwd}} "
         stl += "%#Lf_hl_{0}_stlSeparator3#%{{g:Lf_StlSeparator.left}}"
         stl += "%#Lf_hl_stlBlank#%="
+        stl += "%#Lf_hl_stlSpin#%{{g:Lf_{0}_StlRunning}}"
         stl += "%#Lf_hl_{0}_stlSeparator4#%{{g:Lf_StlSeparator.right}}"
         if self._reverse_order:
             stl += "%#Lf_hl_stlLineInfo# %{{g:Lf_{0}_StlLineNumber}}/%{{g:Lf_{0}_StlResultsCount}} "
         else:
             stl += "%#Lf_hl_stlLineInfo# %l/%{{g:Lf_{0}_StlResultsCount}} "
         stl += "%#Lf_hl_{0}_stlSeparator5#%{{g:Lf_StlSeparator.right}}"
-        stl += "%#Lf_hl_stlTotal# Total%{{g:Lf_{0}_StlRunning}} %{{g:Lf_{0}_StlTotal}} "
+        stl += "%#Lf_hl_stlTotal# Total: %{{g:Lf_{0}_StlTotal}} "
         self._stl = stl.format(self._category)
 
     def _setAttributes(self):
@@ -935,12 +936,12 @@ class LfInstance(object):
             return
 
         if running:
-            status = (':', ' ')
-            lfCmd("let g:Lf_{}_StlRunning = '{}'".format(self._category, status[self._running_status]))
-            self._running_status = (self._running_status + 1) & 1
+            spin = "{}".format(self._cli._spin_symbols[self._running_status])
+            self._running_status = (self._running_status + 1) % len(self._cli._spin_symbols)
+            lfCmd("let g:Lf_{}_StlRunning = '{}'".format(self._category, spin))
         else:
             self._running_status = 0
-            lfCmd("let g:Lf_{}_StlRunning = ':'".format(self._category))
+            lfCmd("let g:Lf_{}_StlRunning = ''".format(self._category))
 
     def enterBuffer(self, win_pos, clear):
         if self._enterOpeningBuffer():
@@ -1263,7 +1264,6 @@ class LfInstance(object):
 
         try:
             start = time.time()
-            status_start = start
             cur_content = []
             for line in content:
                 cur_content.append(line)
@@ -1274,9 +1274,7 @@ class LfInstance(object):
                         if self._reverse_order:
                             lfCmd("normal! G")
 
-                    if time.time() - status_start > 0.45:
-                        status_start = time.time()
-                        self.setStlRunning(True)
+                    self.setStlRunning(True)
                     self.setStlTotal(len(cur_content)//unit)
                     self.setStlResultsCount(len(cur_content)//unit)
                     if self._win_pos not in ('popup', 'floatwin'):
