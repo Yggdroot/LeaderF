@@ -637,6 +637,13 @@ class LfCli(object):
         try:
             self._history_index = 0
             self._blinkon = True
+            idle = 10000
+            update = False
+            if lfEval("has('nvim') && exists('g:GuiLoaded')") == '1':
+                threshold = 2
+            else:
+                threshold = 25
+
             while 1:
                 self._buildPrompt()
                 self._idle = False
@@ -653,11 +660,18 @@ class LfCli(object):
                         if lfEval("has('nvim') && exists('g:GuiLoaded')") == '1':
                             time.sleep(0.009) # this is to solve issue 375 leaderF hangs in nvim-qt
 
-                        try:
-                            callback()
-                        except Exception as e:
-                            lfPrintError(e)
-                            break
+                        idle = min(idle + 1, 10000)
+                        if update == True:
+                            if idle >= threshold:
+                                update = False
+                                idle = 0
+                                yield '<Update>'
+                        else:
+                            try:
+                                callback()
+                            except Exception as e:
+                                lfPrintError(e)
+                                break
 
                         continue
                     # https://groups.google.com/forum/#!topic/vim_dev/gg-l-kaCz_M
@@ -670,11 +684,18 @@ class LfCli(object):
                         if lfEval("has('nvim') && exists('g:GuiLoaded')") == '1':
                             time.sleep(0.009) # this is to solve issue 375 leaderF hangs in nvim-qt
 
-                        try:
-                            callback()
-                        except Exception as e:
-                            lfPrintError(e)
-                            break
+                        idle = min(idle + 1, 10000)
+                        if update == True:
+                            if idle >= threshold:
+                                update = False
+                                idle = 0
+                                yield '<Update>'
+                        else:
+                            try:
+                                callback()
+                            except Exception as e:
+                                lfPrintError(e)
+                                break
 
                         continue
                     else:
@@ -691,7 +712,14 @@ class LfCli(object):
                     self._buildPattern()
                     if self._pattern is None or (self._refine and self._pattern[1] == ''): # e.g. abc;
                         continue
-                    yield '<Update>'
+
+                    update = True
+                    if idle < threshold:
+                        continue
+                    else:
+                        idle = 0
+                        update = False
+                        yield '<Update>'
                 else:
                     cmd = ''
                     for (key, value) in self._key_dict.items():
