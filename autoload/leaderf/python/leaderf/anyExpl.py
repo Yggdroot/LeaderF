@@ -142,7 +142,7 @@ class AnyExplorer(Explorer):
 
         if sys.version_info >= (3, 0):
             if isinstance(result, list) and result and isinstance(result[0], bytes):
-                result = [lfBytes2Str(i) for i in result]
+                result = [lfBytes2Str(i, lfEval("&encoding")) for i in result]
 
         return result
 
