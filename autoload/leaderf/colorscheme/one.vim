@@ -110,4 +110,4 @@ let s:palette = {
             \   }
             \ }
 
-let g:leaderf#colorscheme#default#palette = leaderf#colorscheme#mergePalette(s:palette)
+let g:leaderf#colorscheme#one#palette = leaderf#colorscheme#mergePalette(s:palette)

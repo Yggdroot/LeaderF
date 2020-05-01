@@ -214,4 +214,4 @@ else
                 \ }
 endif
 
-let g:leaderf#colorscheme#default#palette = leaderf#colorscheme#mergePalette(s:palette)
+let g:leaderf#colorscheme#gruvbox_material#palette = leaderf#colorscheme#mergePalette(s:palette)
