@@ -733,10 +733,9 @@ class FileExplManager(Manager):
 
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
             winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
-            icon_pattern = r'^__icon__'
-            self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
-            self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
-            self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsExtension(r'^__icon__\ze\s\+.\{-}\.__name__$', winid))
+            self._match_ids.extend(matchaddDevIconsExact(r'^__icon__\ze\s\+\S*__name__$', winid))
+            self._match_ids.extend(matchaddDevIconsDefault(r'^__icon__', winid))
 
     def _beforeExit(self):
         super(FileExplManager, self)._beforeExit()

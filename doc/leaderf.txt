@@ -889,8 +889,8 @@ g:Lf_DevIconsPalette                            *g:Lf_DevIconsPalette*
         `'default'` : General Icons.
         Other Keys: Icons of the file type and the specified file name.
 
-    The default values are written in the following:
-    `LeaderF/autoload/leaderf.vim`
+    The default values can be seen in a dict called `devicons_palette` in
+    `LeaderF/autoload/leaderf/python/leaderf/devicons.py`
 
     The default value is set by referring to
     https://github.com/vscode-icons/vscode-icons
