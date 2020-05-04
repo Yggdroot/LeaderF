@@ -240,19 +240,12 @@ class MruExplManager(Manager):
                 id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
                 self._match_ids.append(id)
 
-            icon_extension_pattern = r'^__icon__\ze\s\+.\{-}\.__name__\s'
-            icon_exact_pattern = r'^__icon__\ze\s\+__name__\s'
-            icon_default_pattern = r'^__icon__'
-        else:
-            icon_extension_pattern = r'^__icon__\ze\s\+\S\+\.__name__$'
-            icon_exact_pattern = r'^__icon__\ze\s\+\S*__name__$'
-            icon_default_pattern = r'^__icon__'
-
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
             winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
-            self._match_ids.extend(matchaddDevIconsExtension(icon_extension_pattern, winid))
-            self._match_ids.extend(matchaddDevIconsExact(icon_exact_pattern, winid))
-            self._match_ids.extend(matchaddDevIconsDefault(icon_default_pattern, winid))
+            icon_pattern = r'^__icon__'
+            self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
 
     def _beforeExit(self):
         super(MruExplManager, self)._beforeExit()
