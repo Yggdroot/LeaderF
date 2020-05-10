@@ -104,6 +104,8 @@ class LfCli(object):
 
     def _paste(self):
         for ch in lfEval("@*"):
+            if ch == '\n':
+                break
             self._insert(ch)
 
     def _backspace(self):
@@ -795,4 +797,3 @@ class LfCli(object):
         except vim.error: # for neovim
             lfCmd("call getchar(0)")
             yield '<Quit>'
-
