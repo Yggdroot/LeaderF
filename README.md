@@ -295,7 +295,7 @@ Customization
 
     e.g. `let g:Lf_ShortcutF = '<C-P>'`
 
- * Show icons
+ * Show icons (should install fonts from https://github.com/ryanoasis/nerd-fonts)
 
     Support commands: buffer,file,mru,window
 
@@ -303,7 +303,7 @@ Customization
     " Show icons, icons are shown by default
     let g:Lf_ShowDevIcons = 1
     " For GUI vim, the icon font can be specify like this, for example
-    let g:Lf_DevIconsFont = "DejaVuSansMono Nerd Font Mono"
+    let g:Lf_DevIconsFont = "DroidSansMono Nerd Font Mono"
     " If needs
     set ambiwidth=double
     ```
@@ -345,6 +345,11 @@ noremap <leader>fo :<C-U><C-R>=printf("Leaderf! gtags --recall %s", "")<CR><CR>
 noremap <leader>fn :<C-U><C-R>=printf("Leaderf gtags --next %s", "")<CR><CR>
 noremap <leader>fp :<C-U><C-R>=printf("Leaderf gtags --previous %s", "")<CR><CR>
 ```
+
+FAQ
+---
+
+https://github.com/Yggdroot/LeaderF/issues?q=label%3AFAQ+
 
 License
 -------
