@@ -2012,6 +2012,8 @@ class Manager(object):
 
             self._index = 0
             pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
+            if len(pattern) > 1 and (pattern[0] == '"' and pattern[-1] == '"' or pattern[0] == "'" and pattern[-1] == "'"):
+                pattern = pattern[1:-1]
             self._cli.setPattern(pattern)
             self._result_content = []
             self._cb_content = []
