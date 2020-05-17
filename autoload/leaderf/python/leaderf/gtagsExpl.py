@@ -33,6 +33,7 @@ class GtagsExplorer(Explorer):
                                      '.LfCache',
                                      'gtags')
         self._store_in_project = lfEval("get(g:, 'Lf_GtagsStoreInProject', 0)") == '1'
+        self._store_in_rootmarker = lfEval("get(g:, 'Lf_GtagsStoreInRootMarker', 0)") == '1'
         self._project_root = ""
         self._gtagslibpath = []
         self._result_format = None
@@ -400,6 +401,12 @@ class GtagsExplorer(Explorer):
 
         if self._store_in_project:
             return path
+        elif self._store_in_rootmarker:
+            for name in self._root_markers:
+                if os.path.exists(os.path.join(path, name)):
+                    return os.path.join(path, name, '.LfGtags')
+            # if not exist root marker, store in project
+            return os.path.join(path, '.LfGtags')
         else:
             return os.path.join(self._db_location, db_folder)
 
