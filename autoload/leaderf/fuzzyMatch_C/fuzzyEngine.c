@@ -40,12 +40,12 @@ typedef struct FeString
     uint32_t len;
 }FeString;
 
-typedef struct FeTaskItem
+typedef struct TaskItem
 {
+    uint32_t function;
     uint32_t offset;
     uint32_t length;
-    uint32_t function;
-}FeTaskItem;
+}TaskItem;
 
 typedef struct FeResult
 {
@@ -56,6 +56,31 @@ typedef struct FeResult
     };
     uint32_t index;
 }FeResult;
+
+typedef struct MergeTaskItem
+{
+    uint32_t function;
+    uint32_t offset_1;
+    uint32_t length_1;
+    /* offset_2 = offset_1 + length_1, so no need to define it */
+    uint32_t length_2;
+    /* a buffer that helps merge two list, its length is `length_2` */
+    FeResult* buffer;
+}MergeTaskItem;
+
+typedef struct PySetTaskItem
+{
+    uint32_t function;
+    uint32_t offset;
+    uint32_t length;
+    union
+    {
+        weight_t* weights;
+        uint32_t* path_weights;
+    };
+    PyObject* text_list;
+    PyObject* py_source;
+}PySetTaskItem;
 
 typedef struct FeCircularQueue
 {
@@ -100,12 +125,10 @@ struct FuzzyEngine
         };
     };
     FeString*       source;
-    FeTaskItem*     tasks;
     union
     {
-        weight_t*        weights;
+        FeResult*        results;
         HighlightGroup** highlights;
-        uint32_t*        path_weights;
     };
     FeCircularQueue task_queue;
 };
@@ -302,10 +325,33 @@ struct FuzzyEngine
 
 enum
 {
-    GETWEIGHT = 0,
-    GETHIGHLIGHTS,
-    GETPATHWEIGHT
+    GET_WEIGHT = 0,
+    GET_HIGHLIGHTS,
+    GET_PATH_WEIGHT,
+    Q_SORT,
+    Q_SORT_2,
+    MERGE,
+    MERGE_2,
+    PY_SET_ITEM,
+    PY_SET_ITEM_2
 };
+
+/* sort in descending order */
+static int compare(const void* a, const void* b)
+{
+    weight_t wa = ((const FeResult*)a)->weight;
+    weight_t wb = ((const FeResult*)b)->weight;
+    return (wa < wb) - (wa > wb);
+}
+
+/* sort in descending order */
+static int compare2(const void* a, const void* b)
+{
+    uint32_t wa = ((const FeResult*)a)->path_weight;
+    uint32_t wb = ((const FeResult*)b)->path_weight;
+
+    return (int)wb - (int)wa;
+}
 
 #if defined(_MSC_VER)
 static DWORD WINAPI _worker(LPVOID pParam)
@@ -317,43 +363,159 @@ static void* _worker(void* pParam)
 
     while ( 1 )
     {
-        FeTaskItem* pTask = NULL;
-        QUEUE_GET(pEngine->task_queue, FeTaskItem*, pTask);
+        TaskItem* pTask = NULL;
+        QUEUE_GET(pEngine->task_queue, TaskItem*, pTask);
 
         if ( pTask )
         {
-            FeString* tasks = pEngine->source + pTask->offset;
-            if ( pTask->function == GETWEIGHT )
+            switch ( pTask->function )
             {
-                weight_t* results = pEngine->weights + pTask->offset;
-                uint32_t length = pTask->length;
-                uint32_t i = 0;
-                for ( ; i < length; ++i )
+            case GET_WEIGHT:
                 {
-                    results[i] = getWeight(tasks[i].str, tasks[i].len,
-                                           pEngine->pPattern_ctxt, pEngine->is_name_only);
+                    FeString* tasks = pEngine->source + pTask->offset;
+                    FeResult* results = pEngine->results + pTask->offset;
+                    uint32_t length = pTask->length;
+                    uint32_t i = 0;
+                    for ( ; i < length; ++i )
+                    {
+                        results[i].weight = getWeight(tasks[i].str, tasks[i].len,
+                                                      pEngine->pPattern_ctxt, pEngine->is_name_only);
+                        results[i].index = pTask->offset + i;
+                    }
                 }
-            }
-            else if ( pTask->function == GETHIGHLIGHTS )
-            {
-                HighlightGroup** results = pEngine->highlights + pTask->offset;
-                uint32_t length = pTask->length;
-                uint32_t i = 0;
-                for ( ; i < length; ++i )
+                break;
+            case GET_HIGHLIGHTS:
                 {
-                    results[i] = getHighlights(tasks[i].str, tasks[i].len,
-                                               pEngine->pPattern_ctxt, pEngine->is_name_only);
+                    FeString* tasks = pEngine->source + pTask->offset;
+                    HighlightGroup** results = pEngine->highlights + pTask->offset;
+                    uint32_t length = pTask->length;
+                    uint32_t i = 0;
+                    for ( ; i < length; ++i )
+                    {
+                        results[i] = getHighlights(tasks[i].str, tasks[i].len,
+                                                   pEngine->pPattern_ctxt, pEngine->is_name_only);
+                    }
                 }
-            }
-            else if ( pTask->function == GETPATHWEIGHT )
-            {
-                uint32_t* results = pEngine->path_weights + pTask->offset;
-                uint32_t length = pTask->length;
-                uint32_t i = 0;
-                for ( ; i < length; ++i )
+                break;
+            case GET_PATH_WEIGHT:
                 {
-                    results[i] = getPathWeight(pEngine->filename, pEngine->suffix, pEngine->dirname, tasks[i].str, tasks[i].len);
+                    FeString* tasks = pEngine->source + pTask->offset;
+                    FeResult* results = pEngine->results + pTask->offset;
+                    uint32_t length = pTask->length;
+                    uint32_t i = 0;
+                    for ( ; i < length; ++i )
+                    {
+                        results[i].path_weight = getPathWeight(pEngine->filename, pEngine->suffix, pEngine->dirname, tasks[i].str, tasks[i].len);
+                        results[i].index = pTask->offset + i;
+                    }
                 }
+                break;
+            case Q_SORT:
+                {
+                    FeResult* tasks = pEngine->results + pTask->offset;
+                    qsort(tasks, pTask->length, sizeof(FeResult), compare);
+                }
+                break;
+            case Q_SORT_2:
+                {
+                    FeResult* tasks = pEngine->results + pTask->offset;
+                    qsort(tasks, pTask->length, sizeof(FeResult), compare2);
+                }
+                break;
+            case MERGE:
+                {
+                    MergeTaskItem* pMergeTask = (MergeTaskItem*)pTask;
+                    FeResult* list_1 = pEngine->results + pMergeTask->offset_1;
+                    FeResult* list_2 = list_1 + pMergeTask->length_1;
+                    FeResult* buffer = pMergeTask->buffer;
+                    memcpy(buffer, list_2, pMergeTask->length_2 * sizeof(FeResult));
+                    int32_t i = pMergeTask->length_1 - 1;
+                    int32_t j = pMergeTask->length_2 - 1;
+                    int32_t k = pMergeTask->length_1 + j;
+                    while ( i >= 0 && j >= 0 )
+                    {
+                        if ( list_1[i].weight < buffer[j].weight )
+                        {
+                            list_1[k--] = list_1[i--];
+                        }
+                        else
+                        {
+                            list_1[k--] = buffer[j--];
+                        }
+                    }
+                    while ( j >= 0 )
+                    {
+                        list_1[k--] = buffer[j--];
+                    }
+                }
+                break;
+            case MERGE_2:
+                {
+                    MergeTaskItem* pMergeTask = (MergeTaskItem*)pTask;
+                    FeResult* list_1 = pEngine->results + pMergeTask->offset_1;
+                    FeResult* list_2 = list_1 + pMergeTask->length_1;
+                    FeResult* buffer = pMergeTask->buffer;
+                    memcpy(buffer, list_2, pMergeTask->length_2 * sizeof(FeResult));
+                    int32_t i = pMergeTask->length_1 - 1;
+                    int32_t j = pMergeTask->length_2 - 1;
+                    int32_t k = pMergeTask->length_1 + j;
+                    while ( i >= 0 && j >= 0 )
+                    {
+                        if ( list_1[i].path_weight < buffer[j].path_weight )
+                        {
+                            list_1[k--] = list_1[i--];
+                        }
+                        else
+                        {
+                            list_1[k--] = buffer[j--];
+                        }
+                    }
+                    while ( j >= 0 )
+                    {
+                        list_1[k--] = buffer[j--];
+                    }
+                }
+                break;
+            case PY_SET_ITEM:
+                {
+                    PySetTaskItem* pPySetTask = (PySetTaskItem*)pTask;
+                    weight_t* weights = pPySetTask->weights + pPySetTask->offset;
+                    FeResult* results = pEngine->results + pPySetTask->offset;
+                    PyObject* text_list = pPySetTask->text_list;
+                    PyObject* py_source = pPySetTask->py_source;
+                    uint32_t i = 0;
+                    uint32_t length = pPySetTask->length;
+
+                    for ( i = 0; i < length; ++i )
+                    {
+                        weights[i] = results[i].weight;
+                        PyObject* item = PyList_GET_ITEM(py_source, results[i].index);
+                        Py_INCREF(item);
+                        /* PyList_SET_ITEM() steals a reference to item.     */
+                        PyList_SET_ITEM(text_list, pPySetTask->offset + i, item);
+                    }
+                }
+                break;
+            case PY_SET_ITEM_2:
+                {
+                    PySetTaskItem* pPySetTask = (PySetTaskItem*)pTask;
+                    uint32_t* path_weights = pPySetTask->path_weights + pPySetTask->offset;
+                    FeResult* results = pEngine->results + pPySetTask->offset;
+                    PyObject* text_list = pPySetTask->text_list;
+                    PyObject* py_source = pPySetTask->py_source;
+                    uint32_t i = 0;
+                    uint32_t length = pPySetTask->length;
+
+                    for ( i = 0; i < length; ++i )
+                    {
+                        path_weights[i] = results[i].path_weight;
+                        PyObject* item = PyList_GET_ITEM(py_source, results[i].index);
+                        Py_INCREF(item);
+                        /* PyList_SET_ITEM() steals a reference to item.     */
+                        PyList_SET_ITEM(text_list, pPySetTask->offset + i, item);
+                    }
+                }
+                break;
             }
 
             QUEUE_TASK_DONE(pEngine->task_queue);
@@ -383,7 +545,6 @@ FuzzyEngine* createFuzzyEngine(uint32_t cpu_count)
     pEngine->threads = NULL;
     pEngine->pPattern_ctxt = NULL;
     pEngine->source = NULL;
-    pEngine->tasks = NULL;
 
     int32_t ret = 0;
     QUEUE_INIT(pEngine->task_queue, MAX_TASK_COUNT(cpu_count) + cpu_count + 1, ret);
@@ -448,14 +609,6 @@ static int32_t pyObject_ToStringAndSize(PyObject* obj, char** buffer, uint32_t* 
 #endif
 }
 
-/* sort in descending order */
-static int compare(const void* a, const void* b)
-{
-    weight_t wa = ((const FeResult*)a)->weight;
-    weight_t wb = ((const FeResult*)b)->weight;
-    return (wa < wb) - (wa > wb);
-}
-
 static void delFuzzyEngine(PyObject* obj)
 {
     closeFuzzyEngine((FuzzyEngine*)PyCapsule_GetPointer(obj, NULL));
@@ -518,6 +671,16 @@ static PyObject* fuzzyEngine_initPattern(PyObject* self, PyObject* args)
     return PyCapsule_New(pCtxt, NULL, delPatternContext);
 }
 
+static void delWeights(PyObject* obj)
+{
+    free(PyCapsule_GetPointer(obj, NULL));
+}
+
+static PyObject* createWeights(void* weights)
+{
+    return PyCapsule_New(weights, NULL, delWeights);
+}
+
 /**
  * fuzzyMatch(engine, source, pattern, is_name_only=False, sort_results=True)
  *
@@ -564,6 +727,11 @@ static PyObject* fuzzyEngine_fuzzyMatch(PyObject* self, PyObject* args, PyObject
     uint32_t max_task_count  = MAX_TASK_COUNT(pEngine->cpu_count);
     uint32_t chunk_size = (source_size + max_task_count - 1) / max_task_count;
     uint32_t task_count = (source_size + chunk_size - 1) / chunk_size;
+    if ( chunk_size == 1 || pEngine->cpu_count == 1 )
+    {
+        chunk_size = source_size;
+        task_count = 1;
+    }
 
     pEngine->source = (FeString*)malloc(source_size * sizeof(FeString));
     if ( !pEngine->source )
@@ -572,32 +740,24 @@ static PyObject* fuzzyEngine_fuzzyMatch(PyObject* self, PyObject* args, PyObject
         return NULL;
     }
 
-    pEngine->tasks = (FeTaskItem*)malloc(task_count * sizeof(FeTaskItem));
-    if ( !pEngine->tasks )
+    TaskItem* tasks = (TaskItem*)malloc(task_count * sizeof(TaskItem));
+    if ( !tasks )
     {
         free(pEngine->source);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
         return NULL;
     }
 
-    pEngine->weights = (weight_t*)malloc(source_size * sizeof(weight_t));
-    if ( !pEngine->weights )
+    pEngine->results = (FeResult*)malloc(source_size * sizeof(FeResult));
+    if ( !pEngine->results )
     {
         free(pEngine->source);
-        free(pEngine->tasks);
+        free(tasks);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
         return NULL;
     }
 
-    FeResult* results = (FeResult*)malloc(source_size * sizeof(FeResult));
-    if ( !results )
-    {
-        free(pEngine->source);
-        free(pEngine->tasks);
-        free(pEngine->weights);
-        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
-        return NULL;
-    }
+    FeResult* results = pEngine->results;
 
     if ( !pEngine->threads )
     {
@@ -609,8 +769,7 @@ static PyObject* fuzzyEngine_fuzzyMatch(PyObject* self, PyObject* args, PyObject
         if ( !pEngine->threads )
         {
             free(pEngine->source);
-            free(pEngine->tasks);
-            free(pEngine->weights);
+            free(tasks);
             free(results);
             fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
             return NULL;
@@ -628,8 +787,7 @@ static PyObject* fuzzyEngine_fuzzyMatch(PyObject* self, PyObject* args, PyObject
 #endif
             {
                 free(pEngine->source);
-                free(pEngine->tasks);
-                free(pEngine->weights);
+                free(tasks);
                 free(results);
                 free(pEngine->threads);
                 fprintf(stderr, "pthread_create error!\n");
@@ -648,9 +806,9 @@ static PyObject* fuzzyEngine_fuzzyMatch(PyObject* self, PyObject* args, PyObject
         uint32_t offset = i * chunk_size;
         uint32_t length = MIN(chunk_size, source_size - offset);
 
-        pEngine->tasks[i].offset = offset;
-        pEngine->tasks[i].length = length;
-        pEngine->tasks[i].function = GETWEIGHT;
+        tasks[i].function = GET_WEIGHT;
+        tasks[i].offset = offset;
+        tasks[i].length = length;
 
         uint32_t j = 0;
         for ( ; j < length; ++j )
@@ -660,15 +818,14 @@ static PyObject* fuzzyEngine_fuzzyMatch(PyObject* self, PyObject* args, PyObject
             if ( pyObject_ToStringAndSize(item, &s->str, &s->len) < 0 )
             {
                 free(pEngine->source);
-                free(pEngine->tasks);
-                free(pEngine->weights);
+                free(tasks);
                 free(results);
                 fprintf(stderr, "pyObject_ToStringAndSize error!\n");
                 return NULL;
             }
         }
 
-        QUEUE_PUT(pEngine->task_queue, pEngine->tasks + i);
+        QUEUE_PUT(pEngine->task_queue, tasks + i);
     }
 
     QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
@@ -676,10 +833,12 @@ static PyObject* fuzzyEngine_fuzzyMatch(PyObject* self, PyObject* args, PyObject
     uint32_t results_count = 0;
     for ( i = 0; i < source_size; ++i )
     {
-        if ( pEngine->weights[i] > MIN_WEIGHT )
+        if ( results[i].weight > MIN_WEIGHT )
         {
-            results[results_count].weight = pEngine->weights[i];
-            results[results_count].index = i;
+            if ( i > results_count )
+            {
+                results[results_count] = results[i];
+            }
             ++results_count;
         }
     }
@@ -687,37 +846,171 @@ static PyObject* fuzzyEngine_fuzzyMatch(PyObject* self, PyObject* args, PyObject
     if ( results_count == 0 )
     {
         free(pEngine->source);
-        free(pEngine->tasks);
-        free(pEngine->weights);
+        free(tasks);
         free(results);
         return Py_BuildValue("([],[])");
     }
 
     if ( sort_results )
     {
-        qsort(results, results_count, sizeof(FeResult), compare);
+        if ( task_count == 1 || results_count < 60000 )
+        {
+            qsort(results, results_count, sizeof(FeResult), compare);
+        }
+        else
+        {
+            chunk_size = (results_count + task_count - 1) / task_count;
+            if ( chunk_size < 2000 )
+            {
+                chunk_size = (results_count + (task_count >> 1) - 1) / (task_count >> 1);
+            }
+            task_count = (results_count + chunk_size - 1) / chunk_size;
+            FeResult* buffer = (FeResult*)malloc(chunk_size * (task_count >> 1) * sizeof(FeResult));
+            if ( !buffer )
+            {
+                free(pEngine->source);
+                free(tasks);
+                free(results);
+                fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+                return NULL;
+            }
+#if defined(_MSC_VER)
+            QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
+#endif
+            for ( i = 0; i < task_count; ++i )
+            {
+                uint32_t offset = i * chunk_size;
+                uint32_t length = MIN(chunk_size, results_count - offset);
+
+                tasks[i].function = Q_SORT;
+                tasks[i].offset = offset;
+                tasks[i].length = length;
+                QUEUE_PUT(pEngine->task_queue, tasks + i);
+            }
+
+            QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+            MergeTaskItem* merge_tasks = NULL;
+            merge_tasks = (MergeTaskItem*)malloc(task_count * sizeof(MergeTaskItem));
+            if ( !merge_tasks )
+            {
+                free(pEngine->source);
+                free(tasks);
+                free(results);
+                free(buffer);
+                fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+                return NULL;
+            }
+
+            while ( chunk_size < results_count )
+            {
+                uint32_t q = results_count / (chunk_size << 1);
+                uint32_t r = results_count % (chunk_size << 1);
+#if defined(_MSC_VER)
+                QUEUE_SET_TASK_COUNT(pEngine->task_queue, q + r/chunk_size);
+#endif
+                for ( i = 0; i < q; ++i )
+                {
+                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].offset_1 = i * (chunk_size << 1);
+                    merge_tasks[i].length_1 = chunk_size;
+                    merge_tasks[i].length_2 = chunk_size;
+                    merge_tasks[i].buffer = buffer + (merge_tasks[i].offset_1 >> 1); /* buffer + i * chunk_size */
+                    QUEUE_PUT(pEngine->task_queue, merge_tasks + i);
+                }
+
+                if ( r > chunk_size )
+                {
+                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].offset_1 = i * (chunk_size << 1);
+                    merge_tasks[i].length_1 = chunk_size;
+                    merge_tasks[i].length_2 = r - chunk_size;
+                    merge_tasks[i].buffer = buffer + (merge_tasks[i].offset_1 >> 1); /* buffer + i * chunk_size */
+                    QUEUE_PUT(pEngine->task_queue, merge_tasks + i);
+                }
+
+                QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+                chunk_size <<= 1;
+            }
+
+            free(buffer);
+            free(merge_tasks);
+        }
     }
 
-    PyObject* weight_list = PyList_New(results_count);
-    PyObject* text_list = PyList_New(results_count);
-    for ( i = 0; i < results_count; ++i )
+    weight_t* weights = (weight_t*)malloc(results_count * sizeof(weight_t));
+    if ( !weights )
     {
-        /* PyList_SET_ITEM() steals a reference to item.     */
-        /* PySequence_ITEM() return value: New reference. */
-        PyList_SET_ITEM(weight_list, i, Py_BuildValue("f", results[i].weight));
-        PyList_SET_ITEM(text_list, i, PySequence_ITEM(py_source, results[i].index));
+        free(pEngine->source);
+        free(tasks);
+        free(results);
+        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+        return NULL;
+    }
+
+    PyObject* text_list = PyList_New(results_count);
+    if ( task_count == 1 || results_count < 40000 )
+    {
+        for ( i = 0; i < results_count; ++i )
+        {
+            weights[i] = results[i].weight;
+            /* PyList_SET_ITEM() steals a reference to item.     */
+            /* PySequence_ITEM() return value: New reference. */
+            PyList_SET_ITEM(text_list, i, PySequence_ITEM(py_source, results[i].index));
+        }
+    }
+    else
+    {
+        chunk_size = (results_count + task_count - 1) / task_count;
+        if ( chunk_size < 8000 )
+        {
+            chunk_size = (results_count + (task_count >> 1) - 1) / (task_count >> 1);
+        }
+        task_count = (results_count + chunk_size - 1) / chunk_size;
+
+        PySetTaskItem* py_set_tasks = NULL;
+        py_set_tasks = (PySetTaskItem*)malloc(task_count * sizeof(PySetTaskItem));
+        if ( !py_set_tasks )
+        {
+            free(pEngine->source);
+            free(tasks);
+            free(results);
+            fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+            return NULL;
+        }
+
+#if defined(_MSC_VER)
+        QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
+#endif
+        for ( i = 0; i < task_count; ++i )
+        {
+            uint32_t offset = i * chunk_size;
+            uint32_t length = MIN(chunk_size, results_count - offset);
+
+            py_set_tasks[i].function = PY_SET_ITEM;
+            py_set_tasks[i].offset = offset;
+            py_set_tasks[i].length = length;
+            py_set_tasks[i].weights = weights;
+            py_set_tasks[i].text_list = text_list;
+            py_set_tasks[i].py_source = py_source;
+            QUEUE_PUT(pEngine->task_queue, py_set_tasks + i);
+        }
+
+        QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+        free(py_set_tasks);
     }
 
     free(pEngine->source);
-    free(pEngine->tasks);
-    free(pEngine->weights);
+    free(tasks);
     free(results);
 
-    return Py_BuildValue("(NN)", weight_list, text_list);
+    return Py_BuildValue("(NN)", createWeights(weights), text_list);
 }
 
 /**
- * fuzzyMatchEx(engine, source, pattern, is_name_only=False, sort_results=True)
+ * fuzzyMatchEx(engine, source, pattern, is_name_only=False, sort_results=True, is_and_mode=False)
  *
  * same as fuzzyMatch(), the only difference is the return value.
  * return a tuple, (a list of corresponding weight, a sorted list of index to items from `source` that match `pattern`).
@@ -729,10 +1022,11 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
     PyObject* py_patternCtxt = NULL;
     uint8_t is_name_only = 0;
     uint8_t sort_results = 1;
-    static char* kwlist[] = {"engine", "source", "pattern", "is_name_only", "sort_results", NULL};
+    uint8_t is_and_mode = 0;
+    static char* kwlist[] = {"engine", "source", "pattern", "is_name_only", "sort_results", "is_and_mode", NULL};
 
-    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "OOO|bb:fuzzyMatch", kwlist, &py_engine,
-                                      &py_source, &py_patternCtxt, &is_name_only, &sort_results) )
+    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "OOO|bbb:fuzzyMatch", kwlist, &py_engine,
+                                      &py_source, &py_patternCtxt, &is_name_only, &sort_results, &is_and_mode) )
         return NULL;
 
     FuzzyEngine* pEngine = (FuzzyEngine*)PyCapsule_GetPointer(py_engine, NULL);
@@ -760,6 +1054,11 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
     uint32_t max_task_count  = MAX_TASK_COUNT(pEngine->cpu_count);
     uint32_t chunk_size = (source_size + max_task_count - 1) / max_task_count;
     uint32_t task_count = (source_size + chunk_size - 1) / chunk_size;
+    if ( chunk_size == 1 || pEngine->cpu_count == 1 )
+    {
+        chunk_size = source_size;
+        task_count = 1;
+    }
 
     pEngine->source = (FeString*)malloc(source_size * sizeof(FeString));
     if ( !pEngine->source )
@@ -768,32 +1067,24 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
         return NULL;
     }
 
-    pEngine->tasks = (FeTaskItem*)malloc(task_count * sizeof(FeTaskItem));
-    if ( !pEngine->tasks )
+    TaskItem* tasks = (TaskItem*)malloc(task_count * sizeof(TaskItem));
+    if ( !tasks )
     {
         free(pEngine->source);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
         return NULL;
     }
 
-    pEngine->weights = (weight_t*)malloc(source_size * sizeof(weight_t));
-    if ( !pEngine->weights )
+    pEngine->results = (FeResult*)malloc(source_size * sizeof(FeResult));
+    if ( !pEngine->results )
     {
         free(pEngine->source);
-        free(pEngine->tasks);
+        free(tasks);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
         return NULL;
     }
 
-    FeResult* results = (FeResult*)malloc(source_size * sizeof(FeResult));
-    if ( !results )
-    {
-        free(pEngine->source);
-        free(pEngine->tasks);
-        free(pEngine->weights);
-        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
-        return NULL;
-    }
+    FeResult* results = pEngine->results;
 
     if ( !pEngine->threads )
     {
@@ -805,8 +1096,7 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
         if ( !pEngine->threads )
         {
             free(pEngine->source);
-            free(pEngine->tasks);
-            free(pEngine->weights);
+            free(tasks);
             free(results);
             fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
             return NULL;
@@ -824,8 +1114,7 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
 #endif
             {
                 free(pEngine->source);
-                free(pEngine->tasks);
-                free(pEngine->weights);
+                free(tasks);
                 free(results);
                 free(pEngine->threads);
                 fprintf(stderr, "pthread_create error!\n");
@@ -844,9 +1133,9 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
         uint32_t offset = i * chunk_size;
         uint32_t length = MIN(chunk_size, source_size - offset);
 
-        pEngine->tasks[i].offset = offset;
-        pEngine->tasks[i].length = length;
-        pEngine->tasks[i].function = GETWEIGHT;
+        tasks[i].function = GET_WEIGHT;
+        tasks[i].offset = offset;
+        tasks[i].length = length;
 
         uint32_t j = 0;
         for ( ; j < length; ++j )
@@ -856,15 +1145,14 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
             if ( pyObject_ToStringAndSize(item, &s->str, &s->len) < 0 )
             {
                 free(pEngine->source);
-                free(pEngine->tasks);
-                free(pEngine->weights);
+                free(tasks);
                 free(results);
                 fprintf(stderr, "pyObject_ToStringAndSize error!\n");
                 return NULL;
             }
         }
 
-        QUEUE_PUT(pEngine->task_queue, pEngine->tasks + i);
+        QUEUE_PUT(pEngine->task_queue, tasks + i);
     }
 
     QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
@@ -872,10 +1160,12 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
     uint32_t results_count = 0;
     for ( i = 0; i < source_size; ++i )
     {
-        if ( pEngine->weights[i] > MIN_WEIGHT )
+        if ( results[i].weight > MIN_WEIGHT )
         {
-            results[results_count].weight = pEngine->weights[i];
-            results[results_count].index = i;
+            if ( i > results_count )
+            {
+                results[results_count] = results[i];
+            }
             ++results_count;
         }
     }
@@ -883,32 +1173,143 @@ static PyObject* fuzzyEngine_fuzzyMatchEx(PyObject* self, PyObject* args, PyObje
     if ( results_count == 0 )
     {
         free(pEngine->source);
-        free(pEngine->tasks);
-        free(pEngine->weights);
+        free(tasks);
         free(results);
         return Py_BuildValue("([],[])");
     }
 
     if ( sort_results )
     {
-        qsort(results, results_count, sizeof(FeResult), compare);
+        if ( task_count == 1 || results_count < 60000 )
+        {
+            qsort(results, results_count, sizeof(FeResult), compare);
+        }
+        else
+        {
+            chunk_size = (results_count + task_count - 1) / task_count;
+            if ( chunk_size < 2000 )
+            {
+                chunk_size = (results_count + (task_count >> 1) - 1) / (task_count >> 1);
+            }
+            task_count = (results_count + chunk_size - 1) / chunk_size;
+            FeResult* buffer = (FeResult*)malloc(chunk_size * (task_count >> 1) * sizeof(FeResult));
+            if ( !buffer )
+            {
+                free(pEngine->source);
+                free(tasks);
+                free(results);
+                fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+                return NULL;
+            }
+#if defined(_MSC_VER)
+            QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
+#endif
+            for ( i = 0; i < task_count; ++i )
+            {
+                uint32_t offset = i * chunk_size;
+                uint32_t length = MIN(chunk_size, results_count - offset);
+
+                tasks[i].function = Q_SORT;
+                tasks[i].offset = offset;
+                tasks[i].length = length;
+                QUEUE_PUT(pEngine->task_queue, tasks + i);
+            }
+
+            QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+            MergeTaskItem* merge_tasks = NULL;
+            merge_tasks = (MergeTaskItem*)malloc(task_count * sizeof(MergeTaskItem));
+            if ( !merge_tasks )
+            {
+                free(pEngine->source);
+                free(tasks);
+                free(results);
+                free(buffer);
+                fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+                return NULL;
+            }
+
+            while ( chunk_size < results_count )
+            {
+                uint32_t q = results_count / (chunk_size << 1);
+                uint32_t r = results_count % (chunk_size << 1);
+#if defined(_MSC_VER)
+                QUEUE_SET_TASK_COUNT(pEngine->task_queue, q + r/chunk_size);
+#endif
+                for ( i = 0; i < q; ++i )
+                {
+                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].offset_1 = i * (chunk_size << 1);
+                    merge_tasks[i].length_1 = chunk_size;
+                    merge_tasks[i].length_2 = chunk_size;
+                    merge_tasks[i].buffer = buffer + (merge_tasks[i].offset_1 >> 1); /* buffer + i * chunk_size */
+                    QUEUE_PUT(pEngine->task_queue, merge_tasks + i);
+                }
+
+                if ( r > chunk_size )
+                {
+                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].offset_1 = i * (chunk_size << 1);
+                    merge_tasks[i].length_1 = chunk_size;
+                    merge_tasks[i].length_2 = r - chunk_size;
+                    merge_tasks[i].buffer = buffer + (merge_tasks[i].offset_1 >> 1); /* buffer + i * chunk_size */
+                    QUEUE_PUT(pEngine->task_queue, merge_tasks + i);
+                }
+
+                QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+                chunk_size <<= 1;
+            }
+
+            free(buffer);
+            free(merge_tasks);
+        }
     }
 
-    PyObject* weight_list = PyList_New(results_count);
-    PyObject* index_list = PyList_New(results_count);
-    for ( i = 0; i < results_count; ++i )
+    if ( is_and_mode )
     {
-        /* PyList_SET_ITEM() steals a reference to item.     */
-        PyList_SET_ITEM(weight_list, i, Py_BuildValue("f", results[i].weight));
-        PyList_SET_ITEM(index_list, i, Py_BuildValue("I", results[i].index));
+        PyObject* weight_list = PyList_New(results_count);
+        PyObject* index_list = PyList_New(results_count);
+        for ( i = 0; i < results_count; ++i )
+        {
+            /* PyList_SET_ITEM() steals a reference to item.     */
+            PyList_SET_ITEM(weight_list, i, Py_BuildValue("f", results[i].weight));
+            PyList_SET_ITEM(index_list, i, Py_BuildValue("I", results[i].index));
+        }
+
+        free(pEngine->source);
+        free(tasks);
+        free(results);
+
+        return Py_BuildValue("(NN)", weight_list, index_list);
     }
+    else
+    {
+        weight_t* weights = (weight_t*)malloc(results_count * sizeof(weight_t));
+        if ( !weights )
+        {
+            free(pEngine->source);
+            free(tasks);
+            free(results);
+            fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+            return NULL;
+        }
 
-    free(pEngine->source);
-    free(pEngine->tasks);
-    free(pEngine->weights);
-    free(results);
+        PyObject* index_list = PyList_New(results_count);
+        for ( i = 0; i < results_count; ++i )
+        {
+            weights[i] = results[i].weight;
+            /* PyList_SET_ITEM() steals a reference to item.     */
+            /* PySequence_ITEM() return value: New reference. */
+            PyList_SET_ITEM(index_list, i, Py_BuildValue("I", results[i].index));
+        }
 
-    return Py_BuildValue("(NN)", weight_list, index_list);
+        free(pEngine->source);
+        free(tasks);
+        free(results);
+
+        return Py_BuildValue("(NN)", createWeights(weights), index_list);
+    }
 }
 
 /**
@@ -924,66 +1325,69 @@ static PyObject* fuzzyEngine_merge(PyObject* self, PyObject* args)
     if ( !PyArg_ParseTuple(args, "(OO)(OO):merge", &weight_list_a, &text_list_a,  &weight_list_b, &text_list_b) )
         return NULL;
 
-    uint32_t size_a = (uint32_t)PyList_Size(weight_list_a);
+    uint32_t size_a = (uint32_t)PyList_Size(text_list_a);
     if ( size_a == 0 )
     {
         return Py_BuildValue("(OO)", weight_list_b, text_list_b);
     }
-    uint32_t size_b = (uint32_t)PyList_Size(weight_list_b);
+    uint32_t size_b = (uint32_t)PyList_Size(text_list_b);
     if ( size_b == 0 )
     {
         return Py_BuildValue("(OO)", weight_list_a, text_list_a);
     }
 
-    PyObject* weight_list = PyList_New(size_a + size_b);
+    weight_t* weights = (weight_t*)malloc((size_a + size_b) * sizeof(weight_t));
+    if ( !weights )
+    {
+        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+        return NULL;
+    }
+
     PyObject* text_list = PyList_New(size_a + size_b);
 
     uint32_t i = 0;
     uint32_t j = 0;
-    PyObject* item_a = PyList_GET_ITEM(weight_list_a, i);
-    double w_a = PyFloat_AsDouble(item_a);
-    PyObject* item_b = PyList_GET_ITEM(weight_list_b, j);
-    double w_b = PyFloat_AsDouble(item_b);
+
+    weight_t* weights_a = (weight_t*)PyCapsule_GetPointer(weight_list_a, NULL);
+    weight_t w_a = weights_a[i];
+    weight_t* weights_b = (weight_t*)PyCapsule_GetPointer(weight_list_b, NULL);
+    weight_t w_b = weights_b[j];
     while ( i < size_a && j < size_b )
     {
         if ( w_a > w_b )
         {
-            Py_INCREF(item_a);
-            PyList_SET_ITEM(weight_list, i + j, item_a);
+            weights[i + j] = weights_a[i];
             PyList_SET_ITEM(text_list, i + j, PySequence_ITEM(text_list_a, i));
             ++i;
             if ( i < size_a )
             {
-                item_a = PyList_GET_ITEM(weight_list_a, i);
-                w_a = PyFloat_AsDouble(item_a);
+                w_a = weights_a[i];
             }
         }
         else
         {
-            Py_INCREF(item_b);
-            PyList_SET_ITEM(weight_list, i + j, item_b);
+            weights[i + j] = weights_b[j];
             PyList_SET_ITEM(text_list, i + j, PySequence_ITEM(text_list_b, j));
             ++j;
             if ( j < size_b )
             {
-                item_b = PyList_GET_ITEM(weight_list_b, j);
-                w_b = PyFloat_AsDouble(item_b);
+                w_b = weights_b[j];
             }
         }
     }
     while ( i < size_a )
     {
-        PyList_SET_ITEM(weight_list, i + j, PySequence_ITEM(weight_list_a, i));
+        weights[i + j] = weights_a[i];
         PyList_SET_ITEM(text_list, i + j, PySequence_ITEM(text_list_a, i));
         ++i;
     }
     while ( j < size_b )
     {
-        PyList_SET_ITEM(weight_list, i + j, PySequence_ITEM(weight_list_b, j));
+        weights[i + j] = weights_b[j];
         PyList_SET_ITEM(text_list, i + j, PySequence_ITEM(text_list_b, j));
         ++j;
     }
-    return Py_BuildValue("(NN)", weight_list, text_list);
+    return Py_BuildValue("(NN)", createWeights(weights), text_list);
 }
 /**
  * getHighlights(engine, source, pattern, is_name_only=False)
@@ -1041,8 +1445,8 @@ static PyObject* fuzzyEngine_getHighlights(PyObject* self, PyObject* args, PyObj
         return NULL;
     }
 
-    pEngine->tasks = (FeTaskItem*)malloc(task_count * sizeof(FeTaskItem));
-    if ( !pEngine->tasks )
+    TaskItem* tasks = (TaskItem*)malloc(task_count * sizeof(TaskItem));
+    if ( !tasks )
     {
         free(pEngine->source);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
@@ -1053,7 +1457,7 @@ static PyObject* fuzzyEngine_getHighlights(PyObject* self, PyObject* args, PyObj
     if ( !pEngine->highlights )
     {
         free(pEngine->source);
-        free(pEngine->tasks);
+        free(tasks);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
         return NULL;
     }
@@ -1068,9 +1472,9 @@ static PyObject* fuzzyEngine_getHighlights(PyObject* self, PyObject* args, PyObj
         uint32_t offset = i * chunk_size;
         uint32_t length = MIN(chunk_size, source_size - offset);
 
-        pEngine->tasks[i].offset = offset;
-        pEngine->tasks[i].length = length;
-        pEngine->tasks[i].function = GETHIGHLIGHTS;
+        tasks[i].function = GET_HIGHLIGHTS;
+        tasks[i].offset = offset;
+        tasks[i].length = length;
 
         uint32_t j = 0;
         for ( ; j < length; ++j )
@@ -1080,14 +1484,14 @@ static PyObject* fuzzyEngine_getHighlights(PyObject* self, PyObject* args, PyObj
             if ( pyObject_ToStringAndSize(item, &s->str, &s->len) < 0 )
             {
                 free(pEngine->source);
-                free(pEngine->tasks);
+                free(tasks);
                 free(pEngine->highlights);
                 fprintf(stderr, "pyObject_ToStringAndSize error!\n");
                 return NULL;
             }
         }
 
-        QUEUE_PUT(pEngine->task_queue, pEngine->tasks + i);
+        QUEUE_PUT(pEngine->task_queue, tasks + i);
     }
 
     QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
@@ -1099,7 +1503,7 @@ static PyObject* fuzzyEngine_getHighlights(PyObject* self, PyObject* args, PyObj
         if ( !pGroup )
         {
             free(pEngine->source);
-            free(pEngine->tasks);
+            free(tasks);
             free(pEngine->highlights);
             Py_XDECREF(res);
             return NULL;
@@ -1115,16 +1519,9 @@ static PyObject* fuzzyEngine_getHighlights(PyObject* self, PyObject* args, PyObj
         free(pGroup);
     }
 
+    free(pEngine->highlights);
+
     return res;
-}
-
-/* sort in descending order */
-static int compare2(const void* a, const void* b)
-{
-    uint32_t wa = ((const FeResult*)a)->path_weight;
-    uint32_t wb = ((const FeResult*)b)->path_weight;
-
-    return (int)wb - (int)wa;
 }
 
 /**
@@ -1174,6 +1571,11 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
     uint32_t max_task_count  = MAX_TASK_COUNT(pEngine->cpu_count);
     uint32_t chunk_size = (source_size + max_task_count - 1) / max_task_count;
     uint32_t task_count = (source_size + chunk_size - 1) / chunk_size;
+    if ( chunk_size == 1 || pEngine->cpu_count == 1 )
+    {
+        chunk_size = source_size;
+        task_count = 1;
+    }
 
     pEngine->source = (FeString*)malloc(source_size * sizeof(FeString));
     if ( !pEngine->source )
@@ -1182,32 +1584,24 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
         return NULL;
     }
 
-    pEngine->tasks = (FeTaskItem*)malloc(task_count * sizeof(FeTaskItem));
-    if ( !pEngine->tasks )
+    TaskItem* tasks = (TaskItem*)malloc(task_count * sizeof(TaskItem));
+    if ( !tasks )
     {
         free(pEngine->source);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
         return NULL;
     }
 
-    pEngine->path_weights = (uint32_t*)malloc(source_size * sizeof(uint32_t));
-    if ( !pEngine->path_weights )
+    pEngine->results = (FeResult*)malloc(source_size * sizeof(FeResult));
+    if ( !pEngine->results )
     {
         free(pEngine->source);
-        free(pEngine->tasks);
+        free(tasks);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
         return NULL;
     }
 
-    FeResult* results = (FeResult*)malloc(source_size * sizeof(FeResult));
-    if ( !results )
-    {
-        free(pEngine->source);
-        free(pEngine->tasks);
-        free(pEngine->path_weights);
-        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
-        return NULL;
-    }
+    FeResult* results = pEngine->results;
 
     if ( !pEngine->threads )
     {
@@ -1219,8 +1613,7 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
         if ( !pEngine->threads )
         {
             free(pEngine->source);
-            free(pEngine->tasks);
-            free(pEngine->path_weights);
+            free(tasks);
             free(results);
             fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
             return NULL;
@@ -1238,8 +1631,7 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
 #endif
             {
                 free(pEngine->source);
-                free(pEngine->tasks);
-                free(pEngine->path_weights);
+                free(tasks);
                 free(results);
                 free(pEngine->threads);
                 fprintf(stderr, "pthread_create error!\n");
@@ -1258,9 +1650,9 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
         uint32_t offset = i * chunk_size;
         uint32_t length = MIN(chunk_size, source_size - offset);
 
-        pEngine->tasks[i].offset = offset;
-        pEngine->tasks[i].length = length;
-        pEngine->tasks[i].function = GETPATHWEIGHT;
+        tasks[i].function = GET_PATH_WEIGHT;
+        tasks[i].offset = offset;
+        tasks[i].length = length;
 
         uint32_t j = 0;
         for ( ; j < length; ++j )
@@ -1270,46 +1662,174 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
             if ( pyObject_ToStringAndSize(item, &s->str, &s->len) < 0 )
             {
                 free(pEngine->source);
-                free(pEngine->tasks);
-                free(pEngine->path_weights);
+                free(tasks);
                 free(results);
                 fprintf(stderr, "pyObject_ToStringAndSize error!\n");
                 return NULL;
             }
         }
 
-        QUEUE_PUT(pEngine->task_queue, pEngine->tasks + i);
+        QUEUE_PUT(pEngine->task_queue, tasks + i);
     }
 
     QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
 
-    for ( i = 0; i < source_size; ++i )
-    {
-        results[i].path_weight = pEngine->path_weights[i];
-        results[i].index = i;
-    }
-
     if ( sort_results )
     {
-        qsort(results, source_size, sizeof(FeResult), compare2);
+        if ( task_count == 1 || source_size < 60000 )
+        {
+            qsort(results, source_size, sizeof(FeResult), compare2);
+        }
+        else
+        {
+            chunk_size = (source_size + task_count - 1) / task_count;
+            if ( chunk_size < 2000 )
+            {
+                chunk_size = (source_size + (task_count >> 1) - 1) / (task_count >> 1);
+            }
+            task_count = (source_size + chunk_size - 1) / chunk_size;
+            FeResult* buffer = (FeResult*)malloc(chunk_size * (task_count >> 1) * sizeof(FeResult));
+            if ( !buffer )
+            {
+                free(pEngine->source);
+                free(tasks);
+                free(results);
+                fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+                return NULL;
+            }
+#if defined(_MSC_VER)
+            QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
+#endif
+            for ( i = 0; i < task_count; ++i )
+            {
+                uint32_t offset = i * chunk_size;
+                uint32_t length = MIN(chunk_size, source_size - offset);
+
+                tasks[i].function = Q_SORT;
+                tasks[i].offset = offset;
+                tasks[i].length = length;
+                QUEUE_PUT(pEngine->task_queue, tasks + i);
+            }
+
+            QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+            MergeTaskItem* merge_tasks = NULL;
+            merge_tasks = (MergeTaskItem*)malloc(task_count * sizeof(MergeTaskItem));
+            if ( !merge_tasks )
+            {
+                free(pEngine->source);
+                free(tasks);
+                free(results);
+                free(buffer);
+                fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+                return NULL;
+            }
+
+            while ( chunk_size < source_size )
+            {
+                uint32_t q = source_size / (chunk_size << 1);
+                uint32_t r = source_size % (chunk_size << 1);
+#if defined(_MSC_VER)
+                QUEUE_SET_TASK_COUNT(pEngine->task_queue, q + r/chunk_size);
+#endif
+                for ( i = 0; i < q; ++i )
+                {
+                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].offset_1 = i * (chunk_size << 1);
+                    merge_tasks[i].length_1 = chunk_size;
+                    merge_tasks[i].length_2 = chunk_size;
+                    merge_tasks[i].buffer = buffer + (merge_tasks[i].offset_1 >> 1); /* buffer + i * chunk_size */
+                    QUEUE_PUT(pEngine->task_queue, merge_tasks + i);
+                }
+
+                if ( r > chunk_size )
+                {
+                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].offset_1 = i * (chunk_size << 1);
+                    merge_tasks[i].length_1 = chunk_size;
+                    merge_tasks[i].length_2 = r - chunk_size;
+                    merge_tasks[i].buffer = buffer + (merge_tasks[i].offset_1 >> 1); /* buffer + i * chunk_size */
+                    QUEUE_PUT(pEngine->task_queue, merge_tasks + i);
+                }
+
+                QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+                chunk_size <<= 1;
+            }
+
+            free(buffer);
+            free(merge_tasks);
+        }
     }
 
-    PyObject* weight_list = PyList_New(source_size);
-    PyObject* text_list = PyList_New(source_size);
-    for ( i = 0; i < source_size; ++i )
+    uint32_t* path_weights = (uint32_t*)malloc(source_size * sizeof(uint32_t));
+    if ( !path_weights )
     {
-        /* PyList_SET_ITEM() steals a reference to item.     */
-        /* PySequence_ITEM() return value: New reference. */
-        PyList_SET_ITEM(weight_list, i, Py_BuildValue("I", results[i].path_weight));
-        PyList_SET_ITEM(text_list, i, PySequence_ITEM(py_source, results[i].index));
+        free(pEngine->source);
+        free(tasks);
+        free(results);
+        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+        return NULL;
+    }
+
+    PyObject* text_list = PyList_New(source_size);
+    if ( task_count == 1 || source_size < 40000 )
+    {
+        for ( i = 0; i < source_size; ++i )
+        {
+            path_weights[i] = results[i].path_weight;
+            /* PyList_SET_ITEM() steals a reference to item.     */
+            /* PySequence_ITEM() return value: New reference. */
+            PyList_SET_ITEM(text_list, i, PySequence_ITEM(py_source, results[i].index));
+        }
+    }
+    else
+    {
+        chunk_size = (source_size + task_count - 1) / task_count;
+        if ( chunk_size < 8000 )
+        {
+            chunk_size = (source_size + (task_count >> 1) - 1) / (task_count >> 1);
+        }
+        task_count = (source_size + chunk_size - 1) / chunk_size;
+
+        PySetTaskItem* py_set_tasks = NULL;
+        py_set_tasks = (PySetTaskItem*)malloc(task_count * sizeof(PySetTaskItem));
+        if ( !py_set_tasks )
+        {
+            free(pEngine->source);
+            free(tasks);
+            free(results);
+            fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+            return NULL;
+        }
+
+#if defined(_MSC_VER)
+        QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
+#endif
+        for ( i = 0; i < task_count; ++i )
+        {
+            uint32_t offset = i * chunk_size;
+            uint32_t length = MIN(chunk_size, source_size - offset);
+
+            py_set_tasks[i].function = PY_SET_ITEM_2;
+            py_set_tasks[i].offset = offset;
+            py_set_tasks[i].length = length;
+            py_set_tasks[i].path_weights = path_weights;
+            py_set_tasks[i].text_list = text_list;
+            py_set_tasks[i].py_source = py_source;
+            QUEUE_PUT(pEngine->task_queue, py_set_tasks + i);
+        }
+
+        QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+        free(py_set_tasks);
     }
 
     free(pEngine->source);
-    free(pEngine->tasks);
-    free(pEngine->path_weights);
+    free(tasks);
     free(results);
 
-    return Py_BuildValue("(NN)", weight_list, text_list);
+    return Py_BuildValue("(NN)", createWeights(path_weights), text_list);
 }
 
 enum
@@ -1623,6 +2143,11 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
     uint32_t max_task_count  = MAX_TASK_COUNT(pEngine->cpu_count);
     uint32_t chunk_size = (source_size + max_task_count - 1) / max_task_count;
     uint32_t task_count = (source_size + chunk_size - 1) / chunk_size;
+    if ( chunk_size == 1 || pEngine->cpu_count == 1 )
+    {
+        chunk_size = source_size;
+        task_count = 1;
+    }
 
     pEngine->source = (FeString*)malloc(source_size * sizeof(FeString));
     if ( !pEngine->source )
@@ -1631,32 +2156,24 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
         return NULL;
     }
 
-    pEngine->tasks = (FeTaskItem*)malloc(task_count * sizeof(FeTaskItem));
-    if ( !pEngine->tasks )
+    TaskItem* tasks = (TaskItem*)malloc(task_count * sizeof(TaskItem));
+    if ( !tasks )
     {
         free(pEngine->source);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
         return NULL;
     }
 
-    pEngine->weights = (weight_t*)malloc(source_size * sizeof(weight_t));
-    if ( !pEngine->weights )
+    pEngine->results = (FeResult*)malloc(source_size * sizeof(FeResult));
+    if ( !pEngine->results )
     {
         free(pEngine->source);
-        free(pEngine->tasks);
+        free(tasks);
         fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
         return NULL;
     }
 
-    FeResult* results = (FeResult*)malloc(source_size * sizeof(FeResult));
-    if ( !results )
-    {
-        free(pEngine->source);
-        free(pEngine->tasks);
-        free(pEngine->weights);
-        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
-        return NULL;
-    }
+    FeResult* results = pEngine->results;
 
     if ( !pEngine->threads )
     {
@@ -1668,8 +2185,7 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
         if ( !pEngine->threads )
         {
             free(pEngine->source);
-            free(pEngine->tasks);
-            free(pEngine->weights);
+            free(tasks);
             free(results);
             fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
             return NULL;
@@ -1687,8 +2203,7 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
 #endif
             {
                 free(pEngine->source);
-                free(pEngine->tasks);
-                free(pEngine->weights);
+                free(tasks);
                 free(results);
                 free(pEngine->threads);
                 fprintf(stderr, "pthread_create error!\n");
@@ -1707,9 +2222,9 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
         uint32_t offset = i * chunk_size;
         uint32_t length = MIN(chunk_size, source_size - offset);
 
-        pEngine->tasks[i].offset = offset;
-        pEngine->tasks[i].length = length;
-        pEngine->tasks[i].function = GETWEIGHT;
+        tasks[i].function = GET_WEIGHT;
+        tasks[i].offset = offset;
+        tasks[i].length = length;
 
         uint32_t j = 0;
         for ( ; j < length; ++j )
@@ -1719,12 +2234,12 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
             if ( pyObject_ToStringAndSize(item, &s->str, &s->len) < 0 )
             {
                 free(pEngine->source);
-                free(pEngine->tasks);
-                free(pEngine->weights);
+                free(tasks);
                 free(results);
                 fprintf(stderr, "pyObject_ToStringAndSize error!\n");
                 return NULL;
             }
+
             switch ( category )
             {
             case Category_Rg:
@@ -1733,8 +2248,7 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
                 if ( !param )
                 {
                     free(pEngine->source);
-                    free(pEngine->tasks);
-                    free(pEngine->weights);
+                    free(tasks);
                     free(results);
                     fprintf(stderr, "PyCapsule_GetPointer error!\n");
                     return NULL;
@@ -1754,8 +2268,7 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
                 if ( !param )
                 {
                     free(pEngine->source);
-                    free(pEngine->tasks);
-                    free(pEngine->weights);
+                    free(tasks);
                     free(results);
                     fprintf(stderr, "PyCapsule_GetPointer error!\n");
                     return NULL;
@@ -1769,7 +2282,7 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
             }
         }
 
-        QUEUE_PUT(pEngine->task_queue, pEngine->tasks + i);
+        QUEUE_PUT(pEngine->task_queue, tasks + i);
     }
 
     QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
@@ -1777,10 +2290,12 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
     uint32_t results_count = 0;
     for ( i = 0; i < source_size; ++i )
     {
-        if ( pEngine->weights[i] > MIN_WEIGHT )
+        if ( results[i].weight > MIN_WEIGHT )
         {
-            results[results_count].weight = pEngine->weights[i];
-            results[results_count].index = i;
+            if ( i > results_count )
+            {
+                results[results_count] = results[i];
+            }
             ++results_count;
         }
     }
@@ -1788,33 +2303,167 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
     if ( results_count == 0 )
     {
         free(pEngine->source);
-        free(pEngine->tasks);
-        free(pEngine->weights);
+        free(tasks);
         free(results);
         return Py_BuildValue("([],[])");
     }
 
     if ( sort_results )
     {
-        qsort(results, results_count, sizeof(FeResult), compare);
+        if ( task_count == 1 || results_count < 60000 )
+        {
+            qsort(results, results_count, sizeof(FeResult), compare);
+        }
+        else
+        {
+            chunk_size = (results_count + task_count - 1) / task_count;
+            if ( chunk_size < 2000 )
+            {
+                chunk_size = (results_count + (task_count >> 1) - 1) / (task_count >> 1);
+            }
+            task_count = (results_count + chunk_size - 1) / chunk_size;
+            FeResult* buffer = (FeResult*)malloc(chunk_size * (task_count >> 1) * sizeof(FeResult));
+            if ( !buffer )
+            {
+                free(pEngine->source);
+                free(tasks);
+                free(results);
+                fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+                return NULL;
+            }
+#if defined(_MSC_VER)
+            QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
+#endif
+            for ( i = 0; i < task_count; ++i )
+            {
+                uint32_t offset = i * chunk_size;
+                uint32_t length = MIN(chunk_size, results_count - offset);
+
+                tasks[i].function = Q_SORT;
+                tasks[i].offset = offset;
+                tasks[i].length = length;
+                QUEUE_PUT(pEngine->task_queue, tasks + i);
+            }
+
+            QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+            MergeTaskItem* merge_tasks = NULL;
+            merge_tasks = (MergeTaskItem*)malloc(task_count * sizeof(MergeTaskItem));
+            if ( !merge_tasks )
+            {
+                free(pEngine->source);
+                free(tasks);
+                free(results);
+                free(buffer);
+                fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+                return NULL;
+            }
+
+            while ( chunk_size < results_count )
+            {
+                uint32_t q = results_count / (chunk_size << 1);
+                uint32_t r = results_count % (chunk_size << 1);
+#if defined(_MSC_VER)
+                QUEUE_SET_TASK_COUNT(pEngine->task_queue, q + r/chunk_size);
+#endif
+                for ( i = 0; i < q; ++i )
+                {
+                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].offset_1 = i * (chunk_size << 1);
+                    merge_tasks[i].length_1 = chunk_size;
+                    merge_tasks[i].length_2 = chunk_size;
+                    merge_tasks[i].buffer = buffer + (merge_tasks[i].offset_1 >> 1); /* buffer + i * chunk_size */
+                    QUEUE_PUT(pEngine->task_queue, merge_tasks + i);
+                }
+
+                if ( r > chunk_size )
+                {
+                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].offset_1 = i * (chunk_size << 1);
+                    merge_tasks[i].length_1 = chunk_size;
+                    merge_tasks[i].length_2 = r - chunk_size;
+                    merge_tasks[i].buffer = buffer + (merge_tasks[i].offset_1 >> 1); /* buffer + i * chunk_size */
+                    QUEUE_PUT(pEngine->task_queue, merge_tasks + i);
+                }
+
+                QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+                chunk_size <<= 1;
+            }
+
+            free(buffer);
+            free(merge_tasks);
+        }
     }
 
-    PyObject* weight_list = PyList_New(results_count);
-    PyObject* text_list = PyList_New(results_count);
-    for ( i = 0; i < results_count; ++i )
+    weight_t* weights = (weight_t*)malloc(results_count * sizeof(weight_t));
+    if ( !weights )
     {
-        /* PyList_SET_ITEM() steals a reference to item.     */
-        /* PySequence_ITEM() return value: New reference. */
-        PyList_SET_ITEM(weight_list, i, Py_BuildValue("f", results[i].weight));
-        PyList_SET_ITEM(text_list, i, PySequence_ITEM(py_source, results[i].index));
+        free(pEngine->source);
+        free(tasks);
+        free(results);
+        fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+        return NULL;
+    }
+
+    PyObject* text_list = PyList_New(results_count);
+    if ( task_count == 1 || results_count < 40000 )
+    {
+        for ( i = 0; i < results_count; ++i )
+        {
+            weights[i] = results[i].weight;
+            /* PyList_SET_ITEM() steals a reference to item.     */
+            /* PySequence_ITEM() return value: New reference. */
+            PyList_SET_ITEM(text_list, i, PySequence_ITEM(py_source, results[i].index));
+        }
+    }
+    else
+    {
+        chunk_size = (results_count + task_count - 1) / task_count;
+        if ( chunk_size < 8000 )
+        {
+            chunk_size = (results_count + (task_count >> 1) - 1) / (task_count >> 1);
+        }
+        task_count = (results_count + chunk_size - 1) / chunk_size;
+
+        PySetTaskItem* py_set_tasks = NULL;
+        py_set_tasks = (PySetTaskItem*)malloc(task_count * sizeof(PySetTaskItem));
+        if ( !py_set_tasks )
+        {
+            free(pEngine->source);
+            free(tasks);
+            free(results);
+            fprintf(stderr, "Out of memory at %s:%d\n", __FILE__, __LINE__);
+            return NULL;
+        }
+
+#if defined(_MSC_VER)
+        QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
+#endif
+        for ( i = 0; i < task_count; ++i )
+        {
+            uint32_t offset = i * chunk_size;
+            uint32_t length = MIN(chunk_size, results_count - offset);
+
+            py_set_tasks[i].function = PY_SET_ITEM;
+            py_set_tasks[i].offset = offset;
+            py_set_tasks[i].length = length;
+            py_set_tasks[i].weights = weights;
+            py_set_tasks[i].text_list = text_list;
+            py_set_tasks[i].py_source = py_source;
+            QUEUE_PUT(pEngine->task_queue, py_set_tasks + i);
+        }
+
+        QUEUE_JOIN(pEngine->task_queue);    /* blocks until all tasks have finished */
+
+        free(py_set_tasks);
     }
 
     free(pEngine->source);
-    free(pEngine->tasks);
-    free(pEngine->weights);
+    free(tasks);
     free(results);
 
-    return Py_BuildValue("(NN)", weight_list, text_list);
+    return Py_BuildValue("(NN)", createWeights(weights), text_list);
 }
 
 static PyMethodDef fuzzyEngine_Methods[] =

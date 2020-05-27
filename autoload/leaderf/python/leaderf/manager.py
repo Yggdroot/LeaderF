@@ -1072,15 +1072,15 @@ class Manager(object):
                 pattern = fuzzyEngine.initPattern(p)
                 if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=False, sort_results=False)
+                                            is_name_only=False, sort_results=False, is_and_mode=True)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History", "Tag", "Rg", "Filetype",
                         "Command", "Window"]:
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=True, sort_results=False)
+                                            is_name_only=True, sort_results=False, is_and_mode=True)
                 else:
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=not self._cli.isFullPath, sort_results=False)
+                                            is_name_only=not self._cli.isFullPath, sort_results=False, is_and_mode=True)
 
                 getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                         pattern=pattern, is_name_only=not self._cli.isFullPath)
