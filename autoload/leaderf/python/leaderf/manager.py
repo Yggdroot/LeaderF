@@ -1586,7 +1586,7 @@ class Manager(object):
             return iter([])
 
     def _regexSearch(self, content, is_continue, step):
-        if not self._cli.isPrefix:
+        if not is_continue and not self._cli.isPrefix:
             self._index = 0
         self._result_content = self._filter(8000, self._regexFilter, content, is_continue)
         self._getInstance().setBuffer(self._result_content[:self._initial_count])
