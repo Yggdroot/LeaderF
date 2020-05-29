@@ -148,7 +148,7 @@ class MruExplManager(Manager):
             if kwargs.get("mode", '') == 't':
                 lfCmd("tab drop %s" % escSpecial(file))
             else:
-                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 0)") == '1':
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
                     lfCmd("hide drop %s" % escSpecial(file))
                 else:
                     lfCmd("hide edit %s" % escSpecial(file))

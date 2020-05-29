@@ -444,7 +444,7 @@ class RgExplManager(Manager):
                 if kwargs.get("mode", '') == 't':
                     lfCmd("tab drop %s | %s" % (escSpecial(file), line_num))
                 else:
-                    if lfEval("get(g:, 'Lf_JumpToExistingWindow', 0)") == '1':
+                    if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
                         lfCmd("hide drop %s | %s" % (escSpecial(file), line_num))
                     else:
                         lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))

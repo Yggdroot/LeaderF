@@ -135,7 +135,7 @@ class BufExplManager(Manager):
             buf_name = lfEval("bufname(%s)" % buf_number)
             lfCmd("tab drop %s" % escSpecial(buf_name))
         else:
-            if lfEval("get(g:, 'Lf_JumpToExistingWindow', 0)") == '1':
+            if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
                 buf_name = lfEval("bufname(%s)" % buf_number)
                 lfCmd("hide drop %s" % escSpecial(buf_name))
             else:
