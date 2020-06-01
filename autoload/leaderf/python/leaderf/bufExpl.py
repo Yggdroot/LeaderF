@@ -137,7 +137,7 @@ class BufExplManager(Manager):
         else:
             if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
                 buf_name = lfEval("bufname(%s)" % buf_number)
-                lfCmd("hide drop %s" % escSpecial(buf_name))
+                lfCmd("keepj hide drop %s" % escSpecial(buf_name))
             else:
                 lfCmd("hide buffer %d" % buf_number)
 

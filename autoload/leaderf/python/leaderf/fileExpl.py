@@ -831,7 +831,7 @@ class FileExplManager(Manager):
                     and vim.current.buffer.name == '' and len(vim.current.buffer) == 1
                     and vim.current.buffer[0] == '' and not vim.current.buffer.options["modified"]):
                 if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
-                    lfCmd("hide drop %s" % escSpecial(file))
+                    lfCmd("keepj hide drop %s" % escSpecial(file))
                 else:
                     if vim.current.buffer.options["modified"]:
                         lfCmd("hide edit %s" % escSpecial(file))
