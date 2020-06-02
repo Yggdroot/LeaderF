@@ -477,7 +477,7 @@ class Manager(object):
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
             lfCmd("silent! %foldopen!")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
-            lfCmd("redraw!")
+            # lfCmd("redraw!") # maybe we don't need it, it makes the preview slow
         else:
             popup_window = self._getInstance().window
             popup_pos = lfEval("popup_getpos(%d)" % popup_window.id)
