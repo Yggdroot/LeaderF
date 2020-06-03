@@ -1714,6 +1714,7 @@ class Manager(object):
                 self._accept(files[0], mode)
                 self._argaddFiles(files)
                 self._accept(files[0], mode)
+                lfCmd("doautocmd BufwinEnter")
             else:
                 for file in files:
                     self._accept(file, mode)
