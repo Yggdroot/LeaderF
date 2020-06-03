@@ -1541,11 +1541,12 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
     const char* filename = NULL;
     const char* suffix = NULL;
     const char* dirname = NULL;
+    PyObject* py_icon = NULL;
     uint8_t sort_results = 1;
-    static char* kwlist[] = {"engine", "source", "filename", "suffix", "dirname", "sort_results", NULL};
+    static char* kwlist[] = {"engine", "source", "filename", "suffix", "dirname", "icon", "sort_results", NULL};
 
-    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "OOsss|b:guessMatch", kwlist, &py_engine,
-                                      &py_source, &filename, &suffix, &dirname, &sort_results) )
+    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "OOsssO|b:guessMatch", kwlist, &py_engine,
+                                      &py_source, &filename, &suffix, &dirname, &py_icon, &sort_results) )
         return NULL;
 
     FuzzyEngine* pEngine = (FuzzyEngine*)PyCapsule_GetPointer(py_engine, NULL);
@@ -1644,6 +1645,18 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
     QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
 #endif
 
+    char icon_str[16] = {0};
+    char *tmp = icon_str;
+    uint32_t icon_len = 0;
+    if ( pyObject_ToStringAndSize(py_icon, &tmp, &icon_len) < 0 )
+    {
+        free(pEngine->source);
+        free(tasks);
+        free(results);
+        fprintf(stderr, "pyObject_ToStringAndSize error!\n");
+        return NULL;
+    }
+
     uint32_t i = 0;
     for ( ; i < task_count; ++i )
     {
@@ -1666,6 +1679,12 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
                 free(results);
                 fprintf(stderr, "pyObject_ToStringAndSize error!\n");
                 return NULL;
+            }
+
+            if ( icon_len > 0 )
+            {
+                s->str += icon_len;
+                s->len -= icon_len;
             }
         }
 
