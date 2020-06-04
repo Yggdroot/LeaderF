@@ -94,6 +94,7 @@ class GtagsExplorer(Explorer):
             self._gtagslibpath = []
 
         if "--update" in arguments_dict:
+            self._evalVimVar()
             if "--accept-dotfiles" in arguments_dict:
                 self._accept_dotfiles = "--accept-dotfiles "
             if "--skip-unreadable" in arguments_dict:
