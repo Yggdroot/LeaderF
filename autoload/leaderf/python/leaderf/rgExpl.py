@@ -400,6 +400,9 @@ class RgExplManager(Manager):
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
+        
+        if args[0] == self._getExplorer().getContextSeparator():
+            return
 
         line = args[0]
         if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
@@ -742,6 +745,9 @@ class RgExplManager(Manager):
 
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0:
+            return
+
+        if args[0] == self._getExplorer().getContextSeparator():
             return
 
         line = args[0]
