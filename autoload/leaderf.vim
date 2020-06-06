@@ -363,7 +363,7 @@ function! leaderf#popupModePreviewFilter(winid, key) abort
     if key ==? "<ESC>"
         call popup_close(a:winid)
         redraw
-        return 1
+        return 0
     elseif key ==? "<CR>"
         call popup_close(a:winid)
         " https://github.com/vim/vim/issues/5216
