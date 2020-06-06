@@ -798,15 +798,26 @@ class RgExplManager(Manager):
     def _getFormatedContents(self):
         items = []
         for line in self._instance._buffer_object:
-            m = re.match(r'^(?:\.[\\/])?([^:]+):(\d+):(.*)$', line)
-            if m:
-                fpath, lnum, text = m.group(1, 2, 3)
-                items.append({
-                    "filename": fpath,
-                    "lnum": lnum,
-                    "col": 1,
-                    "text": text,
-                })
+            if self._has_column:
+                m = re.match(r'^(?:\.[\\/])?([^:]+):(\d+):(\d+):(.*)$', line)
+                if m:
+                    fpath, lnum, col, text = m.group(1, 2, 3, 4)
+                    items.append({
+                        "filename": fpath,
+                        "lnum": lnum,
+                        "col": col,
+                        "text": text,
+                    })
+            else:
+                m = re.match(r'^(?:\.[\\/])?([^:]+):(\d+):(.*)$', line)
+                if m:
+                    fpath, lnum, text = m.group(1, 2, 3)
+                    items.append({
+                        "filename": fpath,
+                        "lnum": lnum,
+                        "col": 1,
+                        "text": text,
+                    })
         return items
 
 #*****************************************************
