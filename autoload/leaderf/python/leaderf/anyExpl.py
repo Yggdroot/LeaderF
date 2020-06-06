@@ -698,6 +698,14 @@ class AnyHub(object):
             elif category == "window":
                 from .windowExpl import windowExplManager
                 manager = windowExplManager
+            elif category == "quickfix":
+                from .qfloclistExpl import qfloclistExplManager
+                manager = qfloclistExplManager
+                kwargs["list_type"] = "quickfix"
+            elif category == "loclist":
+                from .qfloclistExpl import qfloclistExplManager
+                manager = qfloclistExplManager
+                kwargs["list_type"] = "loclist"
             else:
                 import ctypes
                 manager_id = lfFunction(lfEval("g:Lf_PythonExtensions['%s'].manager_id" % category))()

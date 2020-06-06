@@ -52,6 +52,8 @@ let g:Lf_Helps = {
             \ "filetype":       "navigate the filetype",
             \ "command":        "execute built-in/user-defined Ex commands",
             \ "window":         "search windows",
+            \ "quickfix":       "navigate quickfix",
+            \ "loclist":        "navigate location list",
             \ }
 
 let g:Lf_Arguments = {
@@ -178,7 +180,9 @@ let g:Lf_Arguments = {
             \ "command": [
             \           {"name": ["--run-immediately"], "nargs": 0, "help": "Immediately execute the command on the current line in the result window"},
             \   ],
-            \ "window": []
+            \ "window": [],
+            \ "quickfix": [],
+            \ "loclist": [],
             \}
 
 let g:Lf_CommonArguments = [
