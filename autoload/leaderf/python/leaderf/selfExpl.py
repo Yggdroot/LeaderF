@@ -38,6 +38,8 @@ class SelfExplorer(Explorer):
             '19 LeaderfFiletype         "navigate the filetype"',
             '20 LeaderfCommand          "execute built-in/user-defined Ex commands"',
             '21 LeaderfWindow           "search windows"',
+            '22 LeaderfQuickFix         "navigate quickfix"',
+            '23 LeaderfLocList          "navigate location list"',
             ]
 
     def getContent(self, *args, **kwargs):

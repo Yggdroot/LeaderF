@@ -1078,7 +1078,7 @@ class Manager(object):
                                             is_name_only=False, sort_results=False, is_and_mode=True)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History", "Tag", "Rg", "Filetype",
-                        "Command", "Window"]:
+                        "Command", "Window", "QuickFix", "LocList"]:
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
                                             is_name_only=True, sort_results=False, is_and_mode=True)
                 else:
@@ -1107,7 +1107,7 @@ class Manager(object):
                                             fuzzy_match.getWeight2)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History", "Tag", "Rg", "Filetype",
-                        "Command", "Window"]:
+                        "Command", "Window", "QuickFix", "LocList"]:
                     filter_method = partial(self._fuzzyFilterEx,
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight3)
@@ -1267,7 +1267,7 @@ class Manager(object):
                                             param=fuzzyEngine.createParameter(1), is_name_only=True, sort_results=True)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History", "Filetype",
-                        "Command", "Window"]:
+                        "Command", "Window", "QuickFix", "LocList"]:
                     return_index = True
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
                                             is_name_only=True, sort_results=True)
@@ -1299,7 +1299,7 @@ class Manager(object):
                                             fuzzy_match.getWeight2)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History", "Rg", "Filetype",
-                        "Command", "Window"]:
+                        "Command", "Window", "QuickFix", "LocList"]:
                     filter_method = partial(self._fuzzyFilter,
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight3)

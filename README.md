@@ -93,7 +93,7 @@ usage: Leaderf[!] [-h] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                   [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap] [--next | --previous]
                   [--recall] [--popup-height <POPUP_HEIGHT>] [--popup-width <POPUP_WIDTH>]
                   
-                  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,self,bufTag,buffer,rg,filetype,command,window}
+                  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,self,bufTag,buffer,rg,filetype,command,window,quickfix,loclist}
                   ...
 
 optional arguments:
@@ -125,7 +125,7 @@ optional arguments:
 
 subcommands:
 
-  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,self,bufTag,buffer,rg,filetype,command,window}
+  {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,self,bufTag,buffer,rg,filetype,command,window,quickfix,loclist}
     file                search files
     tag                 navigate tags using the tags file
     function            navigate functions or methods in the buffer
@@ -143,6 +143,8 @@ subcommands:
     filetype            navigate the filetype
     command             execute built-in/user-defined Ex commands.
     window              search windows.
+    quickfix            navigate the quickfix.
+    loclist             navigate the location list.
 
 If [!] is given, enter normal mode directly.
 ```

@@ -87,6 +87,12 @@ if has("syntax")
     highlight def link Lf_hl_winModified        String
     highlight def link Lf_hl_winNomodifiable    Comment
     highlight def link Lf_hl_winDirname         Directory
+    highlight def link Lf_hl_quickfixFileName   Directory
+    highlight def link Lf_hl_quickfixLineNumber Constant
+    highlight def link Lf_hl_quickfixColumnNumber Constant
+    highlight def link Lf_hl_loclistFileName    Directory
+    highlight def link Lf_hl_loclistLineNumber  Constant
+    highlight def link Lf_hl_loclistColumnNumber Constant
 endif
 
 let b:current_syntax = "leaderf"
