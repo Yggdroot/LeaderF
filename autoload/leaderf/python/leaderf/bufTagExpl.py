@@ -476,7 +476,7 @@ class BufTagExplManager(Manager):
         line = self._getInstance().currentLine
         line_nr = self._getInstance().window.cursor[0]
 
-        if self._preview_in_popup:
+        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
             self._previewInPopup(line, self._getInstance().buffer, line_nr)
             return
 

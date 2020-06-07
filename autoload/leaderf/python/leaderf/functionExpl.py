@@ -347,7 +347,7 @@ class FunctionExplManager(Manager):
             return
 
         line = self._getInstance().currentLine
-        if self._preview_in_popup:
+        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
             self._previewInPopup(line)
             return
 

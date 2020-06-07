@@ -108,7 +108,6 @@ class Manager(object):
         self._orig_cwd = None
         self._cursorline_dict = {}
         self._empty_query = lfEval("get(g:, 'Lf_EmptyQuery', 1)") == '1'
-        self._preview_in_popup = lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1'
         self._preview_winid = 0
         self._is_previewed = False
         self._match_ids = []
@@ -364,7 +363,7 @@ class Manager(object):
 
         line = self._getInstance().currentLine
 
-        if self._preview_in_popup:
+        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
             self._previewInPopup(line)
             return
 
