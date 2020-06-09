@@ -72,7 +72,7 @@ class QfLocListExplManager(Manager):
             if kwargs.get("mode", '') == 't':
                 lfCmd("tab drop %s" % escSpecial(file))
             else:
-                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufexists('%s')" % escQuote(file)) == '1':
                     lfCmd("keepj hide drop %s" % escSpecial(file))
                 else:
                     lfCmd("hide edit %s" % escSpecial(file))

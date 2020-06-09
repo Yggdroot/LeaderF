@@ -400,7 +400,7 @@ class RgExplManager(Manager):
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
-        
+
         if args[0] == self._getExplorer().getContextSeparator():
             return
 
@@ -447,7 +447,7 @@ class RgExplManager(Manager):
                 if kwargs.get("mode", '') == 't':
                     lfCmd("tab drop %s | %s" % (escSpecial(file), line_num))
                 else:
-                    if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
+                    if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufexists('%s')" % escQuote(file)) == '1':
                         lfCmd("keepj hide drop %s | %s" % (escSpecial(file), line_num))
                     else:
                         lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
