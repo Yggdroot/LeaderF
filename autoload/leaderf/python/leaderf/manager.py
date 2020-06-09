@@ -17,10 +17,7 @@ from .cli import LfCli
 from .utils import *
 from .fuzzyMatch import FuzzyMatch
 from .asyncExecutor import AsyncExecutor
-from .devicons import (
-    webDevIconsGetFileTypeSymbol,
-    removeDevIcons
-)
+from .devicons import removeDevIcons
 
 is_fuzzyEngine_C = False
 try:
@@ -1351,12 +1348,11 @@ class Manager(object):
             self._highlight_method = highlight_method
             self._highlight_method()
 
-    def _guessFilter(self, filename, suffix, dirname, icon, iterable):
+    def _guessFilter(self, filename, suffix, dirname, iterable):
         """
         return a list, each item is a pair (weight, line)
         """
-        icon_len = len(icon)
-        return ((FuzzyMatch.getPathWeight(filename, suffix, dirname, line[icon_len:]), line) for line in iterable)
+        return ((FuzzyMatch.getPathWeight(filename, suffix, dirname, line), line) for line in iterable)
 
     def _guessSearch(self, content, is_continue=False, step=0):
         if self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] not in [b'', '']:
@@ -1375,19 +1371,15 @@ class Manager(object):
         buffer_name = lfEncode(buffer_name)
         dirname, basename = os.path.split(buffer_name)
         filename, suffix = os.path.splitext(basename)
-        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
-            icon = webDevIconsGetFileTypeSymbol(basename)
-        else:
-            icon = ''
         if self._fuzzy_engine:
             filter_method = partial(fuzzyEngine.guessMatch, engine=self._fuzzy_engine, filename=filename,
-                                    suffix=suffix, dirname=dirname, icon=icon, sort_results=True)
+                                    suffix=suffix, dirname=dirname, sort_results=True)
             step = len(content)
 
             _, self._result_content = self._filter(step, filter_method, content, is_continue, True)
         else:
             step = len(content)
-            filter_method = partial(self._guessFilter, filename, suffix, dirname, icon)
+            filter_method = partial(self._guessFilter, filename, suffix, dirname)
             pairs = self._filter(step, filter_method, content, is_continue)
             pairs.sort(key=operator.itemgetter(0), reverse=True)
             self._result_content = self._getList(pairs)
