@@ -595,14 +595,18 @@ void closeFuzzyEngine(FuzzyEngine* pEngine)
 
 static int32_t pyObject_ToStringAndSize(PyObject* obj, char** buffer, uint32_t* size)
 {
+    Py_ssize_t length = 0;
 #if PY_MAJOR_VERSION >= 3
-    *buffer = (char*)PyUnicode_AsUTF8AndSize(obj, (Py_ssize_t*)size);
+    *buffer = (char*)PyUnicode_AsUTF8AndSize(obj, &length);
+    *size = (uint32_t)length;
     if ( buffer )
         return 0;
     else
         return -1;
 #else
-    if ( PyString_AsStringAndSize(obj, buffer, (Py_ssize_t*)size) >= 0 )
+    int ret = PyString_AsStringAndSize(obj, buffer, &length);
+    *size = (uint32_t)length;
+    if ( ret >= 0 )
         return 0;
     else
         return -1;
@@ -666,7 +670,7 @@ static PyObject* fuzzyEngine_initPattern(PyObject* self, PyObject* args)
     if ( !PyArg_ParseTuple(args, "s#:initPattern", &pattern, &pattern_len) )
         return NULL;
 
-    PatternContext* pCtxt = initPattern(pattern, pattern_len);
+    PatternContext* pCtxt = initPattern(pattern, (uint16_t)pattern_len);
 
     return PyCapsule_New(pCtxt, NULL, delPatternContext);
 }
@@ -1525,7 +1529,7 @@ static PyObject* fuzzyEngine_getHighlights(PyObject* self, PyObject* args, PyObj
 }
 
 /**
- * guessMatch(engine, source, filename, suffix, dirname, sort_results=True)
+ * guessMatch(engine, source, filename, suffix, dirname, icon, sort_results=True)
  *
  * e.g., /usr/src/example.tar.gz
  * `filename` is "example.tar"
@@ -1541,11 +1545,12 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
     const char* filename = NULL;
     const char* suffix = NULL;
     const char* dirname = NULL;
+    PyObject* py_icon = NULL;
     uint8_t sort_results = 1;
-    static char* kwlist[] = {"engine", "source", "filename", "suffix", "dirname", "sort_results", NULL};
+    static char* kwlist[] = {"engine", "source", "filename", "suffix", "dirname", "icon", "sort_results", NULL};
 
-    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "OOsss|b:guessMatch", kwlist, &py_engine,
-                                      &py_source, &filename, &suffix, &dirname, &sort_results) )
+    if ( !PyArg_ParseTupleAndKeywords(args, kwargs, "OOsssO|b:guessMatch", kwlist, &py_engine,
+                                      &py_source, &filename, &suffix, &dirname, &py_icon, &sort_results) )
         return NULL;
 
     FuzzyEngine* pEngine = (FuzzyEngine*)PyCapsule_GetPointer(py_engine, NULL);
@@ -1644,6 +1649,17 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
     QUEUE_SET_TASK_COUNT(pEngine->task_queue, task_count);
 #endif
 
+    char *icon_str = NULL;
+    uint32_t icon_len = 0;
+    if ( pyObject_ToStringAndSize(py_icon, &icon_str, &icon_len) < 0 )
+    {
+        free(pEngine->source);
+        free(tasks);
+        free(results);
+        fprintf(stderr, "pyObject_ToStringAndSize error!\n");
+        return NULL;
+    }
+
     uint32_t i = 0;
     for ( ; i < task_count; ++i )
     {
@@ -1666,6 +1682,12 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
                 free(results);
                 fprintf(stderr, "pyObject_ToStringAndSize error!\n");
                 return NULL;
+            }
+
+            if ( icon_len > 0 )
+            {
+                s->str += icon_len;
+                s->len -= icon_len;
             }
         }
 
@@ -1886,7 +1908,7 @@ static PyObject* fuzzyEngine_createRgParameter(PyObject* self, PyObject* args)
     }
     param->display_multi = display_multi;
     param->separator = separator;
-    param->separator_len = separator_len;
+    param->separator_len = (uint32_t)separator_len;
     param->has_column = has_column;
 
     return PyCapsule_New(param, NULL, delParamObj);
@@ -1963,7 +1985,7 @@ static void rg_getDigest(char** str, uint32_t* length, RgParameter* param)
                     if ( (colon == 2 && !param->has_column) || colon == 3 )
                     {
                         *str = p + 1;
-                        *length -= *str - s;
+                        *length -= (uint32_t)(*str - s);
                         return;
                     }
                 }
@@ -1973,7 +1995,7 @@ static void rg_getDigest(char** str, uint32_t* length, RgParameter* param)
                     if ( minus == 2 )
                     {
                         *str = p + 1;
-                        *length -= *str - s;
+                        *length -= (uint32_t)(*str - s);
                         return;
                     }
                 }
@@ -1991,7 +2013,7 @@ static void rg_getDigest(char** str, uint32_t* length, RgParameter* param)
                 if ( (colon == 2 && !param->has_column) || colon == 3 )
                 {
                     *str = p + 1;
-                    *length -= *str - s;
+                    *length -= (uint32_t)(*str - s);
                     return;
                 }
             }
@@ -2008,7 +2030,7 @@ static void tag_getDigest(char** str, uint32_t* length, Parameter* param)
     {
         if ( *p == '\t' )
         {
-            *length = p - s;
+            *length = (uint32_t)(p - s);
             return;
         }
     }
@@ -2025,7 +2047,7 @@ static void file_getDigest(char** str, uint32_t* length, Parameter* param)
         if ( *p == '/' || *p == '\\' )
         {
             *str = p + 1;
-            *length -= *str - s;
+            *length -= (uint32_t)(*str - s);
             return;
         }
     }
@@ -2051,7 +2073,7 @@ static void gtags_getDigest(char** str, uint32_t* length, GtagsParameter* param)
                 if ( tab == 2 )
                 {
                     *str = p + 1;
-                    *length -= *str - s;
+                    *length -= (uint32_t)(*str - s);
                     return;
                 }
             }
@@ -2063,7 +2085,7 @@ static void gtags_getDigest(char** str, uint32_t* length, GtagsParameter* param)
         {
             if ( *p == '\t' )
             {
-                *length = p - s;
+                *length = (uint32_t)(p - s);
                 return;
             }
         }
@@ -2074,7 +2096,7 @@ static void gtags_getDigest(char** str, uint32_t* length, GtagsParameter* param)
         {
             if ( *p == ' ' )
             {
-                *length = p - s;
+                *length = (uint32_t)(p - s);
                 return;
             }
         }
@@ -2089,7 +2111,7 @@ static void line_getDigest(char** str, uint32_t* length, Parameter* param)
     {
         if ( *p == '\t' )
         {
-            *length = p - s;
+            *length = (uint32_t)(p - s);
             return;
         }
     }

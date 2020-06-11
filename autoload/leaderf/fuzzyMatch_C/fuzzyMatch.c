@@ -1650,7 +1650,7 @@ uint32_t getPathWeight(const char* filename,
                         break;
                     }
                 }
-                filename_prefix = p - filename_start;
+                filename_prefix = (uint32_t)(p - filename_start);
             }
             else if ( (*p >= 'A' && *p <= 'Z') && (*p1 >= 'A' && *p1 <= 'Z')
                       && (*(p-1) >= 'A' && *(p-1) <= 'Z') )
@@ -1667,7 +1667,7 @@ uint32_t getPathWeight(const char* filename,
                         break;
                     }
                 }
-                filename_prefix = p - filename_start;
+                filename_prefix = (uint32_t)(p - filename_start);
             }
         }
 
@@ -1774,7 +1774,7 @@ static PyObject* fuzzyMatchC_initPattern(PyObject* self, PyObject* args)
     if ( !PyArg_ParseTuple(args, "s#:initPattern", &pattern, &pattern_len) )
         return NULL;
 
-    PatternContext* pCtxt = initPattern(pattern, pattern_len);
+    PatternContext* pCtxt = initPattern(pattern, (uint16_t)pattern_len);
 
     return PyCapsule_New(pCtxt, NULL, delPatternContext);
 }
@@ -1795,7 +1795,7 @@ static PyObject* fuzzyMatchC_getWeight(PyObject* self, PyObject* args, PyObject*
     if ( !pCtxt )
         return NULL;
 
-    return Py_BuildValue("f", getWeight(text, text_len, pCtxt, is_name_only));
+    return Py_BuildValue("f", getWeight(text, (uint16_t)text_len, pCtxt, is_name_only));
 }
 
 static PyObject* fuzzyMatchC_getHighlights(PyObject* self, PyObject* args, PyObject* kwargs)
@@ -1814,7 +1814,7 @@ static PyObject* fuzzyMatchC_getHighlights(PyObject* self, PyObject* args, PyObj
     if ( !pCtxt )
         return NULL;
 
-    HighlightGroup* pGroup = getHighlights(text, text_len, pCtxt, is_name_only);
+    HighlightGroup* pGroup = getHighlights(text, (uint16_t)text_len, pCtxt, is_name_only);
     if ( !pGroup )
         return NULL;
 
