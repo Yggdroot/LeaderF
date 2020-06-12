@@ -478,6 +478,7 @@ class Manager(object):
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
             lfCmd("silent! %foldopen!")
+            lfCmd("norm! zz")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
             # lfCmd("redraw!") # maybe we don't need it, it makes the preview slow
         else:
@@ -569,6 +570,7 @@ class Manager(object):
                 lfCmd("""call win_execute(%d, "exec 'norm! %dG'")""" % (self._preview_winid, line_nr))
             lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber colorcolumn= ')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
+            lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
 
     def _createPopupPreview(self, title, buf_number, line_nr, jump_cmd=''):
         self._is_previewed = True
