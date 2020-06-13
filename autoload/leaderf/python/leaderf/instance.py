@@ -407,7 +407,7 @@ class LfInstance(object):
                     "row"     : line + 1,
                     "col"     : col
                     }
-            lfCmd("silent let winid = nvim_open_win(%d, 1, %s)" % (buf_number, str(config)))
+            lfCmd("silent noswapfile let winid = nvim_open_win(%d, 1, %s)" % (buf_number, str(config)))
             self._popup_winid = int(lfEval("winid"))
             self._setAttributes()
             try:
@@ -532,7 +532,7 @@ class LfInstance(object):
                     "filter":          "leaderf#PopupFilter",
                     }
 
-            lfCmd("silent let winid = popup_create(%d, %s)" % (buf_number, str(options)))
+            lfCmd("silent noswapfile let winid = popup_create(%d, %s)" % (buf_number, str(options)))
             self._popup_winid = int(lfEval("winid"))
             lfCmd("call win_execute(%d, 'setlocal nobuflisted')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal buftype=nofile')" % self._popup_winid)
