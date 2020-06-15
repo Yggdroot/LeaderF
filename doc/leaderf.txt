@@ -590,6 +590,11 @@ g:Lf_RgStorePattern                             *g:Lf_RgStorePattern*
 
     Default value is "".
 
+g:Lf_RgHighlightInPreview                       *g:Lf_RgHighlightInPreview*
+    Specify whether to highlight searched words in preview window.
+
+    Default value is 1.
+
 g:Lf_MaxCount                                   *g:Lf_MaxCount*
     Specify the limit of the number of source entries. LeaderF will stop
     producing the source entries if the limit is hit. There is no limit if the

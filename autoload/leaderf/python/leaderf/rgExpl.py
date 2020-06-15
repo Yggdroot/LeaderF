@@ -790,6 +790,24 @@ class RgExplManager(Manager):
 
         self._createPopupPreview("", buf_number, line_num)
 
+        if lfEval("get(g:, 'Lf_RgHighlightInPreview', 1)") == '1':
+            if self._getInstance().getWinPos() == 'popup':
+                for i in self._getExplorer().getPatternRegex():
+                    lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_rgHighlight', '%s', 9)")"""
+                            % (self._preview_winid, escQuote(i).replace('\\', '\\\\')))
+                    id = int(lfEval("matchid"))
+                    self._match_ids.append(id)
+            else:
+                cur_winid = lfEval("win_getid()")
+                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+                try:
+                    for i in self._getExplorer().getPatternRegex():
+                        id = int(lfEval("matchadd('Lf_hl_rgHighlight', '%s', 9)" % escQuote(i)))
+                        self._match_ids.append(id)
+                except vim.error:
+                    pass
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+
     def outputToQflist(self, *args, **kwargs):
         items = self._getFormatedContents()
         lfCmd("call setqflist(%s, 'r')" % json.dumps(items))
