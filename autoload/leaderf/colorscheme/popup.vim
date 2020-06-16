@@ -66,7 +66,7 @@ function! s:HighlightSeperator(category) abort
         let left_ctermbg = synIDattr(sid_left, "bg", "cterm")
         let right_guibg = synIDattr(sid_right, "bg", "gui")
         let right_ctermbg = synIDattr(sid_right, "bg", "cterm")
-        let hiCmd = printf("hi def Lf_hl_popup_%s_%s", a:category, sep)
+        let hiCmd = printf("hi Lf_hl_popup_%s_%s", a:category, sep)
         let hiCmd .= printf(" guifg=%s guibg=%s", left_guibg == '' ? 'NONE': left_guibg, right_guibg == '' ? 'NONE': right_guibg)
         let hiCmd .= printf(" ctermfg=%s ctermbg=%s", left_ctermbg == '' ? 'NONE': left_ctermbg, right_ctermbg == '' ? 'NONE': right_ctermbg)
         if get(g:Lf_StlSeparator, "font", "") != ""
@@ -84,7 +84,7 @@ function! s:HighlightSeperator(category) abort
         let left_ctermbg = synIDattr(sid_left, "bg", "cterm")
         let right_guibg = synIDattr(sid_right, "bg", "gui")
         let right_ctermbg = synIDattr(sid_right, "bg", "cterm")
-        let hiCmd = printf("hi def Lf_hl_popup_%s_%s", a:category, sep)
+        let hiCmd = printf("hi Lf_hl_popup_%s_%s", a:category, sep)
         let hiCmd .= printf(" guifg=%s guibg=%s", right_guibg == '' ? 'NONE': right_guibg, left_guibg == '' ? 'NONE': left_guibg)
         let hiCmd .= printf(" ctermfg=%s ctermbg=%s", right_ctermbg == '' ? 'NONE': right_ctermbg, left_ctermbg == '' ? 'NONE': left_ctermbg)
         if get(g:Lf_StlSeparator, "font", "") != ""
@@ -140,8 +140,8 @@ function! leaderf#colorscheme#popup#hiMode(category, mode) abort
     let sid = synIDtrans(hlID(printf("Lf_hl_popup_%s_mode", a:category)))
     let guibg = synIDattr(sid, "bg", "gui")
     let ctermbg = synIDattr(sid, "bg", "cterm")
-    exec printf("hi def Lf_hl_popup_%s_sep0 guifg=%s", a:category, guibg == '' ? 'NONE': guibg)
-    exec printf("hi def Lf_hl_popup_%s_sep0 ctermfg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
+    exec printf("hi Lf_hl_popup_%s_sep0 guifg=%s", a:category, guibg == '' ? 'NONE': guibg)
+    exec printf("hi Lf_hl_popup_%s_sep0 ctermfg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
 endfunction
 
 " mode can be:
@@ -154,10 +154,10 @@ function! leaderf#colorscheme#popup#hiMatchMode(category, mode) abort
     let guibg = synIDattr(sid, "bg", "gui")
     let ctermbg = synIDattr(sid, "bg", "cterm")
     exec printf("hi link Lf_hl_popup_%s_matchMode %s", a:category, s:matchModeMap[a:mode])
-    exec printf("hi def Lf_hl_popup_%s_sep1 guibg=%s", a:category, guibg == '' ? 'NONE': guibg)
-    exec printf("hi def Lf_hl_popup_%s_sep1 ctermbg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
-    exec printf("hi def Lf_hl_popup_%s_sep2 guifg=%s", a:category, guibg == '' ? 'NONE': guibg)
-    exec printf("hi def Lf_hl_popup_%s_sep2 ctermfg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
+    exec printf("hi Lf_hl_popup_%s_sep1 guibg=%s", a:category, guibg == '' ? 'NONE': guibg)
+    exec printf("hi Lf_hl_popup_%s_sep1 ctermbg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
+    exec printf("hi Lf_hl_popup_%s_sep2 guifg=%s", a:category, guibg == '' ? 'NONE': guibg)
+    exec printf("hi Lf_hl_popup_%s_sep2 ctermfg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
 endfunction
 
 function! s:AddPropType() abort
