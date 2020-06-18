@@ -838,7 +838,10 @@ class FileExplManager(Manager):
                     else:
                         lfCmd("edit %s" % escSpecial(file))
             else:
-                lfCmd("tab drop %s" % escSpecial(file))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
+                    lfCmd("tab drop %s" % escSpecial(file))
+                else:
+                    lfCmd("tabe %s" % escSpecial(file))
         except vim.error as e: # E37
             lfPrintError(e)
 
