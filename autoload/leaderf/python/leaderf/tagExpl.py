@@ -78,7 +78,10 @@ class TagExplManager(Manager):
         tagaddress = res[0]
         try:
             if kwargs.get("mode", '') == 't':
-                lfCmd("tab drop %s" % escSpecial(tagfile))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
+                    lfCmd("tab drop %s" % escSpecial(tagfile))
+                else:
+                    lfCmd("tabe %s" % escSpecial(tagfile))
             else:
                 if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufexists('%s')" % escQuote(tagfile)) == '1':
                     lfCmd("keepj hide drop %s" % escSpecial(tagfile))
