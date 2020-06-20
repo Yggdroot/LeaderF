@@ -93,7 +93,6 @@ function! leaderf#Rg#Interactive()
             return
         endif
         let globList = map(split(glob, '[ ,]\+'), 'v:val =~ ''^".*"$'' ? v:val : ''"''.v:val.''"''')
-        "echo printf("Leaderf rg %s\"%s\" -g %s", pattern =~ '^\s*$' ? '' : '-e ', pattern, join(globList, ' -g '))
         exec printf("Leaderf rg %s\"%s\" -g %s", pattern =~ '^\s*$' ? '' : '-e ', pattern, join(globList, ' -g '))
     finally
         echohl None
