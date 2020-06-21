@@ -13,6 +13,25 @@ from .explorer import *
 from .manager import *
 from .mru import *
 
+def workingDirectory(func):
+    @wraps(func)
+    def deco(self, *args, **kwargs):
+        if self._getExplorer()._cmd_work_dir == os.getcwd():
+            return func(self, *args, **kwargs)
+
+        # https://github.com/neovim/neovim/issues/8336
+        if lfEval("has('nvim')") == '1':
+            chdir = vim.chdir
+        else:
+            chdir = os.chdir
+        orig_cwd = os.getcwd()
+        chdir(self._getExplorer()._cmd_work_dir)
+        try:
+            return func(self, *args, **kwargs)
+        finally:
+            chdir(orig_cwd)
+
+    return deco
 
 #*****************************************************
 # RgExplorer
@@ -23,12 +42,14 @@ class RgExplorer(Explorer):
         self._pattern_regex = []
         self._context_separator = "..."
         self._display_multi = False
+        self._cmd_work_dir = ""
 
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" in arguments_dict:
             return []
 
+        self._cmd_work_dir = os.getcwd()
         rg_config = lfEval("get(g:, 'Lf_RgConfig', [])")
         extra_options = ' '.join(rg_config)
         for opt in rg_config:
@@ -362,7 +383,7 @@ class RgExplorer(Explorer):
         return 'Rg'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(self._cmd_work_dir))
 
     def supportsNameOnly(self):
         return False
@@ -397,6 +418,7 @@ class RgExplManager(Manager):
     def _defineMaps(self):
         lfCmd("call leaderf#Rg#Maps()")
 
+    @workingDirectory
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
