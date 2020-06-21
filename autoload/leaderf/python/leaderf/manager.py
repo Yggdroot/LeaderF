@@ -2061,12 +2061,12 @@ class Manager(object):
             self._is_content_list = True
             self._read_finished = 2
 
-            if len(content[0]) == len(content[0].rstrip("\r\n")):
-                self._content = content
-            else:
-                self._content = [line.rstrip("\r\n") for line in content]
-
             if not remember_last_status:
+                if len(content[0]) == len(content[0].rstrip("\r\n")):
+                    self._content = content
+                else:
+                    self._content = [line.rstrip("\r\n") for line in content]
+
                 self._getInstance().setStlTotal(len(self._content)//self._getUnit())
                 self._getInstance().setStlResultsCount(len(self._content))
                 if not empty_query:
@@ -2090,7 +2090,7 @@ class Manager(object):
                 self._bangEnter()
                 self._getInstance().mimicCursor()
 
-                if not self._cli.pattern and empty_query:
+                if not remember_last_status and not self._cli.pattern and empty_query:
                     self._gotoFirstLine()
                     self._guessSearch(self._content)
                     if self._result_content: # self._result_content is [] only if 
@@ -2349,7 +2349,8 @@ class Manager(object):
         if self._cli.pattern:    # --input xxx or from normal mode to input mode
             if self._index == 0: # --input xxx
                 self._search(self._content)
-        elif self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+        elif self._empty_query and self._getExplorer().getStlCategory() in ["File"] \
+                and "--recall" not in self._arguments:
             self._guessSearch(self._content)
 
         for cmd in self._cli.input(self._callback):
