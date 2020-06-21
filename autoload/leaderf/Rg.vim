@@ -87,12 +87,13 @@ function! leaderf#Rg#Interactive()
     try
         echohl Question
         let pattern = input("Search pattern: ")
+        let pattern = escape(pattern,'"')
         let glob = input("Search in files(e.g., *.c, *.cpp): ", "*")
         if glob =~ '^\s*$'
             return
         endif
         let globList = map(split(glob, '[ ,]\+'), 'v:val =~ ''^".*"$'' ? v:val : ''"''.v:val.''"''')
-        exec printf("Leaderf rg %s%s -g %s", pattern =~ '^\s*$' ? '' : '-e ', pattern, join(globList, ' -g '))
+        exec printf("Leaderf rg %s\"%s\" -g %s", pattern =~ '^\s*$' ? '' : '-e ', pattern, join(globList, ' -g '))
     finally
         echohl None
     endtry
