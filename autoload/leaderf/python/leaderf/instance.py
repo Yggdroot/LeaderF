@@ -1077,7 +1077,7 @@ class LfInstance(object):
 
     def _actualLength(self, buffer):
         num = 0
-        columns = self._window_object.width - 1
+        columns = self._window_object.width - int(lfEval("&numberwidth")) - 1
         for i in buffer:
             num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + columns - 1)// columns
         return num
@@ -1160,13 +1160,19 @@ class LfInstance(object):
 
     def refreshPopupStatusline(self):
         statusline_win = self._popup_instance.statusline_win
-        if self._win_pos == 'popup' and statusline_win:
-            lfCmd("call leaderf#ResetPopupOptions(%d, 'line', %d)" % (self._popup_winid, self._window_object.initialLine)) # trigger a redraw
-            expected_line = self._window_object.initialLine + self._window_object.height
-            if expected_line != int(lfEval("popup_getpos(%d).line" % statusline_win.id)):
-                lfCmd("call leaderf#ResetPopupOptions(%d, 'line', %d)" % (statusline_win.id, expected_line))
+        buffer_len = len(self._buffer_object)
+        if self._win_pos == 'popup':
+            if "--nowrap" not in self._arguments:
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'minheight', %d)" % (self._popup_winid,
+                    min(self._popup_maxheight, self._actualLength(self._buffer_object[:self._popup_maxheight]))))
+            else:
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'minheight', %d)" % (self._popup_winid, min(self._popup_maxheight, buffer_len)))
+
+            if statusline_win:
+                expected_line = self._window_object.initialLine + self._window_object.height
+                if expected_line != int(lfEval("popup_getpos(%d).line" % statusline_win.id)):
+                    lfCmd("call leaderf#ResetPopupOptions(%d, 'line', %d)" % (statusline_win.id, expected_line))
         elif self._win_pos == 'floatwin':
-            buffer_len = len(self._buffer_object)
             if buffer_len < self._popup_maxheight:
                 if "--nowrap" not in self._arguments:
                     self._window_object.height = min(self._popup_maxheight, self._actualLength(self._buffer_object))
