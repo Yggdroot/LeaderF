@@ -725,6 +725,7 @@ class LfInstance(object):
 
         if not self._is_colorscheme_autocmd_set:
             self._is_colorscheme_autocmd_set = True
+            lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')".format(self._category, lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
             lfCmd("call leaderf#colorscheme#highlight('{}')".format(self._category))
             lfCmd("augroup Lf_{}_Colorscheme".format(self._category))
             lfCmd("autocmd!")

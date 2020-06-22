@@ -115,6 +115,18 @@ if &background ==? 'dark'
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
+
+    highlight def link Lf_hl_winNumber          Constant
+    highlight def link Lf_hl_winIndicators      Statement
+    highlight def link Lf_hl_winModified        String
+    highlight def link Lf_hl_winNomodifiable    Comment
+    highlight def link Lf_hl_winDirname         Directory
+    highlight def link Lf_hl_quickfixFileName   Directory
+    highlight def link Lf_hl_quickfixLineNumber Constant
+    highlight def link Lf_hl_quickfixColumnNumber Constant
+    highlight def link Lf_hl_loclistFileName    Directory
+    highlight def link Lf_hl_loclistLineNumber  Constant
+    highlight def link Lf_hl_loclistColumnNumber Constant
 else
     " Lf_hl_popup_inputText is the wincolor of input window
     highlight def Lf_hl_popup_inputText guifg=#525252 guibg=#f4f3d7 gui=NONE ctermfg=239 ctermbg=230 cterm=NONE
@@ -217,4 +229,16 @@ else
     highlight def Lf_hl_gtagsHighlight guifg=#4d4d4d guibg=#cccc66 gui=NONE ctermfg=239 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
+
+    highlight def link Lf_hl_winNumber          Constant
+    highlight def link Lf_hl_winIndicators      Statement
+    highlight def link Lf_hl_winModified        String
+    highlight def link Lf_hl_winNomodifiable    Comment
+    highlight def link Lf_hl_winDirname         Directory
+    highlight def link Lf_hl_quickfixFileName   Directory
+    highlight def link Lf_hl_quickfixLineNumber Constant
+    highlight def link Lf_hl_quickfixColumnNumber Constant
+    highlight def link Lf_hl_loclistFileName    Directory
+    highlight def link Lf_hl_loclistLineNumber  Constant
+    highlight def link Lf_hl_loclistColumnNumber Constant
 endif
