@@ -2000,12 +2000,6 @@ class Manager(object):
 
         self._cleanup()
 
-        if kwargs.get('bang', 0):
-            self._current_mode = 'NORMAL'
-        else:
-            self._current_mode = 'INPUT'
-        lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))
-
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
         self._getInstance().setArguments(self._arguments)
         empty_query = self._empty_query and self._getExplorer().getStlCategory() in ["File"]
@@ -2046,6 +2040,12 @@ class Manager(object):
         self._getInstance().setStlCategory(self._getExplorer().getStlCategory())
         self._setStlMode(**kwargs)
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
+
+        if kwargs.get('bang', 0):
+            self._current_mode = 'NORMAL'
+        else:
+            self._current_mode = 'INPUT'
+        lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))
 
         self._getInstance().setPopupStl(self._current_mode)
 
