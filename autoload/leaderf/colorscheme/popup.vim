@@ -226,4 +226,5 @@ function! leaderf#colorscheme#popup#load(category, name)
     call s:AddPropType()
     call s:LoadFromPalette()
     call s:HighlightSeperator(a:category)
+    call g:LfDefineDefaultColors()
 endfunction
