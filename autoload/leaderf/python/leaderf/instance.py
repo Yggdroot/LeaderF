@@ -723,6 +723,8 @@ class LfInstance(object):
         if self._buffer_object is None or not self._buffer_object.valid:
             self._buffer_object = vim.current.buffer
 
+        self._setAttributes()
+
         if not self._is_colorscheme_autocmd_set:
             self._is_colorscheme_autocmd_set = True
             lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')".format(self._category, lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
@@ -980,12 +982,10 @@ class LfInstance(object):
             if len(vim.tabpages) < 2:
                 lfCmd("set showtabline=0")
             self._createBufWindow(win_pos)
-            self._setAttributes()
         else:
             self._orig_win_nr = vim.current.window.number
             self._orig_win_id = lfWinId(self._orig_win_nr)
             self._createBufWindow(win_pos)
-            self._setAttributes()
 
         if not self._is_icon_colorscheme_autocmd_set:
             self._is_icon_colorscheme_autocmd_set = True
