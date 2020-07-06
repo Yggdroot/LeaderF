@@ -2422,6 +2422,16 @@ class Manager(object):
             elif equal(cmd, '<C-T>'):
                 if self.accept('t') is None:
                     break
+            elif equal(cmd, '<C-\>'):
+                actions = ['', 'h', 'v', 't', 'dr']
+                action_count = len(actions)
+                selection = int( vim.eval(
+                    'confirm("Action?", "&Edit\n&Split\n&Vsplit\n&Tabnew\n&Drop")' ) ) - 1
+                if selection < 0 or selection >= action_count:
+                    selection = 0
+                action = actions[selection]
+                if self.accept(action) is None:
+                    break
             elif equal(cmd, '<Quit>'):
                 self._cli.writeHistory(self._getExplorer().getStlCategory())
                 self.quit()
