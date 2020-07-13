@@ -169,6 +169,7 @@ Once LeaderF is launched:
 | `<C-X>`                    | open in horizontal split window
 | `<C-]>`                    | open in vertical split window
 | `<C-T>`                    | open in new tabpage
+| `<C-\>`                    | show a prompt enable to choose split window method: vertical, horizontal, tabpage, etc
 | `<F5>`                     | refresh the cache
 | `<C-LeftMouse>`<br>`<C-S>` | select multiple files
 | `<S-LeftMouse>`            | select consecutive multiple files
