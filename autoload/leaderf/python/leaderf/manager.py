@@ -1714,7 +1714,7 @@ class Manager(object):
                 chdir(cwd)
 
             orig_cwd = os.getcwd()
-            if mode == '':
+            if mode == '' and self._getExplorer().getStlCategory() == "File":
                 self._accept(files[0], mode)
                 self._argaddFiles(files)
                 self._accept(files[0], mode)
