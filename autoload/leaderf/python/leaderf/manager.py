@@ -113,6 +113,7 @@ class Manager(object):
         self._match_ids = []
         self._vim_file_autoloaded = False
         self._arguments = {}
+        self._last_pattern = ""
         self._getExplClass()
 
     #**************************************************************
@@ -1355,6 +1356,10 @@ class Manager(object):
         else:
             self._highlight_method = highlight_method
             self._highlight_method()
+
+        if len(self._cli.pattern) > 1 and len(self._cli.pattern) - len(self._last_pattern) == 1:
+            lfCmd("redraw")
+        self._last_pattern = self._cli.pattern
 
     def _guessFilter(self, filename, suffix, dirname, icon, iterable):
         """
