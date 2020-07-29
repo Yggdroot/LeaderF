@@ -56,7 +56,9 @@ class BufferExplorer(Explorer):
         # e.g., 12 u %a+-  aaa.txt
         bufnr_len = len(lfEval("bufnr('$')"))
         self._prefix_length = bufnr_len + 8
+        self.show_icon = False
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self.show_icon = True
             self._prefix_length += webDevIconsStrLen()
 
         self._max_bufname_len = max([int(lfEval("strdisplaywidth('%s')"
@@ -183,7 +185,12 @@ class BufExplManager(Manager):
         """
         if not line:
             return 0
-        prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
+
+        if self._getExplorer().show_icon:
+            prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
+        else:
+            prefix_len = self._getExplorer().getPrefixLength()
+
         if mode == 0:
             return prefix_len
         elif mode == 1:

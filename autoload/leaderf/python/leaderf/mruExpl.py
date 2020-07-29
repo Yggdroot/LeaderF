@@ -52,7 +52,10 @@ class MruExplorer(Explorer):
         if kwargs["cb_name"] == lines[0]:
             lines = lines[1:] + lines[0:1]
 
+        self._prefix_length = 0
+        self.show_icon = False
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self.show_icon = True
             self._prefix_length = webDevIconsStrLen()
 
         if "--no-split-path" in kwargs.get("arguments", {}):
@@ -204,7 +207,11 @@ class MruExplManager(Manager):
             else:
                 return lfBytesLen(getDirname(line))
         else:
-            prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
+            if self._getExplorer().show_icon:
+                prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
+            else:
+                prefix_len = self._getExplorer().getPrefixLength()
+
             if mode == 0:
                 return prefix_len
             elif mode == 1:

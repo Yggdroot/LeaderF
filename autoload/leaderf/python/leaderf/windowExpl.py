@@ -30,7 +30,9 @@ class WindowExplorer(Explorer):
         self._max_bufname_len = self._get_max_bufname_len()
 
         self._prefix_length = 10
+        self.show_icon = False
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self.show_icon = True
             self._prefix_length += webDevIconsStrLen()
 
         for tab in vim.tabpages:
@@ -180,7 +182,11 @@ class WindowExplManager(Manager):
         if not line:
             return 0
 
-        prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
+        if self._getExplorer().show_icon:
+            prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
+        else:
+            prefix_len = self._getExplorer().getPrefixLength()
+
         if mode == 0:
             return prefix_len
         elif mode == 1:
