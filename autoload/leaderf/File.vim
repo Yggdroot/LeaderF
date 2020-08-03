@@ -37,7 +37,6 @@ function! leaderf#File#Maps()
     nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "fileExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "fileExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "fileExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "fileExplManager._previewResult(False)"<CR>
     if has("nvim")
         nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "fileExplManager._toUpInPopup()"<CR>
         nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "fileExplManager._toDownInPopup()"<CR>
@@ -109,7 +108,13 @@ function! leaderf#File#NormalModeFilter(winid, key) abort
         exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"
         redraw
     elseif key ==? "<LeftMouse>"
-        if has('patch-8.1.2266')
+        if exists("*getmousepos")
+            let pos = getmousepos()
+            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
+            exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"
+            redraw
+            exec g:Lf_py "fileExplManager._previewResult(False)"
+        elseif has('patch-8.1.2266')
             call win_execute(a:winid, "exec v:mouse_lnum")
             call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
             exec g:Lf_py "fileExplManager._cli._buildPopupPrompt()"

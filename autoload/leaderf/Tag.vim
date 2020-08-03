@@ -34,7 +34,6 @@ function! leaderf#Tag#Maps()
     nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
     if has("nvim")
         nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "tagExplManager._toUpInPopup()"<CR>
         nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "tagExplManager._toDownInPopup()"<CR>

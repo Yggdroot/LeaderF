@@ -86,10 +86,15 @@ function! leaderf#QfLocList#NormalModeFilter(winid, key) abort
         exec g:Lf_py "qfloclistExplManager._cli._buildPopupPrompt()"
         redraw
     elseif key ==? "<LeftMouse>"
-        if has('patch-8.1.2266')
+        if exists("*getmousepos")
+            let pos = getmousepos()
+            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
+            exec g:Lf_py "qfloclistExplManager._cli._buildPopupPrompt()"
+            redraw
+        elseif has('patch-8.1.2266')
             call win_execute(a:winid, "exec v:mouse_lnum")
             call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
-        exec g:Lf_py "qfloclistExplManager._cli._buildPopupPrompt()"
+            exec g:Lf_py "qfloclistExplManager._cli._buildPopupPrompt()"
             redraw
         endif
     elseif key ==? "<ScrollWheelUp>"

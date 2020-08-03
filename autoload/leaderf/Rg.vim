@@ -28,7 +28,6 @@ function! leaderf#Rg#Maps()
     nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "rgExplManager.quit()"<CR>
     " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "rgExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "rgExplManager.input()"<CR>
@@ -195,7 +194,13 @@ function! leaderf#Rg#NormalModeFilter(winid, key) abort
         exec g:Lf_py "rgExplManager._cli._buildPopupPrompt()"
         redraw
     elseif key ==? "<LeftMouse>"
-        if has('patch-8.1.2266')
+        if exists("*getmousepos")
+            let pos = getmousepos()
+            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
+            exec g:Lf_py "rgExplManager._cli._buildPopupPrompt()"
+            redraw
+            exec g:Lf_py "rgExplManager._previewResult(False)"
+        elseif has('patch-8.1.2266')
             call win_execute(a:winid, "exec v:mouse_lnum")
             call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
             exec g:Lf_py "rgExplManager._cli._buildPopupPrompt()"

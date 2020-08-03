@@ -660,11 +660,6 @@ class Manager(object):
             maxheight = int(lfEval("&lines - (line('w$') - line('.')) - 4"))
             maxheight -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
 
-            if self._current_mode == 'NORMAL':
-                filter_cb = "leaderf#normalModePreviewFilter"
-            else:
-                filter_cb = "leaderf#popupModePreviewFilter"
-
             options = {
                     "title":           title,
                     "maxwidth":        maxwidth,
@@ -679,7 +674,7 @@ class Manager(object):
                     "border":          [1, 0, 0, 0],
                     "borderchars":     [' '],
                     "borderhighlight": ["Lf_hl_previewTitle"],
-                    "filter":          filter_cb,
+                    "filter":           "leaderf#popupModePreviewFilter",
                     }
             if maxheight < int(lfEval("&lines"))//2 - 2:
                 maxheight = int(lfEval("&lines")) - maxheight - 5
@@ -690,6 +685,9 @@ class Manager(object):
 
             lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, json.dumps(options)))
             self._preview_winid = int(lfEval("winid"))
+            if self._current_mode == 'NORMAL':
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', function('leaderf#normalModePreviewFilter', [%d]))"
+                        % (self._preview_winid, id(self)))
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
             elif line_nr > 0:

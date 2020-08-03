@@ -371,27 +371,35 @@ function! leaderf#popupModePreviewFilter(winid, key) abort
         " https://github.com/vim/vim/issues/5216
         "redraw
         return 0
-    elseif key ==? "<LeftMouse>" && has('patch-8.1.2266')
-        " v:mouse_winid is always 0 in popup window(fixed in vim 8.1.2292)
-        " the below workaround can make v:mouse_winid have the value
-        if v:mouse_winid == 0
-            silent! call feedkeys("\<LeftMouse>", "n")
-            silent! call getchar()
-        endif
+    elseif key ==? "<LeftMouse>"
+        if exists("*getmousepos")
+            let pos = getmousepos()
+            if pos.winid == a:winid
+                call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
+                return 1
+            endif
+        elseif has('patch-8.1.2266')
+            " v:mouse_winid is always 0 in popup window(fixed in vim 8.1.2292)
+            " the below workaround can make v:mouse_winid have the value
+            if v:mouse_winid == 0
+                silent! call feedkeys("\<LeftMouse>", "n")
+                silent! call getchar()
+            endif
 
-        "echom v:mouse_winid v:mouse_lnum v:mouse_col v:mouse_win
-        " in normal window, v:mouse_lnum and v:mouse_col are always 0 after getchar()
-        if v:mouse_winid == a:winid
-            call win_execute(a:winid, "exec v:mouse_lnum")
-            call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
-            redraw
-            return 1
-        else
-            call popup_close(a:winid)
-            call win_execute(v:mouse_winid, "exec v:mouse_lnum")
-            call win_execute(v:mouse_winid, "exec 'norm!'.v:mouse_col.'|'")
-            redraw
-            return 1
+            "echom v:mouse_winid v:mouse_lnum v:mouse_col v:mouse_win
+            " in normal window, v:mouse_lnum and v:mouse_col are always 0 after getchar()
+            if v:mouse_winid == a:winid
+                call win_execute(a:winid, "exec v:mouse_lnum")
+                call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
+                redraw
+                return 1
+            else
+                call popup_close(a:winid)
+                call win_execute(v:mouse_winid, "exec v:mouse_lnum")
+                call win_execute(v:mouse_winid, "exec 'norm!'.v:mouse_col.'|'")
+                redraw
+                return 1
+            endif
         endif
     elseif key ==? "<ScrollWheelUp>"
         call win_execute(a:winid, "norm! 3k")
@@ -405,7 +413,7 @@ function! leaderf#popupModePreviewFilter(winid, key) abort
     return 0
 endfunction
 
-function! leaderf#normalModePreviewFilter(winid, key) abort
+function! leaderf#normalModePreviewFilter(id, winid, key) abort
     let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
     if key ==? "<ESC>"
         call popup_close(a:winid)
@@ -417,7 +425,18 @@ function! leaderf#normalModePreviewFilter(winid, key) abort
         "redraw
         return 0
     elseif key ==? "<LeftMouse>" && has('patch-8.1.2266')
-        return 0
+        let pos = getmousepos()
+        if pos.winid == a:winid
+            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
+            return 1
+        else
+            call popup_close(a:winid)
+            redraw
+            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
+            exec g:Lf_py "import ctypes"
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+            return 1
+        endif
     elseif key ==? "<ScrollWheelUp>"
         call win_execute(a:winid, "norm! 3k")
         redraw
@@ -495,7 +514,13 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         redraw
     elseif key ==? "<LeftMouse>"
-        if has('patch-8.1.2266')
+        if exists("*getmousepos")
+            let pos = getmousepos()
+            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+            redraw
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+        elseif has('patch-8.1.2266')
             call win_execute(a:winid, "exec v:mouse_lnum")
             call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
             exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
