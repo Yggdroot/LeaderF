@@ -641,10 +641,14 @@ class LfCli(object):
             self._blinkon = True
             idle = 10000
             update = False
-            if lfEval("has('nvim') && exists('g:GuiLoaded')") == '1':
-                threshold = 2
+
+            if len(self._instance._manager._content) < 100000:
+                threshold = 0
             else:
-                threshold = 25
+                if lfEval("has('nvim') && exists('g:GuiLoaded')") == '1':
+                    threshold = 2
+                else:
+                    threshold = 25
 
             while 1:
                 self._buildPrompt()

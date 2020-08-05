@@ -1354,7 +1354,8 @@ class Manager(object):
             self._highlight_method = highlight_method
             self._highlight_method()
 
-        if len(self._cli.pattern) > 1 and not is_continue:
+        if lfEval("has('gui_running')") == '1' and len(self._content) >= 100000 \
+                and len(self._cli.pattern) > 1 and not is_continue:
             lfCmd("redraw")
 
     def _guessFilter(self, filename, suffix, dirname, icon, iterable):
