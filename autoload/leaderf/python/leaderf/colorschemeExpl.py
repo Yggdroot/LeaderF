@@ -24,11 +24,16 @@ class ColorschemeExplorer(Explorer):
             return self.getFreshContent()
 
     def getFreshContent(self, *args, **kwargs):
-        content = []
+        user_home = os.path.expanduser("~")
+        content, content_prefer = [], []
         for dir in lfEval("&rtp").split(','):
             try:
                 colors = os.listdir(os.path.join(dir, "colors"))
-                content.extend([c[:-4] for c in colors if c.endswith(".vim")])
+                colors_name = [c[:-4] for c in colors if c.endswith(".vim")]
+                if user_home in dir:
+                    content_prefer.extend(colors_name)
+                else:
+                    content.extend(colors_name)
             except:
                 pass
 
@@ -39,14 +44,17 @@ class ColorschemeExplorer(Explorer):
                     "{}/pack/*/start/*/colors/*.vim",
                     "{}/pack/*/opt/*/colors/*.vim",
                 ]:
-                    colors = [
+                    colors_name = [
                         os.path.basename(f)[:-4]
                         for f in glob.glob(pack_path.format(dir))
                     ]
-                    content.extend(colors)
+                    if user_home in dir:
+                        content_prefer.extend(colors_name)
+                    else:
+                        content.extend(colors_name)
 
-        self._content = list(set(content))
-        self._content.sort()
+        content_prefer, content = list(set(content_prefer)), list(set(content))
+        self._content = sorted(content_prefer) + sorted(content)
 
         return self._content
 
