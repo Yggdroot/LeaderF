@@ -187,6 +187,13 @@ g:Lf_NumberOfHighlight                          *g:Lf_NumberOfHighlight*
     Specify the number of highlight lines in the result.
     Default value is 100.
 
+g:Lf_DisableStl                                 *g:Lf_StlColorscheme*
+    Don't let LeaderF modify statusline.
+    e.g. >
+    let g:Lf_DisableStl = 1
+<
+    g:Lf_DisableStl will not be set by default.
+    
 g:Lf_StlColorscheme                             *g:Lf_StlColorscheme*
     You can configure the colorscheme of statusline for LeaderF.
     e.g. >

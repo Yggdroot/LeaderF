@@ -2058,6 +2058,8 @@ class Manager(object):
         self._bang_start_time = self._start_time
         self._bang_count = 0
 
+        self._getInstance().buffer.vars['Lf_category'] = self._getExplorer().getStlCategory()
+ 
         self._read_content_exception = None
         if isinstance(content, list):
             self._is_content_list = True

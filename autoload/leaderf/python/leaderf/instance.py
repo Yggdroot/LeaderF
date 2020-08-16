@@ -995,7 +995,8 @@ class LfInstance(object):
             lfCmd("autocmd! ColorScheme * call leaderf#highlightDevIcons()")
             lfCmd("augroup END")
 
-        self._setStatusline()
+        if lfEval("get(g:, 'Lf_DisableStl', 0)")=="0":
+            self._setStatusline()
         self._after_enter()
 
     def exitBuffer(self):
