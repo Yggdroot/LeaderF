@@ -813,7 +813,7 @@ class RgExplManager(Manager):
         self._createPopupPreview("", buf_number, line_num)
 
         if lfEval("get(g:, 'Lf_RgHighlightInPreview', 1)") == '1':
-            if self._getInstance().getWinPos() == 'popup':
+            if lfEval("has('nvim')") != '1':
                 for i in self._getExplorer().getPatternRegex():
                     lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_rgHighlight', '%s', 9)")"""
                             % (self._preview_winid, escQuote(i).replace('\\', '\\\\')))
