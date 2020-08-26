@@ -622,6 +622,11 @@ g:Lf_GtagsAutoGenerate                          *g:Lf_GtagsAutoGenerate*
     generated manually by using `Leaderf gtags --update` .
     Default value is 0.
 
+g:Lf_GtagsAutoUpdate                            *g:Lf_GtagsAutoUpdate*
+    If the value is 1 and the gtags database already exists, gtags database
+    will be updated automatically after the buffer is saved.
+    Default value is 1.
+
 g:Lf_GtagsSource                                *g:Lf_GtagsSource*
     Gtags accepts a list of files as target files. This option indicates
     where the target files come from. It has 3 values: 0, 1, 2.

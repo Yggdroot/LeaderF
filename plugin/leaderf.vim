@@ -73,7 +73,9 @@ augroup LeaderF_Gtags
     if get(g:, 'Lf_GtagsAutoGenerate', 0) == 1
         autocmd BufRead * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 0)
     endif
-    autocmd BufWritePost * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 1)
+    if get(g:, 'Lf_GtagsAutoUpdate', 1) == 1
+        autocmd BufWritePost * call leaderf#Gtags#updateGtags(expand('<afile>:p'), 1)
+    endif
 augroup END
 
 noremap <silent> <Plug>LeaderfFileTop        :<C-U>Leaderf file --top<CR>
