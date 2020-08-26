@@ -14,7 +14,7 @@ elseif v:version < 704 || v:version == 704 && has("patch330") == 0
     echomsg "LeaderF requires Vim 7.4.330+."
     echohl None
     finish
-elseif !has('pythonx') && !has('python3') && !has('python2')
+elseif !has('pythonx') && !has('python3') && !has('python')
     echohl Error
     echomsg "LeaderF requires Vim compiled with python and/or a compatible python version."
     echohl None
