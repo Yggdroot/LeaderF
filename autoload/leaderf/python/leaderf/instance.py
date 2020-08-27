@@ -1080,7 +1080,10 @@ class LfInstance(object):
         num = 0
         columns = self._window_object.width - int(lfEval("&numberwidth")) - 1
         for i in buffer:
-            num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + columns - 1)// columns
+            try:
+                num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + columns - 1)// columns
+            except:
+                num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i).replace('\x00', '\x01'))) + columns - 1)// columns
         return num
 
     def setBuffer(self, content, need_copy=False):

@@ -156,5 +156,8 @@ def lfPrintError(error):
 def lfActualLineCount(buffer, start, end, col_width):
     num = 0
     for i in buffer[start:end]:
-        num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + col_width - 1) // col_width
+        try:
+            num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + col_width - 1) // col_width
+        except:
+            num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i).replace('\x00', '\x01'))) + col_width - 1) // col_width
     return num

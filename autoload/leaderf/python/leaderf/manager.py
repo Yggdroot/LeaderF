@@ -1589,6 +1589,8 @@ class Manager(object):
                 return '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" % (text.replace('\x00', '\x01'), pattern))
             except ValueError:  # python 3
                 return '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" % (text.replace('\x00', '\x01'), pattern))
+            except:
+                return '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" % (text.replace('\x00', '\x01'), pattern))
 
         try:
             if ('-2' == lfEval("g:LfNoErrMsgMatch('', '%s')" % escQuote(self._cli.pattern))):
