@@ -320,7 +320,7 @@ class LfCli(object):
 
     def buildPopupPrompt(self):
         self._buildPopupPrompt()
-        lfCmd("redraw")
+        lfCmd("silent! redraw")
 
     def _buildPrompt(self):
         if lfEval("has('nvim')") == '1' and self._instance.getWinPos() != 'floatwin':
