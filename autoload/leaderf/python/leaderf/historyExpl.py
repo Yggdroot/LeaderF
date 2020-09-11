@@ -18,15 +18,19 @@ class HistoryExplorer(Explorer):
 
     def getContent(self, *args, **kwargs):
         result_list = []
+        pattern_exclude = []
+        history_pattern_exclude = lfEval("g:Lf_HistoryExclude")
         if "history" in kwargs:
             lfCmd("let tmp = @x")
             lfCmd("redir @x")
             if kwargs.get("history") == "cmd":
                 self._history_type = "Cmd_History"
                 lfCmd("silent history :")
+                pattern_exclude = history_pattern_exclude.get('cmd', [])
             elif kwargs.get("history") == "search":
                 self._history_type = "Search_History"
                 lfCmd("silent history /")
+                pattern_exclude = history_pattern_exclude.get('search', [])
             else:
                 self._history_type = "History"
                 lfCmd("let @x = ''")
@@ -35,6 +39,9 @@ class HistoryExplorer(Explorer):
             lfCmd("redir END")
             result_list = result.splitlines()[2:]
             result_list = [line[1:].lstrip().split('  ', 1)[1] for line in result_list]
+
+            compiled = [re.compile(p) for p in pattern_exclude]
+            result_list = [line for line in result_list if all(p.search(line) is None for p in compiled)]
 
         return result_list[::-1]
 
@@ -96,6 +103,37 @@ class HistoryExplManager(Manager):
                   2, return the start position of the whole line
         """
         return 0
+
+    def _createHelp(self):
+        help = []
+        help.append('" <CR>/<double-click>/o : open file under cursor')
+        help.append('" i/<Tab> : switch to input mode')
+        help.append('" q : quit')
+        help.append('" e : edit command under cursor')
+        help.append('" <F1> : toggle this help')
+        help.append('" ---------------------------------------------------------')
+        return help
+
+    def _cmdExtension(self, cmd):
+        if equal(cmd, '<C-o>'):
+            self.editHistory()
+        return True
+
+    def editHistory(self):
+        instance = self._getInstance()
+
+        line = instance.currentLine
+        edit_prompt = lfEval("g:Lf_HistoryEditPromptIfEmpty") == "1"
+        if edit_prompt and len(line.strip()) == 0:
+            line = ''.join(instance._cli._cmdline)
+
+        instance.exitBuffer()
+        cmd = ":"
+
+        if self._getExplorer().getHistoryType() == "Search_History":
+            cmd = "/"
+
+        lfCmd("call feedkeys('%s', 'n')" % (cmd + escQuote(line)))
 
 
 #*****************************************************

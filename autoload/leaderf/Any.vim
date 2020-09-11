@@ -49,6 +49,11 @@ let g:Lf_Helps = {
             \ "self":           "execute the commands of itself",
             \ "rg":             "grep using rg",
             \ "gtags":          "navigate tags using the gtags",
+            \ "filetype":       "navigate the filetype",
+            \ "command":        "execute built-in/user-defined Ex commands",
+            \ "window":         "search windows",
+            \ "quickfix":       "navigate quickfix",
+            \ "loclist":        "navigate location list",
             \ }
 
 let g:Lf_Arguments = {
@@ -135,7 +140,6 @@ let g:Lf_Arguments = {
             \               {"name": ["--current-buffer"], "nargs": 0, "help": "Searches in current buffer."},
             \               {"name": ["--all-buffers"], "nargs": 0, "help": "Searches in all listed buffers."},
             \           ],
-            \           {"name": ["--recall"], "nargs": 0, "help": "Recall last search. If the result window is closed, reopen it."},
             \           {"name": ["--append"], "nargs": 0, "help": "Append to the previous search results."},
             \           {"name": ["--match-path"], "nargs": 0, "help": "Match the file path when fuzzy searching."},
             \           {"name": ["--wd-mode"], "nargs": 1, "metavar": "<MODE>", "help": "Specify the working directory mode, value has the same meaning as g:Lf_WorkingDirectoryMode."},
@@ -162,7 +166,6 @@ let g:Lf_Arguments = {
             \           {"name": ["--literal"], "nargs": 0, "help": "Execute literal search instead of regular expression search."},
             \           {"name": ["--path-style"], "nargs": 1, "choices": ["relative", "absolute", "shorter", "abslib", "through"], "metavar": "<FORMAT>", "help": "Show path names using <FORMAT>, which may be one of: `relative`, `absolute`, `shorter`, `abslib` or `through`. `relative` means relative path.  `absolute`  means  absolute path.  `shorter` means the shorter one of relative and absolute path.  `abslib` means absolute path for libraries (GTAGSLIBPATH) and relative path for the rest.  `through` means the relative path from the project root directory (internal format of GPATH).  The default is `relative`."},
             \           {"name": ["-S", "--scope"], "nargs": 1, "metavar": "<DIR>", "help": "Show only tags which exist under <DIR> directory."},
-            \           {"name": ["--recall"], "nargs": 0, "help": "Recall last search. If the result window is closed, reopen it."},
             \           {"name": ["--match-path"], "nargs": 0, "help": "Match the file path when fuzzy searching."},
             \           [
             \               {"name": ["--append"], "nargs": 0, "help": "Append to the previous search results."},
@@ -173,6 +176,13 @@ let g:Lf_Arguments = {
             \           {"name": ["--result"], "nargs": 1, "choices": ["ctags", "ctags-x", "ctags-mod"], "metavar": "<FORMAT>", "help": "Show result using format, which may be one of: `ctags`(default), `ctags-x`,  `ctags-mod`."},
             \           {"name": ["--auto-jump"], "nargs": "?", "metavar": "<TYPE>", "help": "Jump to the tag directly when there is only one match. <TYPE> can be 'h', 'v' or 't', which mean jump to a horizontally, vertically split window, or a new tabpage respectively. If <TYPE> is omitted, jump to a position in current window."},
             \   ],
+            \ "filetype": [],
+            \ "command": [
+            \           {"name": ["--run-immediately"], "nargs": 0, "help": "Immediately execute the command on the current line in the result window"},
+            \   ],
+            \ "window": [],
+            \ "quickfix": [],
+            \ "loclist": [],
             \}
 
 let g:Lf_CommonArguments = [
@@ -190,6 +200,7 @@ let g:Lf_CommonArguments = [
             \   {"name": ["--belowright"], "nargs": 0, "help": "the LeaderF window is at the belowright of the screen"},
             \   {"name": ["--aboveleft"],  "nargs": 0, "help": "the LeaderF window is at the aboveleft of the screen"},
             \   {"name": ["--fullScreen"], "nargs": 0, "help": "the LeaderF window takes up the full screen"},
+            \   {"name": ["--popup"],      "nargs": 0, "help": "the LeaderF window is a popup window or floating window"},
             \ ],
             \ [
             \   {"name": ["--nameOnly"], "nargs": 0, "help": "LeaderF is in NameOnly mode by default"},
@@ -202,6 +213,9 @@ let g:Lf_CommonArguments = [
             \   {"name": ["--next"], "nargs": 0, "help": "Jump to the next result."},
             \   {"name": ["--previous"], "nargs": 0, "help": "Jump to the previous result."},
             \ ],
+            \ {"name": ["--recall"], "nargs": 0, "help": "Recall last search. If the result window is closed, reopen it."},
+            \ {"name": ["--popup-height"], "nargs": 1, "help": "specifies the maximum height of popup window, only available in popup mode."},
+            \ {"name": ["--popup-width"], "nargs": 1, "help": "specifies the width of popup window, only available in popup mode."},
             \]
 
 " arguments is something like g:Lf_CommonArguments
@@ -213,7 +227,7 @@ let g:Lf_CommonArguments = [
 "   ["--top", "--bottom", "--left", "--right", "--belowright", "--aboveleft", "--fullScreen"],
 "   ["--nameOnly", "--fullPath", "--fuzzy", "--regexMode"],
 " ]
-function! s:Lf_Refine(arguments)
+function! s:Lf_Refine(arguments) abort
     let result = []
     for arg in a:arguments
         if type(arg) == type([])
@@ -238,7 +252,7 @@ endfunction
 "   "--cword":    {"name": ["--cword"], "nargs": 0, "help": "current word under cursor is inputted in advance"},
 "   ...
 " }
-function! s:Lf_GenDict(arguments)
+function! s:Lf_GenDict(arguments) abort
     let result = {}
     for arg in a:arguments
         if type(arg) == type([])
@@ -256,7 +270,7 @@ function! s:Lf_GenDict(arguments)
     return result
 endfunction
 
-function! s:Lf_FuzzyMatch(pattern, str)
+function! s:Lf_FuzzyMatch(pattern, str) abort
     let i = 0
     let pattern_len = len(a:pattern)
     let j = 0
@@ -270,13 +284,13 @@ function! s:Lf_FuzzyMatch(pattern, str)
     return i >= pattern_len
 endfunction
 
-function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
+function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos) abort
     let argList = split(a:cmdline[:a:cursorPos-1], '[ \t!]\+')
     let argNum = len(argList)
     if argNum == 1  " Leaderf
-        return keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions)
+        return keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions) + ['--recall', '--next', '--previous']
     elseif argNum == 2 && a:cmdline[a:cursorPos-1] !~ '\s'  " 'Leaderf b'
-        return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions), "s:Lf_FuzzyMatch(a:argLead, v:val)")
+        return filter(keys(g:Lf_Arguments) + keys(g:Lf_Extensions) + keys(g:Lf_PythonExtensions) + ['--recall', '--next', '--previous'], "s:Lf_FuzzyMatch(a:argLead, v:val)")
     else
         let existingOptions = a:cmdline[a:cursorPos-1] !~ '\s' ? argList[2:-2] : argList[2:]
         if argList[1] == "gtags"
@@ -313,7 +327,7 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos)
     endif
 endfunction
 
-function! leaderf#Any#start(bang, args)
+function! leaderf#Any#start(bang, args) abort
     if a:args == ""
 
     else

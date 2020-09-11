@@ -9,6 +9,14 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .mru import *
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    webDevIconsStrLen,
+    webDevIconsBytesLen,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 
 #*****************************************************
@@ -35,8 +43,8 @@ class MruExplorer(Explorer):
 
         lines = [line.rstrip() for line in lines] # remove the '\n'
         wildignore = lfEval("g:Lf_MruWildIgnore")
-        lines = [name for name in lines if True not in (fnmatch(name, j) for j in wildignore['file'])
-                    and True not in (fnmatch(name, "*/" + j + "/*") for j in wildignore['dir'])]
+        lines = [name for name in lines if True not in (fnmatch(name, j) for j in wildignore.get('file', []))
+                    and True not in (fnmatch(name, "*/" + j + "/*") for j in wildignore.get('dir', []))]
 
         if len(lines) == 0:
             return lines
@@ -44,8 +52,21 @@ class MruExplorer(Explorer):
         if kwargs["cb_name"] == lines[0]:
             lines = lines[1:] + lines[0:1]
 
+        self._prefix_length = 0
+        self.show_icon = False
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            self.show_icon = True
+            self._prefix_length = webDevIconsStrLen()
+
         if "--no-split-path" in kwargs.get("arguments", {}):
-            return lines
+            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "0":
+                return lines
+
+            for line in lines:
+                return [
+                    webDevIconsGetFileTypeSymbol(getBasename(line)) + line
+                    for line in lines
+                ]
 
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(line))))
@@ -57,7 +78,13 @@ class MruExplorer(Explorer):
             dirname = getDirname(line)
             space_num = self._max_bufname_len \
                         - int(lfEval("strdisplaywidth('%s')" % escQuote(basename)))
-            lines[i] = '{}{} "{}"'.format(getBasename(line), ' ' * space_num,
+
+            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+                icon = webDevIconsGetFileTypeSymbol(basename)
+            else:
+                icon = ""
+
+            lines[i] = '{}{}{} "{}"'.format(icon, getBasename(line), ' ' * space_num,
                                           dirname if dirname else '.' + os.sep)
         return lines
 
@@ -94,7 +121,6 @@ class MruExplorer(Explorer):
 class MruExplManager(Manager):
     def __init__(self):
         super(MruExplManager, self).__init__()
-        self._match_ids = []
 
     def _getExplClass(self):
         return MruExplorer
@@ -123,9 +149,15 @@ class MruExplManager(Manager):
                 file = os.path.normpath(lfEncode(file))
 
             if kwargs.get("mode", '') == 't':
-                lfCmd("tab drop %s" % escSpecial(file))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
+                    lfCmd("tab drop %s" % escSpecial(file))
+                else:
+                    lfCmd("tabe %s" % escSpecial(file))
             else:
-                lfCmd("hide edit %s" % escSpecial(file))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufexists('%s')" % escQuote(file)) == '1':
+                    lfCmd("keepj hide drop %s" % escSpecial(file))
+                else:
+                    lfCmd("hide edit %s" % escSpecial(file))
         except vim.error as e: # E37
             lfPrintError(e)
 
@@ -140,7 +172,9 @@ class MruExplManager(Manager):
         if not line:
             return ''
 
+        prefix_len = self._getExplorer().getPrefixLength()
         if "--no-split-path" in self._arguments:
+            line = line[prefix_len:]
             if mode == 0:
                 return line
             elif mode == 1:
@@ -148,7 +182,6 @@ class MruExplManager(Manager):
             else:
                 return getDirname(line)
         else:
-            prefix_len = self._getExplorer().getPrefixLength()
             if mode == 0:
                 return line[prefix_len:]
             elif mode == 1:
@@ -170,11 +203,15 @@ class MruExplManager(Manager):
             return 0
         if "--no-split-path" in self._arguments:
             if mode == 0 or mode == 2:
-                return 0
+                return webDevIconsBytesLen()
             else:
                 return lfBytesLen(getDirname(line))
         else:
-            prefix_len = self._getExplorer().getPrefixLength()
+            if self._getExplorer().show_icon:
+                prefix_len = self._getExplorer().getPrefixLength() - webDevIconsStrLen() + webDevIconsBytesLen()
+            else:
+                prefix_len = self._getExplorer().getPrefixLength()
+
             if mode == 0:
                 return prefix_len
             elif mode == 1:
@@ -202,30 +239,71 @@ class MruExplManager(Manager):
 
     def _afterEnter(self):
         super(MruExplManager, self)._afterEnter()
+
         if "--no-split-path" not in self._arguments:
-            id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
-            self._match_ids.append(id)
+            if self._getInstance().getWinPos() == 'popup':
+                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
+                        % self._getInstance().getPopupWinId())
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+            else:
+                id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
+                self._match_ids.append(id)
+
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
+            icon_pattern = r'^__icon__'
+            self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
 
     def _beforeExit(self):
         super(MruExplManager, self)._beforeExit()
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
 
     def deleteMru(self):
-        if vim.current.window.cursor[0] <= self._help_length:
+        instance = self._getInstance()
+        if self._inHelpLines():
             return
-        lfCmd("setlocal modifiable")
-        line = vim.current.line
+        if instance.getWinPos() == 'popup':
+            lfCmd("call win_execute(%d, 'setlocal modifiable')" % instance.getPopupWinId())
+        else:
+            lfCmd("setlocal modifiable")
+        line = instance._buffer_object[instance.window.cursor[0] - 1]
+
+        if line == '':
+            return
+
         dirname = self._getDigest(line, 2)
         basename = self._getDigest(line, 1)
         self._explorer.delFromCache(dirname + basename)
         if len(self._content) > 0:
             self._content.remove(line)
+            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+            self._getInstance().setStlResultsCount(len(self._content)//self._getUnit())
         # `del vim.current.line` does not work in neovim
         # https://github.com/neovim/neovim/issues/9361
-        del vim.current.buffer[vim.current.window.cursor[0] - 1]
-        lfCmd("setlocal nomodifiable")
+        del instance._buffer_object[instance.window.cursor[0] - 1]
+        if instance.getWinPos() == 'popup':
+            instance.refreshPopupStatusline()
+            lfCmd("call win_execute(%d, 'setlocal nomodifiable')" % instance.getPopupWinId())
+        else:
+            lfCmd("setlocal nomodifiable")
+
+    def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+        dirname = self._getDigest(line, 2)
+        basename = self._getDigest(line, 1)
+
+        file = dirname + basename
+        if not os.path.isabs(file):
+            file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+            file = os.path.normpath(lfEncode(file))
+
+        buf_number = lfEval("bufadd('{}')".format(escQuote(file)))
+        self._createPopupPreview(file, buf_number, 0)
 
 
 #*****************************************************

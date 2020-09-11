@@ -33,27 +33,15 @@ function! leaderf#Function#Maps()
     nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
+    if has("nvim")
+        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "functionExplManager._toUpInPopup()"<CR>
+        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "functionExplManager._toDownInPopup()"<CR>
+        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "functionExplManager._closePreviewPopup()"<CR>
+    endif
     if has_key(g:Lf_NormalMap, "Function")
         for i in g:Lf_NormalMap["Function"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
         endfor
-    endif
-endfunction
-
-function! leaderf#Function#startExpl(win_pos, bang, ...)
-    if a:0 == 0
-        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', bang=".a:bang.")")
-    else
-        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', arguments={'--all': []}, bang=".a:bang.")")
-    endif
-endfunction
-
-function! leaderf#Function#startExplPattern(win_pos, bang, all, pattern)
-    if a:all == 0
-        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', pattern='".a:pattern."', bang=".a:bang.")")
-    else
-        call leaderf#LfPy("functionExplManager.startExplorer('".a:win_pos."', arguments={'--all': []}, pattern='".a:pattern."', bang=".a:bang.")")
     endif
 endfunction
 

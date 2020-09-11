@@ -13,13 +13,20 @@ from .utils import *
 from .explorer import *
 from .manager import *
 from .asyncExecutor import AsyncExecutor
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    removeDevIcons,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 def showRelativePath(func):
     @wraps(func)
     def deco(*args, **kwargs):
         if lfEval("g:Lf_ShowRelativePath") == '1':
             # os.path.relpath() is too slow!
-            dir = os.getcwd() if len(args) == 1 else args[1]
+            dir = os.getcwd() if args[0]._cmd_work_dir == "" else args[1]
             cwd_length = len(lfEncode(dir))
             if not dir.endswith(os.sep):
                 cwd_length += 1
@@ -27,6 +34,20 @@ def showRelativePath(func):
         else:
             return func(*args, **kwargs)
     return deco
+
+def showDevIcons(func):
+    @wraps(func)
+    def deco(*args, **kwargs):
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
+            content = func(*args, **kwargs)
+            # In case of Windows, line feeds may be included when reading from the cache.
+            return [format_line(line.rstrip()) for line in content or []]
+        else:
+            return func(*args, **kwargs)
+    return deco
+
+def format_line(line):
+    return webDevIconsGetFileTypeSymbol(line) + line
 
 
 #*****************************************************
@@ -45,6 +66,7 @@ class FileExplorer(Explorer):
         self._initCache()
         self._executor = []
         self._no_ignore = None
+        self._cmd_work_dir = ""
 
     def _initCache(self):
         if not os.path.exists(self._cache_dir):
@@ -60,16 +82,17 @@ class FileExplorer(Explorer):
         for dir_path, dirs, files in os.walk(dir, followlinks = False
                 if lfEval("g:Lf_FollowLinks") == '0' else True):
             dirs[:] = [i for i in dirs if True not in (fnmatch.fnmatch(i,j)
-                       for j in wildignore['dir'])]
+                       for j in wildignore.get('dir', []))]
             for name in files:
                 if True not in (fnmatch.fnmatch(name, j)
-                                for j in wildignore['file']):
+                                for j in wildignore.get('file', [])):
                     file_list.append(lfEncode(os.path.join(dir_path,name)))
                 if time.time() - start_time > float(
                         lfEval("g:Lf_IndexTimeLimit")):
                     return file_list
         return file_list
 
+    @showDevIcons
     @showRelativePath
     def _getFileList(self, dir):
         dir = dir if dir.endswith(os.sep) else dir + os.sep
@@ -140,6 +163,14 @@ class FileExplorer(Explorer):
                             cache_file.write(line + '\n')
                 return file_list
 
+    @showDevIcons
+    def _readFromFileList(self, files):
+        result = []
+        for file in files:
+            with lfOpen(file, 'r', errors='ignore') as f:
+                result += f.readlines()
+        return result
+
     def _refresh(self):
         dir = os.path.abspath(self._cur_dir)
         dir = dir if dir.endswith(os.sep) else dir + os.sep
@@ -206,25 +237,36 @@ class FileExplorer(Explorer):
                 return glob
 
     def _buildCmd(self, dir, **kwargs):
-        if lfEval("g:Lf_ShowRelativePath") == '1':
+        if self._cmd_work_dir:
+            if os.name == 'nt':
+                cd_cmd = 'cd /d "{}" && '.format(dir)
+            else:
+                cd_cmd = 'cd "{}" && '.format(dir)
+        else:
+            cd_cmd = ""
+
+        if lfEval("g:Lf_ShowRelativePath") == '1' and self._cmd_work_dir == "":
             dir = os.path.relpath(dir)
 
         if lfEval("exists('g:Lf_ExternalCommand')") == '1':
-            cmd = lfEval("g:Lf_ExternalCommand") % dir.join('""')
+            if cd_cmd:
+                cmd = cd_cmd + lfEval("g:Lf_ExternalCommand").replace('"%s"', '').replace('%s', '')
+            else:
+                cmd = lfEval("g:Lf_ExternalCommand") % dir.join('""')
             self._external_cmd = cmd
             return cmd
 
         if lfEval("g:Lf_UseVersionControlTool") == '1':
-            if self._exists(dir, ".git"):
+            if self._exists(dir, ".git") and lfEval("executable('git')") == '1':
                 wildignore = lfEval("g:Lf_WildIgnore")
-                if ".git" in wildignore["dir"]:
-                    wildignore["dir"].remove(".git")
-                if ".git" in wildignore["file"]:
-                    wildignore["file"].remove(".git")
+                if ".git" in wildignore.get("dir", []):
+                    wildignore.get("dir", []).remove(".git")
+                if ".git" in wildignore.get("file", []):
+                    wildignore.get("file", []).remove(".git")
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     ignore += ' -x "%s"' % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     ignore += ' -x "%s"' % i
 
                 if "--no-ignore" in kwargs.get("arguments", {}):
@@ -237,22 +279,28 @@ class FileExplorer(Explorer):
                 else:
                     recurse_submodules = ""
 
-                cmd = 'git ls-files %s "%s" && git ls-files --others %s %s "%s"' % (recurse_submodules, dir, no_ignore, ignore, dir)
+                if cd_cmd:
+                    cmd = cd_cmd + 'git ls-files %s && git ls-files --others %s %s' % (recurse_submodules, no_ignore, ignore)
+                else:
+                    cmd = 'git ls-files %s "%s" && git ls-files --others %s %s "%s"' % (recurse_submodules, dir, no_ignore, ignore, dir)
                 self._external_cmd = cmd
                 return cmd
-            elif self._exists(dir, ".hg"):
+            elif self._exists(dir, ".hg") and lfEval("executable('hg')") == '1':
                 wildignore = lfEval("g:Lf_WildIgnore")
-                if ".hg" in wildignore["dir"]:
-                    wildignore["dir"].remove(".hg")
+                if ".hg" in wildignore.get("dir", []):
+                    wildignore.get("dir", []).remove(".hg")
                 if ".hg" in wildignore["file"]:
-                    wildignore["file"].remove(".hg")
+                    wildignore.get("file", []).remove(".hg")
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     ignore += ' -X "%s"' % self._expandGlob("dir", i)
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     ignore += ' -X "%s"' % self._expandGlob("file", i)
 
-                cmd = 'hg files %s "%s"' % (ignore, dir)
+                if cd_cmd:
+                    cmd = cd_cmd + 'hg files %s' % ignore
+                else:
+                    cmd = 'hg files %s "%s"' % (ignore, dir)
                 self._external_cmd = cmd
                 return cmd
 
@@ -270,19 +318,19 @@ class FileExplorer(Explorer):
             if os.name == 'nt': # https://github.com/BurntSushi/ripgrep/issues/500
                 color = ""
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'): # rg does not show hidden files by default
                         ignore += ' -g "!%s"' % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                         ignore += ' -g "!%s"' % i
             else:
                 color = "--color never"
                 ignore = ""
-                for i in wildignore["dir"]:
+                for i in wildignore.get("dir", []):
                     if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                         ignore += " -g '!%s'" % i
-                for i in wildignore["file"]:
+                for i in wildignore.get("file", []):
                     if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                         ignore += " -g '!%s'" % i
 
@@ -306,14 +354,17 @@ class FileExplorer(Explorer):
             else:
                 cur_dir = '"%s"' % dir
 
-            cmd = 'rg --no-messages --files %s %s %s %s %s %s' % (color, ignore, followlinks, show_hidden, no_ignore, cur_dir)
+            if cd_cmd:
+                cmd = cd_cmd + 'rg --no-messages --files %s %s %s %s %s' % (color, ignore, followlinks, show_hidden, no_ignore)
+            else:
+                cmd = 'rg --no-messages --files %s %s %s %s %s %s' % (color, ignore, followlinks, show_hidden, no_ignore, cur_dir)
         elif default_tool["pt"] and lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
-            for i in wildignore["dir"]:
+            for i in wildignore.get("dir", []):
                 if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'): # pt does not show hidden files by default
                     ignore += " --ignore=%s" % i
-            for i in wildignore["file"]:
+            for i in wildignore.get("file", []):
                 if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                     ignore += " --ignore=%s" % i
 
@@ -332,14 +383,17 @@ class FileExplorer(Explorer):
             else:
                 no_ignore = ""
 
-            cmd = 'pt --nocolor %s %s %s %s -g="" "%s"' % (ignore, followlinks, show_hidden, no_ignore, dir)
+            if cd_cmd:
+                cmd = cd_cmd + 'pt --nocolor %s %s %s %s -g=""' % (ignore, followlinks, show_hidden, no_ignore)
+            else:
+                cmd = 'pt --nocolor %s %s %s %s -g="" "%s"' % (ignore, followlinks, show_hidden, no_ignore, dir)
         elif default_tool["ag"] and lfEval("executable('ag')") == '1' and os.name != 'nt': # https://github.com/vim/vim/issues/3236
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
-            for i in wildignore["dir"]:
+            for i in wildignore.get("dir", []):
                 if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'): # ag does not show hidden files by default
                     ignore += ' --ignore "%s"' % i
-            for i in wildignore["file"]:
+            for i in wildignore.get("file", []):
                 if lfEval("g:Lf_ShowHidden") != '0' or not i.startswith('.'):
                     ignore += ' --ignore "%s"' % i
 
@@ -358,16 +412,19 @@ class FileExplorer(Explorer):
             else:
                 no_ignore = ""
 
-            cmd = 'ag --nocolor --silent %s %s %s %s -g "" "%s"' % (ignore, followlinks, show_hidden, no_ignore, dir)
+            if cd_cmd:
+                cmd = cd_cmd + 'ag --nocolor --silent %s %s %s %s -g ""' % (ignore, followlinks, show_hidden, no_ignore)
+            else:
+                cmd = 'ag --nocolor --silent %s %s %s %s -g "" "%s"' % (ignore, followlinks, show_hidden, no_ignore, dir)
         elif default_tool["find"] and lfEval("executable('find')") == '1' \
                 and lfEval("executable('sed')") == '1' and os.name != 'nt':
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore_dir = ""
-            for d in wildignore["dir"]:
+            for d in wildignore.get("dir", []):
                 ignore_dir += '-type d -name "%s" -prune -o ' % d
 
             ignore_file = ""
-            for f in wildignore["file"]:
+            for f in wildignore.get("file", []):
                     ignore_file += '-type f -name "%s" -o ' % f
 
             if lfEval("g:Lf_FollowLinks") == '1':
@@ -390,13 +447,21 @@ class FileExplorer(Explorer):
             else:
                 show_hidden = ""
 
-            cmd = 'find %s "%s" -name "." -o %s %s %s -type f -print %s %s' % (followlinks,
-                                                                               dir,
-                                                                               ignore_dir,
-                                                                               ignore_file,
-                                                                               show_hidden,
-                                                                               redir_err,
-                                                                               strip)
+            if cd_cmd:
+                cmd = cd_cmd + 'find %s . -name "." -o %s %s %s -type f -print %s %s' % (followlinks,
+                                                                                         ignore_dir,
+                                                                                         ignore_file,
+                                                                                         show_hidden,
+                                                                                         redir_err,
+                                                                                         strip)
+            else:
+                cmd = 'find %s "%s" -name "." -o %s %s %s -type f -print %s %s' % (followlinks,
+                                                                                   dir,
+                                                                                   ignore_dir,
+                                                                                   ignore_file,
+                                                                                   show_hidden,
+                                                                                   redir_err,
+                                                                                   strip)
         else:
             cmd = None
 
@@ -404,6 +469,7 @@ class FileExplorer(Explorer):
 
         return cmd
 
+    @removeDevIcons
     def _writeCache(self, content):
         dir = self._cur_dir if self._cur_dir.endswith(os.sep) else self._cur_dir + os.sep
         with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
@@ -466,6 +532,7 @@ class FileExplorer(Explorer):
                     for line in content:
                         cache_file.write(line + '\n')
 
+    @showDevIcons
     def _getFilesFromCache(self):
         dir = self._cur_dir if self._cur_dir.endswith(os.sep) else self._cur_dir + os.sep
         with lfOpen(self._cache_index, 'r+', errors='ignore') as f:
@@ -508,7 +575,6 @@ class FileExplorer(Explorer):
             else:
                 return None
 
-
     def setContent(self, content):
         self._content = content
         if lfEval("g:Lf_UseCache") == '1':
@@ -517,22 +583,21 @@ class FileExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         files = kwargs.get("arguments", {}).get("--file", [])
         if files:
-            result = []
-            for file in files:
-                with lfOpen(file, 'r', errors='ignore') as f:
-                    result += f.readlines()
-            return result
+            return self._readFromFileList(files)
 
         dir = os.getcwd()
 
-        if kwargs.get("arguments", {}).get("directory"):
-            dir = kwargs.get("arguments", {}).get("directory")[0]
+        self._cmd_work_dir = ""
+        directory = kwargs.get("arguments", {}).get("directory")
+        if directory and directory[0] not in ['""', "''"]:
+            dir = directory[0].strip('"').rstrip('\\/')
             if os.path.exists(os.path.expanduser(lfDecode(dir))):
-                if lfEval("get(g:, 'Lf_NoChdir', 0)") == '0':
+                if lfEval("get(g:, 'Lf_NoChdir', 1)") == '0':
                     lfCmd("silent cd %s" % dir)
                     dir = os.getcwd()
                 else:
                     dir = os.path.abspath(lfDecode(dir))
+                    self._cmd_work_dir = dir
             else:
                 lfCmd("echohl ErrorMsg | redraw | echon "
                       "'Unknown directory `%s`' | echohl NONE" % dir)
@@ -563,9 +628,12 @@ class FileExplorer(Explorer):
                 executor = AsyncExecutor()
                 self._executor.append(executor)
                 if cmd.split(None, 1)[0] == "dir":
-                    content = executor.execute(cmd)
+                    content = executor.execute(cmd, format_line)
                 else:
-                    content = executor.execute(cmd, encoding=lfEval("&encoding"))
+                    if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
+                        content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=format_line)
+                    else:
+                        content = executor.execute(cmd, encoding=lfEval("&encoding"))
                 self._cmd_start_time = time.time()
                 return content
             else:
@@ -587,7 +655,10 @@ class FileExplorer(Explorer):
         return 'File'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        if self._cmd_work_dir:
+            return escQuote(lfEncode(self._cmd_work_dir))
+        else:
+            return escQuote(lfEncode(os.getcwd()))
 
     def supportsMulti(self):
         return True
@@ -610,10 +681,6 @@ class FileExplManager(Manager):
 
     def _defineMaps(self):
         lfCmd("call leaderf#File#Maps()")
-        lfCmd("augroup Lf_File")
-        lfCmd("autocmd!")
-        lfCmd("autocmd VimLeavePre * call leaderf#File#cleanup()")
-        lfCmd("augroup END")
 
     def _createHelp(self):
         help = []
@@ -657,8 +724,39 @@ class FileExplManager(Manager):
 
         return ""
 
+    def _afterEnter(self):
+        super(FileExplManager, self)._afterEnter()
+        lfCmd("augroup Lf_File")
+        lfCmd("autocmd!")
+        lfCmd("autocmd VimLeavePre * call leaderf#File#cleanup()")
+        lfCmd("augroup END")
+
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
+            icon_pattern = r'^__icon__'
+            self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
+
+    def _beforeExit(self):
+        super(FileExplManager, self)._beforeExit()
+        if self._timer_id is not None:
+            lfCmd("call timer_stop(%s)" % self._timer_id)
+            self._timer_id = None
+
+    def _bangEnter(self):
+        super(FileExplManager, self)._bangEnter()
+        if lfEval("exists('*timer_start')") == '0':
+            lfCmd("echohl Error | redraw | echo ' E117: Unknown function: timer_start' | echohl NONE")
+            return
+
+        self._workInIdle(bang=True)
+        if self._read_finished < 2:
+            self._timer_id = lfEval("timer_start(1, 'leaderf#File#TimerCallback', {'repeat': -1})")
+
     def startExplorer(self, win_pos, *args, **kwargs):
-        if kwargs.get("arguments", {}).get("directory"): # behavior no change for `LeaderfFile <directory>`
+        directory = kwargs.get("arguments", {}).get("directory")
+        if directory and directory[0] not in ['""', "''"]: # behavior no change for `LeaderfFile <directory>`
             self._orig_cwd = None
             super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
             return
@@ -709,6 +807,43 @@ class FileExplManager(Manager):
 
         super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
+    @removeDevIcons
+    def _previewInPopup(self, *args, **kwargs):
+        line = args[0]
+        buf_number = lfEval("bufadd('{}')".format(escQuote(line)))
+        self._createPopupPreview(line, buf_number, 0)
+
+    @removeDevIcons
+    def _acceptSelection(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+        file = args[0]
+        try:
+            if not os.path.isabs(file):
+                if self._getExplorer()._cmd_work_dir:
+                    file = os.path.join(self._getExplorer()._cmd_work_dir, lfDecode(file))
+                else:
+                    file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+                file = os.path.normpath(lfEncode(file))
+
+            if kwargs.get("mode", '') != 't' or (lfEval("get(g:, 'Lf_DiscardEmptyBuffer', 0)") == '1'
+                    and len(vim.tabpages) == 1 and len(vim.current.tabpage.windows) == 1
+                    and vim.current.buffer.name == '' and len(vim.current.buffer) == 1
+                    and vim.current.buffer[0] == '' and not vim.current.buffer.options["modified"]):
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufexists('%s')" % escQuote(file)) == '1':
+                    lfCmd("keepj hide drop %s" % escSpecial(file))
+                else:
+                    if vim.current.buffer.options["modified"]:
+                        lfCmd("hide edit %s" % escSpecial(file))
+                    else:
+                        lfCmd("edit %s" % escSpecial(file))
+            else:
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
+                    lfCmd("tab drop %s" % escSpecial(file))
+                else:
+                    lfCmd("tabe %s" % escSpecial(file))
+        except vim.error as e: # E37
+            lfPrintError(e)
 
 #*****************************************************
 # fileExplManager is a singleton

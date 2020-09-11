@@ -42,7 +42,7 @@ class BufTagExplorer(Explorer):
                     if changedtick != self._buf_changedtick.get(b.number, -1):
                         break
             else:
-                return list(itertools.chain.from_iterable(self._tag_list.values()))
+                return itertools.chain.from_iterable(self._tag_list.values())
 
             return itertools.chain.from_iterable(self._getTagList())
         else:
@@ -75,8 +75,7 @@ class BufTagExplorer(Explorer):
                 yield tag_list
             else:
                 exe_taglist = (self._formatResult(*r) for r in exe_result)
-                # list can reduce the flash of screen
-                yield list(itertools.chain(tag_list, itertools.chain.from_iterable(exe_taglist)))
+                yield itertools.chain(tag_list, itertools.chain.from_iterable(exe_taglist))
 
     def _getTagResult(self, buffer):
         if not buffer.name or lfEval("bufloaded(%d)" % buffer.number) == '0':
@@ -92,7 +91,7 @@ class BufTagExplorer(Explorer):
             self._buf_changedtick[buffer.number] = changedtick
 
         if lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "cpp":
-            extra_options = "--c++-kinds=+p"
+            extra_options = "--language-force=C++ --c++-kinds=+p"
         elif lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "c":
             extra_options = "--c-kinds=+p"
         elif lfEval("getbufvar(%d, '&filetype')" % buffer.number) == "python":
@@ -127,7 +126,7 @@ class BufTagExplorer(Explorer):
             return []
 
         # a list of [tag, file, line, kind, scope]
-        output = [line.split('\t') for line in result if line is not None]
+        output = [line.split('\t') for line in result]
         if not output:
             return []
 
@@ -150,6 +149,8 @@ class BufTagExplorer(Explorer):
         tag_len = min(max_tag_len, ave_taglen * 2)
 
         tab_len = buffer.options["shiftwidth"]
+        if tab_len == 0:
+            tab_len = 4
         std_tag_kind_len = tag_len // tab_len * tab_len + tab_len + max_kind_len
 
         tag_list = []
@@ -209,7 +210,6 @@ class BufTagExplorer(Explorer):
 class BufTagExplManager(Manager):
     def __init__(self):
         super(BufTagExplManager, self).__init__()
-        self._match_ids = []
         self._supports_preview = int(lfEval("g:Lf_PreviewCode"))
         self._orig_line = ''
 
@@ -218,11 +218,6 @@ class BufTagExplManager(Manager):
 
     def _defineMaps(self):
         lfCmd("call leaderf#BufTag#Maps()")
-        lfCmd("augroup Lf_BufTag")
-        lfCmd("autocmd!")
-        lfCmd("autocmd BufWipeout * call leaderf#BufTag#removeCache(expand('<abuf>'))")
-        lfCmd("autocmd VimLeavePre * call leaderf#BufTag#cleanup()")
-        lfCmd("augroup END")
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -248,12 +243,13 @@ class BufTagExplManager(Manager):
         if "preview" not in kwargs:
             lfCmd("norm! ^")
             lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
+        lfCmd("norm! zv")
         lfCmd("norm! zz")
-        preview_dict = lfEval("g:Lf_PreviewResult")
-        if int(preview_dict.get(self._getExplorer().getStlCategory(), 0)) == 0:
-            lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
-        else:
-            lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
+
+        if vim.current.window not in self._cursorline_dict:
+            self._cursorline_dict[vim.current.window] = vim.current.window.options["cursorline"]
+
+        lfCmd("setlocal cursorline")
 
     def _getDigest(self, line, mode):
         """
@@ -300,27 +296,59 @@ class BufTagExplManager(Manager):
 
     def _afterEnter(self):
         super(BufTagExplManager, self)._afterEnter()
-        id = int(lfEval('''matchadd('Lf_hl_buftagKind', '^[^\t]*\t\zs\S\+')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagScopeType', '[^\t]*\t\S\+\s*\zs\w\+:')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagScope', '^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagDirname', '[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagLineNum', '\d\+\t\ze\d\+$')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_buftagCode', '^\s\+.*')'''))
-        self._match_ids.append(id)
+        lfCmd("augroup Lf_BufTag")
+        lfCmd("autocmd!")
+        lfCmd("autocmd BufWipeout * call leaderf#BufTag#removeCache(expand('<abuf>'))")
+        lfCmd("autocmd VimLeavePre * call leaderf#BufTag#cleanup()")
+        lfCmd("augroup END")
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagKind'', ''^[^\t]*\t\zs\S\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagScopeType'', ''[^\t]*\t\S\+\s*\zs\w\+:'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagScope'', ''^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagDirname'', ''[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagLineNum'', ''\d\+\t\ze\d\+$'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagCode'', ''^\s\+.*'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+        else:
+            id = int(lfEval('''matchadd('Lf_hl_buftagKind', '^[^\t]*\t\zs\S\+')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagScopeType', '[^\t]*\t\S\+\s*\zs\w\+:')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagScope', '^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagDirname', '[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagLineNum', '\d\+\t\ze\d\+$')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_buftagCode', '^\s\+.*')'''))
+            self._match_ids.append(id)
 
     def _beforeExit(self):
         super(BufTagExplManager, self)._beforeExit()
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
         if self._timer_id is not None:
             lfCmd("call timer_stop(%s)" % self._timer_id)
             self._timer_id = None
+        for k, v in self._cursorline_dict.items():
+            if k.valid:
+                k.options["cursorline"] = v
+        self._cursorline_dict.clear()
 
     def _getUnit(self):
         """
@@ -410,7 +438,10 @@ class BufTagExplManager(Manager):
                 lfCmd("norm! 3kj")
                 self._getInstance().setLineNumber()
             else:
-                lfCmd("norm! 2k")
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("call win_execute(%d, 'norm! 2k')" % (self._getInstance().getPopupWinId()))
+                else:
+                    lfCmd("norm! 2k")
         else:
             super(BufTagExplManager, self)._toUp()
 
@@ -423,7 +454,10 @@ class BufTagExplManager(Manager):
                 lfCmd("norm! 2j")
                 self._getInstance().setLineNumber()
             else:
-                lfCmd("norm! 3jk")
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("call win_execute(%d, 'norm! 3jk')" % (self._getInstance().getPopupWinId()))
+                else:
+                    lfCmd("norm! 3jk")
         else:
             super(BufTagExplManager, self)._toDown()
 
@@ -434,14 +468,20 @@ class BufTagExplManager(Manager):
         self._getExplorer().removeCache(buf_number)
 
     def _previewResult(self, preview):
+        self._closePreviewPopup()
+
         if not self._needPreview(preview):
             return
 
         line = self._getInstance().currentLine
+        line_nr = self._getInstance().window.cursor[0]
+
+        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
+            self._previewInPopup(line, self._getInstance().buffer, line_nr)
+            return
+
         orig_pos = self._getInstance().getOriginalPos()
         cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
-
-        line_nr = self._getInstance().window.cursor[0]
 
         saved_eventignore = vim.options['eventignore']
         vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
@@ -475,8 +515,12 @@ class BufTagExplManager(Manager):
         orig_line = inst.getOriginalCursor()[0]
         tags = []
         for index, line in enumerate(inst.buffer, 1):
-            if self._supports_preview and index & 1 == 0:
-                continue
+            if self._supports_preview:
+                if self._getInstance().isReverseOrder():
+                    if index & 1 == 1:
+                        continue
+                elif index & 1 == 0:
+                    continue
             items = re.split(" *\t *", line)
             line_nr = int(items[3].rsplit(":", 1)[1])
             buf_number = int(items[4])
@@ -493,8 +537,40 @@ class BufTagExplManager(Manager):
             last -= 1
         if last >= 0:
             index = tags[last][0]
-            lfCmd(str(index))
-            lfCmd("norm! zz")
+            if self._getInstance().getWinPos() == 'popup':
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', '%s')"
+                        % (self._getInstance().getPopupWinId(), 'leaderf#PopupFilter'))
+                lfCmd("""call win_execute(%d, "exec 'norm! %dG'")""" % (self._getInstance().getPopupWinId(), int(index)))
+
+                if lfEval("exists('*leaderf#%s#NormalModeFilter')" % self._getExplorer().getStlCategory()) == '1':
+                    lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', '%s')" % (self._getInstance().getPopupWinId(),
+                            'leaderf#%s#NormalModeFilter' % self._getExplorer().getStlCategory()))
+                else:
+                    lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', function('leaderf#NormalModeFilter', [%d]))"
+                            % (self._getInstance().getPopupWinId(), id(self)))
+            else:
+                lfCmd(str(index))
+                lfCmd("norm! zz")
+
+    def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+        if line[0].isspace(): # if g:Lf_PreviewCode == 1
+            buffer = args[1]
+            line_nr = args[2]
+            if self._getInstance().isReverseOrder():
+                line = buffer[line_nr]
+            else:
+                line = buffer[line_nr - 2]
+        # {tag} {kind} {scope} {file}:{line} {buf_number}
+        items = re.split(" *\t *", line)
+        tagname = items[0]
+        line_nr = items[3].rsplit(":", 1)[1]
+        buf_number = items[4]
+
+        self._createPopupPreview(tagname, buf_number, line_nr)
 
 
 #*****************************************************

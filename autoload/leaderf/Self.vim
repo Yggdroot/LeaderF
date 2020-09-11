@@ -29,7 +29,3 @@ function! leaderf#Self#Maps()
         endfor
     endif
 endfunction
-
-function! leaderf#Self#startExpl(win_pos, ...)
-    call leaderf#LfPy("selfExplManager.startExplorer('".a:win_pos."')")
-endfunction

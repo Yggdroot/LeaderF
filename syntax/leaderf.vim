@@ -25,60 +25,100 @@ if has("syntax")
         syn match Lf_hl_filename display '[^/]*$' containedin=Lf_hl_nonHelp contained
         syn match Lf_hl_dirname  display '^.*/'   containedin=Lf_hl_nonHelp contained
     endif
+endif
 
-    highlight def Lf_hl_selection guibg=#A5EB84 guifg=Black ctermbg=156 ctermfg=Black
-    highlight def link Lf_hl_help               comment
+let b:current_syntax = "leaderf"
+
+function! g:LfDefineDefaultColors() abort
+    highlight def link Lf_hl_popup_cursor Cursor
+    highlight def Lf_hl_cursorline guifg=Yellow guibg=NONE gui=NONE ctermfg=226 ctermbg=NONE cterm=NONE
+
+    " the color of matching character
+    highlight def Lf_hl_match  guifg=SpringGreen guibg=NONE gui=bold ctermfg=85 ctermbg=NONE cterm=bold
+
+    " the color of matching character in `And mode`
+    highlight def Lf_hl_match0 guifg=SpringGreen guibg=NONE gui=bold ctermfg=85 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match1 guifg=#fe8019 guibg=NONE gui=bold ctermfg=208 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match2 guifg=#3ff5d1 guibg=NONE gui=bold ctermfg=50 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match3 guifg=#ff7272 guibg=NONE gui=bold ctermfg=203 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match4 guifg=#43b9f0 guibg=NONE gui=bold ctermfg=74 ctermbg=NONE cterm=bold
+
+    " the color of matching character in nameOnly mode when ';' is typed
+    highlight def Lf_hl_matchRefine gui=bold guifg=Magenta cterm=bold ctermfg=201
+
+    " the color of help in normal mode when <F1> is pressed
+    highlight def link Lf_hl_help               Comment
     highlight def link Lf_hl_helpCmd            Identifier
-    if &background ==? "dark"
-        highlight def Lf_hl_match  gui=bold guifg=SpringGreen cterm=bold ctermfg=48
-        highlight def Lf_hl_match0 gui=bold guifg=SpringGreen cterm=bold ctermfg=48
-        highlight def Lf_hl_match1 gui=bold guifg=#FE8019 cterm=bold ctermfg=208
-        highlight def Lf_hl_match2 gui=bold guifg=#3FF5D1 cterm=bold ctermfg=50
-        highlight def Lf_hl_match3 gui=bold guifg=#FF7272 cterm=bold ctermfg=203
-        highlight def Lf_hl_match4 gui=bold guifg=#43B9F0 cterm=bold ctermfg=74
-        highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
-    else
-        highlight def Lf_hl_match  gui=bold guifg=#1540AD cterm=bold ctermfg=26
-        highlight def Lf_hl_match0 gui=bold guifg=#1540AD cterm=bold ctermfg=26
-        highlight def Lf_hl_match1 gui=bold guifg=#A52A2A cterm=bold ctermfg=124
-        highlight def Lf_hl_match2 gui=bold guifg=#B52BB0 cterm=bold ctermfg=127
-        highlight def Lf_hl_match3 gui=bold guifg=#02781A cterm=bold ctermfg=28
-        highlight def Lf_hl_match4 gui=bold guifg=#F70505 cterm=bold ctermfg=196
-        highlight def Lf_hl_matchRefine  gui=bold guifg=Magenta cterm=bold ctermfg=201
-    endif
+
+    " the color when select multiple lines
+    highlight def Lf_hl_selection guifg=Black guibg=#a5eb84 gui=NONE ctermfg=Black ctermbg=156 cterm=NONE
+
+    " the color of `Leaderf buffer`
     highlight def link Lf_hl_bufNumber          Constant
     highlight def link Lf_hl_bufIndicators      Statement
     highlight def link Lf_hl_bufModified        String
     highlight def link Lf_hl_bufNomodifiable    Comment
     highlight def link Lf_hl_bufDirname         Directory
+
+    " the color of `Leaderf tag`
     highlight def link Lf_hl_tagFile            Directory
     highlight def link Lf_hl_tagType            Type
     highlight def link Lf_hl_tagKeyword         Keyword
+
+    " the color of `Leaderf bufTag`
     highlight def link Lf_hl_buftagKind         Title
     highlight def link Lf_hl_buftagScopeType    Keyword
     highlight def link Lf_hl_buftagScope        Type
     highlight def link Lf_hl_buftagDirname      Directory
     highlight def link Lf_hl_buftagLineNum      Constant
     highlight def link Lf_hl_buftagCode         Comment
+
+    " the color of `Leaderf function`
     highlight def link Lf_hl_funcKind           Title
     highlight def link Lf_hl_funcReturnType     Type
     highlight def link Lf_hl_funcScope          Keyword
     highlight def link Lf_hl_funcName           Function
     highlight def link Lf_hl_funcDirname        Directory
     highlight def link Lf_hl_funcLineNum        Constant
+
+    " the color of `Leaderf line`
     highlight def link Lf_hl_lineLocation       Comment
-    highlight def link Lf_hl_historyIndex       Constant
+
+    " the color of `Leaderf self`
     highlight def link Lf_hl_selfIndex          Constant
     highlight def link Lf_hl_selfDescription    Comment
+
+    " the color of `Leaderf help`
     highlight def link Lf_hl_helpTagfile        Comment
+
+    " the color of `Leaderf rg`
     highlight def link Lf_hl_rgFileName         Directory
     highlight def link Lf_hl_rgLineNumber       Constant
+    " the color of line number if '-A' or '-B' or '-C' is in the options list
+    " of `Leaderf rg`
     highlight def link Lf_hl_rgLineNumber2      Folded
+    " the color of column number if '--column' in g:Lf_RgConfig
     highlight def link Lf_hl_rgColumnNumber     Constant
-    highlight def Lf_hl_rgHighlight guifg=#000000 guibg=#CCCC66 ctermfg=16 ctermbg=185
+    highlight def Lf_hl_rgHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
+
+    " the color of `Leaderf gtags`
     highlight def link Lf_hl_gtagsFileName      Directory
     highlight def link Lf_hl_gtagsLineNumber    Constant
-    highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#CCCC66 ctermfg=16 ctermbg=185
-endif
+    highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
-let b:current_syntax = "leaderf"
+    highlight def link Lf_hl_previewTitle       Statusline
+
+    highlight def link Lf_hl_winNumber          Constant
+    highlight def link Lf_hl_winIndicators      Statement
+    highlight def link Lf_hl_winModified        String
+    highlight def link Lf_hl_winNomodifiable    Comment
+    highlight def link Lf_hl_winDirname         Directory
+
+    highlight def link Lf_hl_quickfixFileName   Directory
+    highlight def link Lf_hl_quickfixLineNumber Constant
+    highlight def link Lf_hl_quickfixColumnNumber Constant
+
+    highlight def link Lf_hl_loclistFileName    Directory
+    highlight def link Lf_hl_loclistLineNumber  Constant
+    highlight def link Lf_hl_loclistColumnNumber Constant
+endfunction

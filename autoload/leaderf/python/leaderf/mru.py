@@ -36,6 +36,7 @@ class Mru(object):
     def normalize(self, name):
         if '~' in name:
             name = os.path.expanduser(name)
+        name = os.path.abspath(name)
         if sys.platform[:3] == 'win':
             if name[:4] == '\\\\?\\' and os.path.isabs(name):
                 if os.path.isabs(name[4:]) and name[5:6] == ':':

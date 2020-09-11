@@ -63,6 +63,7 @@ g:Lf_WindowPosition                             *g:Lf_WindowPosition*
     'bottom' - the LeaderF window is at the bottom of the screen.
     'left' - the LeaderF window is at the left of the screen.
     'right' - the LeaderF window is at the right of the screen.
+    'popup' - the LeaderF window is a popup window or floating window.
     Default value is 'bottom'.
 
 g:Lf_WindowHeight                               *g:Lf_WindowHeight*
@@ -71,7 +72,7 @@ g:Lf_WindowHeight                               *g:Lf_WindowHeight*
     percentage of the height of the vim window.
     e.g., let g:Lf_WindowHeight = 0.30
     The option will be ignored if the value of |g:Lf_WindowPosition| is
-    not 'top' and 'bottom'.
+    not 'top' or 'bottom'.
     Default value is 0.5.
 
 g:Lf_TabpagePosition                            *g:Lf_TabpagePosition*
@@ -185,6 +186,13 @@ g:Lf_HighlightIndividual                        *g:Lf_HighlightIndividual*
 g:Lf_NumberOfHighlight                          *g:Lf_NumberOfHighlight*
     Specify the number of highlight lines in the result.
     Default value is 100.
+
+g:Lf_DisableStl                                 *g:Lf_DisableStl*
+    Don't let LeaderF modify statusline.
+    e.g. >
+    let g:Lf_DisableStl = 1
+<
+    g:Lf_DisableStl will not be set by default.
 
 g:Lf_StlColorscheme                             *g:Lf_StlColorscheme*
     You can configure the colorscheme of statusline for LeaderF.
@@ -415,7 +423,9 @@ g:Lf_PreviewResult                              *g:Lf_PreviewResult*
             \ 'BufTag': 1,
             \ 'Function': 1,
             \ 'Line': 0,
-            \ 'Colorscheme': 0
+            \ 'Colorscheme': 0,
+            \ 'Rg': 0,
+            \ 'Gtags': 0
             \}
 <
     e.g., if you want to disable the preview of BufTag explorer: >
@@ -436,8 +446,13 @@ g:Lf_UseCache                                   *g:Lf_UseCache*
 
 g:Lf_NormalMap                                  *g:Lf_NormalMap*
     Use this option to customize the mappings in normal mode.
+    The mapping with the key `"_"` applies to all categories.
+    Also, `"_"` is overridden by the mapping of each category.
     e.g., >
     let g:Lf_NormalMap = {
+        \ "_":      [["<C-j>", "j"],
+        \            ["<C-k>", "k"]
+        \           ],
         \ "File":   [["<ESC>", ':exec g:Lf_py "fileExplManager.quit()"<CR>'],
         \            ["<F6>", ':exec g:Lf_py "fileExplManager.quit()"<CR>']
         \           ],
@@ -532,6 +547,30 @@ g:Lf_HistoryNumber                              *g:Lf_HistoryNumber*
     Specify the number of records in history.
     Default value is 100.
 
+g:Lf_HistoryExclude                              *g:Lf_HistoryExclude*
+    This option indicates that do not display the historires that matches the
+    patterns defined in it.
+
+    Default value is: >
+    let g:Lf_HistoryExclude = {
+            \ 'cmd': [],
+            \ 'search': []
+            \}
+<
+    This is specified with a Python regular expression.
+
+    For example, you can set as below: >
+    let g:Lf_HistoryExclude = {
+            \ 'cmd': ['^w!?', '^q!?', '^.\s*$'],
+            \ 'search': ['^Plug']
+            \}
+<
+g:Lf_HistoryEditPromptIfEmpty                   *g:Lf_HistoryEditPromptIfEmpty*
+    This option is used when the history (cmdHistory or searchHistory).
+    If set to 1, when editing is started when there are 0 results, the text of
+    the entered prompt is edited.
+    Default value is 1.
+
 g:Lf_RgConfig                                   *g:Lf_RgConfig*
     Specify a list of ripgrep configurations. For example, >
     let g:Lf_RgConfig = [
@@ -543,6 +582,26 @@ g:Lf_RgConfig                                   *g:Lf_RgConfig*
 <
     Default value is [].
 
+g:Lf_RgStorePattern                             *g:Lf_RgStorePattern*
+    Specify the register to store the search pattern when you exit LeaderF.
+    The pattern entered with `-e` of the `Leaderf rg` command is stored. Also,
+    patterns are converted to Vim's regexp.
+
+    For example, When there is one pattern:
+        When executed in `Leaderf rg -e "pat1"`, `/\v\cpat1` is stored.
+
+    For example, When there are multiple patterns:
+        If multiple patterns are specified, they will be joined with `|`.
+        When executed in `Leaderf rg -e "pat1" -e "pat2"`, `/\v\cpat1|pat2` is
+        stored.
+
+    Default value is "".
+
+g:Lf_RgHighlightInPreview                       *g:Lf_RgHighlightInPreview*
+    Specify whether to highlight searched words in preview window.
+
+    Default value is 1.
+
 g:Lf_MaxCount                                   *g:Lf_MaxCount*
     Specify the limit of the number of source entries. LeaderF will stop
     producing the source entries if the limit is hit. There is no limit if the
@@ -553,7 +612,7 @@ g:Lf_NoChdir                                    *g:Lf_NoChdir*
     Don't change the current working directory when using `LeaderfFile dir` if
     the value is 1, otherwise the current working directory will be changed
     to `dir`.
-    Default value is 0.
+    Default value is 1.
 
 g:Lf_GtagsAutoGenerate                          *g:Lf_GtagsAutoGenerate*
     If the value is 1 and there is a rootmark defined by |g:Lf_RootMarkers|
@@ -567,6 +626,11 @@ g:Lf_GtagsGutentags								*g:Lf_GtagsGutentags*
 	if you use https://github.com/ludovicchabant/vim-gutentags to generate
 		gtags; you should let g:Lf_GtagsAutoGenerate = 0 and let  g:Lf_GtagsGutentags = 1
 	Default value is 0
+
+g:Lf_GtagsAutoUpdate                            *g:Lf_GtagsAutoUpdate*
+    If the value is 1 and the gtags database already exists, gtags database
+    will be updated automatically after the buffer is saved.
+    Default value is 1.
 
 g:Lf_GtagsSource                                *g:Lf_GtagsSource*
     Gtags accepts a list of files as target files. This option indicates
@@ -622,6 +686,265 @@ g:Lf_Gtagslabel                                   *g:Lf_Gtagslabel*
     set this option as "native-pygments".
     Default value is "default".
 
+g:Lf_GtagsStoreInProject                          *g:Lf_GtagsStoreInProject*
+    This option specifies whether to store the gtags database files in the
+    root directory of the project.
+
+    Default value is 0.
+
+g:Lf_GtagsStoreInRootMarker                       *g:Lf_GtagsStoreInRootMarker*
+    This option specifies whether to store the gtags database files in the
+    root marker of the project.
+
+    Default value is 0.
+
+g:Lf_EmptyQuery                                   *g:Lf_EmptyQuery*
+    This option specifies whether to enable the empty query, i.e., if no
+    pattern is input, sort the result according to the best match of current
+    buffer's name.
+
+    Default value is 1.
+
+g:Lf_IgnoreCurrentBufferName                      *g:Lf_IgnoreCurrentBufferName*
+    This option specifies whether to remove the current buffer name from
+    the result list.
+
+    Default value is 0.
+
+g:Lf_PreviewInPopup                               *g:Lf_PreviewInPopup*
+    This option specifies whether to preview the result in a popup window.
+
+    Default value is 0.
+
+g:Lf_PreviewHorizontalPosition                    *g:Lf_PreviewHorizontalPosition*
+    Specify where to locate the preview window horizontally. The value can be
+    one of the following:
+    'left': the preview window is on the left side of the screen.
+    'center': the preview window is in the center of the screen.
+    'right': the preview window is on the right side of the screen.
+    'cursor': the preview window is at the cursor position.
+
+    Default value is 'cursor'.
+
+g:Lf_PreviewPopupWidth                            *g:Lf_PreviewPopupWidth*
+    Specify the width of preview popup window, the value should be a non-negative
+    integer. If the value is 0, the width is half of the screen's width.
+
+    Default value is 0.
+
+g:Lf_DiscardEmptyBuffer                           *g:Lf_DiscardEmptyBuffer*
+    Specify whether to discard the first empty [No Name] buffer when opening
+    with <C-T>.
+
+    Default value is 0.
+
+g:Lf_PopupWidth                                   *g:Lf_PopupWidth*
+    Specify the width of the popup window or floating window when LeaderF is
+    in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
+    is in the options list of `Leaderf` command.
+    The value is a non-negative integer. If the value is 0, the width is 2/3 of
+    vim's width.
+
+    If the value is a floating point number less than 1, it means the percentage
+    of the width of the vim window.
+
+    For example, set the width to 3/4 of the screen's width: >
+    let g:Lf_PopupWidth = &columns * 3 / 4
+    or
+    let g:Lf_PopupHeight = 0.75
+<
+    Default value is 0.
+
+g:Lf_PopupHeight                                   *g:Lf_PopupHeight*
+    Specify the height of the popup window or floating window when LeaderF is
+    in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
+    is in the options list of `Leaderf` command.
+    The value is a non-negative integer. If the value is 0, the height is 40% of
+    vim's height.
+    If the value is a floating point number less than 1, it means the percentage
+    of the height of the vim window.
+
+    For example, set the height to 30% of the vim's height: >
+    let g:Lf_PopupHeight = float2nr(&lines * 0.3)
+    or
+    let g:Lf_PopupHeight = 0.3
+<
+    Default value is 0.
+
+g:Lf_PopupPosition                                 *g:Lf_PopupPosition*
+    Specify the coordinate of the topleft corner of popup window or floating
+    window when LeaderF is in popup mode. `Popup mode` is when |g:Lf_WindowPosition|
+    is 'popup' or '--popup' is in the options list of `Leaderf` command.
+    The value is a list [`line`, `col`], the first line and the first column are
+    both 1.
+    If the value of `line` is 0, the popup window or floating window is vertically
+    centered.
+    If the value of `col` is 0, the popup window or floating window is horizontally
+    centered.
+
+    Default value is [0, 0].
+
+g:Lf_PopupShowStatusline                           *g:Lf_PopupShowStatusline*
+    Specify whether to show the statusline when LeaderF is in popup mode.
+    `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup' is in the
+    options list of `Leaderf` command.
+
+    Default value is 1.
+
+g:Lf_PopupPreviewPosition                          *g:Lf_PopupPreviewPosition*
+    Specify where to locate the preview window when LeaderF is in popup mode.
+    `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup' is in the
+    options list of `Leaderf` command.
+    The value can be one of the following:
+    'top': the preview window is on the top of the main LeaderF window.
+    'bottom': the preview window is at the bottom of the main LeaderF window.
+    'cursor': the preview window is at the cursor position in the main LeaderF
+              window.
+
+    Default value is 'top'.
+
+g:Lf_PopupColorscheme                              *g:Lf_PopupColorscheme*
+    You can configure the colorscheme of LeaderF in popup mode.
+    e.g. >
+    let g:Lf_PopupColorscheme = 'default'
+<
+    The colorscheme files can be found in the directory >
+    "LeaderF/autoload/leaderf/colorscheme/popup/"
+<
+    You can also define the colorscheme by yourself, follow 'default.vim' and
+    put it under "autoload/leaderf/colorscheme/popup/".
+
+    Default value is 'default'.
+
+g:Lf_PopupPalette                                  *g:Lf_PopupPalette*
+    This is a dictionary, you can customize the colorscheme of popup mode using
+    it.
+    Its structure is like below: >
+    let g:Lf_PopupPalette = {
+        \  'light': {
+        \      'Lf_hl_match': {
+        \                'gui': 'NONE',
+        \                'font': 'NONE',
+        \                'guifg': 'NONE',
+        \                'guibg': '#303136',
+        \                'cterm': 'NONE',
+        \                'ctermfg': 'NONE',
+        \                'ctermbg': '236'
+        \              },
+        \      'Lf_hl_cursorline': {
+        \                'gui': 'NONE',
+        \                'font': 'NONE',
+        \                'guifg': 'NONE',
+        \                'guibg': '#303136',
+        \                'cterm': 'NONE',
+        \                'ctermfg': 'NONE',
+        \                'ctermbg': '236'
+        \              },
+        \      },
+        \  'dark': {
+        \         ...
+        \         ...
+        \      }
+        \  }
+<
+    All the highlight groups supported are defined in
+    `LeaderF/autoload/leaderf/colorscheme/popup/default.vim`
+
+    It is not defined by default.
+
+g:Lf_AutoResize                                 *g:Lf_AutoResize*
+    Auto resize the LeaderF window height automatically.
+
+    Default value is 0.
+
+g:Lf_JumpToExistingWindow                       *g:Lf_JumpToExistingWindow*
+    Jump to existing window if the selected file is already opened in a
+    window.
+
+    Default value is 1.
+
+g:Lf_ShowDevIcons                               *g:Lf_ShowDevIcons*
+    Support commands: buffer,file,mru,window
+
+    Default value is 1.
+
+g:Lf_DevIconsFont                                 *g:Lf_DevIconsFont*
+    Specifies the font used to display the icon.
+    If it is empty, use the default font.
+
+    Also, the value of |g:Lf_DevIconsPalette| takes precedence.
+
+    Default value is `''`.
+
+g:Lf_DevIconsPalette                            *g:Lf_DevIconsPalette*
+    This is a dictionary with customizable icons highlights.
+
+    Its structure is like below: >
+    let g:Lf_DevIconsPalette = {
+        \  'light': {
+        \      '_': {
+        \                'gui': 'NONE',
+        \                'font': 'NONE',
+        \                'guifg': '#505050',
+        \                'guibg': 'NONE',
+        \                'cterm': 'NONE',
+        \                'ctermfg': '238',
+        \                'ctermbg': 'NONE'
+        \              },
+        \      'default': {
+        \                'guifg': '#505050',
+        \                'ctermfg': '238',
+        \              },
+        \      },
+        \      'vim': {
+        \                'guifg': '#007F00',
+        \                'ctermfg': '28',
+        \              },
+        \      },
+        \      '.gitignore': {
+        \                'guifg': '#dd4c35',
+        \                'ctermfg': '166',
+        \              },
+        \      },
+        \  'dark': {
+        \         ...
+        \         ...
+        \      }
+        \  }
+<
+    Key Description:
+        `'_'` :       All icons with no customized highlights.
+        `'default'` : General Icons.
+        Other Keys: Icons of the file type and the specified file name.
+
+    The default values can be seen in a dict called `devicons_palette` in
+    `LeaderF/autoload/leaderf/python/leaderf/devicons.py`
+
+    The default value is set by referring to
+    https://github.com/vscode-icons/vscode-icons
+
+g:Lf_DevIconsExactSymbols                       *g:Lf_DevIconsExactSymbols*
+    Dictionary mappings for exact file node matches
+
+    e.g.: >
+    let g:Lf_DevIconsExactSymbols = { 'tags': '󿧸' }
+<
+    Default value is `{}`
+
+g:Lf_DevIconsExtensionSymbols                   *g:Lf_DevIconsExtensionSymbols*
+    Dictionary mappings for file extension matches
+
+    e.g.: >
+    let g:Lf_DevIconsExtensionSymbols = { 'tmp': '󿦨' }
+<
+    Default value is `{}`
+
+g:Lf_SpinSymbols                                *g:Lf_SpinSymbols*
+    Specify a list of spin symbols at the top right corner.
+
+    For Linux platform, the default value is ['△', '▲', '▷', '▶', '▽', '▼', '◁', '◀'],
+    for Windows and MacOS, the default value is ['🌘', '🌗', '🌖', '🌕', '🌔', '🌓', '🌒', '🌑']
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
@@ -676,6 +999,21 @@ USAGE                                           *leaderf-usage*
 :LeaderfColorscheme                             *LeaderfColorscheme*
     Launch LeaderF to switch between colorschemes.
 
+:LeaderfFiletype                                *LeaderfFiletype*
+    Launch LeaderF to navigate the filetype.
+
+:LeaderfCommand                                 *LeaderfCommand*
+    Launch LeaderF to execute user-defined/built-in Ex commands.
+
+:LeaderfWindow                                  *LeaderfWindow*
+    Launch LeaderF to search windows.
+
+:LeaderfQuickFix                                *LeaderfQuickFix*
+    Launch LeaderF to navigate the quickfix.
+
+:LeaderfLocList                                 *LeaderfLocList*
+    Launch LeaderF to navigate the location list.
+
 :LeaderfRgInteractive                           *LeaderfRgInteractive*
     Launch LeaderF to use rg interactively.
 
@@ -705,6 +1043,15 @@ Some handy maps for `Leaderf rg`:
 | `<Plug>LeaderfRgVisualRegexBoundary`         | search visually selected text treated as regex with `-w` option
 | `<Plug>LeaderfRgBangVisualRegexBoundary`     | like `<Plug>LeaderfRgVisualRegexBoundary`, but with a bang(`!`)
 
+Some handy maps for `Leaderf gtags`:
+
+| Map                                        | Description
+| ---                                        | -----------
+| `<Plug>LeaderfGtagsDefinition`               | Show <cword> or selected text locations of definitions.
+| `<Plug>LeaderfGtagsReference`                | Show <cword> or selected text reference to a symbol which has definitions.
+| `<Plug>LeaderfGtagsSymbol`                   | Show <cword> or selected text reference to a symbol which has no definition.
+| `<Plug>LeaderfGtagsGrep`                     | Show all lines which match to the <cword> or selected text .
+
 Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <C-C>, <ESC> : quit from LeaderF.
     <C-R> : switch between fuzzy search mode and regex mode.
@@ -712,6 +1059,7 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <Tab> : switch to normal mode.
     <C-V>, <S-Insert> : paste from clipboard.
     <C-U> : clear the prompt.
+    <C-W> : delete the word before the cursor in the prompt.
     <C-J>, <C-K> : navigate the result list.
     <Up>, <Down> : recall last/next input pattern from history.
     <2-LeftMouse> or <CR> : open the file under cursor or selected(when
@@ -731,6 +1079,12 @@ Once LeaderF is launched:                       *prompt* *leaderf-prompt*
     <Left>: move the cursor one character to the left.
     <Right> : move the cursor one character to the right.
     <C-P> : preview the result.
+    <C-Up> : scroll up in the popup preview window.
+    <C-Down> : scroll down in the popup preview window.
+
+    cmdHistory/searchHistory/command only mappings:
+        <C-o> : edit command under cursor.
+
 ==============================================================================
 FAQ                                             *leaderf-faq*
 

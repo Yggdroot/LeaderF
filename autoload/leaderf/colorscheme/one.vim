@@ -81,6 +81,15 @@ let s:palette = {
             \       'ctermfg': '145',
             \       'ctermbg': '235'
             \   },
+            \   'stlSpin': {
+            \       'gui': 'NONE',
+            \       'font': 'NONE',
+            \       'guifg': '#E6E666',
+            \       'guibg': '#3E4452',
+            \       'cterm': 'NONE',
+            \       'ctermfg': '185',
+            \       'ctermbg': '235'
+            \   },
             \   'stlLineInfo': {
             \       'gui': 'NONE',
             \       'font': 'NONE',
@@ -101,4 +110,4 @@ let s:palette = {
             \   }
             \ }
 
-let g:leaderf#colorscheme#default#palette = leaderf#colorscheme#mergePalette(s:palette)
+let g:leaderf#colorscheme#one#palette = leaderf#colorscheme#mergePalette(s:palette)

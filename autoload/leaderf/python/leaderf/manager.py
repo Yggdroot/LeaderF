@@ -4,6 +4,7 @@
 import vim
 import os
 import sys
+import json
 import time
 import operator
 import itertools
@@ -16,6 +17,10 @@ from .cli import LfCli
 from .utils import *
 from .fuzzyMatch import FuzzyMatch
 from .asyncExecutor import AsyncExecutor
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    removeDevIcons
+)
 
 is_fuzzyEngine_C = False
 try:
@@ -53,11 +58,26 @@ else:
 def modifiableController(func):
     @wraps(func)
     def deco(self, *args, **kwargs):
-        if self._getExplorer().getStlCategory() in ("Search_History", "Cmd_History"):
-            return func(self, *args, **kwargs)
         self._getInstance().buffer.options['modifiable'] = True
         func(self, *args, **kwargs)
         self._getInstance().buffer.options['modifiable'] = False
+    return deco
+
+def catchException(func):
+    @wraps(func)
+    def deco(self, *args, **kwargs):
+        try:
+            func(self, *args, **kwargs)
+        except vim.error as e: # for neovim
+            if str(e) != "b'Keyboard interrupt'" and str(e) != 'Keyboard interrupt':
+                raise e
+            elif self._timer_id is not None:
+                lfCmd("call timer_stop(%s)" % self._timer_id)
+                self._timer_id = None
+        except KeyboardInterrupt: # <C-C>, this does not work in vim
+            if self._timer_id is not None:
+                lfCmd("call timer_stop(%s)" % self._timer_id)
+                self._timer_id = None
     return deco
 
 #*****************************************************
@@ -79,7 +99,6 @@ class Manager(object):
         self._highlight_refine_pos = []
         self._highlight_ids = []
         self._orig_line = ''
-        self._launched = False
         self._ctrlp_pressed = False
         self._fuzzy_engine = None
         self._result_content = []
@@ -87,6 +106,13 @@ class Manager(object):
         self._timer_id = None
         self._highlight_method = lambda : None
         self._orig_cwd = None
+        self._cursorline_dict = {}
+        self._empty_query = lfEval("get(g:, 'Lf_EmptyQuery', 1)") == '1'
+        self._preview_winid = 0
+        self._is_previewed = False
+        self._match_ids = []
+        self._vim_file_autoloaded = False
+        self._arguments = {}
         self._getExplClass()
 
     #**************************************************************
@@ -103,6 +129,17 @@ class Manager(object):
     def _defineMaps(self):
         pass
 
+    def _defineCommonMaps(self):
+        normal_map = lfEval("get(g:, 'Lf_NormalMap', {})")
+        if "_" not in normal_map: 
+            return
+
+        for [lhs, rhs] in normal_map["_"]:
+            # If a buffer-local mapping does not exist, map it
+            maparg = lfEval("maparg('{}', 'n', 0, 1)".format(lhs))
+            if maparg == {} or maparg.get("buffer", "0") == "0" :
+                lfCmd("nnoremap <buffer> <silent> {} {}".format(lhs, rhs))
+
     def _cmdExtension(self, cmd):
         """
         this function can be overridden to add new cmd
@@ -110,27 +147,23 @@ class Manager(object):
         """
         pass
 
+    @removeDevIcons
     def _argaddFiles(self, files):
         # It will raise E480 without 'silent!'
         lfCmd("silent! argdelete *")
         for file in files:
             lfCmd("argadd %s" % escSpecial(file))
 
-    def _acceptSelection(self, *args, **kwargs):
-        if len(args) == 0:
-            return
-        file = args[0]
-        try:
-            if not os.path.isabs(file):
-                file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
-                file = os.path.normpath(lfEncode(file))
+    def _issue_422_set_option(self):
+        if lfEval("has('nvim')") == '1' and self._is_previewed:
+            lfCmd("silent! setlocal number<")
+            lfCmd("silent! setlocal relativenumber<")
+            lfCmd("silent! setlocal cursorline<")
+            lfCmd("silent! setlocal colorcolumn<")
+            lfCmd("silent! setlocal winhighlight<")
 
-            if kwargs.get("mode", '') == 't':
-                lfCmd("tab drop %s" % escSpecial(file))
-            else:
-                lfCmd("hide edit %s" % escSpecial(file))
-        except vim.error as e: # E37
-            lfPrintError(e)
+    def _acceptSelection(self, *args, **kwargs):
+        pass
 
     def _getDigest(self, line, mode):
         """
@@ -202,13 +235,43 @@ class Manager(object):
 
     def _beforeEnter(self):
         self._resetAutochdir()
+        self._cur_buffer = vim.current.buffer
 
     def _afterEnter(self):
+        if self._vim_file_autoloaded == False:
+            category = self._getExplorer().getStlCategory()
+            if category == 'Colorscheme':
+                category = 'Colors'
+            lfCmd("silent! call leaderf#%s#a_nonexistent_function()" % category)
+            self._vim_file_autoloaded = True
+
         if "--nowrap" in self._arguments:
-            self._getInstance().window.options['wrap'] = False
-        self._cleanup()
-        self._defineMaps()
-        lfCmd("runtime syntax/leaderf.vim")
+            if self._getInstance().getWinPos() == 'popup':
+                lfCmd("call win_execute(%d, 'setlocal nowrap')" % self._getInstance().getPopupWinId())
+            elif self._getInstance().getWinPos() == 'floatwin':
+                lfCmd("call nvim_win_set_option(%d, 'wrap', v:false)" % self._getInstance().getPopupWinId())
+            else:
+                self._getInstance().window.options['wrap'] = False
+        else:
+            if self._getInstance().getWinPos() == 'popup':
+                lfCmd("call win_execute(%d, 'setlocal wrap')" % self._getInstance().getPopupWinId())
+            elif self._getInstance().getWinPos() == 'floatwin':
+                lfCmd("call nvim_win_set_option(%d, 'wrap', v:true)" % self._getInstance().getPopupWinId())
+            else:
+                self._getInstance().window.options['wrap'] = True
+
+        if self._getInstance().getWinPos() != 'popup':
+            self._defineMaps()
+            self._defineCommonMaps()
+
+            id = int(lfEval("matchadd('Lf_hl_cursorline', '.*\%#.*', 9)"))
+            self._match_ids.append(id)
+        else:
+            lfCmd("""call win_execute({}, 'let matchid = matchadd(''Lf_hl_cursorline'', ''.*\%#.*'', 9)')"""
+                    .format(self._getInstance().getPopupWinId()))
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+
         if is_fuzzyEngine_C:
             self._fuzzy_engine = fuzzyEngine.createFuzzyEngine(cpu_count, False)
 
@@ -216,9 +279,7 @@ class Manager(object):
         if self._getInstance().window.valid:
             self._getInstance().cursorRow = self._getInstance().window.cursor[0]
         self._getInstance().helpLength = self._help_length
-        self._help_length = 0
-        self._show_help = False
-        self._cleanup()
+        self.clearSelections()
         self._getExplorer().cleanup()
         if self._fuzzy_engine:
             fuzzyEngine.closeFuzzyEngine(self._fuzzy_engine)
@@ -227,14 +288,39 @@ class Manager(object):
         if self._reader_thread and self._reader_thread.is_alive():
             self._stop_reader_thread = True
 
+        self._closePreviewPopup()
+
+        if self._getInstance().getWinPos() == 'popup':
+            for i in self._match_ids:
+                lfCmd("silent! call matchdelete(%d, %d)" % (i, self._getInstance().getPopupWinId()))
+        else:
+            for i in self._match_ids:
+                lfCmd("silent! call matchdelete(%d)" % i)
+        self._match_ids = []
+
     def _afterExit(self):
         pass
 
     def _bangEnter(self):
-        pass
+        self._preview_open = False
+        self._current_mode = 'NORMAL'
+        if self._getInstance().getWinPos() == 'popup':
+            self._cli.hideCursor()
+            if lfEval("exists('*leaderf#%s#NormalModeFilter')" % self._getExplorer().getStlCategory()) == '1':
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', '%s')" % (self._getInstance().getPopupWinId(),
+                        'leaderf#%s#NormalModeFilter' % self._getExplorer().getStlCategory()))
+            else:
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', function('leaderf#NormalModeFilter', [%d]))"
+                        % (self._getInstance().getPopupWinId(), id(self)))
+
+        self._resetHighlights()
+        if self._cli.pattern and self._index == 0:
+            self._search(self._content)
 
     def _bangReadFinished(self):
-        pass
+        if self._preview_open == False and self._getInstance().getWinPos() in ('popup', 'floatwin'):
+            self._previewResult(False)
+            self._preview_open = True
 
     def _getList(self, pairs):
         """
@@ -254,11 +340,36 @@ class Manager(object):
     def _supportsRefine(self):
         return False
 
+    def _previewInPopup(self, *args, **kwargs):
+        pass
+
+    def _closePreviewPopup(self):
+        if lfEval("has('nvim')") == '1':
+            if self._preview_winid:
+                if int(lfEval("nvim_win_is_valid(%d) == v:true" % self._preview_winid)):
+                    lfCmd("call nvim_win_close(%d, 1)" % self._preview_winid)
+                self._preview_winid = 0
+        else:
+            if self._preview_winid:
+                lfCmd("call popup_close(%d)" % self._preview_winid)
+                self._preview_winid = 0
+
     def _previewResult(self, preview):
+        if self._getInstance().getWinPos() == 'floatwin':
+            self._cli.buildPopupPrompt()
+
+        if int(lfEval("win_id2win(%d)" % self._preview_winid)) != vim.current.window.number:
+            self._closePreviewPopup()
+
         if not self._needPreview(preview):
             return
 
         line = self._getInstance().currentLine
+
+        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
+            self._previewInPopup(line)
+            return
+
         orig_pos = self._getInstance().getOriginalPos()
         cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
 
@@ -267,8 +378,12 @@ class Manager(object):
         try:
             vim.current.tabpage, vim.current.window = orig_pos[:2]
             self._acceptSelection(line)
+            lfCmd("augroup Lf_Cursorline")
+            lfCmd("autocmd! BufwinEnter <buffer> setlocal cursorline<")
+            lfCmd("augroup END")
         finally:
-            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
+            if self._getInstance().getWinPos() != 'popup':
+                vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
             vim.options['eventignore'] = saved_eventignore
 
     def _restoreOrigCwd(self):
@@ -299,24 +414,305 @@ class Manager(object):
 
     #**************************************************************
 
+    def _createPopupModePreview(self, title, buf_number, line_nr, jump_cmd):
+        self._is_previewed = True
+        if lfEval("has('nvim')") == '1':
+            width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
+            if width == 0:
+                maxwidth = int(lfEval("&columns"))//2
+            else:
+                maxwidth = min(width, int(lfEval("&columns")))
+            relative = 'editor'
+            lfCmd("silent! call bufload(%d)" % buf_number)
+            buffer_len = len(vim.buffers[buf_number])
+            float_window = self._getInstance().window
+            float_win_row = int(float(lfEval("nvim_win_get_config(%d).row" % float_window.id)))
+            float_win_col = int(float(lfEval("nvim_win_get_config(%d).col" % float_window.id)))
+            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
+            if preview_pos.lower() == 'bottom':
+                anchor = "NW"
+                if self._getInstance().getPopupInstance().statusline_win:
+                    statusline_height = 1
+                else:
+                    statusline_height = 0
+                row = float_win_row + float_window.height + statusline_height
+                col = float_win_col
+                height = int(lfEval("&lines")) - row - 2
+                width = float_window.width
+            elif preview_pos.lower() == 'top':
+                anchor = "SW"
+                row = float_win_row - 1
+                col = float_win_col
+                height = row
+                width = float_window.width
+            else:
+                anchor = "SW"
+                start = int(lfEval("line('w0')")) - 1
+                end = int(lfEval("line('.')")) - 1
+                col_width = float_window.width - int(lfEval("&numberwidth")) - 1
+                delta_height = lfActualLineCount(self._getInstance().buffer, start, end, col_width)
+                row = float_win_row + delta_height
+                col = float_win_col + int(lfEval("&numberwidth")) + 1 + float_window.cursor[1]
+                height = row
+                width = maxwidth
+
+            config = {
+                    "relative": relative,
+                    "anchor"  : anchor,
+                    "height"  : height,
+                    "width"   : width,
+                    "row"     : row,
+                    "col"     : col
+                    }
+            self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (buf_number, str(config))))
+            if jump_cmd:
+                cur_winid = lfEval("win_getid()")
+                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+                lfCmd(jump_cmd)
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            if buffer_len >= line_nr > 0:
+                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
+
+            lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._preview_winid)
+            cur_winid = lfEval("win_getid()")
+            lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            lfCmd("silent! %foldopen!")
+            lfCmd("norm! zz")
+            lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            # lfCmd("redraw!") # maybe we don't need it, it makes the preview slow
+        else:
+            popup_window = self._getInstance().window
+            popup_pos = lfEval("popup_getpos(%d)" % popup_window.id)
+
+            width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
+            if width == 0:
+                maxwidth = int(lfEval("&columns"))//2 - 1
+            else:
+                maxwidth = min(width, int(lfEval("&columns")))
+
+            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
+            if preview_pos.lower() == 'bottom':
+                maxwidth = int(popup_pos["width"]) - 1 # there is one column of padding on the left
+                col = int(popup_pos["col"])
+                if self._getInstance().getPopupInstance().statusline_win:
+                    statusline_height = 1
+                else:
+                    statusline_height = 0
+                line = int(popup_pos["line"]) + int(popup_pos["height"]) + statusline_height
+                pos = "topleft"
+                maxheight = int(lfEval("&lines")) - line - 2
+
+                lfCmd("silent! call bufload(%d)" % buf_number)
+                buffer_len = len(vim.buffers[buf_number])
+                if buffer_len >= maxheight: # scrollbar appear
+                    maxwidth -= 1
+            elif preview_pos.lower() == 'top':
+                maxwidth = int(popup_pos["width"]) - 1 # there is one column of padding on the left
+                col = int(popup_pos["col"])
+                # int(popup_pos["core_line"]) - 1(exclude the first line) - 1(input window) - 1(title)
+                maxheight = int(popup_pos["line"]) - 3
+
+                lfCmd("silent! call bufload(%d)" % buf_number)
+                buffer_len = len(vim.buffers[buf_number])
+                if buffer_len >= maxheight: # scrollbar appear
+                    maxwidth -= 1
+
+                pos = "botleft"
+                line = maxheight + 1
+            else: # cursor
+                lfCmd("""call win_execute(%d, "let numberwidth = &numberwidth")""" % popup_window.id)
+                col = int(popup_pos["core_col"]) + int(lfEval("numberwidth")) + popup_window.cursor[1]
+
+                lfCmd("""call win_execute(%d, "let delta_height = line('.') - line('w0')")""" % popup_window.id)
+                # the line of buffer starts from 0, while the line of line() starts from 1
+                start = int(lfEval("line('w0', %d)" % popup_window.id)) - 1
+                end = int(lfEval("line('.', %d)" % popup_window.id)) - 1
+                col_width = int(popup_pos["core_width"]) - int(lfEval("numberwidth"))
+                delta_height = lfActualLineCount(self._getInstance().buffer, start, end, col_width)
+                # int(popup_pos["core_line"]) - 1(exclude the first line) - 1(input window)
+                maxheight = int(popup_pos["core_line"]) + delta_height - 2
+                pos = "botleft"
+                line = maxheight + 1
+
+            options = {
+                    "title":           title,
+                    "maxwidth":        maxwidth,
+                    "minwidth":        maxwidth,
+                    "maxheight":       maxheight,
+                    "minheight":       maxheight,
+                    "zindex":          20481,
+                    "pos":             pos,
+                    "line":            line,
+                    "col":             col,
+                    "padding":         [0, 0, 0, 1],
+                    "border":          [1, 0, 0, 0],
+                    "borderchars":     [' '],
+                    "borderhighlight": ["Lf_hl_previewTitle"],
+                    "filter":          "leaderf#popupModePreviewFilter",
+                    }
+
+            if preview_pos.lower() == 'bottom':
+                del options["title"]
+                options["border"] = [0, 0, 1, 0]
+            elif preview_pos.lower() == 'cursor' and maxheight < int(lfEval("&lines"))//2 - 2:
+                maxheight = int(lfEval("&lines")) - maxheight - 5
+                del options["title"]
+                options["border"] = [0, 0, 1, 0]
+                options["maxheight"] = maxheight
+                options["minheight"] = maxheight
+
+            lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, json.dumps(options)))
+            self._preview_winid = int(lfEval("winid"))
+            if jump_cmd:
+                lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
+            elif line_nr > 0:
+                lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_nr))
+            lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber colorcolumn= ')" % self._preview_winid)
+            lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
+            lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
+
+    def _createPopupPreview(self, title, buf_number, line_nr, jump_cmd=''):
+        self._is_previewed = True
+        buf_number = int(buf_number)
+        line_nr = int(line_nr)
+
+        if self._getInstance().getWinPos() in ('popup', 'floatwin'):
+            self._createPopupModePreview(title, buf_number, line_nr, jump_cmd)
+            return
+
+        if lfEval("has('nvim')") == '1':
+            width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
+            if width == 0:
+                width = int(lfEval("&columns"))//2
+            else:
+                width = min(width, int(lfEval("&columns")))
+            maxheight = int(lfEval("&lines - (line('w$') - line('.')) - 3"))
+            maxheight -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
+            relative = 'editor'
+            anchor = "SW"
+            row = maxheight
+            lfCmd("silent! call bufload(%d)" % buf_number)
+            buffer_len = len(vim.buffers[buf_number])
+            height = min(maxheight, buffer_len)
+            preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
+            if preview_pos.lower() == 'center':
+                col = (int(lfEval("&columns")) - width) // 2
+            elif preview_pos.lower() == 'left':
+                col = 0
+            elif preview_pos.lower() == 'right':
+                col = int(lfEval("&columns")) - width
+            else:
+                relative = 'cursor'
+                row = 0
+                col = 0
+
+            if maxheight < int(lfEval("&lines"))//2 - 2:
+                anchor = "NW"
+                if relative == 'cursor':
+                    row = 1
+                else:
+                    row = maxheight + 1
+                height = min(int(lfEval("&lines")) - maxheight - 3, buffer_len)
+
+            config = {
+                    "relative": relative,
+                    "anchor"  : anchor,
+                    "height"  : height,
+                    "width"   : width,
+                    "row"     : row,
+                    "col"     : col
+                    }
+            self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (buf_number, str(config))))
+            if jump_cmd:
+                cur_winid = lfEval("win_getid()")
+                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+                lfCmd(jump_cmd)
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            if buffer_len >= line_nr > 0:
+                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
+            lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
+            cur_winid = lfEval("win_getid()")
+            lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            lfCmd("silent! %foldopen!")
+            lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+        else:
+            preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
+            if preview_pos.lower() == 'center':
+                col = 0
+            elif preview_pos.lower() == 'left':
+                col = 1
+            elif preview_pos.lower() == 'right':
+                col = int(lfEval("&columns"))//2 + 2
+            else:
+                col = "cursor"
+            width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
+            if width == 0:
+                maxwidth = int(lfEval("&columns"))//2 - 1
+            else:
+                maxwidth = min(width, int(lfEval("&columns")))
+            maxheight = int(lfEval("&lines - (line('w$') - line('.')) - 4"))
+            maxheight -= int(self._getInstance().window.height) - int(lfEval("(line('w$') - line('w0') + 1)"))
+
+            options = {
+                    "title":           title,
+                    "maxwidth":        maxwidth,
+                    "minwidth":        maxwidth,
+                    "maxheight":       maxheight,
+                    "minheight":       maxheight,
+                    "zindex":          20481,
+                    "pos":             "botleft",
+                    "line":            "cursor-1",
+                    "col":             col,
+                    "padding":         [0, 0, 0, 1],
+                    "border":          [1, 0, 0, 0],
+                    "borderchars":     [' '],
+                    "borderhighlight": ["Lf_hl_previewTitle"],
+                    "filter":           "leaderf#popupModePreviewFilter",
+                    }
+            if maxheight < int(lfEval("&lines"))//2 - 2:
+                maxheight = int(lfEval("&lines")) - maxheight - 5
+                del options["title"]
+                options["border"] = [0, 0, 1, 0]
+                options["maxheight"] = maxheight
+                options["minheight"] = maxheight
+
+            lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, json.dumps(options)))
+            self._preview_winid = int(lfEval("winid"))
+            if self._current_mode == 'NORMAL':
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', function('leaderf#normalModePreviewFilter', [%d]))"
+                        % (self._preview_winid, id(self)))
+            if jump_cmd:
+                lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
+            elif line_nr > 0:
+                lfCmd("""call win_execute(%d, "exec 'norm! %dG'")""" % (self._preview_winid, line_nr))
+            lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber')" % self._preview_winid)
+
     def _needPreview(self, preview):
         """
         Args:
             preview:
                 if True, always preview the result no matter what `g:Lf_PreviewResult` is.
         """
-        preview_dict = lfEval("g:Lf_PreviewResult")
+        preview_dict = {k.lower(): v for k, v in lfEval("g:Lf_PreviewResult").items()}
         category = self._getExplorer().getStlCategory()
-        if not preview and int(preview_dict.get(category, 0)) == 0:
+        if not preview and int(preview_dict.get(category.lower(), 0)) == 0:
             return False
 
         if self._getInstance().isReverseOrder():
             if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
-                return
+                return False
         elif self._getInstance().window.cursor[0] <= self._help_length:
             return False
 
-        if self._getInstance().empty() or vim.current.buffer != self._getInstance().buffer:
+        if self._getInstance().empty() or (self._getInstance().getWinPos() != 'popup' and
+                vim.current.buffer != self._getInstance().buffer):
             return False
 
         if self._ctrlp_pressed == True:
@@ -332,7 +728,8 @@ class Manager(object):
 
     def _getInstance(self):
         if self._instance is None:
-            self._instance = LfInstance(self._getExplorer().getStlCategory(),
+            self._instance = LfInstance(self, self._getExplorer().getStlCategory(),
+                                        self._cli,
                                         self._beforeEnter,
                                         self._afterEnter,
                                         self._beforeExit,
@@ -340,8 +737,6 @@ class Manager(object):
         return self._instance
 
     def _createHelpHint(self):
-        if self._getExplorer().getStlCategory() in ("Search_History", "Cmd_History"):
-            return
         help = []
         if not self._show_help:
             if lfEval("get(g:, 'Lf_HideHelp', 0)") == '0':
@@ -355,7 +750,15 @@ class Manager(object):
             self._getInstance().buffer.options['modifiable'] = True
             self._getInstance().buffer.append(help[::-1])
             self._getInstance().buffer.options['modifiable'] = False
-            self._getInstance().window.height = len(self._getInstance().buffer)
+            buffer_len = len(self._getInstance().buffer)
+            if buffer_len < self._initial_count:
+                if "--nowrap" not in self._arguments:
+                    self._getInstance().window.height = min(self._initial_count,
+                            self._getInstance()._actualLength(self._getInstance().buffer))
+                else:
+                    self._getInstance().window.height = buffer_len
+            elif self._getInstance().window.height < self._initial_count:
+                self._getInstance().window.height = self._initial_count
             lfCmd("normal! Gzb")
             self._getInstance().window.cursor = (orig_row, 0)
         else:
@@ -363,6 +766,8 @@ class Manager(object):
             self._getInstance().buffer.append(help, 0)
             self._getInstance().buffer.options['modifiable'] = False
             self._getInstance().window.cursor = (orig_row + self._help_length, 0)
+
+        self._getInstance().refreshPopupStatusline()
 
     def _hideHelp(self):
         self._getInstance().buffer.options['modifiable'] = True
@@ -383,7 +788,19 @@ class Manager(object):
             self._getInstance().setLineNumber()
         else:
             del self._getInstance().buffer[:self._help_length]
+            if self._help_length > 0 and self._getInstance().getWinPos() == 'popup':
+                lfCmd("call win_execute(%d, 'norm! %dk')" % (self._getInstance().getPopupWinId(), self._help_length))
+
         self._help_length = 0
+        self._getInstance().refreshPopupStatusline()
+
+    def _inHelpLines(self):
+        if self._getInstance().isReverseOrder():
+            if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
+                return True
+        elif self._getInstance().window.cursor[0] <= self._help_length:
+            return True
+        return False
 
     def _getExplorer(self):
         if self._explorer is None:
@@ -403,7 +820,34 @@ class Manager(object):
             # to the directory containing the file which was opened or selected.
             lfCmd("set autochdir")
 
+    def _toUpInPopup(self):
+        if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
+            if lfEval("has('nvim')") == '1':
+                cur_winid = lfEval("win_getid()")
+                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+                lfCmd("norm! k")
+                lfCmd("redraw")
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            else:
+                lfCmd("call win_execute(%d, 'norm! k')" % (self._preview_winid))
+
+    def _toDownInPopup(self):
+        if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
+            if lfEval("has('nvim')") == '1':
+                cur_winid = lfEval("win_getid()")
+                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+                lfCmd("norm! j")
+                lfCmd("redraw")
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            else:
+                lfCmd("call win_execute(%d, 'norm! j')" % (self._preview_winid))
+
     def _toUp(self):
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("call win_execute(%d, 'norm! k')" % (self._getInstance().getPopupWinId()))
+            self._getInstance().refreshPopupStatusline()
+            return
+
         adjust = False
         if self._getInstance().isReverseOrder() and self._getInstance().getCurrentPos()[0] == 1:
             adjust = True
@@ -423,6 +867,11 @@ class Manager(object):
         lfCmd("setlocal cursorline!")   # also fix a weird bug of vim
 
     def _toDown(self):
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("call win_execute(%d, 'norm! j')" % (self._getInstance().getPopupWinId()))
+            self._getInstance().refreshPopupStatusline()
+            return
+
         if not self._getInstance().isReverseOrder() \
                 and self._getInstance().getCurrentPos()[0] == self._getInstance().window.height:
             self._setResultContent()
@@ -433,6 +882,11 @@ class Manager(object):
         lfCmd("setlocal cursorline!")   # also fix a weird bug of vim
 
     def _pageUp(self):
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'exec "norm! \<PageUp>"')""" % (self._getInstance().getPopupWinId()))
+            self._getInstance().refreshPopupStatusline()
+            return
+
         if self._getInstance().isReverseOrder():
             self._setResultContent()
             if self._cli.pattern and self._cli.isFuzzy \
@@ -445,6 +899,11 @@ class Manager(object):
         self._getInstance().setLineNumber()
 
     def _pageDown(self):
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'exec "norm! \<PageDown>"')""" % (self._getInstance().getPopupWinId()))
+            self._getInstance().refreshPopupStatusline()
+            return
+
         if not self._getInstance().isReverseOrder():
             self._setResultContent()
 
@@ -453,12 +912,28 @@ class Manager(object):
         self._getInstance().setLineNumber()
 
     def _leftClick(self):
-        if self._getInstance().window.number == int(lfEval("v:mouse_win")):
+        if self._getInstance().getWinPos() == 'popup':
+            if int(lfEval("has('patch-8.1.2266')")) == 1:
+                if self._getInstance().getPopupWinId() == int(lfEval("v:mouse_winid")):
+                    lfCmd("""call win_execute(%d, "exec v:mouse_lnum")""" % (self._getInstance().getPopupWinId()))
+                    lfCmd("""call win_execute(%d, "exec 'norm!'.v:mouse_col.'|'")""" % (self._getInstance().getPopupWinId()))
+            exit_loop = False
+        elif self._getInstance().window.number == int(lfEval("v:mouse_win")):
             lfCmd("exec v:mouse_lnum")
             lfCmd("exec 'norm!'.v:mouse_col.'|'")
             self._getInstance().setLineNumber()
             self.clearSelections()
             exit_loop = False
+        elif self._preview_winid == int(lfEval("v:mouse_winid")):
+            if lfEval("has('nvim')") == '1':
+                lfCmd("call win_gotoid(%d)" % self._preview_winid)
+                lfCmd("exec v:mouse_lnum")
+                lfCmd("exec 'norm!'.v:mouse_col.'|'")
+
+                self._current_mode = 'NORMAL'
+                lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))
+                self._getInstance().setPopupStl(self._current_mode)
+            exit_loop = True
         else:
             self.quit()
             exit_loop = True
@@ -470,10 +945,14 @@ class Manager(object):
             self._clearHighlights()
             self._clearHighlightsPos()
             self._cli.highlightMatches()
+
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
-            self._getInstance().setBuffer(content[:self._initial_count])
-            self._getInstance().setStlResultsCount(len(content))
-            self._result_content = []
+            if self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+                self._guessSearch(self._content)
+            else:
+                self._getInstance().setBuffer(content[:self._initial_count])
+                self._getInstance().setStlResultsCount(len(content), True)
+                self._result_content = []
             return
 
         if self._cli.isFuzzy:
@@ -499,12 +978,15 @@ class Manager(object):
         length = len(content)
         if self._index == 0:
             self._cb_content = []
-            self._result_content = content
+            self._result_content = []
             self._index = min(step, length)
             cur_content = content[:self._index]
         else:
-            if not is_continue and not self._getInstance().empty():
-                self._cb_content += self._result_content
+            if not is_continue and self._result_content:
+                if self._cb_content:
+                    self._cb_content += self._result_content
+                else:
+                    self._cb_content = self._result_content
 
             if len(self._cb_content) >= step:
                 cur_content = self._cb_content[:step]
@@ -537,11 +1019,9 @@ class Manager(object):
                 result = filter_method(source=cur_content)
 
             if is_continue:
-                self._previous_result = (self._previous_result[0] + result[0],
-                                         self._previous_result[1] + result[1])
-                result = self._previous_result
-            else:
-                self._previous_result = result
+                result = fuzzyEngine.merge(self._previous_result, result)
+
+            self._previous_result = result
         else:
             result = list(filter_method(cur_content))
             if is_continue:
@@ -597,14 +1077,15 @@ class Manager(object):
                 pattern = fuzzyEngine.initPattern(p)
                 if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=False, sort_results=False)
+                                            is_name_only=False, sort_results=False, is_and_mode=True)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
-                        "Function", "History", "Cmd_History", "Search_History", "Tag", "Rg"]:
+                        "Function", "History", "Cmd_History", "Search_History", "Tag", "Rg", "Filetype",
+                        "Command", "Window", "QuickFix", "LocList"]:
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=True, sort_results=False)
+                                            is_name_only=True, sort_results=False, is_and_mode=True)
                 else:
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=not self._cli.isFullPath, sort_results=False)
+                                            is_name_only=not self._cli.isFullPath, sort_results=False, is_and_mode=True)
 
                 getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                         pattern=pattern, is_name_only=not self._cli.isFullPath)
@@ -627,7 +1108,8 @@ class Manager(object):
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight2)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
-                        "Function", "History", "Cmd_History", "Search_History", "Tag", "Rg"]:
+                        "Function", "History", "Cmd_History", "Search_History", "Tag", "Rg", "Filetype",
+                        "Command", "Window", "QuickFix", "LocList"]:
                     filter_method = partial(self._fuzzyFilterEx,
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight3)
@@ -679,7 +1161,7 @@ class Manager(object):
                     return_index = True
                     pattern = fuzzyEngine.initPattern(self._cli.pattern[0])
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine,
-                                            pattern=pattern, is_name_only=True, sort_results=not is_continue)
+                                            pattern=pattern, is_name_only=True, sort_results=True)
                     getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                             pattern=pattern, is_name_only=True)
                     highlight_method = partial(self._highlight, True, getHighlights, True)
@@ -702,7 +1184,7 @@ class Manager(object):
                     return_index = True
                     pattern = fuzzyEngine.initPattern(self._cli.pattern[1])
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine,
-                                            pattern=pattern, is_name_only=False, sort_results=not is_continue)
+                                            pattern=pattern, is_name_only=False, sort_results=True)
                     getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                             pattern=pattern, is_name_only=False)
                     highlight_method = partial(self._highlight, True, getHighlights, True)
@@ -750,28 +1232,51 @@ class Manager(object):
             if self._fuzzy_engine and isAscii(self._cli.pattern) and self._getUnit() == 1: # currently, only BufTag's _getUnit() is 2
                 use_fuzzy_engine = True
                 pattern = fuzzyEngine.initPattern(self._cli.pattern)
-                if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                if self._getExplorer().getStlCategory() == "File":
                     return_index = False
-                    filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=False, sort_results=not is_continue)
-                elif self._getExplorer().getStlCategory() in ["Rg"]:
-                    if "--match-path" in self._arguments:
-                        return_index = False
+                    if self._cli.isFullPath:
                         filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
-                                                is_name_only=True, sort_results=not is_continue)
+                                                is_name_only=False, sort_results=True)
                     else:
-                        return_index = True
-                        filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                                is_name_only=True, sort_results=not is_continue)
+                        filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_File,
+                                                param=fuzzyEngine.createParameter(1), is_name_only=True, sort_results=True)
+                elif self._getExplorer().getStlCategory() == "Rg":
+                    return_index = False
+                    if "--match-path" in self._arguments:
+                        filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
+                                                is_name_only=True, sort_results=True)
+                    else:
+                        filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_Rg,
+                                param=fuzzyEngine.createRgParameter(self._getExplorer().displayMulti(), self._getExplorer().getContextSeparator(), self._has_column),
+                                is_name_only=True, sort_results=True)
+                elif self._getExplorer().getStlCategory() == "Tag":
+                    return_index = False
+                    mode = 0 if self._cli.isFullPath else 1
+                    filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_Tag,
+                                            param=fuzzyEngine.createParameter(mode), is_name_only=True, sort_results=True)
+                elif self._getExplorer().getStlCategory() == "Gtags":
+                    return_index = False
+                    result_format = 1
+                    if self._getExplorer().getResultFormat() in [None, "ctags-mod"]:
+                        result_format = 0
+                    elif self._getExplorer().getResultFormat() == "ctags-x":
+                        result_format = 2
+                    filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_Gtags,
+                                            param=fuzzyEngine.createGtagsParameter(0, result_format, self._match_path), is_name_only=True, sort_results=True)
+                elif self._getExplorer().getStlCategory() == "Line":
+                    return_index = False
+                    filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine, pattern=pattern, category=fuzzyEngine.Category_Line,
+                                            param=fuzzyEngine.createParameter(1), is_name_only=True, sort_results=True)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
-                        "Function", "History", "Cmd_History", "Search_History", "Tag"]:
+                        "Function", "History", "Cmd_History", "Search_History", "Filetype",
+                        "Command", "Window", "QuickFix", "LocList"]:
                     return_index = True
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=True, sort_results=not is_continue)
+                                            is_name_only=True, sort_results=True)
                 else:
                     return_index = True
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=not self._cli.isFullPath, sort_results=not is_continue)
+                                            is_name_only=not self._cli.isFullPath, sort_results=True)
 
                 getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                         pattern=pattern, is_name_only=not self._cli.isFullPath)
@@ -795,7 +1300,8 @@ class Manager(object):
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight2)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
-                        "Function", "History", "Cmd_History", "Search_History", "Rg"]:
+                        "Function", "History", "Cmd_History", "Search_History", "Rg", "Filetype",
+                        "Command", "Window", "QuickFix", "LocList"]:
                     filter_method = partial(self._fuzzyFilter,
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight3)
@@ -820,20 +1326,15 @@ class Manager(object):
         elif use_fuzzy_engine:
             if step == 0:
                 if return_index == True:
-                    step = 20000 * cpu_count
+                    step = 30000 * cpu_count
                 else:
-                    step = 40000 * cpu_count
+                    step = 60000 * cpu_count
 
-            pair = self._filter(step, filter_method, content, is_continue, True, return_index)
-            if is_continue: # result is not sorted
-                pairs = sorted(zip(*pair), key=operator.itemgetter(0), reverse=True)
-                self._result_content = self._getList(pairs)
-            else:
-                self._result_content = pair[1]
+            _, self._result_content = self._filter(step, filter_method, content, is_continue, True, return_index)
         else:
             if step == 0:
                 if use_fuzzy_match_c:
-                    step = 40000
+                    step = 60000
                 elif self._getExplorer().supportsNameOnly() and self._cli.isFullPath:
                     step = 6000
                 else:
@@ -844,7 +1345,7 @@ class Manager(object):
             self._result_content = self._getList(pairs)
 
         self._getInstance().setBuffer(self._result_content[:self._initial_count])
-        self._getInstance().setStlResultsCount(len(self._result_content))
+        self._getInstance().setStlResultsCount(len(self._result_content), True)
 
         if self._cli.isAndMode:
             self._highlight_method = partial(self._highlight_and_mode, highlight_methods)
@@ -853,14 +1354,66 @@ class Manager(object):
             self._highlight_method = highlight_method
             self._highlight_method()
 
+        if lfEval("has('gui_running')") == '1' and len(self._content) >= 100000 \
+                and len(self._cli.pattern) > 1 and not is_continue:
+            lfCmd("redraw")
+
+    def _guessFilter(self, filename, suffix, dirname, icon, iterable):
+        """
+        return a list, each item is a pair (weight, line)
+        """
+        icon_len = len(icon)
+        return ((FuzzyMatch.getPathWeight(filename, suffix, dirname, line[icon_len:]), line) for line in iterable)
+
+    def _guessSearch(self, content, is_continue=False, step=0):
+        if self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] not in [b'', '']:
+            self._getInstance().setBuffer(content[:self._initial_count])
+            self._getInstance().setStlResultsCount(len(content), True)
+            self._result_content = []
+            return
+
+        buffer_name = os.path.normpath(lfDecode(self._cur_buffer.name))
+        if lfEval("g:Lf_ShowRelativePath") == '1':
+            try:
+                buffer_name = os.path.relpath(buffer_name)
+            except ValueError:
+                pass
+
+        buffer_name = lfEncode(buffer_name)
+        dirname, basename = os.path.split(buffer_name)
+        filename, suffix = os.path.splitext(basename)
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
+            icon = webDevIconsGetFileTypeSymbol(basename)
+        else:
+            icon = ''
+        if self._fuzzy_engine:
+            filter_method = partial(fuzzyEngine.guessMatch, engine=self._fuzzy_engine, filename=filename,
+                                    suffix=suffix, dirname=dirname, icon=icon, sort_results=True)
+            step = len(content)
+
+            _, self._result_content = self._filter(step, filter_method, content, is_continue, True)
+        else:
+            step = len(content)
+            filter_method = partial(self._guessFilter, filename, suffix, dirname, icon)
+            pairs = self._filter(step, filter_method, content, is_continue)
+            pairs.sort(key=operator.itemgetter(0), reverse=True)
+            self._result_content = self._getList(pairs)
+
+        self._getInstance().setBuffer(self._result_content[:self._initial_count])
+        self._getInstance().setStlResultsCount(len(self._result_content), True)
+
     def _highlight_and_mode(self, highlight_methods):
         self._clearHighlights()
         for i, highlight_method in enumerate(highlight_methods):
             highlight_method(hl_group='Lf_hl_match' + str(i % 5))
 
     def _clearHighlights(self):
-        for i in self._highlight_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
+        if self._getInstance().getWinPos() == 'popup':
+            for i in self._highlight_ids:
+                lfCmd("silent! call matchdelete(%d, %d)" % (i, self._getInstance().getPopupWinId()))
+        else:
+            for i in self._highlight_ids:
+                lfCmd("silent! call matchdelete(%d)" % i)
         self._highlight_ids = []
 
     def _clearHighlightsPos(self):
@@ -887,7 +1440,11 @@ class Manager(object):
                     pos = [[unit*i + 1 + self._help_length] + p for p in pos]
                 # The maximum number of positions is 8 in matchaddpos().
                 for j in range(0, len(pos), 8):
-                    id = int(lfEval("matchaddpos('%s', %s)" % (hl_group, str(pos[j:j+8]))))
+                    if self._getInstance().getWinPos() == 'popup':
+                        lfCmd("""call win_execute(%d, "let matchid = matchaddpos('%s', %s)")""" % (self._getInstance().getPopupWinId(), hl_group, str(pos[j:j+8])))
+                        id = int(lfEval("matchid"))
+                    else:
+                        id = int(lfEval("matchaddpos('%s', %s)" % (hl_group, str(pos[j:j+8]))))
                     self._highlight_ids.append(id)
 
         for i, pos in enumerate(self._highlight_refine_pos):
@@ -897,7 +1454,11 @@ class Manager(object):
                 pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
-                id = int(lfEval("matchaddpos('Lf_hl_matchRefine', %s)" % str(pos[j:j+8])))
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("""call win_execute(%d, "let matchid = matchaddpos('Lf_hl_matchRefine', %s)")""" % (self._getInstance().getPopupWinId(), str(pos[j:j+8])))
+                    id = int(lfEval("matchid"))
+                else:
+                    id = int(lfEval("matchaddpos('Lf_hl_matchRefine', %s)" % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
     def _highlight(self, is_full_path, get_highlights, use_fuzzy_engine=False, clear=True, hl_group='Lf_hl_match'):
@@ -948,7 +1509,11 @@ class Manager(object):
                 pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
-                id = int(lfEval("matchaddpos('%s', %s)" % (hl_group, str(pos[j:j+8]))))
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("""call win_execute(%d, "let matchid = matchaddpos('%s', %s)")""" % (self._getInstance().getPopupWinId(), hl_group, str(pos[j:j+8])))
+                    id = int(lfEval("matchid"))
+                else:
+                    id = int(lfEval("matchaddpos('%s', %s)" % (hl_group, str(pos[j:j+8]))))
                 self._highlight_ids.append(id)
 
     def _highlightRefine(self, first_get_highlights, get_highlights):
@@ -989,7 +1554,11 @@ class Manager(object):
                 pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
-                id = int(lfEval("matchaddpos('Lf_hl_match', %s)" % str(pos[j:j+8])))
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("""call win_execute(%d, "let matchid = matchaddpos('Lf_hl_match', %s)")""" % (self._getInstance().getPopupWinId(), str(pos[j:j+8])))
+                    id = int(lfEval("matchid"))
+                else:
+                    id = int(lfEval("matchaddpos('Lf_hl_match', %s)" % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
         self._highlight_refine_pos = [get_highlights(getDigest(line, 2))
@@ -1005,7 +1574,11 @@ class Manager(object):
                 pos = [[unit*i + 1 + self._help_length] + p for p in pos]
             # The maximum number of positions is 8 in matchaddpos().
             for j in range(0, len(pos), 8):
-                id = int(lfEval("matchaddpos('Lf_hl_matchRefine', %s)" % str(pos[j:j+8])))
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("""call win_execute(%d, "let matchid = matchaddpos('Lf_hl_matchRefine', %s)")""" % (self._getInstance().getPopupWinId(), str(pos[j:j+8])))
+                    id = int(lfEval("matchid"))
+                else:
+                    id = int(lfEval("matchaddpos('Lf_hl_matchRefine', %s)" % str(pos[j:j+8])))
                 self._highlight_ids.append(id)
 
     def _regexFilter(self, iterable):
@@ -1016,35 +1589,41 @@ class Manager(object):
                 return '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" % (text.replace('\x00', '\x01'), pattern))
             except ValueError:  # python 3
                 return '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" % (text.replace('\x00', '\x01'), pattern))
+            except:
+                return '-1' != lfEval("g:LfNoErrMsgMatch('%s', '%s')" % (text.replace('\x00', '\x01'), pattern))
 
         try:
             if ('-2' == lfEval("g:LfNoErrMsgMatch('', '%s')" % escQuote(self._cli.pattern))):
                 return iter([])
             else:
                 return (line for line in iterable
-                        if noErrMatch(escQuote(self._getDigest(line, 0).strip()), escQuote(self._cli.pattern)))
+                        if noErrMatch(escQuote(self._getDigest(line, 0)), escQuote(self._cli.pattern)))
         except vim.error:
             return iter([])
 
     def _regexSearch(self, content, is_continue, step):
-        if not self._cli.isPrefix:
+        if not is_continue and not self._cli.isPrefix:
             self._index = 0
         self._result_content = self._filter(8000, self._regexFilter, content, is_continue)
         self._getInstance().setBuffer(self._result_content[:self._initial_count])
-        self._getInstance().setStlResultsCount(len(self._result_content))
+        self._getInstance().setStlResultsCount(len(self._result_content), True)
 
     def clearSelections(self):
         for i in self._selections.values():
-            lfCmd("call matchdelete(%d)" % i)
+            if self._getInstance().getWinPos() == 'popup':
+                lfCmd("call matchdelete(%d, %d)" % (i, self._getInstance().getPopupWinId()))
+            else:
+                lfCmd("call matchdelete(%d)" % i)
         self._selections.clear()
 
     def _cleanup(self):
-        if lfEval("g:Lf_RememberLastSearch") == '0':
+        if not ("--recall" in self._arguments or lfEval("g:Lf_RememberLastSearch") == '1'):
             self._pattern_bak = self._cli.pattern
             self._cli.clear()
             self._clearHighlights()
             self._clearHighlightsPos()
-        self.clearSelections()
+            self._help_length = 0
+            self._show_help = False
 
     @modifiableController
     def toggleHelp(self):
@@ -1054,12 +1633,16 @@ class Manager(object):
                 del self._getInstance().buffer[-self._help_length:]
         else:
             del self._getInstance().buffer[:self._help_length]
+            if self._help_length > 0 and self._getInstance().getWinPos() == 'popup':
+                lfCmd("call win_execute(%d, 'norm! %dk')" % (self._getInstance().getPopupWinId(), self._help_length))
         self._createHelpHint()
         self.clearSelections()
         self._resetHighlights()
 
     def _accept(self, file, mode, *args, **kwargs):
         if file:
+            lfCmd("norm! m'")
+
             if mode == '':
                 pass
             elif mode == 'h':
@@ -1070,6 +1653,11 @@ class Manager(object):
             kwargs["mode"] = mode
             tabpage_count = len(vim.tabpages)
             self._acceptSelection(file, *args, **kwargs)
+            for k, v in self._cursorline_dict.items():
+                if k.valid:
+                    k.options["cursorline"] = v
+            self._cursorline_dict.clear()
+            self._issue_422_set_option()
             if mode == 't' and len(vim.tabpages) > tabpage_count:
                 tab_pos = int(lfEval("g:Lf_TabpagePosition"))
                 if tab_pos == 0:
@@ -1086,7 +1674,14 @@ class Manager(object):
                 return
         else:
             if self._getInstance().window.cursor[0] <= self._help_length:
-                lfCmd("norm! j")
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("call win_execute({}, 'norm! j')".format(self._getInstance().getPopupWinId()))
+                else:
+                    lfCmd("norm! j")
+
+                if self._getInstance().getWinPos() in ('popup', 'floatwin'):
+                    self._cli.buildPopupPrompt()
+
                 return
 
         if self._getExplorer().getStlCategory() == "Rg" \
@@ -1107,6 +1702,9 @@ class Manager(object):
             for i in sorted(self._selections.keys()):
                 files.append(self._getInstance().buffer[i-1])
             if "--stayOpen" in self._arguments:
+                if self._getInstance().window.valid:
+                    self._getInstance().cursorRow = self._getInstance().window.cursor[0]
+                self._getInstance().helpLength = self._help_length
                 try:
                     vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
                 except vim.error: # error if original buffer is an No Name buffer
@@ -1120,9 +1718,11 @@ class Manager(object):
                 chdir(cwd)
 
             orig_cwd = os.getcwd()
-            if mode == '':
+            if mode == '' and self._getExplorer().getStlCategory() == "File":
+                self._accept(files[0], mode)
                 self._argaddFiles(files)
                 self._accept(files[0], mode)
+                lfCmd("doautocmd BufwinEnter")
             else:
                 for file in files:
                     self._accept(file, mode)
@@ -1139,6 +1739,9 @@ class Manager(object):
             need_exit = self._needExit(file, self._arguments)
             if need_exit:
                 if "--stayOpen" in self._arguments:
+                    if self._getInstance().window.valid:
+                        self._getInstance().cursorRow = self._getInstance().window.cursor[0]
+                    self._getInstance().helpLength = self._help_length
                     try:
                         vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
                     except vim.error: # error if original buffer is an No Name buffer
@@ -1197,7 +1800,7 @@ class Manager(object):
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
                         (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1, len(instance.buffer) - instance.helpLength))
         else:
-            if instance.window.valid:
+            if instance.window.valid and self._getInstance().getWinPos() != 'popup':
                 if instance.window.cursor[0] <= self._help_length:
                     instance.window.cursor = (self._help_length + 1, 0)
                 elif instance.window.cursor[0] == len(instance.buffer): # at the last line
@@ -1247,7 +1850,7 @@ class Manager(object):
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
                         (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1, len(instance.buffer) - instance.helpLength))
         else:
-            if instance.window.valid:
+            if instance.window.valid and self._getInstance().getWinPos() != 'popup':
                 if instance.window.cursor[0] <= self._help_length + 1:
                     instance.window.cursor = (len(instance.buffer), 0)
                 else:
@@ -1299,22 +1902,45 @@ class Manager(object):
 
     def addSelections(self):
         nr = self._getInstance().window.number
-        if (int(lfEval("v:mouse_win")) != 0 and
-                nr != int(lfEval("v:mouse_win"))):
-            return
-        elif nr == int(lfEval("v:mouse_win")):
-            lfCmd("exec v:mouse_lnum")
-            lfCmd("exec 'norm!'.v:mouse_col.'|'")
+
+        if self._getInstance().getWinPos() != 'popup':
+            if (int(lfEval("v:mouse_win")) != 0 and
+                    nr != int(lfEval("v:mouse_win"))):
+                return
+            elif nr == int(lfEval("v:mouse_win")):
+                lfCmd("exec v:mouse_lnum")
+                lfCmd("exec 'norm!'.v:mouse_col.'|'")
+
         line_nr = self._getInstance().window.cursor[0]
-        if line_nr <= self._help_length:
-            lfCmd("norm! j")
-            return
+        if self._getInstance().isReverseOrder():
+            if line_nr > len(self._getInstance().buffer) - self._help_length:
+                lfCmd("norm! k")
+                return
+        else:
+            if line_nr <= self._help_length:
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("call win_execute({}, 'norm! j')".format(self._getInstance().getPopupWinId()))
+                else:
+                    lfCmd("norm! j")
+
+                if self._getInstance().getWinPos() in ('popup', 'floatwin'):
+                    self._cli.buildPopupPrompt()
+
+                return
 
         if line_nr in self._selections:
-            lfCmd("call matchdelete(%d)" % self._selections[line_nr])
+            if self._getInstance().getWinPos() == 'popup':
+                lfCmd("call matchdelete(%d, %d)" % (self._selections[line_nr], self._getInstance().getPopupWinId()))
+            else:
+                lfCmd("call matchdelete(%d)" % self._selections[line_nr])
             del self._selections[line_nr]
         else:
-            id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % line_nr))
+            if self._getInstance().getWinPos() == 'popup':
+                lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_selection', '\\\\%%%dl.')")"""
+                        % (self._getInstance().getPopupWinId(), line_nr))
+                id = int(lfEval("matchid"))
+            else:
+                id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % line_nr))
             self._selections[line_nr] = id
 
     def selectMulti(self):
@@ -1339,12 +1965,26 @@ class Manager(object):
             return
         for i in range(line_num):
             if i >= self._help_length and i+1 not in self._selections:
-                id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % (i+1)))
+                if self._getInstance().getWinPos() == 'popup':
+                    lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_selection', '\\\\%%%dl.')")"""
+                            % (self._getInstance().getPopupWinId(), i+1))
+                    id = int(lfEval("matchid"))
+                else:
+                    id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % (i+1)))
                 self._selections[i+1] = id
+
+    def _gotoFirstLine(self):
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("call win_execute({}, 'norm! gg')".format(self._getInstance().getPopupWinId()))
+        else:
+            lfCmd("normal! gg")
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
-        self.setArguments(arguments_dict)
+        if "--recall" in arguments_dict:
+            self._arguments["--recall"] = arguments_dict["--recall"]
+        else:
+            self.setArguments(arguments_dict)
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
 
@@ -1362,9 +2002,16 @@ class Manager(object):
                 lfCmd("echohl Error | redraw | echo 'Error, no content!' | echohl NONE")
             return
 
+        self._cleanup()
+
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
-        if self._getExplorer().getStlCategory() in ["Rg", "Gtags"] and "--recall" in self._arguments:
+        self._getInstance().setArguments(self._arguments)
+        empty_query = self._empty_query and self._getExplorer().getStlCategory() in ["File"]
+        remember_last_status = "--recall" in self._arguments or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern
+        if remember_last_status:
             content = self._content
+            self._getInstance().useLastReverseOrder()
+            win_pos = self._getInstance().getWinPos()
         else:
             content = self._getExplorer().getContent(*args, **kwargs)
             self._getInstance().setCwd(os.getcwd())
@@ -1374,49 +2021,62 @@ class Manager(object):
                 self._accept(content[0], mode)
                 return
 
+            self._index = 0
+            pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
+            if len(pattern) > 1 and (pattern[0] == '"' and pattern[-1] == '"' or pattern[0] == "'" and pattern[-1] == "'"):
+                pattern = pattern[1:-1]
+            self._cli.setPattern(pattern)
+            self._result_content = []
+            self._cb_content = []
+
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
 
-        self._getInstance().setArguments(self._arguments)
         if self._getExplorer().getStlCategory() in ["Rg"] and ("-A" in arguments_dict \
                 or "-B" in arguments_dict or "-C" in arguments_dict):
             self._getInstance().ignoreReverse()
 
-        self._getInstance().enterBuffer(win_pos)
+        # clear the buffer only when the content is not a list
+        self._getInstance().enterBuffer(win_pos, not isinstance(content, list))
         self._initial_count = self._getInstance().getInitialWinHeight()
 
         self._getInstance().setStlCategory(self._getExplorer().getStlCategory())
         self._setStlMode(**kwargs)
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
-        if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
-            pass
+        if kwargs.get('bang', 0):
+            self._current_mode = 'NORMAL'
         else:
-            lfCmd("normal! gg")
-            self._index = 0
-            self._pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
-            self._cli.setPattern(self._pattern)
+            self._current_mode = 'INPUT'
+        lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))
+
+        self._getInstance().setPopupStl(self._current_mode)
+
+        if not remember_last_status:
+            self._gotoFirstLine()
 
         self._start_time = time.time()
         self._bang_start_time = self._start_time
-        self._status_start_time = self._start_time
         self._bang_count = 0
 
+        self._getInstance().buffer.vars['Lf_category'] = self._getExplorer().getStlCategory()
+ 
         self._read_content_exception = None
         if isinstance(content, list):
             self._is_content_list = True
-            if len(content[0]) == len(content[0].rstrip("\r\n")):
-                self._content = content
-            else:
-                self._content = [line.rstrip("\r\n") for line in content]
-            self._getInstance().setStlTotal(len(self._content)//self._getUnit())
-            self._result_content = self._content
-            self._getInstance().setStlResultsCount(len(self._content))
-            if lfEval("g:Lf_RememberLastSearch") == '1' and self._launched and self._cli.pattern:
-                pass
-            else:
-                self._getInstance().setBuffer(self._content[:self._initial_count])
+            self._read_finished = 2
+
+            if not remember_last_status:
+                if len(content[0]) == len(content[0].rstrip("\r\n")):
+                    self._content = content
+                else:
+                    self._content = [line.rstrip("\r\n") for line in content]
+
+                self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+                self._getInstance().setStlResultsCount(len(self._content))
+                if not empty_query:
+                    self._getInstance().setBuffer(self._content[:self._initial_count])
 
             if lfEval("has('nvim')") == '1':
                 lfCmd("redrawstatus")
@@ -1424,13 +2084,36 @@ class Manager(object):
             if not kwargs.get('bang', 0):
                 self.input()
             else:
-                self._getInstance().appendBuffer(self._content[self._initial_count:])
+                if not remember_last_status and not empty_query:
+                    self._getInstance().appendBuffer(self._content[self._initial_count:])
+                elif remember_last_status and len(self._getInstance().buffer) < len(self._result_content):
+                    self._getInstance().appendBuffer(self._result_content[self._initial_count:])
+
                 lfCmd("echo")
+                if self._cli.pattern:
+                    self._cli._buildPrompt()
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
+                self._getInstance().mimicCursor()
+
+                if not remember_last_status and not self._cli.pattern and empty_query:
+                    self._gotoFirstLine()
+                    self._guessSearch(self._content)
+                    if self._result_content: # self._result_content is [] only if 
+                                             #  self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] not in [b'', '']:
+                        self._getInstance().appendBuffer(self._result_content[self._initial_count:])
+                    else:
+                        self._getInstance().appendBuffer(self._content[self._initial_count:])
+
+                    if self._timer_id is not None:
+                        lfCmd("call timer_stop(%s)" % self._timer_id)
+                        self._timer_id = None
+
+                    self._bangReadFinished()
+
+                    lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
         elif isinstance(content, AsyncExecutor.Result):
             self._is_content_list = False
-            self._result_content = []
             self._callback = self._workInIdle
             if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
@@ -1441,7 +2124,7 @@ class Manager(object):
                     if "--append" in self.getArguments():
                         self._offset_in_content = len(self._content)
                         if self._pattern_bak:
-                            self._getInstance().setBuffer(self._content)
+                            self._getInstance().setBuffer(self._content, need_copy=False)
                             self._createHelpHint()
                     else:
                         self._getInstance().clearBuffer()
@@ -1464,9 +2147,9 @@ class Manager(object):
                 lfCmd("echo")
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
+                self._getInstance().mimicCursor()
         else:
             self._is_content_list = False
-            self._result_content = []
             self._callback = partial(self._workInIdle, content)
             if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
@@ -1483,8 +2166,7 @@ class Manager(object):
                 lfCmd("echo")
                 self._getInstance().buffer.options['modifiable'] = False
                 self._bangEnter()
-
-        self._launched = True
+                self._getInstance().mimicCursor()
 
     def _readContent(self, content):
         try:
@@ -1502,8 +2184,9 @@ class Manager(object):
         if len(self._result_content) > len(self._getInstance().buffer):
             self._getInstance().setBuffer(self._result_content)
         elif self._index == 0:
-            self._getInstance().setBuffer(self._content)
+            self._getInstance().setBuffer(self._content, need_copy=True)
 
+    @catchException
     def _workInIdle(self, content=None, bang=False):
         if self._read_content_exception is not None:
             if bang == True:
@@ -1516,10 +2199,15 @@ class Manager(object):
             else:
                 raise self._read_content_exception[1]
 
+        if bang == False and self._preview_open == False and self._getInstance().getWinPos() in ('popup', 'floatwin') \
+                and not self._getInstance().empty():
+            self._previewResult(False)
+            self._preview_open = True
+
         if self._is_content_list:
             if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
                 if self._fuzzy_engine:
-                    step = 10000 * cpu_count
+                    step = 60000 * cpu_count
                 elif is_fuzzyMatch_C:
                     step = 10000
                 else:
@@ -1539,18 +2227,38 @@ class Manager(object):
             if self._read_finished == 1:
                 self._read_finished += 1
                 self._getExplorer().setContent(self._content)
+                self._getInstance().setStlTotal(len(self._content)//self._getUnit())
+                self._getInstance().setStlRunning(False)
 
                 if self._cli.pattern:
                     self._getInstance().setStlResultsCount(len(self._result_content))
+                elif self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
+                    self._guessSearch(self._content)
+                    if bang:
+                        if self._result_content: # self._result_content is [] only if 
+                                                 #  self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] != b'':
+                            self._getInstance().appendBuffer(self._result_content[self._initial_count:])
+                        else:
+                            self._getInstance().appendBuffer(self._content[self._initial_count:])
+
+                        if self._timer_id is not None:
+                            lfCmd("call timer_stop(%s)" % self._timer_id)
+                            self._timer_id = None
+
+                        self._bangReadFinished()
+
+                        lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
                 else:
                     if bang:
                         if self._getInstance().empty():
                             self._offset_in_content = len(self._content)
-                            self._getInstance().appendBuffer(self._content[:self._offset_in_content])
+                            if self._offset_in_content > 0:
+                                self._getInstance().appendBuffer(self._content[:self._offset_in_content])
                         else:
                             cur_len = len(self._content)
-                            self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
-                            self._offset_in_content = cur_len
+                            if cur_len > self._offset_in_content:
+                                self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
+                                self._offset_in_content = cur_len
 
                         if self._timer_id is not None:
                             lfCmd("call timer_stop(%s)" % self._timer_id)
@@ -1564,38 +2272,40 @@ class Manager(object):
 
                     self._getInstance().setStlResultsCount(len(self._content))
 
-                self._getInstance().setStlTotal(len(self._content)//self._getUnit())
-                self._getInstance().setStlRunning(False)
-                lfCmd("redrawstatus")
+                if self._getInstance().getWinPos() not in ('popup', 'floatwin'):
+                    lfCmd("redrawstatus")
 
-            if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
-                if self._fuzzy_engine:
-                    step = 10000 * cpu_count
-                elif is_fuzzyMatch_C:
-                    step = 10000
-                else:
-                    step = 2000
-                self._search(self._content, True, step)
+            if self._cli.pattern:
+                if self._index < len(self._content) or len(self._cb_content) > 0:
+                    if self._fuzzy_engine:
+                        step = 60000 * cpu_count
+                    elif is_fuzzyMatch_C:
+                        step = 10000
+                    else:
+                        step = 2000
+                    self._search(self._content, True, step)
+
+                    if bang:
+                        self._getInstance().appendBuffer(self._result_content[self._initial_count:])
         else:
             cur_len = len(self._content)
             if time.time() - self._start_time > 0.1:
                 self._start_time = time.time()
                 self._getInstance().setStlTotal(cur_len//self._getUnit())
-                if time.time() - self._status_start_time > 0.45:
-                    self._status_start_time = time.time()
-                    self._getInstance().setStlRunning(True)
+                self._getInstance().setStlRunning(True)
 
                 if self._cli.pattern:
                     self._getInstance().setStlResultsCount(len(self._result_content))
                 else:
                     self._getInstance().setStlResultsCount(cur_len)
 
-                lfCmd("redrawstatus")
+                if self._getInstance().getWinPos() not in ('popup', 'floatwin'):
+                    lfCmd("redrawstatus")
 
             if self._cli.pattern:
                 if self._index < cur_len or len(self._cb_content) > 0:
                     if self._fuzzy_engine:
-                        step = 10000 * cpu_count
+                        step = 60000 * cpu_count
                     elif is_fuzzyMatch_C:
                         step = 10000
                     else:
@@ -1605,13 +2315,15 @@ class Manager(object):
                 if bang:
                     if self._getInstance().empty():
                         self._offset_in_content = len(self._content)
-                        self._getInstance().appendBuffer(self._content[:self._offset_in_content])
+                        if self._offset_in_content > 0:
+                            self._getInstance().appendBuffer(self._content[:self._offset_in_content])
                     else:
                         cur_len = len(self._content)
-                        self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
-                        self._offset_in_content = cur_len
+                        if cur_len > self._offset_in_content:
+                            self._getInstance().appendBuffer(self._content[self._offset_in_content:cur_len])
+                            self._offset_in_content = cur_len
 
-                    if time.time() - self._bang_start_time > 0.5:
+                    if self._getInstance().getWinPos() not in ('popup', 'floatwin') and time.time() - self._bang_start_time > 0.5:
                         self._bang_start_time = time.time()
                         lfCmd("echohl WarningMsg | redraw | echo ' searching %s' | echohl NONE" % ('.' * self._bang_count))
                         self._bang_count = (self._bang_count + 1) % 9
@@ -1620,34 +2332,57 @@ class Manager(object):
 
     @modifiableController
     def input(self):
+        self._preview_open = False
+        self._current_mode = 'INPUT'
+        self._getInstance().hideMimicCursor()
+        if self._getInstance().getWinPos() in ('popup', 'floatwin'):
+            self._cli.buildPopupPrompt()
+            lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))
+            self._getInstance().setPopupStl(self._current_mode)
+
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', '%s')"
+                    % (self._getInstance().getPopupWinId(), 'leaderf#PopupFilter'))
+
         if self._timer_id is not None:
             lfCmd("call timer_stop(%s)" % self._timer_id)
             self._timer_id = None
 
+        self.clearSelections()
         self._hideHelp()
         self._resetHighlights()
 
-        if self._pattern:
-            self._search(self._content)
+        if self._cli.pattern:    # --input xxx or from normal mode to input mode
+            if self._index == 0: # --input xxx
+                self._search(self._content)
+        elif self._empty_query and self._getExplorer().getStlCategory() in ["File"] \
+                and "--recall" not in self._arguments:
+            self._guessSearch(self._content)
 
         for cmd in self._cli.input(self._callback):
             cur_len = len(self._content)
             cur_content = self._content[:cur_len]
             if equal(cmd, '<Update>'):
+                if self._getInstance().getWinPos() == 'popup':
+                    if self._getInstance()._window_object.cursor[0] > 1:
+                        lfCmd("call win_execute({}, 'norm! gg')".format(self._getInstance().getPopupWinId()))
                 self._search(cur_content)
             elif equal(cmd, '<Shorten>'):
                 if self._getInstance().isReverseOrder():
                     lfCmd("normal! G")
                 else:
-                    lfCmd("normal! gg")
+                    self._gotoFirstLine()
                 self._index = 0 # search from beginning
                 self._search(cur_content)
             elif equal(cmd, '<Mode>'):
                 self._setStlMode()
+                if self._getInstance().getWinPos() in ('popup', 'floatwin'):
+                    self._getInstance().setPopupStl(self._current_mode)
+
                 if self._getInstance().isReverseOrder():
                     lfCmd("normal! G")
                 else:
-                    lfCmd("normal! gg")
+                    self._gotoFirstLine()
                 self._index = 0 # search from beginning
                 if self._cli.pattern:
                     self._search(cur_content)
@@ -1662,7 +2397,7 @@ class Manager(object):
                     if self._getInstance().isReverseOrder():
                         lfCmd("normal! G")
                     else:
-                        lfCmd("normal! gg")
+                        self._gotoFirstLine()
                     self._index = 0 # search from beginning
                     self._search(cur_content)
             elif equal(cmd, '<Down>'):
@@ -1670,7 +2405,7 @@ class Manager(object):
                     if self._getInstance().isReverseOrder():
                         lfCmd("normal! G")
                     else:
-                        lfCmd("normal! gg")
+                        self._gotoFirstLine()
                     self._index = 0 # search from beginning
                     self._search(cur_content)
             elif equal(cmd, '<LeftMouse>'):
@@ -1693,11 +2428,30 @@ class Manager(object):
             elif equal(cmd, '<C-T>'):
                 if self.accept('t') is None:
                     break
+            elif equal(cmd, '<C-\>'):
+                actions = ['', 'h', 'v', 't', 'dr']
+                action_count = len(actions)
+                selection = int( vim.eval(
+                    'confirm("Action?", "&Edit\n&Split\n&Vsplit\n&Tabnew\n&Drop")' ) ) - 1
+                if selection < 0 or selection >= action_count:
+                    selection = 0
+                action = actions[selection]
+                if self.accept(action) is None:
+                    break
             elif equal(cmd, '<Quit>'):
                 self._cli.writeHistory(self._getExplorer().getStlCategory())
                 self.quit()
                 break
             elif equal(cmd, '<Tab>'):   # switch to Normal mode
+                self._current_mode = 'NORMAL'
+                if self._getInstance().getWinPos() == 'popup':
+                    if lfEval("exists('*leaderf#%s#NormalModeFilter')" % self._getExplorer().getStlCategory()) == '1':
+                        lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', '%s')" % (self._getInstance().getPopupWinId(),
+                                'leaderf#%s#NormalModeFilter' % self._getExplorer().getStlCategory()))
+                    else:
+                        lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', function('leaderf#NormalModeFilter', [%d]))"
+                                % (self._getInstance().getPopupWinId(), id(self)))
+
                 self._setResultContent()
                 self.clearSelections()
                 self._cli.hideCursor()
@@ -1707,6 +2461,12 @@ class Manager(object):
                         and len(self._highlight_pos) < (len(self._getInstance().buffer) - self._help_length) // self._getUnit() \
                         and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
                     self._highlight_method()
+
+                if self._getInstance().getWinPos() in ('popup', 'floatwin'):
+                    self._cli.buildPopupPrompt()
+                    lfCmd("call leaderf#colorscheme#popup#hiMode('%s', '%s')" % (self._getExplorer().getStlCategory(), self._current_mode))
+                    self._getInstance().setPopupStl(self._current_mode)
+
                 break
             elif equal(cmd, '<F5>'):
                 self.refresh(False)
@@ -1731,6 +2491,10 @@ class Manager(object):
             elif equal(cmd, '<PageDown>'):
                 self._pageDown()
                 self._previewResult(False)
+            elif equal(cmd, '<C-Up>'):
+                self._toUpInPopup()
+            elif equal(cmd, '<C-Down>'):
+                self._toDownInPopup()
             else:
                 if self._cmdExtension(cmd):
                     break

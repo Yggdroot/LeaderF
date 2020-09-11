@@ -30,14 +30,9 @@ function! leaderf#Colors#Maps()
     nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "colorschemeExplManager._previewResult(False)"<CR>
     if has_key(g:Lf_NormalMap, "Colorscheme")
         for i in g:Lf_NormalMap["Colorscheme"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
         endfor
     endif
-endfunction
-
-function! leaderf#Colors#startExpl(win_pos, ...)
-    call leaderf#LfPy("colorschemeExplManager.startExplorer('".a:win_pos."')")
 endfunction

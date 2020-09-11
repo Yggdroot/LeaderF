@@ -30,13 +30,13 @@ class TagExplorer(Explorer):
             mtime = os.path.getmtime(tagfile)
             if tagfile not in self._file_tags:
                 has_new_tagfile = True
-                with lfOpen(tagfile, 'r', errors='ignore') as f:
+                with lfOpen(tagfile, 'r', encoding='utf-8', errors='ignore') as f:
                     self._file_tags[tagfile] = [mtime, f.readlines()[6:]]
             else:
                 filenames.remove(tagfile)
                 if mtime != self._file_tags[tagfile][0]:
                     has_changed_tagfile = True
-                    with lfOpen(tagfile, 'r', errors='ignore') as f:
+                    with lfOpen(tagfile, 'r', encoding='utf-8', errors='ignore') as f:
                         self._file_tags[tagfile] = [mtime, f.readlines()[6:]]
 
         for name in filenames:
@@ -61,7 +61,6 @@ class TagExplorer(Explorer):
 class TagExplManager(Manager):
     def __init__(self):
         super(TagExplManager, self).__init__()
-        self._match_ids = []
 
     def _getExplClass(self):
         return TagExplorer
@@ -79,16 +78,22 @@ class TagExplManager(Manager):
         tagaddress = res[0]
         try:
             if kwargs.get("mode", '') == 't':
-                lfCmd("tab drop %s" % escSpecial(tagfile))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
+                    lfCmd("tab drop %s" % escSpecial(tagfile))
+                else:
+                    lfCmd("tabe %s" % escSpecial(tagfile))
             else:
-                lfCmd("hide edit %s" % escSpecial(tagfile))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufexists('%s')" % escQuote(tagfile)) == '1':
+                    lfCmd("keepj hide drop %s" % escSpecial(tagfile))
+                else:
+                    lfCmd("hide edit %s" % escSpecial(tagfile))
         except vim.error as e: # E37
             lfPrintError(e)
 
         if tagaddress[0] not in '/?':
             lfCmd(tagaddress)
         else:
-            lfCmd("norm! gg")
+            self._gotoFirstLine()
 
             # In case there are mutiple matches.
             if len(res) > 1:
@@ -110,12 +115,13 @@ class TagExplManager(Manager):
 
         if lfEval("search('\V%s', 'wc')" % escQuote(tagname)) == '0':
             lfCmd("norm! ^")
+        lfCmd("norm! zv")
         lfCmd("norm! zz")
-        preview_dict = lfEval("g:Lf_PreviewResult")
-        if int(preview_dict.get(self._getExplorer().getStlCategory(), 0)) == 0:
-            lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
-        else:
-            lfCmd("setlocal cursorline! | redraw | sleep 20m | setlocal cursorline!")
+
+        if vim.current.window not in self._cursorline_dict:
+            self._cursorline_dict[vim.current.window] = vim.current.window.options["cursorline"]
+
+        lfCmd("setlocal cursorline")
 
     def _getDigest(self, line, mode):
         """
@@ -152,20 +158,37 @@ class TagExplManager(Manager):
 
     def _afterEnter(self):
         super(TagExplManager, self)._afterEnter()
-        id = int(lfEval('''matchadd('Lf_hl_tagFile', '^.\{-}\t\zs.\{-}\ze\t')'''))
-        self._match_ids.append(id)
-        id = int(lfEval('''matchadd('Lf_hl_tagType', ';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)')'''))
-        self._match_ids.append(id)
-        keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
-        for i in keyword:
-            id = int(lfEval('''matchadd('Lf_hl_tagKeyword', '\(;"\t.\{-}\)\@<=%s:')''' % i))
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagFile'', ''^.\{-}\t\zs.\{-}\ze\t'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
             self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagType'', '';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
+            for i in keyword:
+                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagKeyword'', ''\(;"\t.\{-}\)\@<=%s:'')')"""
+                    % (self._getInstance().getPopupWinId(), i))
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+        else:
+            id = int(lfEval('''matchadd('Lf_hl_tagFile', '^.\{-}\t\zs.\{-}\ze\t')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_tagType', ';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)')'''))
+            self._match_ids.append(id)
+            keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
+            for i in keyword:
+                id = int(lfEval('''matchadd('Lf_hl_tagKeyword', '\(;"\t.\{-}\)\@<=%s:')''' % i))
+                self._match_ids.append(id)
 
     def _beforeExit(self):
         super(TagExplManager, self)._beforeExit()
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
+        for k, v in self._cursorline_dict.items():
+            if k.valid:
+                k.options["cursorline"] = v
+        self._cursorline_dict.clear()
 
 
 #*****************************************************

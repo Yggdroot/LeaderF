@@ -67,6 +67,8 @@ else: # python 2.x
                         locale.getdefaultlocale()[1])
         except UnicodeDecodeError:
             return str
+        except:
+            return str
 
     def lfOpen(file, mode='r', buffering=-1, encoding=None, errors=None,
                newline=None, closefd=True):
@@ -121,7 +123,7 @@ def escQuote(str):
     return "" if str is None else str.replace("'","''")
 
 def escSpecial(str):
-    return re.sub('([%#" ])', r"\\\1", str)
+    return re.sub('([%#$" ])', r"\\\1", str)
 
 def equal(str1, str2, ignorecase=True):
     if ignorecase:
@@ -145,5 +147,17 @@ def lfWinId(winnr, tab=None):
         return None
 
 def lfPrintError(error):
-    error = lfEncode(str(error))
-    lfCmd("echohl Error | redraw | echo '%s' | echohl None" % escQuote(error))
+    if lfEval("get(g:, 'Lf_Exception', 0)") == '1':
+        raise error
+    else:
+        error = lfEncode(str(repr(error)))
+        lfCmd("echohl Error | redraw | echo '%s' | echohl None" % escQuote(error))
+
+def lfActualLineCount(buffer, start, end, col_width):
+    num = 0
+    for i in buffer[start:end]:
+        try:
+            num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + col_width - 1) // col_width
+        except:
+            num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i).replace('\x00', '\x01'))) + col_width - 1) // col_width
+    return num

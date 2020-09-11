@@ -8,27 +8,14 @@
 " ============================================================================
 
 function! leaderf#colorscheme#mergePalette(palette)
-    let palette = a:palette
-    for key in keys(g:Lf_StlPalette)
-        try
-            for [k, v] in items(g:Lf_StlPalette[key])
-                let palette[key][k] = v
-            endfor
-        catch
-            echohl Error
-            echo printf("Error: invalid key '%s' in 'g:Lf_StlPalette'.", key)
-            sleep 1
-            echohl None
-        endtry
-    endfor
-    return palette
+    return a:palette
 endfunction
 
 let s:modeMap = {
-            \   'NameOnly': 'stlNameOnlyMode',
-            \   'FullPath': 'stlFullPathMode',
-            \   'Fuzzy': 'stlFuzzyMode',
-            \   'Regex': 'stlRegexMode'
+            \   'NameOnly': 'Lf_hl_stlNameOnlyMode',
+            \   'FullPath': 'Lf_hl_stlFullPathMode',
+            \   'Fuzzy': 'Lf_hl_stlFuzzyMode',
+            \   'Regex': 'Lf_hl_stlRegexMode'
             \ }
 
 let s:leftSep = {
@@ -61,6 +48,26 @@ let s:rightSep = {
             \   }
             \ }
 
+function! s:HighlightGroup(category, name) abort
+    if a:name == 'stlMode'
+        return printf("Lf_hl_%s_%s", a:category, a:name)
+    else
+        return printf("Lf_hl_%s", a:name)
+    endif
+endfunction
+
+function! s:LoadFromPalette() abort
+    let palette = get(g:, "Lf_StlPalette", {})
+
+    for [name, dict] in items(palette)
+        let hiCmd = printf("hi Lf_hl_%s", name)
+        for [k, v] in items(dict)
+            let hiCmd .= printf(" %s=%s", k, v)
+        endfor
+        exec hiCmd
+    endfor
+endfunction
+
 function! leaderf#colorscheme#highlight(category)
     try
         let s:palette = g:leaderf#colorscheme#{g:Lf_StlColorscheme}#palette
@@ -83,43 +90,60 @@ function! leaderf#colorscheme#highlight(category)
 
     let palette = copy(s:palette)
     for [name, dict] in items(palette)
-        let highlightCmd = printf("hi def Lf_hl_%s_%s", a:category, name)
+        let hiCmd = printf("hi def Lf_hl_%s", name)
         for [k, v] in items(dict)
-            let highlightCmd .= printf(" %s=%s", k, v)
+            let hiCmd .= printf(" %s=%s", k, v)
         endfor
-        exec highlightCmd
+        exec hiCmd
     endfor
 
-    let palette.stlMode = palette[s:modeMap[g:Lf_DefaultMode]]
+    call s:LoadFromPalette()
 
+    exec printf("hi link Lf_hl_%s_stlMode %s", a:category, s:modeMap[g:Lf_DefaultMode])
     for [sep, dict] in items(s:leftSep)
-        let highlightCmd = printf("hi def Lf_hl_%s_%s", a:category, sep)
-        let highlightCmd .= printf(" guifg=%s guibg=%s", palette[dict.left].guibg, palette[dict.right].guibg)
-        let highlightCmd .= printf(" ctermfg=%s ctermbg=%s", palette[dict.left].ctermbg, palette[dict.right].ctermbg)
+        let sid_left = synIDtrans(hlID(s:HighlightGroup(a:category, dict.left)))
+        let sid_right = synIDtrans(hlID(s:HighlightGroup(a:category, dict.right)))
+        let left_guibg = synIDattr(sid_left, "bg", "gui")
+        let left_ctermbg = synIDattr(sid_left, "bg", "cterm")
+        let right_guibg = synIDattr(sid_right, "bg", "gui")
+        let right_ctermbg = synIDattr(sid_right, "bg", "cterm")
+        let hiCmd = printf("hi Lf_hl_%s_%s", a:category, sep)
+        let hiCmd .= printf(" guifg=%s guibg=%s", left_guibg == '' ? 'NONE': left_guibg, right_guibg == '' ? 'NONE': right_guibg)
+        let hiCmd .= printf(" ctermfg=%s ctermbg=%s", left_ctermbg == '' ? 'NONE': left_ctermbg, right_ctermbg == '' ? 'NONE': right_ctermbg)
         if get(g:Lf_StlSeparator, "font", "") != ""
-            let highlightCmd .= printf(" font='%s'", g:Lf_StlSeparator["font"])
+            let hiCmd .= printf(" font='%s'", g:Lf_StlSeparator["font"])
         endif
-        exec highlightCmd
+        exec hiCmd
     endfor
 
     for [sep, dict] in items(s:rightSep)
-        let highlightCmd = printf("hi def Lf_hl_%s_%s", a:category, sep)
-        let highlightCmd .= printf(" guifg=%s guibg=%s", palette[dict.right].guibg, palette[dict.left].guibg)
-        let highlightCmd .= printf(" ctermfg=%s ctermbg=%s", palette[dict.right].ctermbg, palette[dict.left].ctermbg)
+        let sid_left = synIDtrans(hlID(s:HighlightGroup(a:category, dict.left)))
+        let sid_right = synIDtrans(hlID(s:HighlightGroup(a:category, dict.right)))
+        let left_guibg = synIDattr(sid_left, "bg", "gui")
+        let left_ctermbg = synIDattr(sid_left, "bg", "cterm")
+        let right_guibg = synIDattr(sid_right, "bg", "gui")
+        let right_ctermbg = synIDattr(sid_right, "bg", "cterm")
+        let hiCmd = printf("hi Lf_hl_%s_%s", a:category, sep)
+        let hiCmd .= printf(" guifg=%s guibg=%s", right_guibg == '' ? 'NONE': right_guibg, left_guibg == '' ? 'NONE': left_guibg)
+        let hiCmd .= printf(" ctermfg=%s ctermbg=%s", right_ctermbg == '' ? 'NONE': right_ctermbg, left_ctermbg == '' ? 'NONE': left_ctermbg)
         if get(g:Lf_StlSeparator, "font", "") != ""
-            let highlightCmd .= printf(" font='%s'", g:Lf_StlSeparator["font"])
+            let hiCmd .= printf(" font='%s'", g:Lf_StlSeparator["font"])
         endif
-        exec highlightCmd
+        exec hiCmd
     endfor
+
     redrawstatus
 endfunction
 
 function! leaderf#colorscheme#highlightMode(category, mode)
-    exec printf("hi link Lf_hl_%s_stlMode Lf_hl_%s_%s", a:category, a:category, s:modeMap[a:mode])
-    exec printf("hi Lf_hl_%s_stlSeparator1 guibg=%s", a:category, s:palette[s:modeMap[a:mode]].guibg)
-    exec printf("hi Lf_hl_%s_stlSeparator1 ctermbg=%s", a:category, s:palette[s:modeMap[a:mode]].ctermbg)
-    exec printf("hi Lf_hl_%s_stlSeparator2 guifg=%s", a:category, s:palette[s:modeMap[a:mode]].guibg)
-    exec printf("hi Lf_hl_%s_stlSeparator2 ctermfg=%s", a:category, s:palette[s:modeMap[a:mode]].ctermbg)
+    let sid = synIDtrans(hlID(s:modeMap[a:mode]))
+    let guibg = synIDattr(sid, "bg", "gui")
+    let ctermbg = synIDattr(sid, "bg", "cterm")
+    exec printf("hi link Lf_hl_%s_stlMode %s", a:category, s:modeMap[a:mode])
+    exec printf("hi Lf_hl_%s_stlSeparator1 guibg=%s", a:category, guibg == '' ? 'NONE': guibg)
+    exec printf("hi Lf_hl_%s_stlSeparator1 ctermbg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
+    exec printf("hi Lf_hl_%s_stlSeparator2 guifg=%s", a:category, guibg == '' ? 'NONE': guibg)
+    exec printf("hi Lf_hl_%s_stlSeparator2 ctermfg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
     redrawstatus
 endfunction
 
