@@ -563,6 +563,11 @@ g:Lf_GtagsAutoGenerate                          *g:Lf_GtagsAutoGenerate*
     generated manually by using `Leaderf gtags --update` .
     Default value is 0.
 
+g:Lf_GtagsGutentags								*g:Lf_GtagsGutentags*
+	if you use https://github.com/ludovicchabant/vim-gutentags to generate
+		gtags; you should let g:Lf_GtagsAutoGenerate = 0 and let  g:Lf_GtagsGutentags = 1
+	Default value is 0
+
 g:Lf_GtagsSource                                *g:Lf_GtagsSource*
     Gtags accepts a list of files as target files. This option indicates
     where the target files come from. It has 3 values: 0, 1, 2.
