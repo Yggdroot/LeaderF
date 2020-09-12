@@ -395,7 +395,7 @@ class GtagsExplorer(Explorer):
             return False
 
     def _generateDbpath(self, path):
-        with_gutentags = lfEval("get(g:, 'Lf_GtagsGutentags', 0)")
+        with_gutentags = lfEval("get(g:, 'Lf_GtagsGutentags', 0)") != '0'
         sep_char = '-' if with_gutentags else '_'
         if os.name == 'nt':
             if with_gutentags:

@@ -624,7 +624,9 @@ g:Lf_GtagsAutoGenerate                          *g:Lf_GtagsAutoGenerate*
 
 g:Lf_GtagsGutentags								*g:Lf_GtagsGutentags*
 	if you use https://github.com/ludovicchabant/vim-gutentags to generate
-		gtags; you should let g:Lf_GtagsAutoGenerate = 0 and let  g:Lf_GtagsGutentags = 1
+		gtags; Firstly, you should let g:Lf_GtagsAutoGenerate = 0 and let  g:Lf_GtagsGutentags = 1.
+        Then, you should config gutentags like this: g:Lf_CacheDirectory =
+        expand('~') and g:gutentags_cache_dir = expand(g:Lf_CacheDirectory.'/.LfCache/gtags')
 	Default value is 0
 
 g:Lf_GtagsAutoUpdate                            *g:Lf_GtagsAutoUpdate*
