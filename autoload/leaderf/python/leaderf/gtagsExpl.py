@@ -403,7 +403,7 @@ class GtagsExplorer(Explorer):
             else:
                 db_folder = re.sub(r'[\\/]', sep_char, path.replace(':\\', sep_char, 1))
         else:
-            if with_gutentags:
+            if self._with_gutentags:
                 db_folder = path[1:].replace('/', sep_char)
             else:
                 db_folder = path.replace('/', sep_char)
