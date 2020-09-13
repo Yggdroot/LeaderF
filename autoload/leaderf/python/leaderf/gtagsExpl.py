@@ -395,10 +395,15 @@ class GtagsExplorer(Explorer):
             return False
 
     def _generateDbpath(self, path):
+        with_gutentags = lfEval("get(g:, 'Lf_GtagsGutentags', 0)") != '0'
+        sep_char = '-' if with_gutentags else '_'
         if os.name == 'nt':
-            db_folder = re.sub(r'[\\/]', '_', path.replace(':\\', '_', 1))
+            if with_gutentags:
+                db_folder = re.sub(r'[:\\/]', sep_char, path)
+            else:
+                db_folder = re.sub(r'[\\/]', sep_char, path.replace(':\\', sep_char, 1))
         else:
-            db_folder = path.replace('/', '_')
+            db_folder = path.replace('/', sep_char)
 
         if self._store_in_project:
             return path
