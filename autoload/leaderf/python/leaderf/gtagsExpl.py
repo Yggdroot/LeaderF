@@ -43,6 +43,7 @@ class GtagsExplorer(Explorer):
         self._db_timestamp = 0
         self._last_command = ""
         self._content = []
+        self._with_gutentags = lfEval("get(g:, 'Lf_GtagsGutentags', 0)") != '0'
 
         self._task_queue = Queue.Queue()
         self._worker_thread = threading.Thread(target=self._processTask)
@@ -395,10 +396,9 @@ class GtagsExplorer(Explorer):
             return False
 
     def _generateDbpath(self, path):
-        with_gutentags = lfEval("get(g:, 'Lf_GtagsGutentags', 0)") != '0'
-        sep_char = '-' if with_gutentags else '_'
+        sep_char = '-' if self._with_gutentags else '_'
         if os.name == 'nt':
-            if with_gutentags:
+            if self._with_gutentags:
                 db_folder = re.sub(r'[:\\/]', sep_char, path)
             else:
                 db_folder = re.sub(r'[\\/]', sep_char, path.replace(':\\', sep_char, 1))
