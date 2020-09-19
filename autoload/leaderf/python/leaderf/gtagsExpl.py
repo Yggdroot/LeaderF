@@ -919,9 +919,9 @@ class GtagsExplManager(Manager):
         try:
             if kwargs.get("mode", '') == 't':
                 if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1':
-                    lfCmd("tab drop %s" % (escSpecial(file), line_num))
+                    lfCmd("tab drop %s | %s" % (escSpecial(file), line_num))
                 else:
-                    lfCmd("tabe %s" % (escSpecial(file), line_num))
+                    lfCmd("tabe %s | %s" % (escSpecial(file), line_num))
             else:
                 if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufexists('%s')" % escQuote(file)) == '1':
                     lfCmd("keepj hide drop %s | %s" % (escSpecial(file), line_num))
