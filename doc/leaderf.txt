@@ -753,7 +753,7 @@ g:Lf_PopupWidth                                   *g:Lf_PopupWidth*
     For example, set the width to 3/4 of the screen's width: >
     let g:Lf_PopupWidth = &columns * 3 / 4
     or
-    let g:Lf_PopupHeight = 0.75
+    let g:Lf_PopupWidth = 0.75
 <
     Default value is 0.
 
