@@ -59,19 +59,23 @@ function! leaderf#Line#NormalModeFilter(winid, key) abort
         exec g:Lf_py "lineExplManager._cli._buildPopupPrompt()"
         "redraw
         exec g:Lf_py "lineExplManager._getInstance().refreshPopupStatusline()"
+        exec g:Lf_py "lineExplManager._previewResult(False)"
     elseif key ==# "k" || key ==? "<Up>"
         call win_execute(a:winid, "norm! k")
         exec g:Lf_py "lineExplManager._cli._buildPopupPrompt()"
         "redraw
         exec g:Lf_py "lineExplManager._getInstance().refreshPopupStatusline()"
+        exec g:Lf_py "lineExplManager._previewResult(False)"
     elseif key ==? "<PageUp>" || key ==? "<C-B>"
         call win_execute(a:winid, "norm! \<PageUp>")
         exec g:Lf_py "lineExplManager._cli._buildPopupPrompt()"
         exec g:Lf_py "lineExplManager._getInstance().refreshPopupStatusline()"
+        exec g:Lf_py "lineExplManager._previewResult(False)"
     elseif key ==? "<PageDown>" || key ==? "<C-F>"
         call win_execute(a:winid, "norm! \<PageDown>")
         exec g:Lf_py "lineExplManager._cli._buildPopupPrompt()"
         exec g:Lf_py "lineExplManager._getInstance().refreshPopupStatusline()"
+        exec g:Lf_py "lineExplManager._previewResult(False)"
     elseif key ==# "g"
         if get(g:, "Lf_Line_is_g_pressed", 0) == 0
             let g:Lf_Line_is_g_pressed = 1
@@ -99,11 +103,13 @@ function! leaderf#Line#NormalModeFilter(winid, key) abort
             call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
             exec g:Lf_py "lineExplManager._cli._buildPopupPrompt()"
             redraw
+            exec g:Lf_py "lineExplManager._previewResult(False)"
         elseif has('patch-8.1.2266')
             call win_execute(a:winid, "exec v:mouse_lnum")
             call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
             exec g:Lf_py "lineExplManager._cli._buildPopupPrompt()"
             redraw
+            exec g:Lf_py "lineExplManager._previewResult(False)"
         endif
     elseif key ==? "<ScrollWheelUp>"
         call win_execute(a:winid, "norm! 3k")
