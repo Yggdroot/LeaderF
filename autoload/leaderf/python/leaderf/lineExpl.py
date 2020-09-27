@@ -149,7 +149,7 @@ class LineExplManager(Manager):
 
     def _getFormatedContents(self):
         items = []
-        for line in self._instance._buffer_object:
+        for line in self._instance._buffer_object[self._help_length:]:
             text, info = line.rsplit("\t", 1)
             info = info[1:-1]    # file:line buf_number
             line_nr, buf_number = info.rsplit(":", 1)[1].split()
