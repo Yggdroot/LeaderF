@@ -136,7 +136,10 @@ class BufExplManager(Manager):
         if kwargs.get("mode", '') == 't':
             buf_name = lfEval("bufname(%s)" % buf_number)
             if buf_name:
-                lfCmd("tab drop %s" % escSpecial(buf_name))
+                try:
+                    lfCmd("tab drop %s" % escSpecial(buf_name))
+                except:
+                    lfCmd("hide buffer %d" % buf_number)
             else:
                 lfCmd("hide buffer %d" % buf_number)
         else:
