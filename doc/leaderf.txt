@@ -759,6 +759,11 @@ g:Lf_PreviewPopupWidth                          *g:Lf_PreviewPopupWidth*
 
     Default value is 0.
 
+g:Lf_PreviewScrollStepSize                      *g:Lf_PreviewScrollStepSize*
+    Specify how many rows will be scrolled at once in the preview window.
+
+    Default value is 1.
+
 g:Lf_PopupWidth                                 *g:Lf_PopupWidth*
     Specify the width of the popup window or floating window when LeaderF is
     in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
