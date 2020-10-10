@@ -571,6 +571,14 @@ g:Lf_HistoryEditPromptIfEmpty                   *g:Lf_HistoryEditPromptIfEmpty*
     the entered prompt is edited.
     Default value is 1.
 
+g:Lf_Rg                                         *g:Lf_Rg*
+    Use this option to specify the rg executable you use. If rg is not
+    in one of the directories in your $PATH environment variable, you should
+    set it by yourself. e.g., >
+    let g:Lf_Rg = "/usr/local/rg"
+<
+    Default value is "rg".
+
 g:Lf_RgConfig                                   *g:Lf_RgConfig*
     Specify a list of ripgrep configurations. For example, >
     let g:Lf_RgConfig = [

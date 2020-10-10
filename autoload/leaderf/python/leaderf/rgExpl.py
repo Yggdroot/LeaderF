@@ -43,6 +43,7 @@ class RgExplorer(Explorer):
         self._context_separator = "..."
         self._display_multi = False
         self._cmd_work_dir = ""
+        self._rg = lfEval("get(g:, 'Lf_Rg', 'rg')")
 
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -290,8 +291,8 @@ class RgExplorer(Explorer):
         if os.name != 'nt':
             pattern = pattern.replace('`', r"\`")
 
-        cmd = '''rg {} --no-config --no-ignore-messages --no-heading --with-filename --color never --line-number '''\
-                '''{} {}{}{}{}{}{}'''.format(extra_options, case_flag, word_or_line, zero_args_options,
+        cmd = '''{} {} --no-config --no-ignore-messages --no-heading --with-filename --color never --line-number '''\
+                '''{} {}{}{}{}{}{}'''.format(self._rg, extra_options, case_flag, word_or_line, zero_args_options,
                                                   one_args_options, repeatable_options, lfDecode(pattern), path)
         lfCmd("let g:Lf_Debug_RgCmd = '%s'" % escQuote(cmd))
         content = executor.execute(cmd, encoding=lfEval("&encoding"), cleanup=partial(removeFiles, tmpfilenames))
