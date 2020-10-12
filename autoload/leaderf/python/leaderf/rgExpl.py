@@ -602,7 +602,7 @@ class RgExplManager(Manager):
             try:
                 for i in self._getExplorer().getPatternRegex():
                     lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_rgHighlight', '%s', 9)")"""
-                            % (self._getInstance().getPopupWinId(), escQuote(i).replace('\\', '\\\\')))
+                            % (self._getInstance().getPopupWinId(), re.sub(r'\\(?!")', r'\\\\', escQuote(i))))
                     id = int(lfEval("matchid"))
                     self._match_ids.append(id)
             except vim.error:
@@ -815,11 +815,14 @@ class RgExplManager(Manager):
 
         if lfEval("get(g:, 'Lf_RgHighlightInPreview', 1)") == '1':
             if lfEval("has('nvim')") != '1':
-                for i in self._getExplorer().getPatternRegex():
-                    lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_rgHighlight', '%s', 9)")"""
-                            % (self._preview_winid, escQuote(i).replace('\\', '\\\\')))
-                    id = int(lfEval("matchid"))
-                    self._match_ids.append(id)
+                try:
+                    for i in self._getExplorer().getPatternRegex():
+                        lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_rgHighlight', '%s', 9)")"""
+                                % (self._preview_winid, re.sub(r'\\(?!")', r'\\\\', escQuote(i))))
+                        id = int(lfEval("matchid"))
+                        self._match_ids.append(id)
+                except vim.error:
+                    pass
             else:
                 cur_winid = lfEval("win_getid()")
                 lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)

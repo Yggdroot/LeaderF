@@ -1062,7 +1062,7 @@ class GtagsExplManager(Manager):
             try:
                 for i in self._getExplorer().getPatternRegex():
                     lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsHighlight', '%s', 9)")"""
-                            % (self._getInstance().getPopupWinId(), escQuote(i).replace('\\', '\\\\')))
+                            % (self._getInstance().getPopupWinId(), re.sub(r'\\(?!")', r'\\\\', escQuote(i))))
                     id = int(lfEval("matchid"))
                     self._match_ids.append(id)
             except vim.error:
