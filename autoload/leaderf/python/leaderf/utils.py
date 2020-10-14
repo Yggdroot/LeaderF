@@ -161,3 +161,45 @@ def lfActualLineCount(buffer, start, end, col_width):
         except:
             num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i).replace('\x00', '\x01'))) + col_width - 1) // col_width
     return num
+
+def lfDrop(type, file_name, line_num=None):
+    if line_num:
+        line_num = int(line_num)
+
+    if lfEval("exists(':drop')") == '2':
+        if type == "tab":
+            if line_num:
+                lfCmd("keepj tab drop %s | %d" % (escSpecial(file_name), line_num))
+            else:
+                lfCmd("keepj tab drop %s" % escSpecial(file_name))
+        else:
+            if line_num:
+                lfCmd("keepj hide drop %s | %d" % (escSpecial(file_name), line_num))
+            else:
+                lfCmd("keepj hide drop %s" % escSpecial(file_name))
+    else:
+        if type == "tab":
+            for tp, w in ((tp, window) for tp in vim.tabpages for window in tp.windows):
+                if w.buffer.name == file_name:
+                    vim.current.tabpage = tp
+                    vim.current.window = w
+                    if line_num:
+                        vim.current.window.cursor = (line_num, 0)
+                    break
+            else:
+                if line_num:
+                    lfCmd("tabe %s | %d" % (escSpecial(file_name), line_num))
+                else:
+                    lfCmd("tabe %s" % escSpecial(file_name))
+        else:
+            for w in vim.windows:
+                if w.buffer.name == file_name:
+                    vim.current.window = w
+                    if line_num:
+                        vim.current.window.cursor = (line_num, 0)
+                    break
+            else:
+                if line_num:
+                    lfCmd("hide edit +%d %s" % (line_num, escSpecial(file_name)))
+                else:
+                    lfCmd("hide edit %s" % escSpecial(file_name))

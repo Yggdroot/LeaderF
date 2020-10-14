@@ -237,7 +237,7 @@ class BufTagExplManager(Manager):
         buf_number = items[4]
         if kwargs.get("mode", '') == 't':
             buf_name = lfEval("bufname(%s)" % buf_number)
-            lfCmd("tab drop %s | %s" % (escSpecial(buf_name), line_nr))
+            lfDrop('tab', buf_name, line_nr)
         else:
             lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         if "preview" not in kwargs:

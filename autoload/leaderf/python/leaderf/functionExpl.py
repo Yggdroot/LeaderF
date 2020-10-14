@@ -224,7 +224,7 @@ class FunctionExplManager(Manager):
         line_nr, buf_number = line.rsplit(":", 1)[1].split()
         if kwargs.get("mode", '') == 't':
             buf_name = lfEval("bufname(%s)" % buf_number)
-            lfCmd("tab drop %s | %s" % (escSpecial(buf_name), line_nr))
+            lfDrop('tab', buf_name, line_nr)
         else:
             lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
         lfCmd("norm! ^zv")

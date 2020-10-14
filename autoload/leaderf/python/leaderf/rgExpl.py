@@ -468,10 +468,13 @@ class RgExplManager(Manager):
         try:
             if buf_number == -1:
                 if kwargs.get("mode", '') == 't':
-                    lfCmd("tab drop %s | %s" % (escSpecial(file), line_num))
+                    if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+                        lfDrop('tab', file, line_num)
+                    else:
+                        lfCmd("tabe %s | %s" % (escSpecial(file), line_num))
                 else:
-                    if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufexists('%s')" % escQuote(file)) == '1':
-                        lfCmd("keepj hide drop %s | %s" % (escSpecial(file), line_num))
+                    if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+                        lfDrop('', file, line_num)
                     else:
                         lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
             else:
