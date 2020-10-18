@@ -49,7 +49,7 @@ class HistoryExplorer(Explorer):
         return self._history_type
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
     def getHistoryType(self):
         return self._history_type

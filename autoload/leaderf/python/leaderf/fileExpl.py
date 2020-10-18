@@ -26,7 +26,7 @@ def showRelativePath(func):
     def deco(*args, **kwargs):
         if lfEval("g:Lf_ShowRelativePath") == '1':
             # os.path.relpath() is too slow!
-            dir = os.getcwd() if args[0]._cmd_work_dir == "" else args[1]
+            dir = lfGetCwd() if args[0]._cmd_work_dir == "" else args[1]
             cwd_length = len(lfEncode(dir))
             if not dir.endswith(os.sep):
                 cwd_length += 1
@@ -585,7 +585,7 @@ class FileExplorer(Explorer):
         if files:
             return self._readFromFileList(files)
 
-        dir = os.getcwd()
+        dir = lfGetCwd()
 
         self._cmd_work_dir = ""
         directory = kwargs.get("arguments", {}).get("directory")
@@ -594,7 +594,7 @@ class FileExplorer(Explorer):
             if os.path.exists(os.path.expanduser(lfDecode(dir))):
                 if lfEval("get(g:, 'Lf_NoChdir', 1)") == '0':
                     lfCmd("silent cd %s" % dir)
-                    dir = os.getcwd()
+                    dir = lfGetCwd()
                 else:
                     dir = os.path.abspath(lfDecode(dir))
                     self._cmd_work_dir = dir
@@ -658,7 +658,7 @@ class FileExplorer(Explorer):
         if self._cmd_work_dir:
             return escQuote(lfEncode(self._cmd_work_dir))
         else:
-            return escQuote(lfEncode(os.getcwd()))
+            return escQuote(lfEncode(lfGetCwd()))
 
     def supportsMulti(self):
         return True
@@ -761,7 +761,7 @@ class FileExplManager(Manager):
             super(FileExplManager, self).startExplorer(win_pos, *args, **kwargs)
             return
 
-        self._orig_cwd = os.getcwd()
+        self._orig_cwd = lfGetCwd()
         root_markers = lfEval("g:Lf_RootMarkers")
         mode = lfEval("g:Lf_WorkingDirectoryMode")
         working_dir = lfEval("g:Lf_WorkingDirectory")

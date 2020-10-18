@@ -186,7 +186,7 @@ class FunctionExplorer(Explorer):
         return 'Function'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
     def removeCache(self, buf_number):
         if buf_number in self._func_list:

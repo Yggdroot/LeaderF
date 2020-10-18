@@ -16,7 +16,7 @@ from .mru import *
 def workingDirectory(func):
     @wraps(func)
     def deco(self, *args, **kwargs):
-        if self._getExplorer()._cmd_work_dir == os.getcwd():
+        if self._getExplorer()._cmd_work_dir == lfGetCwd():
             return func(self, *args, **kwargs)
 
         # https://github.com/neovim/neovim/issues/8336
@@ -24,7 +24,7 @@ def workingDirectory(func):
             chdir = vim.chdir
         else:
             chdir = os.chdir
-        orig_cwd = os.getcwd()
+        orig_cwd = lfGetCwd()
         chdir(self._getExplorer()._cmd_work_dir)
         try:
             return func(self, *args, **kwargs)
@@ -50,7 +50,7 @@ class RgExplorer(Explorer):
         if "--recall" in arguments_dict:
             return []
 
-        self._cmd_work_dir = os.getcwd()
+        self._cmd_work_dir = lfGetCwd()
         rg_config = lfEval("get(g:, 'Lf_RgConfig', [])")
         extra_options = ' '.join(rg_config)
         for opt in rg_config:
@@ -700,7 +700,7 @@ class RgExplManager(Manager):
         return ""
 
     def startExplorer(self, win_pos, *args, **kwargs):
-        self._orig_cwd = os.getcwd()
+        self._orig_cwd = lfGetCwd()
         root_markers = lfEval("g:Lf_RootMarkers")
         wd_mode = lfEval("g:Lf_WorkingDirectoryMode")
         mode = kwargs.get("arguments", {}).get("--wd-mode", [wd_mode])[0]

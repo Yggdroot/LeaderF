@@ -411,10 +411,10 @@ class Manager(object):
             chdir = os.chdir
 
         try:
-            if int(lfEval("&autochdir")) == 0 and os.getcwd() != self._orig_cwd:
+            if int(lfEval("&autochdir")) == 0 and lfGetCwd() != self._orig_cwd:
                 chdir(self._orig_cwd)
         except:
-            if os.getcwd() != self._orig_cwd:
+            if lfGetCwd() != self._orig_cwd:
                 chdir(self._orig_cwd)
 
     def _needExit(self, line, arguments):
@@ -1762,7 +1762,7 @@ class Manager(object):
         else:
             chdir = os.chdir
 
-        cwd = os.getcwd()
+        cwd = lfGetCwd()
         if len(self._selections) > 0:
             files = []
             for i in sorted(self._selections.keys()):
@@ -1783,7 +1783,7 @@ class Manager(object):
             if cwd != win_local_cwd:
                 chdir(cwd)
 
-            orig_cwd = os.getcwd()
+            orig_cwd = lfGetCwd()
             if mode == '' and self._getExplorer().getStlCategory() == "File":
                 self._accept(files[0], mode)
                 self._argaddFiles(files)
@@ -1793,7 +1793,7 @@ class Manager(object):
                 for file in files:
                     self._accept(file, mode)
 
-            if os.getcwd() != orig_cwd:
+            if lfGetCwd() != orig_cwd:
                 dir_changed_by_autocmd = True
             else:
                 dir_changed_by_autocmd = False
@@ -1820,9 +1820,9 @@ class Manager(object):
             if cwd != win_local_cwd:
                 chdir(cwd)
 
-            orig_cwd = os.getcwd()
+            orig_cwd = lfGetCwd()
             self._accept(file, mode, self._getInstance().buffer, line_nr) # for bufTag
-            if os.getcwd() != orig_cwd:
+            if lfGetCwd() != orig_cwd:
                 dir_changed_by_autocmd = True
             else:
                 dir_changed_by_autocmd = False
@@ -2080,7 +2080,7 @@ class Manager(object):
             win_pos = self._getInstance().getWinPos()
         else:
             content = self._getExplorer().getContent(*args, **kwargs)
-            self._getInstance().setCwd(os.getcwd())
+            self._getInstance().setCwd(lfGetCwd())
             if self._getExplorer().getStlCategory() in ["Gtags"] and "--auto-jump" in self._arguments \
                     and isinstance(content, list) and len(content) == 1:
                 mode = self._arguments["--auto-jump"][0] if len(self._arguments["--auto-jump"]) else ""

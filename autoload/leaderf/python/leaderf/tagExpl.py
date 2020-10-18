@@ -52,7 +52,7 @@ class TagExplorer(Explorer):
         return 'Tag'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
 
 #*****************************************************

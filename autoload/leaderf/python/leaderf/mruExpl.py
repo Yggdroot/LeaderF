@@ -39,7 +39,7 @@ class MruExplorer(Explorer):
             f.writelines(lines)
 
         if "--cwd" in kwargs.get("arguments", {}):
-            lines = [name for name in lines if lfDecode(name).startswith(os.getcwd())]
+            lines = [name for name in lines if lfDecode(name).startswith(lfGetCwd())]
 
         lines = [line.rstrip() for line in lines] # remove the '\n'
         wildignore = lfEval("g:Lf_MruWildIgnore")
@@ -92,7 +92,7 @@ class MruExplorer(Explorer):
         return 'Mru'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
     def supportsMulti(self):
         return True

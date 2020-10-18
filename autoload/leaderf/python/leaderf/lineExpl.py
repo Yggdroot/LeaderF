@@ -44,7 +44,7 @@ class LineExplorer(Explorer):
         return 'Line'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
 
 #*****************************************************

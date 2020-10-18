@@ -43,7 +43,7 @@ class HelpExplorer(Explorer):
         return "Help"
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
 
 #*****************************************************

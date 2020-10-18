@@ -150,7 +150,7 @@ class AnyExplorer(Explorer):
         return self._category
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
     def supportsNameOnly(self):
         return bool(int(self._config.get("supports_name_only", False)))

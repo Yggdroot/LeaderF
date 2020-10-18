@@ -54,7 +54,7 @@ class SelfExplorer(Explorer):
         return "Self"
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
 
 #*****************************************************

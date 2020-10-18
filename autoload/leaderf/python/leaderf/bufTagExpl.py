@@ -189,7 +189,7 @@ class BufTagExplorer(Explorer):
         return 'BufTag'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
     def removeCache(self, buf_number):
         if buf_number in self._tag_list:

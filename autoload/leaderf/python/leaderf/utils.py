@@ -43,6 +43,9 @@ if sys.version_info >= (3, 0):
         except UnicodeDecodeError:
             return bytes.decode(errors="ignore")
 
+    def lfGetCwd():
+        return os.getcwd()
+
 else: # python 2.x
 
     range = xrange
@@ -80,6 +83,9 @@ else: # python 2.x
 
     def lfBytes2Str(bytes, encoding=None):
         return bytes
+
+    def lfGetCwd():
+        return os.getcwdu().encode(lf_encoding)
 
 #-----------------------------------------------------------------------------
 

@@ -76,7 +76,7 @@ class GtagsExplorer(Explorer):
         if vim.current.buffer.name:
             filename = os.path.normpath(lfDecode(vim.current.buffer.name))
         else:
-            filename = os.path.join(os.getcwd(), 'no_name')
+            filename = os.path.join(lfGetCwd(), 'no_name')
 
         if "--gtagsconf" in arguments_dict:
             self._gtagsconf = arguments_dict["--gtagsconf"][0]
@@ -431,12 +431,12 @@ class GtagsExplorer(Explorer):
                 self._project_root = ancestor
                 root = self._project_root
             else:
-                ancestor = self._nearestAncestor(self._root_markers, os.getcwd())
+                ancestor = self._nearestAncestor(self._root_markers, lfGetCwd())
                 if ancestor:
                     self._project_root = ancestor
                     root = self._project_root
                 else:
-                    root = os.getcwd()
+                    root = lfGetCwd()
 
         dbpath = self._generateDbpath(root)
         return (root, dbpath, os.path.exists(os.path.join(dbpath, "GTAGS")))
@@ -868,7 +868,7 @@ class GtagsExplorer(Explorer):
         return 'Gtags'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
     def cleanup(self):
         for exe in self._executor:
@@ -1161,7 +1161,7 @@ class GtagsExplManager(Manager):
 
     def startExplorer(self, win_pos, *args, **kwargs):
         if  "through" in kwargs.get("arguments", {}).get("--path-style", []):
-            self._orig_cwd = os.getcwd()
+            self._orig_cwd = lfGetCwd()
 
             # https://github.com/neovim/neovim/issues/8336
             if lfEval("has('nvim')") == '1':
@@ -1172,11 +1172,11 @@ class GtagsExplManager(Manager):
             if vim.current.buffer.name:
                 path = os.path.dirname(lfDecode(vim.current.buffer.name))
             else:
-                path = os.getcwd()
+                path = lfGetCwd()
             root_markers = lfEval("g:Lf_RootMarkers")
             project_root = self._getExplorer()._nearestAncestor(root_markers, path)
-            if project_root == "" and path != os.getcwd():
-                project_root = self._getExplorer()._nearestAncestor(root_markers, os.getcwd())
+            if project_root == "" and path != lfGetCwd():
+                project_root = self._getExplorer()._nearestAncestor(root_markers, lfGetCwd())
             if project_root:
                 chdir(project_root)
 

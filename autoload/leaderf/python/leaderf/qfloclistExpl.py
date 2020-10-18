@@ -34,7 +34,7 @@ class QfLocListExplorer(Explorer):
         return self._list_type
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(os.getcwd()))
+        return escQuote(lfEncode(lfGetCwd()))
 
     def supportsNameOnly(self):
         return True
