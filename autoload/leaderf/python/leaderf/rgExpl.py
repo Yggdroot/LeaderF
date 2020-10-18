@@ -810,11 +810,14 @@ class RgExplManager(Manager):
 
         match = re.search(r"\d+_'No_Name_(\d+)'", file)
         if match:
-            buf_number = match.group(1)
+            source = int(match.group(1))
         else:
-            buf_number = lfEval("bufadd('{}')".format(file))
+            if lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+                source = int(lfEval("bufadd('%s')" % escQuote(file)))
+            else:
+                source = file
 
-        self._createPopupPreview("", buf_number, line_num)
+        self._createPopupPreview("", source, line_num)
 
         if lfEval("get(g:, 'Lf_RgHighlightInPreview', 1)") == '1':
             if lfEval("has('nvim')") != '1':

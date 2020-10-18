@@ -302,8 +302,11 @@ class MruExplManager(Manager):
             file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
             file = os.path.normpath(lfEncode(file))
 
-        buf_number = lfEval("bufadd('{}')".format(escQuote(file)))
-        self._createPopupPreview(file, buf_number, 0)
+        if lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+            source = int(lfEval("bufadd('%s')" % escQuote(file)))
+        else:
+            source = file
+        self._createPopupPreview(file, source, 0)
 
 
 #*****************************************************

@@ -568,7 +568,7 @@ class BufTagExplManager(Manager):
         items = re.split(" *\t *", line)
         tagname = items[0]
         line_nr = items[3].rsplit(":", 1)[1]
-        buf_number = items[4]
+        buf_number = int(items[4])
 
         self._createPopupPreview(tagname, buf_number, line_nr)
 

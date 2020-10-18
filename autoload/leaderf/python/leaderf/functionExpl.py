@@ -425,6 +425,7 @@ class FunctionExplManager(Manager):
         # {kind} {code} {file} {line}
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
         line_nr, buf_number = line.rsplit(":", 1)[1].split()
+        buf_number = int(buf_number)
 
         self._createPopupPreview("", buf_number, line_nr)
 

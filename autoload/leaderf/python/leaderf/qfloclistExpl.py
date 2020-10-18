@@ -199,8 +199,11 @@ class QfLocListExplManager(Manager):
             file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
             file = os.path.normpath(lfEncode(file))
 
-        buf_number = lfEval("bufadd('{}')".format(file))
-        self._createPopupPreview("", buf_number, line_num)
+        if lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+            source = int(lfEval("bufadd('%s')" % escQuote(file)))
+        else:
+            source = file
+        self._createPopupPreview("", source, line_num)
 
 
 # *****************************************************

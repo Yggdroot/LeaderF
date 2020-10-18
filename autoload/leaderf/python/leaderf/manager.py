@@ -80,6 +80,20 @@ def catchException(func):
                 self._timer_id = None
     return deco
 
+def ignoreEvent(events):
+    def wrapper(func):
+        @wraps(func)
+        def deco(self, *args, **kwargs):
+            try:
+                saved_eventignore = vim.options['eventignore']
+                vim.options['eventignore'] = events
+
+                func(self, *args, **kwargs)
+            finally:
+                vim.options['eventignore'] = saved_eventignore
+        return deco
+    return wrapper
+
 #*****************************************************
 # Manager
 #*****************************************************
@@ -414,7 +428,14 @@ class Manager(object):
 
     #**************************************************************
 
-    def _createPopupModePreview(self, title, buf_number, line_nr, jump_cmd):
+    def _createPopupModePreview(self, title, source, line_nr, jump_cmd):
+        """
+        Args:
+            source:
+                if the type is int, it is a buffer number
+                if the type is str, it is a file name
+
+        """
         self._is_previewed = True
         if lfEval("has('nvim')") == '1':
             width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
@@ -423,8 +444,15 @@ class Manager(object):
             else:
                 maxwidth = min(width, int(lfEval("&columns")))
             relative = 'editor'
-            lfCmd("silent! call bufload(%d)" % buf_number)
-            buffer_len = len(vim.buffers[buf_number])
+            if isinstance(source, int):
+                buffer_len = len(vim.buffers[source])
+            else:
+                lfCmd("let content = readfile('%s')" % escQuote(source))
+                buffer_len = int(lfEval("len(content)"))
+                lfCmd("let scratch_buffer = nvim_create_buf(0, 1)")
+                lfCmd("call setbufline(scratch_buffer, 1, content)")
+                lfCmd("call nvim_buf_set_option(scratch_buffer, 'bufhidden', 'wipe')")
+
             float_window = self._getInstance().window
             float_win_row = int(float(lfEval("nvim_win_get_config(%d).row" % float_window.id)))
             float_win_col = int(float(lfEval("nvim_win_get_config(%d).col" % float_window.id)))
@@ -464,7 +492,11 @@ class Manager(object):
                     "row"     : row,
                     "col"     : col
                     }
-            self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (buf_number, str(config))))
+            if isinstance(source, int):
+                self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (source, str(config))))
+            else:
+                self._preview_winid = int(lfEval("nvim_open_win(scratch_buffer, 0, %s)" % str(config)))
+
             if jump_cmd:
                 cur_winid = lfEval("win_getid()")
                 lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
@@ -480,6 +512,8 @@ class Manager(object):
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._preview_winid)
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            if not isinstance(source, int):
+                lfCmd("doautocmd filetypedetect BufNewFile %s" % source)
             lfCmd("silent! %foldopen!")
             lfCmd("norm! zz")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
@@ -494,6 +528,12 @@ class Manager(object):
             else:
                 maxwidth = min(width, int(lfEval("&columns")))
 
+            if isinstance(source, int):
+                buffer_len = len(vim.buffers[source])
+            else:
+                lfCmd("let content = readfile('%s')" % escQuote(source))
+                buffer_len = int(lfEval("len(content)"))
+
             preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
             if preview_pos.lower() == 'bottom':
                 maxwidth = int(popup_pos["width"]) - 1 # there is one column of padding on the left
@@ -506,8 +546,6 @@ class Manager(object):
                 pos = "topleft"
                 maxheight = int(lfEval("&lines")) - line - 2
 
-                lfCmd("silent! call bufload(%d)" % buf_number)
-                buffer_len = len(vim.buffers[buf_number])
                 if buffer_len >= maxheight: # scrollbar appear
                     maxwidth -= 1
             elif preview_pos.lower() == 'top':
@@ -516,8 +554,6 @@ class Manager(object):
                 # int(popup_pos["core_line"]) - 1(exclude the first line) - 1(input window) - 1(title)
                 maxheight = int(popup_pos["line"]) - 3
 
-                lfCmd("silent! call bufload(%d)" % buf_number)
-                buffer_len = len(vim.buffers[buf_number])
                 if buffer_len >= maxheight: # scrollbar appear
                     maxwidth -= 1
 
@@ -565,7 +601,12 @@ class Manager(object):
                 options["maxheight"] = maxheight
                 options["minheight"] = maxheight
 
-            lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, json.dumps(options)))
+            if isinstance(source, int):
+                lfCmd("silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
+            else:
+                lfCmd("silent! let winid = popup_create(content, %s)" % json.dumps(options))
+                lfCmd("call win_execute(winid, 'doautocmd filetypedetect BufNewFile %s')" % escQuote(source))
+
             self._preview_winid = int(lfEval("winid"))
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
@@ -575,13 +616,20 @@ class Manager(object):
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
 
-    def _createPopupPreview(self, title, buf_number, line_nr, jump_cmd=''):
+    @ignoreEvent('BufRead,BufReadPre,BufReadPost')
+    def _createPopupPreview(self, title, source, line_nr, jump_cmd=''):
+        """
+        Args:
+            source:
+                if the type is int, it is a buffer number
+                if the type is str, it is a file name
+
+        """
         self._is_previewed = True
-        buf_number = int(buf_number)
         line_nr = int(line_nr)
 
         if self._getInstance().getWinPos() in ('popup', 'floatwin'):
-            self._createPopupModePreview(title, buf_number, line_nr, jump_cmd)
+            self._createPopupModePreview(title, source, line_nr, jump_cmd)
             return
 
         if lfEval("has('nvim')") == '1':
@@ -595,8 +643,14 @@ class Manager(object):
             relative = 'editor'
             anchor = "SW"
             row = maxheight
-            lfCmd("silent! call bufload(%d)" % buf_number)
-            buffer_len = len(vim.buffers[buf_number])
+            if isinstance(source, int):
+                buffer_len = len(vim.buffers[source])
+            else:
+                lfCmd("let content = readfile('%s')" % escQuote(source))
+                buffer_len = int(lfEval("len(content)"))
+                lfCmd("let scratch_buffer = nvim_create_buf(0, 1)")
+                lfCmd("call setbufline(scratch_buffer, 1, content)")
+                lfCmd("call nvim_buf_set_option(scratch_buffer, 'bufhidden', 'wipe')")
             height = min(maxheight, buffer_len)
             preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
             if preview_pos.lower() == 'center':
@@ -626,7 +680,11 @@ class Manager(object):
                     "row"     : row,
                     "col"     : col
                     }
-            self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (buf_number, str(config))))
+            if isinstance(source, int):
+                self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (source, str(config))))
+            else:
+                self._preview_winid = int(lfEval("nvim_open_win(scratch_buffer, 0, %s)" % str(config)))
+
             if jump_cmd:
                 cur_winid = lfEval("win_getid()")
                 lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
@@ -640,6 +698,8 @@ class Manager(object):
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            if not isinstance(source, int):
+                lfCmd("doautocmd filetypedetect BufNewFile %s" % source)
             lfCmd("silent! %foldopen!")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
         else:
@@ -683,7 +743,13 @@ class Manager(object):
                 options["maxheight"] = maxheight
                 options["minheight"] = maxheight
 
-            lfCmd("silent! let winid = popup_create(%d, %s)" % (buf_number, json.dumps(options)))
+            if isinstance(source, int):
+                lfCmd("silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
+            else:
+                lfCmd("let content = readfile('%s')" % escQuote(source))
+                lfCmd("silent! let winid = popup_create(content, %s)" % json.dumps(options))
+                lfCmd("call win_execute(winid, 'doautocmd filetypedetect BufNewFile %s')" % escQuote(source))
+
             self._preview_winid = int(lfEval("winid"))
             if self._current_mode == 'NORMAL':
                 lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', function('leaderf#normalModePreviewFilter', [%d]))"

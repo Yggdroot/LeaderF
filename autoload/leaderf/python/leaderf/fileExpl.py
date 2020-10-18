@@ -810,8 +810,11 @@ class FileExplManager(Manager):
     @removeDevIcons
     def _previewInPopup(self, *args, **kwargs):
         line = args[0]
-        buf_number = lfEval("bufadd('{}')".format(escQuote(line)))
-        self._createPopupPreview(line, buf_number, 0)
+        if lfEval("bufloaded('%s')" % escQuote(line)) == '1':
+            source = int(lfEval("bufadd('%s')" % escQuote(line)))
+        else:
+            source = line
+        self._createPopupPreview(line, source, 0)
 
     @removeDevIcons
     def _acceptSelection(self, *args, **kwargs):
