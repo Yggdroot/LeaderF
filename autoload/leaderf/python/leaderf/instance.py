@@ -305,7 +305,8 @@ class LfInstance(object):
             lfCmd("setlocal number")
             lfCmd("setlocal foldcolumn=0")
             lfCmd("setlocal nowinfixheight")
-        lfCmd("silent! setlocal filetype=leaderf")
+        if self._win_pos != "floatwin":
+            lfCmd("silent! setlocal filetype=leaderf")
 
     def _setStatusline(self):
         if self._win_pos in ('popup', 'floatwin'):
@@ -415,6 +416,7 @@ class LfInstance(object):
             except vim.error:
                 lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '1')" % self._popup_winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._popup_winid)
+            lfCmd("silent! call nvim_buf_set_option(%d, 'filetype', 'leaderf')" % buf_number)
 
             self._tabpage_object = vim.current.tabpage
             self._buffer_object = vim.buffers[buf_number]
@@ -441,7 +443,6 @@ class LfInstance(object):
             lfCmd("call nvim_buf_set_option(%d, 'bufhidden', 'hide')" % buf_number)
             lfCmd("call nvim_buf_set_option(%d, 'undolevels', -1)" % buf_number)
             lfCmd("call nvim_buf_set_option(%d, 'swapfile', v:false)" % buf_number)
-            lfCmd("call nvim_buf_set_option(%d, 'filetype', 'leaderf')" % buf_number)
 
             lfCmd("call nvim_win_set_option(%d, 'list', v:false)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % winid)
@@ -457,6 +458,7 @@ class LfInstance(object):
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_inputText')" % winid)
+            lfCmd("silent! call nvim_buf_set_option(%d, 'filetype', 'leaderf')" % buf_number)
             def getWindow(number):
                 for w in vim.windows:
                     if number == w.number:
@@ -488,7 +490,6 @@ class LfInstance(object):
                 lfCmd("call nvim_buf_set_option(%d, 'bufhidden', 'hide')" % buf_number)
                 lfCmd("call nvim_buf_set_option(%d, 'undolevels', -1)" % buf_number)
                 lfCmd("call nvim_buf_set_option(%d, 'swapfile', v:false)" % buf_number)
-                lfCmd("call nvim_buf_set_option(%d, 'filetype', 'leaderf')" % buf_number)
 
                 lfCmd("call nvim_win_set_option(%d, 'list', v:false)" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % winid)
@@ -504,6 +505,7 @@ class LfInstance(object):
                 lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_blank')" % winid)
+                lfCmd("silent! call nvim_buf_set_option(%d, 'filetype', 'leaderf')" % buf_number)
                 self._popup_instance.statusline_win = FloatWindow(winid, getWindow(int(lfEval("win_id2win(%d)" % winid))), vim.buffers[buf_number], vim.current.tabpage, line + 1 + floatwin_height)
 
             if "--recall" in self._arguments:
@@ -526,7 +528,7 @@ class LfInstance(object):
                     "pos":             "topleft",
                     "line":            line + 1,      # there is an input window above
                     "col":             col,
-                    "padding":         [0, 0, 0, 1],
+                    "padding":         [0, 0, 0, 0],
                     "scrollbar":       0,
                     "mapping":         0,
                     "filter":          "leaderf#PopupFilter",
@@ -546,11 +548,11 @@ class LfInstance(object):
             lfCmd("call win_execute(%d, 'setlocal foldmethod=manual')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal shiftwidth=4')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal cursorline')" % self._popup_winid)
-            lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % self._popup_winid)
+            lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._popup_winid)
             # lfCmd("call win_execute(%d, 'silent! setlocal signcolumn=no')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % self._popup_winid)
-            lfCmd("call win_execute(%d, 'silent! setlocal filetype=leaderf')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._popup_winid)
+            lfCmd("call win_execute(%d, 'silent! setlocal filetype=leaderf')" % self._popup_winid)
 
             self._tabpage_object = vim.current.tabpage
             self._buffer_object = vim.buffers[buf_number]
@@ -558,8 +560,8 @@ class LfInstance(object):
             self._popup_instance.content_win = self._window_object
 
             input_win_options = {
-                    "maxwidth":        maxwidth + 1,
-                    "minwidth":        maxwidth + 1,
+                    "maxwidth":        maxwidth,
+                    "minwidth":        maxwidth,
                     "maxheight":       1,
                     "zindex":          20480,
                     "pos":             "topleft",
@@ -597,8 +599,8 @@ class LfInstance(object):
 
             if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
                 statusline_win_options = {
-                        "maxwidth":        maxwidth + 1,
-                        "minwidth":        maxwidth + 1,
+                        "maxwidth":        maxwidth,
+                        "minwidth":        maxwidth,
                         "maxheight":       1,
                         "zindex":          20480,
                         "pos":             "topleft",
@@ -1078,7 +1080,7 @@ class LfInstance(object):
 
     def _actualLength(self, buffer):
         num = 0
-        columns = self._window_object.width - int(lfEval("&numberwidth")) - 1
+        columns = self._window_object.width - int(lfEval("&numberwidth")) - int(lfEval("&foldcolumn"))
         for i in buffer:
             try:
                 num += (int(lfEval("strdisplaywidth('%s')" % escQuote(i))) + columns - 1)// columns
