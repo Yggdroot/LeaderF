@@ -536,7 +536,7 @@ class Manager(object):
 
             preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
             if preview_pos.lower() == 'bottom':
-                maxwidth = int(popup_pos["width"]) - 1 # there is one column of padding on the left
+                maxwidth = int(popup_pos["width"])
                 col = int(popup_pos["col"])
                 if self._getInstance().getPopupInstance().statusline_win:
                     statusline_height = 1
@@ -549,7 +549,7 @@ class Manager(object):
                 if buffer_len >= maxheight: # scrollbar appear
                     maxwidth -= 1
             elif preview_pos.lower() == 'top':
-                maxwidth = int(popup_pos["width"]) - 1 # there is one column of padding on the left
+                maxwidth = int(popup_pos["width"])
                 col = int(popup_pos["col"])
                 # int(popup_pos["core_line"]) - 1(exclude the first line) - 1(input window) - 1(title)
                 maxheight = int(popup_pos["line"]) - 3
@@ -584,7 +584,7 @@ class Manager(object):
                     "pos":             pos,
                     "line":            line,
                     "col":             col,
-                    "padding":         [0, 0, 0, 1],
+                    "padding":         [0, 0, 0, 0],
                     "border":          [1, 0, 0, 0],
                     "borderchars":     [' '],
                     "borderhighlight": ["Lf_hl_previewTitle"],
@@ -614,6 +614,7 @@ class Manager(object):
                 lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_nr))
             lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber colorcolumn= ')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
+            lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
 
     @ignoreEvent('BufRead,BufReadPre,BufReadPost')
