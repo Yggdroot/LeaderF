@@ -547,7 +547,7 @@ g:Lf_HistoryNumber                              *g:Lf_HistoryNumber*
     Specify the number of records in history.
     Default value is 100.
 
-g:Lf_HistoryExclude                              *g:Lf_HistoryExclude*
+g:Lf_HistoryExclude                             *g:Lf_HistoryExclude*
     This option indicates that do not display the historires that matches the
     patterns defined in it.
 
@@ -664,22 +664,22 @@ g:Lf_GtagsfilesCmd                              *g:Lf_GtagsfilesCmd*
     repository and `hg files` for hg repository, use `rg --no-messages --files`
     otherwise.
 
-g:Lf_GtagsAcceptDotfiles                          *g:Lf_GtagsAcceptDotfiles*
+g:Lf_GtagsAcceptDotfiles                        *g:Lf_GtagsAcceptDotfiles*
     This option tells gtags to accept files and directories whose names begin
     with a dot if the value is 1.
     Default value is 0.
 
-g:Lf_GtagsSkipUnreadable                          *g:Lf_GtagsSkipUnreadable*
+g:Lf_GtagsSkipUnreadable                        *g:Lf_GtagsSkipUnreadable*
     This option tells gtags to skip unreadable files if the value is 1.
     Default value is 0.
 
-g:Lf_GtagsSkipSymlink                             *g:Lf_GtagsSkipSymlink*
+g:Lf_GtagsSkipSymlink                           *g:Lf_GtagsSkipSymlink*
     This option tells gtags to skip symbolic links. If value is 'f' then skip
     only symbolic links for file, else if 'd' then skip only symbolic links
     for directory, else if value is 'a' then all symbolic links are skipped.
     Default value is "".
 
-g:Lf_Gtagsconf                                    *g:Lf_Gtagsconf*
+g:Lf_Gtagsconf                                  *g:Lf_Gtagsconf*
     This option specifies the path of gtags configuration file('gtags.conf' or
     '.globalrc').
     Basically, you don't have to use this option, gtags has default values in
@@ -688,7 +688,7 @@ g:Lf_Gtagsconf                                    *g:Lf_Gtagsconf*
 
     Default value is "".
 
-g:Lf_Gtagslabel                                   *g:Lf_Gtagslabel*
+g:Lf_Gtagslabel                                 *g:Lf_Gtagslabel*
     This option specifies a label of the configuration file.
     By default, gtags supports C, C++, Yacc, Java, PHP and Assembly
     programming language. If you want to support other programming languages,
@@ -696,37 +696,37 @@ g:Lf_Gtagslabel                                   *g:Lf_Gtagslabel*
     set this option as "native-pygments".
     Default value is "default".
 
-g:Lf_GtagsStoreInProject                          *g:Lf_GtagsStoreInProject*
+g:Lf_GtagsStoreInProject                        *g:Lf_GtagsStoreInProject*
     This option specifies whether to store the gtags database files in the
     root directory of the project.
 
     Default value is 0.
 
-g:Lf_GtagsStoreInRootMarker                       *g:Lf_GtagsStoreInRootMarker*
+g:Lf_GtagsStoreInRootMarker                     *g:Lf_GtagsStoreInRootMarker*
     This option specifies whether to store the gtags database files in the
     root marker of the project.
 
     Default value is 0.
 
-g:Lf_EmptyQuery                                   *g:Lf_EmptyQuery*
+g:Lf_EmptyQuery                                 *g:Lf_EmptyQuery*
     This option specifies whether to enable the empty query, i.e., if no
     pattern is input, sort the result according to the best match of current
     buffer's name.
 
     Default value is 1.
 
-g:Lf_IgnoreCurrentBufferName                      *g:Lf_IgnoreCurrentBufferName*
+g:Lf_IgnoreCurrentBufferName                    *g:Lf_IgnoreCurrentBufferName*
     This option specifies whether to remove the current buffer name from
     the result list.
 
     Default value is 0.
 
-g:Lf_PreviewInPopup                               *g:Lf_PreviewInPopup*
+g:Lf_PreviewInPopup                             *g:Lf_PreviewInPopup*
     This option specifies whether to preview the result in a popup window.
 
     Default value is 0.
 
-g:Lf_PreviewHorizontalPosition                    *g:Lf_PreviewHorizontalPosition*
+g:Lf_PreviewHorizontalPosition                  *g:Lf_PreviewHorizontalPosition*
     Specify where to locate the preview window horizontally. The value can be
     one of the following:
     'left': the preview window is on the left side of the screen.
@@ -736,19 +736,19 @@ g:Lf_PreviewHorizontalPosition                    *g:Lf_PreviewHorizontalPositio
 
     Default value is 'cursor'.
 
-g:Lf_PreviewPopupWidth                            *g:Lf_PreviewPopupWidth*
+g:Lf_PreviewPopupWidth                          *g:Lf_PreviewPopupWidth*
     Specify the width of preview popup window, the value should be a non-negative
     integer. If the value is 0, the width is half of the screen's width.
 
     Default value is 0.
 
-g:Lf_DiscardEmptyBuffer                           *g:Lf_DiscardEmptyBuffer*
+g:Lf_DiscardEmptyBuffer                         *g:Lf_DiscardEmptyBuffer*
     Specify whether to discard the first empty [No Name] buffer when opening
     with <C-T>.
 
     Default value is 0.
 
-g:Lf_PopupWidth                                   *g:Lf_PopupWidth*
+g:Lf_PopupWidth                                 *g:Lf_PopupWidth*
     Specify the width of the popup window or floating window when LeaderF is
     in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
     is in the options list of `Leaderf` command.
@@ -765,7 +765,7 @@ g:Lf_PopupWidth                                   *g:Lf_PopupWidth*
 <
     Default value is 0.
 
-g:Lf_PopupHeight                                   *g:Lf_PopupHeight*
+g:Lf_PopupHeight                                *g:Lf_PopupHeight*
     Specify the height of the popup window or floating window when LeaderF is
     in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
     is in the options list of `Leaderf` command.
@@ -781,7 +781,7 @@ g:Lf_PopupHeight                                   *g:Lf_PopupHeight*
 <
     Default value is 0.
 
-g:Lf_PopupPosition                                 *g:Lf_PopupPosition*
+g:Lf_PopupPosition                              *g:Lf_PopupPosition*
     Specify the coordinate of the topleft corner of popup window or floating
     window when LeaderF is in popup mode. `Popup mode` is when |g:Lf_WindowPosition|
     is 'popup' or '--popup' is in the options list of `Leaderf` command.
@@ -794,14 +794,14 @@ g:Lf_PopupPosition                                 *g:Lf_PopupPosition*
 
     Default value is [0, 0].
 
-g:Lf_PopupShowStatusline                           *g:Lf_PopupShowStatusline*
+g:Lf_PopupShowStatusline                        *g:Lf_PopupShowStatusline*
     Specify whether to show the statusline when LeaderF is in popup mode.
     `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup' is in the
     options list of `Leaderf` command.
 
     Default value is 1.
 
-g:Lf_PopupPreviewPosition                          *g:Lf_PopupPreviewPosition*
+g:Lf_PopupPreviewPosition                       *g:Lf_PopupPreviewPosition*
     Specify where to locate the preview window when LeaderF is in popup mode.
     `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup' is in the
     options list of `Leaderf` command.
@@ -813,7 +813,7 @@ g:Lf_PopupPreviewPosition                          *g:Lf_PopupPreviewPosition*
 
     Default value is 'top'.
 
-g:Lf_PopupColorscheme                              *g:Lf_PopupColorscheme*
+g:Lf_PopupColorscheme                           *g:Lf_PopupColorscheme*
     You can configure the colorscheme of LeaderF in popup mode.
     e.g. >
     let g:Lf_PopupColorscheme = 'default'
@@ -826,7 +826,7 @@ g:Lf_PopupColorscheme                              *g:Lf_PopupColorscheme*
 
     Default value is 'default'.
 
-g:Lf_PopupPalette                                  *g:Lf_PopupPalette*
+g:Lf_PopupPalette                               *g:Lf_PopupPalette*
     This is a dictionary, you can customize the colorscheme of popup mode using
     it.
     Its structure is like below: >
@@ -862,6 +862,12 @@ g:Lf_PopupPalette                                  *g:Lf_PopupPalette*
 
     It is not defined by default.
 
+g:Lf_PopupShowFoldcolumn                        *g:Lf_PopupShowFoldcolumn*
+    Specifies whether to show the foldcolumn in popup window, value 1 means
+    showing foldcolumn, otherwise not.
+
+    Default value is 1.
+
 g:Lf_AutoResize                                 *g:Lf_AutoResize*
     Auto resize the LeaderF window height automatically.
 
@@ -878,7 +884,7 @@ g:Lf_ShowDevIcons                               *g:Lf_ShowDevIcons*
 
     Default value is 1.
 
-g:Lf_DevIconsFont                                 *g:Lf_DevIconsFont*
+g:Lf_DevIconsFont                               *g:Lf_DevIconsFont*
     Specifies the font used to display the icon.
     If it is empty, use the default font.
 

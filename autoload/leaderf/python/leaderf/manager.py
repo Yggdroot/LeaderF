@@ -614,7 +614,10 @@ class Manager(object):
                 lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_nr))
             lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber colorcolumn= ')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
-            lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._preview_winid)
+            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0':
+                lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % self._preview_winid)
+            else:
+                lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
 
     @ignoreEvent('BufRead,BufReadPre,BufReadPost')

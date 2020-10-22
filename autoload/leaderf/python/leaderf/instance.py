@@ -411,10 +411,16 @@ class LfInstance(object):
             lfCmd("silent noswapfile let winid = nvim_open_win(%d, 1, %s)" % (buf_number, str(config)))
             self._popup_winid = int(lfEval("winid"))
             self._setAttributes()
-            try:
-                lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 1)" % self._popup_winid)
-            except vim.error:
-                lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '1')" % self._popup_winid)
+            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0':
+                try:
+                    lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % self._popup_winid)
+                except vim.error:
+                    lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '0')" % self._popup_winid)
+            else:
+                try:
+                    lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 1)" % self._popup_winid)
+                except vim.error:
+                    lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '1')" % self._popup_winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._popup_winid)
             lfCmd("silent! call nvim_buf_set_option(%d, 'filetype', 'leaderf')" % buf_number)
 
@@ -548,7 +554,10 @@ class LfInstance(object):
             lfCmd("call win_execute(%d, 'setlocal foldmethod=manual')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal shiftwidth=4')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal cursorline')" % self._popup_winid)
-            lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._popup_winid)
+            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0':
+                lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % self._popup_winid)
+            else:
+                lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._popup_winid)
             # lfCmd("call win_execute(%d, 'silent! setlocal signcolumn=no')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._popup_winid)
