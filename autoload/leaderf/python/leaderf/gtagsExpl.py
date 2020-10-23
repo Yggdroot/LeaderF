@@ -896,7 +896,7 @@ class GtagsExplorer(Explorer):
 
     def _getGtagsVersion(self):
         env = os.environ
-        proc = subprocess.Popen("gtags --version", shell=True, stdout=subprocess.PIPE, env=env)
+        proc = subprocess.Popen("gtags --version", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         try:
             version = proc.stdout.readline().decode().split()[-1].split(".")
             return int(version[0]) * 10000 + int(version[1]) * 100 + int(version[2])
