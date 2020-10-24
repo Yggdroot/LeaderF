@@ -845,7 +845,8 @@ class FileExplManager(Manager):
                     lfCmd("tabe %s" % escSpecial(file))
             else:
                 if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' and lfEval("bufloaded('%s')" % escQuote(file)) == '1':
-                    if (lfEval("get(g:, 'Lf_DiscardEmptyBuffer', 1)") == '1' and vim.current.buffer.name == ''
+                    if (kwargs.get("mode", '') == '' and lfEval("get(g:, 'Lf_DiscardEmptyBuffer', 1)") == '1'
+                            and vim.current.buffer.name == ''
                             and vim.current.buffer.number == 1
                             and len(vim.current.buffer) == 1 and vim.current.buffer[0] == ''
                             and not vim.current.buffer.options["modified"]
@@ -853,7 +854,8 @@ class FileExplManager(Manager):
                         lfCmd("setlocal bufhidden=wipe")
                     lfDrop('', file)
                 else:
-                    if (lfEval("get(g:, 'Lf_DiscardEmptyBuffer', 1)") == '1' and vim.current.buffer.name == ''
+                    if (kwargs.get("mode", '') == '' and lfEval("get(g:, 'Lf_DiscardEmptyBuffer', 1)") == '1'
+                            and vim.current.buffer.name == ''
                             and vim.current.buffer.number == 1
                             and len(vim.current.buffer) == 1 and vim.current.buffer[0] == ''
                             and not vim.current.buffer.options["modified"]):
