@@ -742,12 +742,6 @@ g:Lf_PreviewPopupWidth                          *g:Lf_PreviewPopupWidth*
 
     Default value is 0.
 
-g:Lf_DiscardEmptyBuffer                         *g:Lf_DiscardEmptyBuffer*
-    Specify whether to discard the first empty [No Name] buffer when opening
-    with <C-T>.
-
-    Default value is 0.
-
 g:Lf_PopupWidth                                 *g:Lf_PopupWidth*
     Specify the width of the popup window or floating window when LeaderF is
     in popup mode. `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup'
