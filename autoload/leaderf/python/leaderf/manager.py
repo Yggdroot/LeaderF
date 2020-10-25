@@ -2290,7 +2290,7 @@ class Manager(object):
             for i, line in enumerate(itertools.islice(content, 20)):
                 self._content.append(line)
 
-            if i == -1:
+            if i == -1 and self._read_finished == 0:
                 self._read_finished = 1
 
         if self._read_finished > 0:
