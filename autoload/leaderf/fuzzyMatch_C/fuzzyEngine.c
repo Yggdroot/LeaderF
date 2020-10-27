@@ -2059,11 +2059,11 @@ static void gtags_getDigest(char** str, uint32_t* length, GtagsParameter* param)
     uint32_t len = *length;
     char* p = NULL;
 
+    if ( param->match_path )
+        return;
+
     if ( param->format == 0 ) /* ctags-mod */
     {
-        if ( param->match_path )
-            return;
-
         uint8_t tab = 0;
         for ( p = s; p < s + len; ++p )
         {

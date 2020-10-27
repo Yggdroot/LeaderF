@@ -989,10 +989,10 @@ class GtagsExplManager(Manager):
                   1, return the name only
                   2, return the directory name
         """
-        if self._getExplorer().getResultFormat() in [None, "ctags-mod"]:
-            if self._match_path:
-                return line
+        if self._match_path or mode == 0:
+            return line
 
+        if self._getExplorer().getResultFormat() in [None, "ctags-mod"]:
             if mode == 2:
                 return line[:line.find('\t')]
             else:
@@ -1018,8 +1018,11 @@ class GtagsExplManager(Manager):
                   1, return the start postion of name only
                   2, return the start postion of directory name
         """
+        if self._match_path or mode == 0:
+            return 0
+
         if self._getExplorer().getResultFormat() in [None, "ctags-mod"]:
-            if self._match_path or mode == 2:
+            if mode == 2:
                 return 0
 
             return lfBytesLen(line[:line.find('\t', line.find('\t'))]) + 1
