@@ -177,7 +177,8 @@ class GtagsExplorer(Explorer):
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, pattern_option, path_style, self._result_format)
 
-            if not self._isDBModified(os.path.join(dbpath, 'GTAGS')) and self._content:
+            if not self._isDBModified(os.path.join(dbpath, 'GTAGS')) and self._content \
+                    and self._last_result_format == self._result_format:
                 return self._content
 
             executor = AsyncExecutor()
