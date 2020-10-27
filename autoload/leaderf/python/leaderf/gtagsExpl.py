@@ -504,7 +504,8 @@ class GtagsExplorer(Explorer):
                             self._gtagslabel, filename, dbpath)
                 env = os.environ
                 # env["GTAGSFORCECPP"] = "" # lead to issue #489
-                subprocess.Popen(cmd, shell=True, env=env)
+                proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stderr=subprocess.PIPE, env=env)
+                _, error = proc.communicate()
         elif not auto:
             self._executeCmd(root, dbpath)
         elif self._isVersionControl(filename):
@@ -540,7 +541,8 @@ class GtagsExplorer(Explorer):
                         '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                         self._gtagslabel, libdbpath)
 
-            subprocess.Popen(cmd, shell=True, env=env)
+            proc = subprocess.Popen(cmd, shell=True, universal_newlines=True, stderr=subprocess.PIPE, env=env)
+            _, error = proc.communicate()
 
     def _which(self, executable):
         for p in os.environ["PATH"].split(";"):
