@@ -575,7 +575,7 @@ g:Lf_Rg                                         *g:Lf_Rg*
     Use this option to specify the rg executable you use. If rg is not
     in one of the directories in your $PATH environment variable, you should
     set it by yourself. e.g., >
-    let g:Lf_Rg  = 'C:\Windows\System32\rg.exe'
+    let g:Lf_Rg = 'C:\Windows\System32\rg.exe'
 <
     Default value is "rg".
 

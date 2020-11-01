@@ -68,7 +68,7 @@ function! s:LoadFromPalette() abort
     endfor
 endfunction
 
-function! leaderf#colorscheme#highlight(category)
+function! leaderf#colorscheme#highlight(category, bufnr)
     try
         let s:palette = g:leaderf#colorscheme#{g:Lf_StlColorscheme}#palette
     catch /^Vim\%((\a\+)\)\=:E121/
@@ -132,6 +132,7 @@ function! leaderf#colorscheme#highlight(category)
         exec hiCmd
     endfor
 
+    call leaderf#colorscheme#highlightBlank(a:category, a:bufnr)
     redrawstatus
 endfunction
 
@@ -144,6 +145,35 @@ function! leaderf#colorscheme#highlightMode(category, mode)
     exec printf("hi Lf_hl_%s_stlSeparator1 ctermbg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
     exec printf("hi Lf_hl_%s_stlSeparator2 guifg=%s", a:category, guibg == '' ? 'NONE': guibg)
     exec printf("hi Lf_hl_%s_stlSeparator2 ctermfg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
+    redrawstatus
+endfunction
+
+function! leaderf#colorscheme#highlightBlank(category, bufnr)
+    let mod = getbufvar(a:bufnr, "&modified")
+    if getbufvar(a:bufnr, "lf_buffer_changed") == mod
+        return
+    endif
+
+    call setbufvar(a:bufnr, "lf_buffer_changed", mod)
+
+    if getbufvar(a:bufnr, "&modified") == 1
+        let blank = "DiffChange"
+    else
+        let blank = "Lf_hl_stlBlank"
+    endif
+    let sid = synIDtrans(hlID(blank))
+    if synIDattr(sid, "reverse") || synIDattr(sid, "inverse")
+        let guibg = synIDattr(sid, "fg", "gui")
+        let ctermbg = synIDattr(sid, "fg", "cterm")
+    else
+        let guibg = synIDattr(sid, "bg", "gui")
+        let ctermbg = synIDattr(sid, "bg", "cterm")
+    endif
+    exec printf("hi link Lf_hl_%s_stlBlank %s", a:category, blank)
+    exec printf("hi Lf_hl_%s_stlSeparator3 guibg=%s", a:category, guibg == '' ? 'NONE': guibg)
+    exec printf("hi Lf_hl_%s_stlSeparator3 ctermbg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
+    exec printf("hi Lf_hl_%s_stlSeparator4 guibg=%s", a:category, guibg == '' ? 'NONE': guibg)
+    exec printf("hi Lf_hl_%s_stlSeparator4 ctermbg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
     redrawstatus
 endfunction
 

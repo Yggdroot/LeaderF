@@ -36,6 +36,10 @@ function! leaderf#Rg#Maps()
     nnoremap <buffer> <silent> d             :exec g:Lf_py "rgExplManager.deleteCurrentLine()"<CR>
     nnoremap <buffer> <silent> Q             :exec g:Lf_py "rgExplManager.outputToQflist()"<CR>
     nnoremap <buffer> <silent> L             :exec g:Lf_py "rgExplManager.outputToLoclist()"<CR>
+    nnoremap <buffer> <silent> r             :exec g:Lf_py "rgExplManager.replace()"<CR>
+    nnoremap <buffer> <silent> w             :call leaderf#Rg#ApplyChangesAndSave(0)<CR>
+    nnoremap <buffer> <silent> W             :call leaderf#Rg#ApplyChangesAndSave(1)<CR>
+    nnoremap <buffer> <silent> U             :call leaderf#Rg#UndoLastChange()<CR>
     if has("nvim")
         nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "rgExplManager._toUpInPopup()"<CR>
         nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "rgExplManager._toDownInPopup()"<CR>
@@ -102,6 +106,43 @@ function! leaderf#Rg#TimerCallback(id)
     call leaderf#LfPy("rgExplManager._workInIdle(bang=True)")
 endfunction
 
+function! leaderf#Rg#ApplyChanges()
+    call leaderf#LfPy("rgExplManager.applyChanges()")
+endfunction
+
+function! leaderf#Rg#UndoLastChange()
+    call leaderf#LfPy("rgExplManager.undo()")
+endfunction
+
+function! leaderf#Rg#Quit()
+    call leaderf#LfPy("rgExplManager.quit()")
+endfunction
+
+function! leaderf#Rg#ApplyChangesAndSave(save)
+    if ! &modified
+        return
+    endif
+    try
+        if a:save
+            let g:Lf_rg_apply_changes_and_save = 1
+        endif
+        write
+    finally
+        silent! unlet g:Lf_rg_apply_changes_and_save
+    endtry
+endfunction
+
+function! leaderf#Rg#SaveCurrentBuffer(buf_number_dict)
+    if has_key(a:buf_number_dict, bufnr('%'))
+        update
+    endif
+endfunction
+
+function! leaderf#Rg#Undo(buf_number_dict)
+    if has_key(a:buf_number_dict, bufnr('%'))
+        undo
+    endif
+endfunction
 
 let s:type_list = []
 function! s:rg_type_list() abort

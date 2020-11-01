@@ -7,6 +7,7 @@ import re
 import os
 import os.path
 import locale
+import traceback
 
 lfCmd = vim.command
 lfEval = vim.eval
@@ -158,6 +159,14 @@ def lfPrintError(error):
     else:
         error = lfEncode(str(repr(error)))
         lfCmd("echohl Error | redraw | echo '%s' | echohl None" % escQuote(error))
+
+def lfPrintTraceback(msg=''):
+    error = traceback.format_exc()
+    error = error[error.find("\n") + 1:].strip()
+    if msg:
+        error = msg + "\n" + error
+    lfCmd("echohl WarningMsg | redraw")
+    lfCmd("echom '%s' | echohl None" % escQuote(error))
 
 def lfActualLineCount(buffer, start, end, col_width):
     num = 0

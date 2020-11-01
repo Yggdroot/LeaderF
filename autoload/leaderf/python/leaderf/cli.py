@@ -675,8 +675,8 @@ class LfCli(object):
                         else:
                             try:
                                 callback()
-                            except Exception as e:
-                                lfPrintError(e)
+                            except Exception:
+                                lfPrintTraceback()
                                 break
 
                         continue
@@ -699,8 +699,8 @@ class LfCli(object):
                         else:
                             try:
                                 callback()
-                            except Exception as e:
-                                lfPrintError(e)
+                            except Exception:
+                                lfPrintTraceback()
                                 break
 
                         continue

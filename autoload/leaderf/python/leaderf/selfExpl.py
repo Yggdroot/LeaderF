@@ -77,8 +77,8 @@ class SelfExplManager(Manager):
         cmd = line.split(None, 2)[1]
         try:
             lfCmd(cmd)
-        except vim.error as e:
-            lfPrintError(e)
+        except vim.error:
+            lfPrintTraceback()
 
     def _getDigest(self, line, mode):
         """

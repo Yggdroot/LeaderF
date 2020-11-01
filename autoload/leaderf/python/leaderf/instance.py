@@ -238,7 +238,7 @@ class LfInstance(object):
         self._orig_pos = () # (tabpage, window, buffer)
         self._running_status = 0
         self._cursor_row = None
-        self._help_length = None
+        self._help_length = 0
         self._current_working_directory = None
         self._cur_buffer_name_ignored = False
         self._ignore_cur_buffer_name = lfEval("get(g:, 'Lf_IgnoreCurrentBufferName', 0)") == '1' \
@@ -269,7 +269,7 @@ class LfInstance(object):
         stl += "%#Lf_hl_{0}_stlSeparator2#%{{g:Lf_StlSeparator.left}}"
         stl += "%#Lf_hl_stlCwd# %<%{{g:Lf_{0}_StlCwd}} "
         stl += "%#Lf_hl_{0}_stlSeparator3#%{{g:Lf_StlSeparator.left}}"
-        stl += "%#Lf_hl_stlBlank#%="
+        stl += "%#Lf_hl_{0}_stlBlank#%="
         stl += "%#Lf_hl_stlSpin#%{{g:Lf_{0}_StlRunning}}"
         stl += "%#Lf_hl_{0}_stlSeparator4#%{{g:Lf_StlSeparator.right}}"
         if self._reverse_order:
@@ -733,16 +733,15 @@ class LfInstance(object):
 
         if self._buffer_object is None or not self._buffer_object.valid:
             self._buffer_object = vim.current.buffer
-
-        self._setAttributes()
+            self._setAttributes()
 
         if not self._is_colorscheme_autocmd_set:
             self._is_colorscheme_autocmd_set = True
             lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')".format(self._category, lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
-            lfCmd("call leaderf#colorscheme#highlight('{}')".format(self._category))
+            lfCmd("call leaderf#colorscheme#highlight('{}', {})".format(self._category, self._buffer_object.number))
             lfCmd("augroup Lf_{}_Colorscheme".format(self._category))
             lfCmd("autocmd!")
-            lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlight('{}')".format(self._category))
+            lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlight('{}', {})".format(self._category, self._buffer_object.number))
             lfCmd("autocmd ColorScheme * call leaderf#colorscheme#highlightMode('{0}', g:Lf_{0}_StlMode)".format(self._category))
             lfCmd("autocmd ColorScheme <buffer> doautocmd syntax")
             lfCmd("autocmd CursorMoved <buffer> let g:Lf_{}_StlLineNumber = 1 + line('$') - line('.')".format(self._category))

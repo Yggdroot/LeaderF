@@ -412,6 +412,8 @@ class RgExplManager(Manager):
         super(RgExplManager, self).__init__()
         self._match_path = False
         self._has_column = False
+        self._orig_buffer = []
+        self._buf_number_dict = {}
 
     def _getExplClass(self):
         return RgExplorer
@@ -486,8 +488,8 @@ class RgExplManager(Manager):
                 self._cursorline_dict[vim.current.window] = vim.current.window.options["cursorline"]
 
             lfCmd("setlocal cursorline")
-        except vim.error as e:
-            lfPrintError(e)
+        except vim.error:
+            lfPrintTraceback()
 
     def setArguments(self, arguments):
         self._arguments = arguments
@@ -568,9 +570,13 @@ class RgExplManager(Manager):
         help.append('" t : open file under cursor in a new tabpage')
         help.append('" p : preview the result')
         help.append('" d : delete the line under the cursor')
-        help.append('" Q : output result quickfix list ')
-        help.append('" L : output result location list ')
+        help.append('" Q : output result quickfix list')
+        help.append('" L : output result location list')
         help.append('" i/<Tab> : switch to input mode')
+        help.append('" r : replace a pattern')
+        help.append('" w : apply the changes to buffer without saving')
+        help.append('" W : apply the changes to buffer and save')
+        help.append('" U : undo the last changes applied')
         help.append('" q : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')
@@ -875,6 +881,197 @@ class RgExplManager(Manager):
                         "text": text,
                     })
         return items
+
+    def replace(self):
+        if self._read_finished == 0:
+            return
+
+        try:
+            if not self._getInstance().buffer.options["modifiable"]:
+                self._getInstance().buffer.options["buftype"] = "acwrite"
+                self._getInstance().buffer.options["modified"] = False
+                self._getInstance().buffer.options["modifiable"] = True
+                self._getInstance().buffer.options["undolevels"] = 1000
+
+                lfCmd("augroup Lf_Rg_ReplaceMode")
+                lfCmd("autocmd!")
+                lfCmd("autocmd BufWriteCmd <buffer> nested call leaderf#Rg#ApplyChanges()")
+                lfCmd("autocmd BufHidden <buffer> nested call leaderf#Rg#Quit()")
+                lfCmd("autocmd TextChanged,TextChangedI <buffer> call leaderf#colorscheme#highlightBlank('{}', {})"
+                        .format(self._getExplorer().getStlCategory(), self._getInstance().buffer.number))
+                lfCmd("augroup END")
+
+                lfCmd("command! -buffer W call leaderf#Rg#ApplyChangesAndSave(1)")
+                lfCmd("command! -buffer Undo call leaderf#Rg#UndoLastChange()")
+
+            lfCmd("echohl Question")
+            self._orig_buffer = self._getInstance().buffer[:]
+
+            text = ("" if len(self._getExplorer().getPatternRegex()) == 0
+                    else self._getExplorer().getPatternRegex()[0])
+            pattern = lfEval("input('Pattern: ', '%s')" % escQuote(text))
+            if pattern == '':
+                return
+            string = lfEval("input('Replace with: ')")
+            flags = lfEval("input('flags: ', 'gc')")
+            lfCmd('%d;$s/\(^.\+\(:\d\+:\|-\d\+-\).\{-}\)\@<=%s/%s/%s' %
+                    (self._getInstance().helpLength + 1, escQuote(pattern.replace('/', '\/')),
+                     escQuote(string.replace('/', '\/')), escQuote(flags)))
+            lfCmd("call histdel('search', -1)")
+            lfCmd("let @/ = histget('search', -1)")
+            lfCmd("nohlsearch")
+        except vim.error as e:
+            if "E486" in str(e):
+                error = 'E486: Pattern not found: %s' % pattern
+                lfCmd("echohl Error | redraw | echo '%s' | echohl None" % escQuote(error))
+            else:
+                lfPrintError(e)
+        except Exception as e:
+            lfPrintTraceback()
+        finally:
+            lfCmd("echohl None")
+
+    def applyChanges(self):
+        if not self._getInstance().buffer.options["modified"]:
+            return
+
+        try:
+            orig_pos = self._getInstance().getOriginalPos()
+            cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
+
+            saved_eventignore = vim.options['eventignore']
+            vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
+            vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
+            vim.options['eventignore'] = saved_eventignore
+
+            self._buf_number_dict = {}
+            lfCmd("echohl WarningMsg | redraw | echo ' Applying changes ...' | echohl None")
+            for n, line in enumerate(self._getInstance().buffer):
+                try:
+                    if self._orig_buffer[n] == line: # no changes
+                        continue
+
+                    if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
+                        m = re.match(r'^(.+?)([:-])(\d+)\2(.*)', line)
+                        file, sep, line_num, content = m.group(1, 2, 3, 4)
+                        if not os.path.exists(lfDecode(file)):
+                            if sep == ':':
+                                sep = '-'
+                            else:
+                                sep = ':'
+                            m = re.match(r'^(.+?)(%s)(\d+)%s(.*)' % (sep, sep), line)
+                            if m:
+                                file, sep, line_num, content = m.group(1, 2, 3, 4)
+                        if not re.search(r"\d+_'No_Name_(\d+)'", file):
+                            i = 1
+                            while not os.path.exists(lfDecode(file)):
+                                m = re.match(r'^(.+?(?:([:-])\d+.*?){%d})\2(\d+)\2(.*)' % i, line)
+                                i += 1
+                                file, sep, line_num, content = m.group(1, 2, 3, 4)
+
+                        if self._has_column and sep == ':':
+                            content = content.split(':', 1)[1]
+                    else:
+                        m = re.match(r'^(.+?):(\d+):(.*)', line)
+                        file, line_num, content = m.group(1, 2, 3)
+                        if not re.search(r"\d+_'No_Name_(\d+)'", file):
+                            i = 1
+                            while not os.path.exists(lfDecode(file)):
+                                m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):(.*)' % i, line)
+                                i += 1
+                                file, line_num, content = m.group(1, 2, 3)
+
+                        if self._has_column:
+                            content = content.split(':', 1)[1]
+
+                    if not os.path.isabs(file):
+                        file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+                        file = os.path.normpath(lfEncode(file))
+
+                    if lfEval("bufloaded('%s')" % escQuote(file)) == '0':
+                        lfCmd("hide edit %s" % escSpecial(file))
+
+                    buf_number = int(lfEval("bufnr('%s')" % escQuote(file)))
+                    vim.buffers[buf_number][int(line_num) - 1] = content
+                    self._buf_number_dict[buf_number] = 0
+                except vim.error as e:
+                    if "Keyboard interrupt" in str(e): # neovim ctrl-c
+                        lfCmd("call getchar(0)")
+                        return
+                    else:
+                        lfPrintTraceback()
+                except KeyboardInterrupt: # <C-C>
+                    return
+                except Exception:
+                    lfPrintTraceback(file)
+
+            if lfEval("exists('g:Lf_rg_apply_changes_and_save')") == '1':
+                lfCmd("bufdo call leaderf#Rg#SaveCurrentBuffer(%s)" % str(self._buf_number_dict))
+        except KeyboardInterrupt: # <C-C>
+            pass
+        except vim.error:
+            pass
+        finally:
+            lfCmd("silent! buf %d" % orig_pos[2].number)
+
+            self._orig_buffer = self._getInstance().buffer[:]
+
+            saved_eventignore = vim.options['eventignore']
+            vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
+            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
+            vim.options['eventignore'] = saved_eventignore
+
+            lfCmd("setlocal nomodified")
+            lfCmd("silent! doautocmd twoline BufWinEnter")
+            lfCmd("call leaderf#colorscheme#highlightBlank('{}', {})"
+                    .format(self._getExplorer().getStlCategory(), self._getInstance().buffer.number))
+            lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl None")
+
+    def undo(self):
+        if int(lfEval("undotree()['seq_cur']")) == 0 or lfEval("&buftype") == "nofile":
+            return
+
+        try:
+            orig_pos = self._getInstance().getOriginalPos()
+            cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
+
+            saved_eventignore = vim.options['eventignore']
+            vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
+            vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
+            vim.options['eventignore'] = saved_eventignore
+
+            lfCmd("silent bufdo call leaderf#Rg#Undo(%s)" % str(self._buf_number_dict))
+            self._buf_number_dict = {}
+        finally:
+            lfCmd("silent! buf %d" % orig_pos[2].number)
+
+            saved_eventignore = vim.options['eventignore']
+            vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
+            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
+            vim.options['eventignore'] = saved_eventignore
+
+            lfCmd("undo")
+            lfCmd("echohl WarningMsg | redraw | echo ' undo finished!' | echohl None")
+
+    def quit(self):
+        if self._getInstance().buffer.options["modified"]:
+            selection = int(lfEval("""confirm("buffer changed, apply changes or discard?", "&apply\n&discard")"""))
+            if selection == 0:
+                return
+            elif selection == 1:
+                lfCmd("call leaderf#Rg#ApplyChangesAndSave(1)")
+                self._getInstance().window.cursor = (1, 0)
+            else:
+                self._getInstance().buffer[:] = self._orig_buffer
+                self._getInstance().window.cursor = (1, 0)
+
+        self._getInstance().buffer.options["buftype"] = "nofile"
+        self._getInstance().buffer.options["modifiable"] = False
+        self._getInstance().buffer.options["undolevels"] = -1
+
+        super(RgExplManager, self).quit()
+
+        lfCmd("silent! autocmd! Lf_Rg_ReplaceMode")
 
 #*****************************************************
 # rgExplManager is a singleton
