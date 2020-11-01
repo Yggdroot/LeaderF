@@ -709,6 +709,7 @@ class LfCli(object):
                         lfCmd("let ch = !type(nr) ? nr2char(nr) : nr")
                         self._blinkon = True
                 else:
+                    threshold = 0
                     lfCmd("let nr = getchar()")
                     lfCmd("let ch = !type(nr) ? nr2char(nr) : nr")
                     self._blinkon = True
