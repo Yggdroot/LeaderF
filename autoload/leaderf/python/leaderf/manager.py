@@ -466,12 +466,16 @@ class Manager(object):
                 row = float_win_row + float_window.height + statusline_height
                 col = float_win_col
                 height = int(lfEval("&lines")) - row - 2
+                if height < 1:
+                    return
                 width = float_window.width
             elif preview_pos.lower() == 'top':
                 anchor = "SW"
                 row = float_win_row - 1
                 col = float_win_col
                 height = row
+                if height < 1:
+                    return
                 width = float_window.width
             else:
                 anchor = "SW"
@@ -544,15 +548,19 @@ class Manager(object):
                     statusline_height = 0
                 line = int(popup_pos["line"]) + int(popup_pos["height"]) + statusline_height
                 pos = "topleft"
-                maxheight = int(lfEval("&lines")) - line - 2
+                maxheight = int(lfEval("&lines")) - line
+                if maxheight < 1:
+                    return
 
                 if buffer_len >= maxheight: # scrollbar appear
                     maxwidth -= 1
             elif preview_pos.lower() == 'top':
                 maxwidth = int(popup_pos["width"])
                 col = int(popup_pos["col"])
-                # int(popup_pos["core_line"]) - 1(exclude the first line) - 1(input window) - 1(title)
+                # int(popup_pos["line"]) - 1(exclude the first line) - 1(input window) - 1(title)
                 maxheight = int(popup_pos["line"]) - 3
+                if maxheight < 1:
+                    return
 
                 if buffer_len >= maxheight: # scrollbar appear
                     maxwidth -= 1
