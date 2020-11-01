@@ -836,6 +836,7 @@ class Manager(object):
             self._getInstance().buffer.append(help, 0)
             self._getInstance().buffer.options['modifiable'] = False
             self._getInstance().window.cursor = (orig_row + self._help_length, 0)
+            self._getInstance().mimicCursor()
 
         self._getInstance().refreshPopupStatusline()
 

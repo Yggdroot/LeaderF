@@ -672,7 +672,7 @@ class RgExplManager(Manager):
             if instance.isLastReverseOrder():
                 instance.window.cursor = (min(instance.cursorRow, len(instance.buffer)), 0)
             else:
-                instance.window.cursor = (max(instance.cursorRow - instance.helpLength, 1), 0)
+                instance.window.cursor = (instance.cursorRow, 0)
             if instance.getWinPos() == 'popup':
                 lfCmd("call win_execute(%d, 'setlocal cursorline')" % instance.getPopupWinId())
             elif instance.getWinPos() == 'floatwin':
