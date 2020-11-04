@@ -372,7 +372,8 @@ class Manager(object):
         if self._getInstance().getWinPos() == 'floatwin':
             self._cli.buildPopupPrompt()
 
-        if int(lfEval("win_id2win(%d)" % self._preview_winid)) != vim.current.window.number:
+        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1' and \
+                int(lfEval("win_id2win(%d)" % self._preview_winid)) != vim.current.window.number:
             self._closePreviewPopup()
 
         if not self._needPreview(preview):
