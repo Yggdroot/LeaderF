@@ -777,17 +777,17 @@ class LfInstance(object):
     def setArguments(self, arguments):
         self._last_reverse_order = self._reverse_order
         self._arguments = arguments
-        if "--reverse" in self._arguments or lfEval("get(g:, 'Lf_ReverseOrder', 0)") == '1':
-            self._reverse_order = True
+        if self._arguments.get("--reverse", 1) is None:
+            self._reverse_order = False
         else:
-            self._reverse_order = False
+            if "--reverse" in self._arguments or lfEval("get(g:, 'Lf_ReverseOrder', 0)") == '1':
+                self._reverse_order = True
+            else:
+                self._reverse_order = False
 
-        if ("--popup" in self._arguments or lfEval("g:Lf_WindowPosition") == 'popup') \
-                and "--bottom" not in self._arguments: # popup does not support reverse order
-            self._reverse_order = False
-
-    def ignoreReverse(self):
-        self._reverse_order = False
+            if ("--popup" in self._arguments or lfEval("g:Lf_WindowPosition") == 'popup') \
+                    and "--bottom" not in self._arguments: # popup does not support reverse order
+                self._reverse_order = False
 
     def useLastReverseOrder(self):
         self._reverse_order = self._last_reverse_order
