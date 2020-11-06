@@ -733,7 +733,8 @@ class LfInstance(object):
 
         if self._buffer_object is None or not self._buffer_object.valid:
             self._buffer_object = vim.current.buffer
-            self._setAttributes()
+
+        self._setAttributes()
 
         if not self._is_colorscheme_autocmd_set:
             self._is_colorscheme_autocmd_set = True
