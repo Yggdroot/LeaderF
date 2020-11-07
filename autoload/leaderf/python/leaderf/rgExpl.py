@@ -428,7 +428,7 @@ class RgExplManager(Manager):
         return RgExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#Rg#Maps()")
+        lfCmd("call leaderf#Rg#Maps(%d)" % int("--heading" in self._arguments))
 
     @workingDirectory
     def _acceptSelection(self, *args, **kwargs):
@@ -616,11 +616,13 @@ class RgExplManager(Manager):
         help.append('" d : delete the line under the cursor')
         help.append('" Q : output result quickfix list')
         help.append('" L : output result location list')
-        help.append('" i/<Tab> : switch to input mode')
-        help.append('" r : replace a pattern')
-        help.append('" w : apply the changes to buffer without saving')
-        help.append('" W : apply the changes to buffer and save')
-        help.append('" U : undo the last changes applied')
+        if "--heading" not in self._arguments:
+            help.append('" i/<Tab> : switch to input mode')
+        if self._getInstance().getWinPos() != 'popup':
+            help.append('" r : replace a pattern')
+            help.append('" w : apply the changes to buffer without saving')
+            help.append('" W : apply the changes to buffer and save')
+            help.append('" U : undo the last changes applied')
         help.append('" q : quit')
         help.append('" <F1> : toggle this help')
         help.append('" ---------------------------------------------------------')

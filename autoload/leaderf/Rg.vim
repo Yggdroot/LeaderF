@@ -13,7 +13,7 @@ endif
 
 exec g:Lf_py "from leaderf.rgExpl import *"
 
-function! leaderf#Rg#Maps()
+function! leaderf#Rg#Maps(heading)
     nmapclear <buffer>
     nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "rgExplManager.accept()"<CR>
     nnoremap <buffer> <silent> o             :exec g:Lf_py "rgExplManager.accept()"<CR>
@@ -30,8 +30,10 @@ function! leaderf#Rg#Maps()
     nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "rgExplManager.quit()"<CR>
     " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "rgExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> i             :exec g:Lf_py "rgExplManager.input()"<CR>
-    nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "rgExplManager.input()"<CR>
+    if a:heading == 0
+        nnoremap <buffer> <silent> i             :exec g:Lf_py "rgExplManager.input()"<CR>
+        nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "rgExplManager.input()"<CR>
+    endif
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "rgExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "rgExplManager.deleteCurrentLine()"<CR>
     nnoremap <buffer> <silent> Q             :exec g:Lf_py "rgExplManager.outputToQflist()"<CR>
@@ -261,8 +263,15 @@ function! leaderf#Rg#NormalModeFilter(winid, key) abort
     elseif key ==# "q" || key ==? "<ESC>"
         exec g:Lf_py "rgExplManager.quit()"
     elseif key ==# "i" || key ==? "<Tab>"
-        call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
-        exec g:Lf_py "rgExplManager.input()"
+        if g:Lf_py == "py "
+            let has_heading = pyeval("'--heading' in rgExplManager._arguments")
+        else
+            let has_heading = py3eval("'--heading' in rgExplManager._arguments")
+        endif
+        if !has_heading
+            call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
+            exec g:Lf_py "rgExplManager.input()"
+        endif
     elseif key ==# "o" || key ==? "<CR>" || key ==? "<2-LeftMouse>"
         exec g:Lf_py "rgExplManager.accept()"
     elseif key ==# "x"
