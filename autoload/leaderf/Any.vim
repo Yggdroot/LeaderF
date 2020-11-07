@@ -116,6 +116,8 @@ let g:Lf_Arguments = {
             \           {"name": ["-E", "--encoding"], "nargs": 1, "metavar": "<ENCODING>", "help": "Specify the text encoding that rg will use on all files searched."},
             \           {"name": ["-M", "--max-columns"], "nargs": 1, "metavar": "<NUM>", "help": "Don't print lines longer than this limit in bytes."},
             \           {"name": ["-m", "--max-count"], "nargs": 1, "metavar": "<NUM>", "help": "Limit the number of matching lines per file searched to NUM."},
+            \           {"name": ["-U", "--multiline"], "nargs": 0, "help": "Enable matching across multiple lines."},
+            \           {"name": ["--multiline-dotall"], "nargs": 0, "help": "This flag enables 'dot all' in your regex pattern, which causes '.' to match newlines when multiline searching is enabled."},
             \           {"name": ["--max-depth"], "nargs": 1, "metavar": "<NUM>", "help": "Limit the depth of directory traversal to NUM levels beyond the paths given."},
             \           {"name": ["--max-filesize"], "nargs": 1, "metavar": "<NUM+SUFFIX?>", "help": "Ignore files larger than NUM in size. This does not apply to directories."},
             \           {"name": ["--path-separator"], "nargs": 1, "metavar": "<SEPARATOR>", "help": "Set the path separator to use when printing file paths."},

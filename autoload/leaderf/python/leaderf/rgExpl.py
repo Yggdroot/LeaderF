@@ -121,6 +121,10 @@ class RgExplorer(Explorer):
             zero_args_options += "--no-messages "
         if "--no-pcre2-unicode" in arguments_dict:
             zero_args_options += "--no-pcre2-unicode "
+        if "-U" in arguments_dict:
+            zero_args_options += "-U "
+        if "--multiline-dotall" in arguments_dict:
+            zero_args_options += "--multiline-dotall "
 
         one_args_options = ''
         if "--context-separator" in arguments_dict:
@@ -673,6 +677,14 @@ class RgExplManager(Manager):
                     self._match_ids.append(id)
             try:
                 for i in self._getExplorer().getPatternRegex():
+                    if "-U" in self._arguments:
+                        if self._has_column:
+                            i = i.replace(r'\n', r'\n.{-}\d+:\d+:')
+                        else:
+                            i = i.replace(r'\n', r'\n.{-}\d+:')
+                        if "--multiline-dotall" in self._arguments:
+                            i = i.replace('.', r'\_.')
+
                     lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_rgHighlight', '%s', 9)")"""
                             % (self._getInstance().getPopupWinId(), re.sub(r'\\(?!")', r'\\\\', escQuote(i))))
                     id = int(lfEval("matchid"))
@@ -711,6 +723,14 @@ class RgExplManager(Manager):
 
             try:
                 for i in self._getExplorer().getPatternRegex():
+                    if "-U" in self._arguments:
+                        if self._has_column:
+                            i = i.replace(r'\n', r'\n.{-}\d+:\d+:')
+                        else:
+                            i = i.replace(r'\n', r'\n.{-}\d+:')
+                        if "--multiline-dotall" in self._arguments:
+                            i = i.replace('.', r'\_.')
+
                     id = int(lfEval("matchadd('Lf_hl_rgHighlight', '%s', 9)" % escQuote(i)))
                     self._match_ids.append(id)
             except vim.error:
