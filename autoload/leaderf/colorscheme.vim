@@ -132,7 +132,7 @@ function! leaderf#colorscheme#highlight(category, bufnr)
         exec hiCmd
     endfor
 
-    call leaderf#colorscheme#highlightBlank(a:category, a:bufnr)
+    exec printf("hi link Lf_hl_%s_stlBlank Lf_hl_stlBlank", a:category)
     redrawstatus
 endfunction
 
