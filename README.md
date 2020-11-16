@@ -36,51 +36,30 @@ Requirements
 Installation
 ------------
 
-To install this plugin just put the plugin files in your `~/.vim` (Linux) or `~/vimfiles` (Windows).<br>
-For [Vundle][3] user, just add `Plugin 'Yggdroot/LeaderF'` to your `.vimrc`.
+For [vim-plug][5] user:
+
+```vim
+Plug 'Yggdroot/LeaderF', { 'do': ':LeaderfInstallCExtension' }
+```
 
 Performance
 -----------
 
-LeaderF is already very fast. If you want better performance, install the C extension of the fuzzy matching algorithm, which is more than 10 times faster.  
-To install the C extension, follow the below:
+LeaderF is already very fast. If you'd like better performance, install the C extension of the fuzzy matching algorithm, which is more than 10 times faster.  
+To install the C extension, firstly, make sure `python2` and/or `python3` commands are available on Linux/Unix/MacOS and `py -2` and/or `py -3` commands are available on Windows.
 
- - On Linux/Unix/MacOS:
-
-    First, make sure `python2` and/or `python3` commands are available.  
-    Then run the installation script:
-
-    ```sh
-    cd ~/.vim/bundle/LeaderF
-    ./install.sh
+ - Install the C extension
+    ```vim
+    :LeaderfInstallCExtension
     ```
-    Uninstall the C extension:
-
-        ./install.sh --reverse
-
-    If you are using [vim-plug][5]:
-
-        Plug 'Yggdroot/LeaderF', { 'do': './install.sh' }
-
- - On Windows:
-
-    First, make sure `py -2` and/or `py -3` commands are available.  
-    Then run the installation script:
-
-    ```sh
-    cd ~\.vim\bundle\LeaderF
-    .\install.bat
-    ```
-    There may be some error during the installation, please google the error messages to resolve it.  
+    There may be some errors during the installation, please google the error messages to resolve it.  
     For example, `"error: Unable to find vcvarsall.bat"`, you can turn to [here][6] for help.
 
-    Uninstall the C extension:
 
-        .\install.bat --reverse
-
-    If you are using [vim-plug][5]:
-
-        Plug 'Yggdroot/LeaderF', { 'do': '.\install.bat' }
+- Uninstall the C extension
+    ```vim
+    :LeaderfUninstallCExtension
+    ```
 
 After running any command of LeaderF, check the value of `echo g:Lf_fuzzyEngine_C`, if the value is 1, it means the C extension is loaded sucessfully.
 
