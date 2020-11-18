@@ -230,6 +230,9 @@ class FunctionExplManager(Manager):
         lfCmd("norm! ^zv")
         lfCmd("norm! zz")
 
+        if "preview" not in kwargs:
+            lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
+
         if vim.current.window not in self._cursorline_dict:
             self._cursorline_dict[vim.current.window] = vim.current.window.options["cursorline"]
 
@@ -358,7 +361,7 @@ class FunctionExplManager(Manager):
         vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
         try:
             vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
-            self._acceptSelection(line)
+            self._acceptSelection(line, preview=True)
         finally:
             vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
             vim.options['eventignore'] = saved_eventignore

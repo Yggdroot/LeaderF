@@ -246,6 +246,9 @@ class BufTagExplManager(Manager):
         lfCmd("norm! zv")
         lfCmd("norm! zz")
 
+        if "preview" not in kwargs:
+            lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
+
         if vim.current.window not in self._cursorline_dict:
             self._cursorline_dict[vim.current.window] = vim.current.window.options["cursorline"]
 
