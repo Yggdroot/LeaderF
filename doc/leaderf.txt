@@ -734,7 +734,7 @@ g:Lf_PreviewHorizontalPosition                  *g:Lf_PreviewHorizontalPosition*
     'right': the preview window is on the right side of the screen.
     'cursor': the preview window is at the cursor position.
 
-    Default value is 'cursor'.
+    Default value is 'right'.
 
 g:Lf_PreviewPopupWidth                          *g:Lf_PreviewPopupWidth*
     Specify the width of preview popup window, the value should be a non-negative

@@ -665,7 +665,7 @@ class Manager(object):
                 lfCmd("call setbufline(scratch_buffer, 1, content)")
                 lfCmd("call nvim_buf_set_option(scratch_buffer, 'bufhidden', 'wipe')")
             height = min(maxheight, buffer_len)
-            preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
+            preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'right')")
             if preview_pos.lower() == 'center':
                 col = (int(lfEval("&columns")) - width) // 2
             elif preview_pos.lower() == 'left':
@@ -716,7 +716,7 @@ class Manager(object):
             lfCmd("silent! %foldopen!")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
         else:
-            preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'cursor')")
+            preview_pos = lfEval("get(g:, 'Lf_PreviewHorizontalPosition', 'right')")
             if preview_pos.lower() == 'center':
                 col = 0
             elif preview_pos.lower() == 'left':
