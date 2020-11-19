@@ -403,8 +403,9 @@ def removeDevIcons(func):
             lines = args[1] if is_list else [args[1]]
 
             res_lines = []
+            start = webDevIconsStrLen()
             for line in lines:
-                res_lines.append(line[webDevIconsStrLen():])
+                res_lines.append(line[start:])
 
             _args = list(args)
             _args[1] = res_lines if is_list else res_lines[0]
