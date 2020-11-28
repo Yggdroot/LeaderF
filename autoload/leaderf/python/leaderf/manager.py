@@ -448,7 +448,10 @@ class Manager(object):
             if isinstance(source, int):
                 buffer_len = len(vim.buffers[source])
             else:
-                lfCmd("let content = readfile('%s')" % escQuote(source))
+                try:
+                    lfCmd("let content = readfile('%s')" % escQuote(source))
+                except vim.error:
+                    return
                 buffer_len = int(lfEval("len(content)"))
                 lfCmd("let scratch_buffer = nvim_create_buf(0, 1)")
                 lfCmd("call setbufline(scratch_buffer, 1, content)")
@@ -536,7 +539,10 @@ class Manager(object):
             if isinstance(source, int):
                 buffer_len = len(vim.buffers[source])
             else:
-                lfCmd("let content = readfile('%s')" % escQuote(source))
+                try:
+                    lfCmd("let content = readfile('%s')" % escQuote(source))
+                except vim.error:
+                    return
                 buffer_len = int(lfEval("len(content)"))
 
             preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
@@ -659,7 +665,10 @@ class Manager(object):
             if isinstance(source, int):
                 buffer_len = len(vim.buffers[source])
             else:
-                lfCmd("let content = readfile('%s')" % escQuote(source))
+                try:
+                    lfCmd("let content = readfile('%s')" % escQuote(source))
+                except vim.error:
+                    return
                 buffer_len = int(lfEval("len(content)"))
                 lfCmd("let scratch_buffer = nvim_create_buf(0, 1)")
                 lfCmd("call setbufline(scratch_buffer, 1, content)")
@@ -759,7 +768,10 @@ class Manager(object):
             if isinstance(source, int):
                 lfCmd("silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
             else:
-                lfCmd("let content = readfile('%s')" % escQuote(source))
+                try:
+                    lfCmd("let content = readfile('%s')" % escQuote(source))
+                except vim.error:
+                    return
                 lfCmd("silent! let winid = popup_create(content, %s)" % json.dumps(options))
                 lfCmd("call win_execute(winid, 'doautocmd filetypedetect BufNewFile %s')" % escQuote(source))
 
