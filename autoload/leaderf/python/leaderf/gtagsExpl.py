@@ -38,7 +38,6 @@ class GtagsExplorer(Explorer):
         self._gtagslibpath = []
         self._result_format = None
         self._last_result_format = None
-        self._gtags_version = self._getGtagsVersion()
         self._evalVimVar()
         self._has_nvim = lfEval("has('nvim')") == '1'
         self._db_timestamp = 0
@@ -101,7 +100,7 @@ class GtagsExplorer(Explorer):
                 self._accept_dotfiles = "--accept-dotfiles "
             if "--skip-unreadable" in arguments_dict:
                 self._skip_unreadable = "--skip-unreadable "
-            if "--skip-symlink" in arguments_dict:
+            if "--skip-symlink" in arguments_dict and self._skip_symlink != "":
                 skip_symlink = arguments_dict["--skip-symlink"]
                 self._skip_symlink = "--skip-symlink%s " % ('=' + skip_symlink[0] if skip_symlink else "")
             self.updateGtags(filename, single_update=False, auto=False)
@@ -560,15 +559,8 @@ class GtagsExplorer(Explorer):
         self._skip_unreadable = "--skip-unreadable " if lfEval("get(g:, 'Lf_GtagsSkipUnreadable', '0')") == '1' else ""
         self._skip_symlink = "--skip-symlink%s " % ('=' + lfEval("get(g:, 'Lf_GtagsSkipSymlink', '')")
                                 if lfEval("get(g:, 'Lf_GtagsSkipSymlink', '')") != '' else "")
-        # Fix issue #706, gtags error! unrecognized option --skip-symlink
-        # --skip-symlink option is only supported after global 6.6.3
-        # remove --skip-symlink option in case the version is lower then 6.6.3
-        try:
-            if self._compare_gtags_version("6.6.3") < 0:
-                self._skip_symlink = ""
-        except:
-            pass
-
+        if lfEval("get(g:, 'Lf_GtagsHigherThan6_6_2', '1')") == '0':
+            self._skip_symlink = ""
         self._gtagsconf = lfEval("get(g:, 'Lf_Gtagsconf', '')")
         if self._gtagsconf:
             self._gtagsconf = self._gtagsconf.join('""')
@@ -897,31 +889,6 @@ class GtagsExplorer(Explorer):
     def getLastResultFormat(self):
         return self._last_result_format
 
-    def _getGtagsVersion(self):
-        env = os.environ
-        proc = subprocess.Popen("gtags --version", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-        try:
-            version = proc.stdout.readline().decode().split()[-1].split(".")
-            return int(version[0]) * 10000 + int(version[1]) * 100 + int(version[2])
-        except Exception as e:
-            return None
-
-    def _compare_gtags_version(self, specify_version):
-        """
-        comparing current gtags version with the specified version string
-        Args:
-            specify_version: the specified version string, for example 6.6.3
-        return:
-            >0, greater than the specify_version
-            0, the same version
-            <0, lower than the specify_version
-        """
-        try:
-            items = specify_version.split(".")
-            specify_vernum = int(items[0]) * 10000 + int(items[1]) * 100 + int(items[2])
-            return self._gtags_version - specify_vernum
-        except:
-            raise Exception("can not compare gtags version")
 
 #*****************************************************
 # GtagsExplManager

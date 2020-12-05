@@ -677,7 +677,7 @@ g:Lf_GtagsSkipSymlink                           *g:Lf_GtagsSkipSymlink*
     This option tells gtags to skip symbolic links. If value is 'f' then skip
     only symbolic links for file, else if 'd' then skip only symbolic links
     for directory, else if value is 'a' then all symbolic links are skipped.
-    Default value is "".
+    Default value is "a".
 
 g:Lf_Gtagsconf                                  *g:Lf_Gtagsconf*
     This option specifies the path of gtags configuration file('gtags.conf' or
@@ -707,6 +707,11 @@ g:Lf_GtagsStoreInRootMarker                     *g:Lf_GtagsStoreInRootMarker*
     root marker of the project.
 
     Default value is 0.
+
+g:Lf_GtagsHigherThan6_6_2                       *g:Lf_GtagsHigherThan6_6_2*
+    If `gtag error! unrecognized option --skip-symlink` happens, set the value
+    to 0.
+    Default value is 1.
 
 g:Lf_EmptyQuery                                 *g:Lf_EmptyQuery*
     This option specifies whether to enable the empty query, i.e., if no
