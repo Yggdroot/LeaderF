@@ -430,40 +430,80 @@ class RgExplManager(Manager):
     def _defineMaps(self):
         lfCmd("call leaderf#Rg#Maps(%d)" % int("--heading" in self._arguments))
 
-    def _getFileInfo(self, line):
-        if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-            m = re.match(r'^(.+?)([:-])(\d+)\2', line)
-            file, sep, line_num = m.group(1, 2, 3)
-            if not os.path.isabs(file):
-                file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+    def _getFileInfo(self, args):
+        line = args[0]
 
-            if not os.path.exists(lfDecode(file)):
-                if sep == ':':
-                    sep = '-'
+        if "--heading" in self._arguments:
+            buffer = args[1]
+            cursor_line = args[2]
+            if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
+                if not re.match(r'^\d+[:-]', line):
+                    return (None, None)
+
+                for cur_line in reversed(buffer[:cursor_line]):
+                    if cur_line == self._getExplorer().getContextSeparator():
+                        continue
+                    elif not re.match(r'^\d+[:-]', cur_line):
+                        break
                 else:
-                    sep = ':'
-                m = re.match(r'^(.+?)%s(\d+)%s' % (sep, sep), line)
-                if m:
-                    file, line_num = m.group(1, 2)
-            if not re.search(r"\d+_'No_Name_(\d+)'", file):
-                i = 1
-                while not os.path.exists(lfDecode(file)):
-                    m = re.match(r'^(.+?(?:([:-])\d+.*?){%d})\2(\d+)\2' % i, line)
-                    i += 1
-                    file, line_num = m.group(1, 3)
-        else:
-            m = re.match(r'^(.+?):(\d+):', line)
-            file, line_num = m.group(1, 2)
-            if not re.search(r"\d+_'No_Name_(\d+)'", file):
+                    return (None, None)
+
+                file = cur_line
                 if not os.path.isabs(file):
                     file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
-                i = 1
-                while not os.path.exists(lfDecode(file)):
-                    m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):' % i, line)
-                    i += 1
-                    file, line_num = m.group(1, 2)
+                line_num = re.split(r'[:-]', line, 1)[0]
+            else:
+                if not re.match(r'^\d+:', line):
+                    return (None, None)
+
+                for cur_line in reversed(buffer[:cursor_line]):
+                    if cur_line == self._getExplorer().getContextSeparator():
+                        continue
+                    elif not re.match(r'^\d+:', cur_line):
+                        break
+                else:
+                    return (None, None)
+
+                file = cur_line
+                if not os.path.isabs(file):
+                    file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+                line_num = line.split(':')[0]
+        else:
+            if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
+                m = re.match(r'^(.+?)([:-])(\d+)\2', line)
+                file, sep, line_num = m.group(1, 2, 3)
+                if not os.path.isabs(file):
+                    file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+
+                if not os.path.exists(lfDecode(file)):
+                    if sep == ':':
+                        sep = '-'
+                    else:
+                        sep = ':'
+                    m = re.match(r'^(.+?)%s(\d+)%s' % (sep, sep), line)
+                    if m:
+                        file, line_num = m.group(1, 2)
+                if not re.search(r"\d+_'No_Name_(\d+)'", file):
+                    i = 1
+                    while not os.path.exists(lfDecode(file)):
+                        m = re.match(r'^(.+?(?:([:-])\d+.*?){%d})\2(\d+)\2' % i, line)
+                        i += 1
+                        file, line_num = m.group(1, 3)
+            else:
+                m = re.match(r'^(.+?):(\d+):', line)
+                file, line_num = m.group(1, 2)
+                if not re.search(r"\d+_'No_Name_(\d+)'", file):
                     if not os.path.isabs(file):
                         file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+                    i = 1
+                    while not os.path.exists(lfDecode(file)):
+                        m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):' % i, line)
+                        i += 1
+                        file, line_num = m.group(1, 2)
+                        if not os.path.isabs(file):
+                            file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+
+        file = os.path.normpath(lfEncode(file))
 
         return (file, line_num)
 
@@ -475,45 +515,9 @@ class RgExplManager(Manager):
         if args[0] == self._getExplorer().getContextSeparator():
             return
 
-        line = args[0]
-
-        if "--heading" in self._arguments:
-            buffer = args[1]
-            cursor_line = args[2]
-            if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-                if not re.match(r'^\d+[:-]', line):
-                    return
-
-                for cur_line in reversed(buffer[:cursor_line]):
-                    if cur_line == self._getExplorer().getContextSeparator():
-                        continue
-                    elif not re.match(r'^\d+[:-]', cur_line):
-                        break
-                else:
-                    return
-
-                file = cur_line
-                line_num = re.split(r'[:-]', line, 1)[0]
-            else:
-                if not re.match(r'^\d+:', line):
-                    return
-
-                for cur_line in reversed(buffer[:cursor_line]):
-                    if cur_line == self._getExplorer().getContextSeparator():
-                        continue
-                    elif not re.match(r'^\d+:', cur_line):
-                        break
-                else:
-                    return
-
-                file = cur_line
-                line_num = line.split(':')[0]
-        else:
-            file, line_num = self._getFileInfo(line)
-
-        if not os.path.isabs(file):
-            file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
-            file = os.path.normpath(lfEncode(file))
+        file, line_num = self._getFileInfo(args)
+        if file is None:
+            return
 
         match = re.search(r"\d+_'No_Name_(\d+)'", file)
         if match:
@@ -907,8 +911,9 @@ class RgExplManager(Manager):
         if args[0] == self._getExplorer().getContextSeparator():
             return
 
-        line = args[0]
-        file, line_num = self._getFileInfo(line)
+        file, line_num = self._getFileInfo(args)
+        if file is None:
+            return
 
         match = re.search(r"\d+_'No_Name_(\d+)'", file)
         if match:
@@ -1114,7 +1119,8 @@ class RgExplManager(Manager):
 
                     if not os.path.isabs(file):
                         file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
-                        file = os.path.normpath(lfEncode(file))
+
+                    file = os.path.normpath(lfEncode(file))
 
                     if lfEval("bufloaded('%s')" % escQuote(file)) == '0':
                         lfCmd("hide edit %s" % escSpecial(file))

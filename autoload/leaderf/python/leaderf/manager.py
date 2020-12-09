@@ -382,7 +382,8 @@ class Manager(object):
         line = self._getInstance().currentLine
 
         if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
-            self._previewInPopup(line)
+            line_nr = self._getInstance().window.cursor[0]
+            self._previewInPopup(line, self._getInstance().buffer, line_nr)
             return
 
         orig_pos = self._getInstance().getOriginalPos()
