@@ -1388,10 +1388,10 @@ class LfInstance(object):
 
     def gotoOriginalWindow(self):
         if self._orig_win_id is not None:
-            lfCmd("call win_gotoid(%d)" % self._orig_win_id)
+            lfCmd("keepj call win_gotoid(%d)" % self._orig_win_id)
         else:
             # 'silent!' is used to skip error E16.
-            lfCmd("silent! exec '%d wincmd w'" % self._orig_win_nr)
+            lfCmd("keepj silent! exec '%d wincmd w'" % self._orig_win_nr)
 
     def getWinPos(self):
         return self._win_pos

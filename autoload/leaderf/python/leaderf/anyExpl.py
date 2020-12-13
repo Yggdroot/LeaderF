@@ -713,6 +713,9 @@ class AnyHub(object):
                 from .qfloclistExpl import qfloclistExplManager
                 manager = qfloclistExplManager
                 kwargs["list_type"] = "loclist"
+            elif category == "jumps":
+                from .jumpsExpl import jumpsExplManager
+                manager = jumpsExplManager
             else:
                 import ctypes
                 manager_id = lfFunction(lfEval("g:Lf_PythonExtensions['%s'].manager_id" % category))()

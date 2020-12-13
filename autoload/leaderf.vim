@@ -124,7 +124,8 @@ call s:InitDict('g:Lf_PreviewResult', {
             \ 'BufTag': 1,
             \ 'Function': 1,
             \ 'Line': 0,
-            \ 'Colorscheme': 0
+            \ 'Colorscheme': 0,
+            \ 'Jumps': 1
             \})
 call s:InitDict('g:Lf_NormalMap', {})
 call s:InitVar('g:Lf_Extensions', {})

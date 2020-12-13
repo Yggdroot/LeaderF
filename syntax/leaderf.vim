@@ -121,4 +121,9 @@ function! g:LfDefineDefaultColors() abort
     highlight def link Lf_hl_loclistFileName    Directory
     highlight def link Lf_hl_loclistLineNumber  Constant
     highlight def link Lf_hl_loclistColumnNumber Constant
+
+    highlight def link Lf_hl_jumpsTitle         Title
+    highlight def link Lf_hl_jumpsNumber        Number
+    highlight def link Lf_hl_jumpsLineCol       String
+    highlight def link Lf_hl_jumpsIndicator     Type
 endfunction

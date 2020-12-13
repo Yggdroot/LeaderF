@@ -54,6 +54,7 @@ let g:Lf_Helps = {
             \ "window":         "search windows",
             \ "quickfix":       "navigate quickfix",
             \ "loclist":        "navigate location list",
+            \ "jumps":          "navigate jumps list",
             \ }
 
 let g:Lf_Arguments = {
@@ -186,6 +187,7 @@ let g:Lf_Arguments = {
             \ "window": [],
             \ "quickfix": [],
             \ "loclist": [],
+            \ "jumps": [],
             \}
 
 let g:Lf_CommonArguments = [

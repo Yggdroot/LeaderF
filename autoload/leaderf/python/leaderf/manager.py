@@ -451,7 +451,8 @@ class Manager(object):
             else:
                 try:
                     lfCmd("let content = readfile('%s')" % escQuote(source))
-                except vim.error:
+                except vim.error as e:
+                    lfPrintError(e)
                     return
                 buffer_len = int(lfEval("len(content)"))
                 lfCmd("let scratch_buffer = nvim_create_buf(0, 1)")
@@ -542,7 +543,8 @@ class Manager(object):
             else:
                 try:
                     lfCmd("let content = readfile('%s')" % escQuote(source))
-                except vim.error:
+                except vim.error as e:
+                    lfPrintError(e)
                     return
                 buffer_len = int(lfEval("len(content)"))
 
@@ -668,7 +670,8 @@ class Manager(object):
             else:
                 try:
                     lfCmd("let content = readfile('%s')" % escQuote(source))
-                except vim.error:
+                except vim.error as e:
+                    lfPrintError(e)
                     return
                 buffer_len = int(lfEval("len(content)"))
                 lfCmd("let scratch_buffer = nvim_create_buf(0, 1)")
@@ -771,7 +774,8 @@ class Manager(object):
             else:
                 try:
                     lfCmd("let content = readfile('%s')" % escQuote(source))
-                except vim.error:
+                except vim.error as e:
+                    lfPrintError(e)
                     return
                 lfCmd("silent! let winid = popup_create(content, %s)" % json.dumps(options))
                 lfCmd("call win_execute(winid, 'doautocmd filetypedetect BufNewFile %s')" % escQuote(source))
@@ -1749,7 +1753,8 @@ class Manager(object):
 
     def _accept(self, file, mode, *args, **kwargs):
         if file:
-            lfCmd("norm! m'")
+            if self._getExplorer().getStlCategory() != "Jumps":
+                lfCmd("norm! m'")
 
             if mode == '':
                 pass
@@ -2091,6 +2096,9 @@ class Manager(object):
         else:
             lfCmd("normal! gg")
 
+    def _readFinished(self):
+        pass
+
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" in arguments_dict:
@@ -2193,6 +2201,7 @@ class Manager(object):
                 lfCmd("redrawstatus")
             self._callback = self._workInIdle
             if not kwargs.get('bang', 0):
+                self._readFinished()
                 self.input()
             else:
                 if not remember_last_status and not empty_query:
@@ -2220,9 +2229,9 @@ class Manager(object):
                         lfCmd("call timer_stop(%s)" % self._timer_id)
                         self._timer_id = None
 
-                    self._bangReadFinished()
+                self._bangReadFinished()
 
-                    lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
+                lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
         elif isinstance(content, AsyncExecutor.Result):
             self._is_content_list = False
             self._callback = self._workInIdle
