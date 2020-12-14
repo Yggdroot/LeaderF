@@ -358,7 +358,7 @@ class FileExplorer(Explorer):
                 cmd = cd_cmd + 'rg --no-messages --files %s %s %s %s %s' % (color, ignore, followlinks, show_hidden, no_ignore)
             else:
                 cmd = 'rg --no-messages --files %s %s %s %s %s %s' % (color, ignore, followlinks, show_hidden, no_ignore, cur_dir)
-        elif default_tool["pt"] and lfEval("executable('pt')") == '1' and os.name != 'nt': # there is bug on Windows
+        elif default_tool["pt"] and lfEval("executable('pt')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
             for i in wildignore.get("dir", []):
@@ -387,7 +387,7 @@ class FileExplorer(Explorer):
                 cmd = cd_cmd + 'pt --nocolor %s %s %s %s -g=""' % (ignore, followlinks, show_hidden, no_ignore)
             else:
                 cmd = 'pt --nocolor %s %s %s %s -g="" "%s"' % (ignore, followlinks, show_hidden, no_ignore, dir)
-        elif default_tool["ag"] and lfEval("executable('ag')") == '1' and os.name != 'nt': # https://github.com/vim/vim/issues/3236
+        elif default_tool["ag"] and lfEval("executable('ag')") == '1':
             wildignore = lfEval("g:Lf_WildIgnore")
             ignore = ""
             for i in wildignore.get("dir", []):
