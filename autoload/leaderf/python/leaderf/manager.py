@@ -1252,6 +1252,7 @@ class Manager(object):
         encoding = lfEval("&encoding")
         use_fuzzy_engine = False
         use_fuzzy_match_c = False
+        do_sort = "--no-sort" not in self._arguments
         if self._cli.isAndMode:
             filter_method = self._andModeFilter
         elif self._cli.isRefinement:
@@ -1261,7 +1262,7 @@ class Manager(object):
                     return_index = True
                     pattern = fuzzyEngine.initPattern(self._cli.pattern[0])
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine,
-                                            pattern=pattern, is_name_only=True, sort_results=True)
+                                            pattern=pattern, is_name_only=True, sort_results=do_sort)
                     getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                             pattern=pattern, is_name_only=True)
                     highlight_method = partial(self._highlight, True, getHighlights, True)
@@ -1274,7 +1275,10 @@ class Manager(object):
                     highlight_method = partial(self._highlight, False, getHighlights)
                 else:
                     fuzzy_match = FuzzyMatch(self._cli.pattern[0], encoding)
-                    getWeight = fuzzy_match.getWeight
+                    if "--no-sort" in self._arguments:
+                        getWeight = fuzzy_match.getWeightNoSort
+                    else:
+                        getWeight = fuzzy_match.getWeight
                     getHighlights = fuzzy_match.getHighlights
                     filter_method = partial(self._fuzzyFilter, False, getWeight)
                     highlight_method = partial(self._highlight, False, getHighlights)
@@ -1284,7 +1288,7 @@ class Manager(object):
                     return_index = True
                     pattern = fuzzyEngine.initPattern(self._cli.pattern[1])
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine,
-                                            pattern=pattern, is_name_only=False, sort_results=True)
+                                            pattern=pattern, is_name_only=False, sort_results=do_sort)
                     getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                             pattern=pattern, is_name_only=False)
                     highlight_method = partial(self._highlight, True, getHighlights, True)
@@ -1297,7 +1301,10 @@ class Manager(object):
                     highlight_method = partial(self._highlight, True, getHighlights)
                 else:
                     fuzzy_match = FuzzyMatch(self._cli.pattern[1], encoding)
-                    getWeight = fuzzy_match.getWeight
+                    if "--no-sort" in self._arguments:
+                        getWeight = fuzzy_match.getWeightNoSort
+                    else:
+                        getWeight = fuzzy_match.getWeight
                     getHighlights = fuzzy_match.getHighlights
                     filter_method = partial(self._fuzzyFilter, True, getWeight)
                     highlight_method = partial(self._highlight, True, getHighlights)
@@ -1310,7 +1317,10 @@ class Manager(object):
                 else:
                     is_ascii_0 = False
                     fuzzy_match_0 = FuzzyMatch(self._cli.pattern[0], encoding)
-                    getWeight_0 = fuzzy_match_0.getWeight
+                    if "--no-sort" in self._arguments:
+                        getWeight_0 = fuzzy_match_0.getWeightNoSort
+                    else:
+                        getWeight_0 = fuzzy_match_0.getWeight
                     getHighlights_0 = fuzzy_match_0.getHighlights
 
                 if is_fuzzyMatch_C and isAscii(self._cli.pattern[1]):
@@ -1321,7 +1331,10 @@ class Manager(object):
                 else:
                     is_ascii_1 = False
                     fuzzy_match_1 = FuzzyMatch(self._cli.pattern[1], encoding)
-                    getWeight_1 = fuzzy_match_1.getWeight
+                    if "--no-sort" in self._arguments:
+                        getWeight_1 = fuzzy_match_1.getWeightNoSort
+                    else:
+                        getWeight_1 = fuzzy_match_1.getWeight
                     getHighlights_1 = fuzzy_match_1.getHighlights
 
                     use_fuzzy_match_c = is_ascii_0 and is_ascii_1
@@ -1336,29 +1349,29 @@ class Manager(object):
                     return_index = False
                     if self._cli.isFullPath:
                         filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
-                                                is_name_only=False, sort_results=True)
+                                                is_name_only=False, sort_results=do_sort)
                     else:
                         filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine,
                                                 pattern=pattern, category=fuzzyEngine.Category_File,
                                                 param=fuzzyEngine.createParameter(1),
-                                                is_name_only=True, sort_results=True)
+                                                is_name_only=True, sort_results=do_sort)
                 elif self._getExplorer().getStlCategory() == "Rg":
                     return_index = False
                     if "--match-path" in self._arguments:
                         filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
-                                                is_name_only=True, sort_results=True)
+                                                is_name_only=True, sort_results=do_sort)
                     else:
                         filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine,
                                                 pattern=pattern, category=fuzzyEngine.Category_Rg,
                                                 param=fuzzyEngine.createRgParameter(self._getExplorer().displayMulti(),
                                                     self._getExplorer().getContextSeparator(), self._has_column),
-                                                is_name_only=True, sort_results=True)
+                                                is_name_only=True, sort_results=do_sort)
                 elif self._getExplorer().getStlCategory() == "Tag":
                     return_index = False
                     mode = 0 if self._cli.isFullPath else 1
                     filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine,
                                             pattern=pattern, category=fuzzyEngine.Category_Tag,
-                                            param=fuzzyEngine.createParameter(mode), is_name_only=True, sort_results=True)
+                                            param=fuzzyEngine.createParameter(mode), is_name_only=True, sort_results=do_sort)
                 elif self._getExplorer().getStlCategory() == "Gtags":
                     return_index = False
                     result_format = 1
@@ -1369,22 +1382,22 @@ class Manager(object):
                     filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine,
                                             pattern=pattern, category=fuzzyEngine.Category_Gtags,
                                             param=fuzzyEngine.createGtagsParameter(0, result_format, self._match_path),
-                                            is_name_only=True, sort_results=True)
+                                            is_name_only=True, sort_results=do_sort)
                 elif self._getExplorer().getStlCategory() == "Line":
                     return_index = False
                     filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine,
                                             pattern=pattern, category=fuzzyEngine.Category_Line,
-                                            param=fuzzyEngine.createParameter(1), is_name_only=True, sort_results=True)
+                                            param=fuzzyEngine.createParameter(1), is_name_only=True, sort_results=do_sort)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History", "Filetype",
                         "Command", "Window", "QuickFix", "LocList"]:
                     return_index = True
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=True, sort_results=True)
+                                            is_name_only=True, sort_results=do_sort)
                 else:
                     return_index = True
                     filter_method = partial(fuzzyEngine.fuzzyMatchEx, engine=self._fuzzy_engine, pattern=pattern,
-                                            is_name_only=not self._cli.isFullPath, sort_results=True)
+                                            is_name_only=not self._cli.isFullPath, sort_results=do_sort)
 
                 getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                         pattern=pattern, is_name_only=not self._cli.isFullPath)
@@ -1403,7 +1416,11 @@ class Manager(object):
                 highlight_method = partial(self._highlight, self._cli.isFullPath, getHighlights)
             else:
                 fuzzy_match = FuzzyMatch(self._cli.pattern, encoding)
-                if self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
+                if "--no-sort" in self._arguments:
+                    filter_method = partial(self._fuzzyFilter,
+                                            self._cli.isFullPath,
+                                            fuzzy_match.getWeightNoSort)
+                elif self._getExplorer().getStlCategory() == "File" and self._cli.isFullPath:
                     filter_method = partial(self._fuzzyFilter,
                                             self._cli.isFullPath,
                                             fuzzy_match.getWeight2)
@@ -1429,8 +1446,11 @@ class Manager(object):
                 step = 10000
             pair, highlight_methods = self._filter(step, filter_method, content, is_continue)
 
-            pairs = sorted(zip(*pair), key=operator.itemgetter(0), reverse=True)
-            self._result_content = self._getList(pairs)
+            if do_sort:
+                pairs = sorted(zip(*pair), key=operator.itemgetter(0), reverse=True)
+                self._result_content = self._getList(pairs)
+            else:
+                self._result_content = pair[1]
         elif use_fuzzy_engine:
             if step == 0:
                 if return_index == True:
@@ -1449,7 +1469,8 @@ class Manager(object):
                     step = 12000
 
             pairs = self._filter(step, filter_method, content, is_continue)
-            pairs.sort(key=operator.itemgetter(0), reverse=True)
+            if "--no-sort" not in self._arguments:
+                pairs.sort(key=operator.itemgetter(0), reverse=True)
             self._result_content = self._getList(pairs)
 
         self._getInstance().setBuffer(self._result_content[:self._initial_count])

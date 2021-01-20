@@ -490,6 +490,73 @@ class FuzzyMatch(object):
                                               val)
         return score + (1 >> beg) + 0.4/(end - beg) + 1.0/(beg + end) + 1.0/len(text)
 
+    def getWeightNoSort(self, text):
+        text = Unicode(text, self._encoding)
+        pattern_len = len(self._pattern)
+        j = 0
+        first_char = self._pattern[0]
+        last_char = self._pattern[-1]
+        if self._is_pattern_lower:
+            text_lower = text.lower()
+            first_char_pos = text_lower.find(first_char)
+            if first_char_pos == -1:
+                return FuzzyMatch.MIN_WEIGHT
+            last_char_pos = text_lower.rfind(last_char, first_char_pos)
+            if last_char_pos == -1:
+                return FuzzyMatch.MIN_WEIGHT
+            text_mask = {}
+            for c in self._pattern_mask:
+                text_mask[c] = 0
+            for i, c in enumerate(text_lower[first_char_pos : last_char_pos+1],
+                                  first_char_pos):
+                if c in text_mask:
+                    text_mask[c] |= (1 << i)
+                    if j < pattern_len and c == self._pattern[j]:
+                        j += 1
+        else:
+            if first_char.isupper():
+                first_char_pos = text.find(first_char)
+            else:
+                first_char_pos = -1
+                for i, c in enumerate(text):
+                    if first_char == c.lower():
+                        first_char_pos = i
+                        break
+            if first_char_pos == -1:
+                return FuzzyMatch.MIN_WEIGHT
+            if last_char.isupper():
+                last_char_pos = text.rfind(last_char, first_char_pos)
+            else:
+                last_char_pos = -1
+                for i, c in enumerate(reversed(text[first_char_pos:])):
+                    if last_char == c.lower():
+                        last_char_pos = len(text) - 1 - i
+                        break
+            if last_char_pos == -1:
+                return FuzzyMatch.MIN_WEIGHT
+            text_mask = {}
+            for c in self._pattern_mask:
+                text_mask[c] = 0
+            for i, c in enumerate(text[first_char_pos : last_char_pos+1],
+                                  first_char_pos):
+                if c.isupper():
+                    if c in text_mask:
+                        text_mask[c] |= (1 << i)
+                    if c.lower() in text_mask:
+                        text_mask[c.lower()] |= (1 << i)
+                    if j < pattern_len and (c == self._pattern[j] or
+                            c.lower() == self._pattern[j]):
+                        j += 1
+                else:
+                    if c in text_mask:
+                        text_mask[c] |= (1 << i)
+                        if j < pattern_len and c == self._pattern[j]:
+                            j += 1
+        if j < pattern_len:
+            return FuzzyMatch.MIN_WEIGHT
+
+        return 1
+
     @staticmethod
     def evaluateHighlights(text, pattern, text_mask, j, pattern_mask, k, val):
         key = (j, k)

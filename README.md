@@ -102,6 +102,7 @@ optional arguments:
                         specifies the maximum height of popup window, only available in popup mode.
   --popup-width <POPUP_WIDTH>
                         specifies the width of popup window, only available in popup mode.
+  --no-sort             do not sort the result.
 
 subcommands:
 
