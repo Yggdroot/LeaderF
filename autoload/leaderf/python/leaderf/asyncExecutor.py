@@ -111,6 +111,7 @@ class AsyncExecutor(object):
                         if self._process:
                             self._process.stdout.close()
                             self._process.stderr.close()
+                            self._process.poll()
                     except IOError:
                         pass
 
@@ -158,6 +159,7 @@ class AsyncExecutor(object):
                         if self._process:
                             self._process.stdout.close()
                             self._process.stderr.close()
+                            self._process.poll()
                     except IOError:
                         pass
 
