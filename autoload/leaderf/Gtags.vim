@@ -50,11 +50,12 @@ endfunction
 " return the visually selected text and quote it with double quote
 function! leaderf#Gtags#visual()
     try
-        let x_save = @x
+        let x_save = getreg("x", 1)
+        let type = getregtype("x")
         norm! gv"xy
         return '"' . escape(@x, '"') . '"'
     finally
-        let @x = x_save
+        call setreg("x", x_save, type)
     endtry
 endfunction
 
