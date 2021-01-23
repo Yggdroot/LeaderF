@@ -44,6 +44,7 @@ class GtagsExplorer(Explorer):
         self._last_command = ""
         self._content = []
         self._with_gutentags = lfEval("get(g:, 'Lf_GtagsGutentags', 0)") != '0'
+        self._is_debug = False
 
         self._task_queue = Queue.Queue()
         self._worker_thread = threading.Thread(target=self._processTask)
@@ -70,6 +71,7 @@ class GtagsExplorer(Explorer):
 
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
+        self._is_debug = "--debug" in arguments_dict
         if "--recall" in arguments_dict:
             return []
 
@@ -864,10 +866,11 @@ class GtagsExplorer(Explorer):
             else:
                 print("gtags generated successfully!")
 
-        if self._has_nvim:
-            vim.async_call(lfCmd, "let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd))
-        # else:
-        #     lfCmd("let g:Lf_Debug_GtagsCmd = '%s'" % escQuote(cmd)) # may cause crash
+        if self._is_debug:
+            if self._has_nvim:
+                vim.async_call(print_log, cmd)
+            else:
+                print(cmd)
 
     def getStlCategory(self):
         return 'Gtags'
