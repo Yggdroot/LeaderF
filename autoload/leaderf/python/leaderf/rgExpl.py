@@ -228,8 +228,11 @@ class RgExplorer(Explorer):
         if pattern == '':
             pattern = '"" '
 
-        if path == '' and os.name == 'nt':
-            path = '.'
+        # as per https://github.com/macvim-dev/macvim/issues/1003
+        # the following hack code is not needed any more
+
+        # if path == '' and os.name == 'nt':
+        #     path = '.'
 
         tmpfilenames = []
         def removeFiles(names):
