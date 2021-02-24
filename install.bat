@@ -11,7 +11,7 @@ if /i "%1" equ "--reverse" (
 )
 echo Begin to compile C extension of Python2 ...
 cd autoload\leaderf\fuzzyMatch_C
-py -2 setup.py build
+python2 setup.py build
 if %errorlevel% neq 0 goto second
 pushd build\lib*2.?
 xcopy /y *.pyd ..\..\..\python\
@@ -26,7 +26,7 @@ popd
 :second
 echo=
 echo Begin to compile C extension of Python3 ...
-py -3 setup.py build
+python3 setup.py build
 if %errorlevel% neq 0 goto end
 pushd build\lib*3.?
 xcopy /y *.pyd ..\..\..\python\
