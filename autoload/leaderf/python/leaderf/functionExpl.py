@@ -382,6 +382,11 @@ class FunctionExplManager(Manager):
         self._relocateCursor()
 
     def _relocateCursor(self):
+        remember_last_status = "--recall" in self._arguments \
+                or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern
+        if remember_last_status:
+            return
+
         inst = self._getInstance()
         if inst.empty():
             return
