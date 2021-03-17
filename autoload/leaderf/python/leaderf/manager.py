@@ -518,6 +518,7 @@ class Manager(object):
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'foldmethod', 'manual')" % self._preview_winid)
             if lfEval("exists('+cursorlineopt')") == '1':
                 lfCmd("call nvim_win_set_option(%d, 'cursorlineopt', 'both')" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
@@ -633,6 +634,7 @@ class Manager(object):
             elif line_nr > 0:
                 lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_nr))
             lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber colorcolumn= ')" % self._preview_winid)
+            lfCmd("call win_execute(%d, 'setlocal foldmethod=manual')" % self._preview_winid)
             if lfEval("exists('+cursorlineopt')") == '1':
                 lfCmd("call win_execute(%d, 'setlocal cursorlineopt=both')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
@@ -725,6 +727,7 @@ class Manager(object):
             lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'foldmethod', 'manual')" % self._preview_winid)
             if lfEval("exists('+cursorlineopt')") == '1':
                 lfCmd("call nvim_win_set_option(%d, 'cursorlineopt', 'both')" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
@@ -795,6 +798,7 @@ class Manager(object):
             elif line_nr > 0:
                 lfCmd("""call win_execute(%d, "exec 'norm! %dG'")""" % (self._preview_winid, line_nr))
             lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber')" % self._preview_winid)
+            lfCmd("call win_execute(%d, 'setlocal foldmethod=manual')" % self._preview_winid)
             if lfEval("exists('+cursorlineopt')") == '1':
                 lfCmd("call win_execute(%d, 'setlocal cursorlineopt=both')" % self._preview_winid)
 
