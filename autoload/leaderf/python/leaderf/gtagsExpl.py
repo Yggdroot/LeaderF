@@ -1216,7 +1216,7 @@ class GtagsExplManager(Manager):
             file = os.path.normpath(lfEncode(file))
 
         if lfEval("bufloaded('%s')" % escQuote(file)) == '1':
-            source = int(lfEval("bufadd('%s')" % escQuote(line)))
+            source = int(lfEval("bufadd('%s')" % escQuote(file)))
         else:
             source = file
         self._createPopupPreview("", source, line_num)
