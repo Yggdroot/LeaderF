@@ -346,6 +346,7 @@ This plugin is released under the Apache License, Version 2.0 (the "License").
 
 If you like this software, please consider buying me a coffee.  
 https://github.com/Yggdroot/SponsorMe/blob/main/README.md#donate
+(捐赠的朋友最好备注一下自己的ID）
 
   [1]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_popup.gif
   [2]: https://github.com/Yggdroot/Images/blob/master/leaderf/leaderf_2.gif
