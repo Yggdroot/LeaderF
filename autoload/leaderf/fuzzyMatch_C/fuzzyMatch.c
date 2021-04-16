@@ -840,10 +840,15 @@ float getWeight(const char* text, uint16_t text_len,
         j = 0;
         for ( i = first_char_pos; i < text_len; ++i )
         {
-            if ( text[i] == pattern[j] )
+            if ( j < pPattern_ctxt->actual_pattern_len )
             {
-                ++j;
+                if ( text[i] == pattern[j] )
+                {
+                    ++j;
+                }
             }
+            else
+                break;
         }
 
         if ( j < pPattern_ctxt->actual_pattern_len )
