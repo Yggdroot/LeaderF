@@ -1729,7 +1729,7 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
                 uint32_t offset = i * chunk_size;
                 uint32_t length = MIN(chunk_size, source_size - offset);
 
-                tasks[i].function = Q_SORT;
+                tasks[i].function = Q_SORT_2;
                 tasks[i].offset = offset;
                 tasks[i].length = length;
                 QUEUE_PUT(pEngine->task_queue, tasks + i);
@@ -1758,7 +1758,7 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
 #endif
                 for ( i = 0; i < q; ++i )
                 {
-                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].function = MERGE_2;
                     merge_tasks[i].offset_1 = i * (chunk_size << 1);
                     merge_tasks[i].length_1 = chunk_size;
                     merge_tasks[i].length_2 = chunk_size;
@@ -1768,7 +1768,7 @@ static PyObject* fuzzyEngine_guessMatch(PyObject* self, PyObject* args, PyObject
 
                 if ( r > chunk_size )
                 {
-                    merge_tasks[i].function = MERGE;
+                    merge_tasks[i].function = MERGE_2;
                     merge_tasks[i].offset_1 = i * (chunk_size << 1);
                     merge_tasks[i].length_1 = chunk_size;
                     merge_tasks[i].length_2 = r - chunk_size;
