@@ -49,11 +49,17 @@ LeaderF is already very fast. If you'd like better performance, install the C ex
 To install the C extension, firstly, make sure `python2` and/or `python3` commands are available on Linux/Unix/MacOS and `py -2` and/or `py -3` commands are available on Windows.
 
  - Install the C extension
+
+    `Note`: For windows system required install [vs2019](https://visualstudio.microsoft.com/)  
+    ![image](https://user-images.githubusercontent.com/19406670/116770959-3103d980-aa7a-11eb-9fff-57bdf96bfa73.png)
+
+    
     ```vim
     :LeaderfInstallCExtension
     ```
     There may be some errors during the installation, please google the error messages to resolve it.  
     For example, `"error: Unable to find vcvarsall.bat"`, you can turn to [here][6] for help.
+ 
 
 
 - Uninstall the C extension
