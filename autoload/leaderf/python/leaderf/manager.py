@@ -1179,11 +1179,11 @@ class Manager(object):
 
     def _andModeFilter(self, iterable):
         encoding = lfEval("&encoding")
-        use_fuzzy_engine = False
         cur_content = iterable
         weight_lists = []
         highlight_methods = []
         for p in self._cli.pattern:
+            use_fuzzy_engine = False
             if self._fuzzy_engine and isAscii(p) and self._getUnit() == 1: # currently, only BufTag's _getUnit() is 2
                 use_fuzzy_engine = True
                 pattern = fuzzyEngine.initPattern(p)
