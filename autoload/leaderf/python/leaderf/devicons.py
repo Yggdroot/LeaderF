@@ -8,8 +8,8 @@ from functools import wraps
 from .utils import *
 
 # thanks for the icons from https://github.com/ryanoasis/vim-devicons and https://github.com/LinArcX/mpi
-fileNodesDefaultSymbol = ''
-folderNodesDefaultSymbol = ''
+fileNodesDefaultSymbol = u''
+folderNodesDefaultSymbol = u''
 
 fileNodesExactSymbols = {
         'exact-match-case-sensitive-1.txt' : '1',

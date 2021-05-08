@@ -25,7 +25,7 @@ else:
     def Unicode(str, encoding):
         try:
             return unicode(str, encoding, 'ignore')
-        except ValueError:
+        except (TypeError, ValueError):
             return str
 
 
