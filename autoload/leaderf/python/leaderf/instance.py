@@ -8,7 +8,17 @@ import os.path
 import time
 import itertools
 from .utils import *
-from .devicons import highlightDevIcons
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    highlightDevIcons
+)
+
+
+def iconLine(line):
+    if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
+        return webDevIconsGetFileTypeSymbol(line) + line
+    else:
+        return line
 
 
 class FloatWindow(object):
@@ -1112,13 +1122,14 @@ class LfInstance(object):
                 end = self._popup_maxheight
             else:
                 end = self._window_object.height
-            if self._orig_buffer_name in content[:end]:
+            orig_buffer_name = iconLine(self._orig_buffer_name)
+            if orig_buffer_name in content[:end]:
                 self._cur_buffer_name_ignored = True
                 if need_copy:
                     content = content[:]
-                content.remove(self._orig_buffer_name)
+                content.remove(orig_buffer_name)
             elif os.name == 'nt':
-                buffer_name = self._orig_buffer_name.replace('\\', '/')
+                buffer_name = orig_buffer_name.replace('\\', '/')
                 if buffer_name in content[:end]:
                     self._cur_buffer_name_ignored = True
                     if need_copy:
