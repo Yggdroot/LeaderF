@@ -1072,8 +1072,7 @@ class Manager(object):
         else:
             self._regexSearch(content, is_continue, step)
 
-        if self._getExplorer().getStlCategory() not in ["File"]:
-            self._previewResult(False)
+        self._previewResult(False)
 
     def _filter(self, step, filter_method, content, is_continue,
                 use_fuzzy_engine=False, return_index=False):
