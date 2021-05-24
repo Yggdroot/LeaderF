@@ -373,7 +373,7 @@ class Manager(object):
             self._cli.buildPopupPrompt()
 
         if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1' and \
-                int(lfEval("win_id2win(%d)" % self._preview_winid)) != vim.current.window.number:
+                self._orig_line != self._getInstance().currentLine:
             self._closePreviewPopup()
 
         if not self._needPreview(preview):
@@ -810,27 +810,29 @@ class Manager(object):
         """
         preview_dict = {k.lower(): v for k, v in lfEval("g:Lf_PreviewResult").items()}
         category = self._getExplorer().getStlCategory()
-        if not preview and int(preview_dict.get(category.lower(), 0)) == 0:
-            return False
-
-        if self._getInstance().isReverseOrder():
-            if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
+        try:
+            if not preview and int(preview_dict.get(category.lower(), 0)) == 0:
                 return False
-        elif self._getInstance().window.cursor[0] <= self._help_length:
-            return False
 
-        if self._getInstance().empty() or (self._getInstance().getWinPos() != 'popup' and
-                vim.current.buffer != self._getInstance().buffer):
-            return False
+            if self._getInstance().isReverseOrder():
+                if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
+                    return False
+            elif self._getInstance().window.cursor[0] <= self._help_length:
+                return False
 
-        if self._ctrlp_pressed == True:
-            return True
+            if self._getInstance().empty() or (self._getInstance().getWinPos() != 'popup' and
+                    vim.current.buffer != self._getInstance().buffer):
+                return False
 
-        line = self._getInstance().currentLine
-        if self._orig_line == line and self._getInstance().buffer.options['modifiable']:
-            return False
+            if self._ctrlp_pressed == True:
+                return True
 
-        self._orig_line = line
+            line = self._getInstance().currentLine
+            if self._orig_line == line and (self._getInstance().buffer.options['modifiable']
+                    or self._getInstance().getWinPos() in ('popup', 'floatwin')):
+                return False
+        finally:
+            self._orig_line = self._getInstance().currentLine
 
         return True
 
@@ -2139,6 +2141,7 @@ class Manager(object):
             self.setArguments(arguments_dict)
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
+        self._orig_line = ''
 
         if self._getExplorer().getStlCategory() in ["Gtags"]:
             if "--update" in self._arguments or "--remove" in self._arguments:
