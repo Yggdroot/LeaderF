@@ -810,29 +810,30 @@ class Manager(object):
         """
         preview_dict = {k.lower(): v for k, v in lfEval("g:Lf_PreviewResult").items()}
         category = self._getExplorer().getStlCategory()
-        try:
-            if not preview and int(preview_dict.get(category.lower(), 0)) == 0:
-                return False
+        if not preview and int(preview_dict.get(category.lower(), 0)) == 0:
+            return False
 
-            if self._getInstance().isReverseOrder():
-                if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
-                    return False
-            elif self._getInstance().window.cursor[0] <= self._help_length:
+        if self._getInstance().isReverseOrder():
+            if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
+                self._orig_line = self._getInstance().currentLine
                 return False
-
-            if self._getInstance().empty() or (self._getInstance().getWinPos() != 'popup' and
-                    vim.current.buffer != self._getInstance().buffer):
-                return False
-
-            if self._ctrlp_pressed == True:
-                return True
-
-            line = self._getInstance().currentLine
-            if self._orig_line == line and (self._getInstance().buffer.options['modifiable']
-                    or self._getInstance().getWinPos() in ('popup', 'floatwin')):
-                return False
-        finally:
+        elif self._getInstance().window.cursor[0] <= self._help_length:
             self._orig_line = self._getInstance().currentLine
+            return False
+
+        if self._getInstance().empty() or (self._getInstance().getWinPos() != 'popup' and
+                vim.current.buffer != self._getInstance().buffer):
+            return False
+
+        if self._ctrlp_pressed == True:
+            return True
+
+        line = self._getInstance().currentLine
+        if self._orig_line == line and (self._getInstance().buffer.options['modifiable']
+                or self._getInstance().getWinPos() in ('popup', 'floatwin')):
+            return False
+
+        self._orig_line = self._getInstance().currentLine
 
         return True
 
