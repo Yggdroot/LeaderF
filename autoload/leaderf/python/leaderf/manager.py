@@ -1937,7 +1937,8 @@ class Manager(object):
                 instance.window.options["cursorline"] = True
 
                 instance.gotoOriginalWindow()
-                self._accept(instance.buffer[instance.window.cursor[0] - 1], "")
+                line_nr = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_nr)
             else:
                 if instance.cursorRow > len(instance.buffer) - instance.helpLength:
                     instance.cursorRow = len(instance.buffer) - instance.helpLength
@@ -1946,7 +1947,8 @@ class Manager(object):
                 else:
                     instance.cursorRow -= 1
 
-                self._accept(instance.buffer[instance.cursorRow - 1], "")
+                line_nr = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_nr)
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE"
                         % (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1,
                             len(instance.buffer) - instance.helpLength))
@@ -1961,7 +1963,8 @@ class Manager(object):
                 instance.window.options["cursorline"] = True
 
                 instance.gotoOriginalWindow()
-                self._accept(instance.buffer[instance.window.cursor[0] - 1], "")
+                line_nr = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_nr)
             else:
                 if instance.cursorRow <= instance.helpLength:
                     instance.cursorRow = instance.helpLength + 1
@@ -1970,7 +1973,8 @@ class Manager(object):
                 else:
                     instance.cursorRow += 1
 
-                self._accept(instance.buffer[instance.cursorRow - 1], "")
+                line_nr = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_nr)
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
                         (instance.cursorRow - instance.helpLength, len(instance.buffer) - instance.helpLength))
 
@@ -1990,14 +1994,16 @@ class Manager(object):
                 instance.window.options["cursorline"] = True
 
                 instance.gotoOriginalWindow()
-                self._accept(instance.buffer[instance.window.cursor[0] - 1], "")
+                line_nr = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_nr)
             else:
                 if instance.cursorRow >= len(instance.buffer) - instance.helpLength:
                     instance.cursorRow = 1
                 else:
                     instance.cursorRow += 1
 
-                self._accept(instance.buffer[instance.cursorRow - 1], "")
+                line_nr = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_nr)
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE"
                         % (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1,
                             len(instance.buffer) - instance.helpLength))
@@ -2010,14 +2016,16 @@ class Manager(object):
                 instance.window.options["cursorline"] = True
 
                 instance.gotoOriginalWindow()
-                self._accept(instance.buffer[instance.window.cursor[0] - 1], "")
+                line_nr = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_nr)
             else:
                 if instance.cursorRow <= instance.helpLength + 1:
                     instance.cursorRow = len(instance.buffer)
                 else:
                     instance.cursorRow -= 1
 
-                self._accept(instance.buffer[instance.cursorRow - 1], "")
+                line_nr = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_nr)
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
                         (instance.cursorRow - instance.helpLength, len(instance.buffer) - instance.helpLength))
 
@@ -2138,6 +2146,10 @@ class Manager(object):
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" in arguments_dict:
             self._arguments["--recall"] = arguments_dict["--recall"]
+        elif "--previous" in arguments_dict:
+            self._arguments["--previous"] = arguments_dict["--previous"]
+        elif "--next" in arguments_dict:
+            self._arguments["--next"] = arguments_dict["--next"]
         else:
             self.setArguments(arguments_dict)
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
