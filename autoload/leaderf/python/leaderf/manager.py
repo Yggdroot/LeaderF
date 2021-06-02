@@ -393,7 +393,8 @@ class Manager(object):
         vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
         try:
             vim.current.tabpage, vim.current.window = orig_pos[:2]
-            self._acceptSelection(line, preview=True)
+            line_nr = self._getInstance().window.cursor[0]
+            self._acceptSelection(line, self._getInstance().buffer, line_nr, preview=True)
             lfCmd("augroup Lf_Cursorline")
             lfCmd("autocmd! BufwinEnter <buffer> setlocal cursorline<")
             lfCmd("augroup END")
