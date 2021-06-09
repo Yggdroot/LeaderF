@@ -95,7 +95,7 @@ function! s:InstallCExtension(install) abort
 endfunction
 
 augroup LeaderF_Mru
-    autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand(expand('<afile>:p:S'))) |
+    autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand(expand('<afile>:p'))) |
                 \ call lfMru#recordBuffer(expand('<abuf>'))
 augroup END
 
