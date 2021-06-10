@@ -94,8 +94,20 @@ function! s:InstallCExtension(install) abort
     endif
 endfunction
 
+function! s:Normalize(filename)
+    if has("nvim") && (has('win32') || has('win64'))
+        if &shellslash
+            return tr(a:filename, '\', '/')
+        else
+            return tr(a:filename, '/', '\')
+        endif
+    else
+        return a:filename
+    endif
+endfunction
+
 augroup LeaderF_Mru
-    autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(expand(expand('<afile>:p'))) |
+    autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(s:Normalize(expand('<afile>:p'))) |
                 \ call lfMru#recordBuffer(expand('<abuf>'))
 augroup END
 

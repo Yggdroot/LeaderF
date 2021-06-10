@@ -181,7 +181,7 @@ def lfDrop(type, file_name, line_num=None):
     if line_num:
         line_num = int(line_num)
 
-    if lfEval("has('patch-8.0.1508')") == '1':
+    if 0 and lfEval("has('patch-8.0.1508')") == '1':
         if type == "tab":
             if line_num:
                 lfCmd("keepj tab drop %s | %d" % (escSpecial(file_name), line_num))
