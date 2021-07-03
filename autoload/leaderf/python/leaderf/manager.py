@@ -507,6 +507,7 @@ class Manager(object):
                 self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (source, str(config))))
             else:
                 self._preview_winid = int(lfEval("nvim_open_win(scratch_buffer, 0, %s)" % str(config)))
+            lfCmd("let g:Lf_PreviewWindowID[%d] = %d" % (id(self), self._preview_winid))
 
             if jump_cmd:
                 cur_winid = lfEval("win_getid()")

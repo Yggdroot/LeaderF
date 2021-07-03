@@ -35,6 +35,7 @@ call s:InitVar('g:Lf_WindowPosition', 'bottom')
 call s:InitVar('g:Lf_CacheDirectory', $HOME)
 call s:InitVar('g:Lf_MruBufnrs', [])
 call s:InitVar('g:Lf_PythonExtensions', {})
+call s:InitVar('g:Lf_PreviewWindowID', {})
 
 function! g:LfNoErrMsgMatch(expr, pat)
     try
