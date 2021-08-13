@@ -330,6 +330,8 @@ class Manager(object):
         self._resetHighlights()
         if self._cli.pattern and self._index == 0:
             self._search(self._content)
+            if len(self._getInstance().buffer) < len(self._result_content):
+                self._getInstance().appendBuffer(self._result_content[self._initial_count:])
 
     def _bangReadFinished(self):
         if self._preview_open == False and self._getInstance().getWinPos() in ('popup', 'floatwin'):
