@@ -596,7 +596,7 @@ class FileExplorer(Explorer):
                     lfCmd("silent cd %s" % dir)
                     dir = lfGetCwd()
                 else:
-                    dir = os.path.abspath(lfDecode(dir))
+                    dir = os.path.abspath(os.path.expanduser(lfDecode(dir)))
                     self._cmd_work_dir = dir
             else:
                 lfCmd("echohl ErrorMsg | redraw | echon "
