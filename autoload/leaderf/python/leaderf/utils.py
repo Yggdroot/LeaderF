@@ -8,6 +8,9 @@ import os
 import os.path
 import locale
 import traceback
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
 
 lfCmd = vim.command
 lfEval = vim.eval
