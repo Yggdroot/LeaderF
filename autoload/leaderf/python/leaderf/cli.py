@@ -330,6 +330,7 @@ class LfCli(object):
         if self._idle and datetime.now() - self._start_time < timedelta(milliseconds=500): # 500ms
             return
         else:
+            self._start_time = datetime.now()
             if self._blinkon:
                 if self._instance.getWinPos() in ('popup', 'floatwin'):
                     lfCmd("hi! default link Lf_hl_cursor Lf_hl_popup_cursor")
@@ -339,9 +340,9 @@ class LfCli(object):
                 lfCmd("hi! default link Lf_hl_cursor NONE")
 
             if lfEval("g:Lf_CursorBlink") == '1':
-                self._start_time = datetime.now()
                 self._blinkon = not self._blinkon
             elif self._idle:
+                lfCmd("silent! redraw")
                 return
 
         if self._instance.getWinPos() in ('popup', 'floatwin'):
