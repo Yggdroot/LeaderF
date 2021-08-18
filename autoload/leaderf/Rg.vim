@@ -135,12 +135,6 @@ function! leaderf#Rg#ApplyChangesAndSave(save)
     endtry
 endfunction
 
-function! leaderf#Rg#SaveCurrentBuffer(buf_number_dict)
-    if has_key(a:buf_number_dict, bufnr('%'))
-        update
-    endif
-endfunction
-
 function! leaderf#Rg#Undo(buf_number_dict)
     if has_key(a:buf_number_dict, bufnr('%'))
         undo
