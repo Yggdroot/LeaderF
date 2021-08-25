@@ -433,6 +433,7 @@ class Manager(object):
 
     #**************************************************************
 
+    @ignoreEvent('BufWinEnter,BufEnter')
     def _createPopupModePreview(self, title, source, line_nr, jump_cmd):
         """
         Args:
