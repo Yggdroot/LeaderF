@@ -1349,7 +1349,7 @@ class LfInstance(object):
 
     @property
     def currentLine(self):
-        if self._win_pos == 'popup':
+        if self._win_pos in ('popup', 'floatwin'):
             return self._buffer_object[self._window_object.cursor[0] - 1]
         else:
             return vim.current.line if self._buffer_object == vim.current.buffer else None

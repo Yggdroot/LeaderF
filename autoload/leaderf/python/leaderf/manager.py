@@ -1072,6 +1072,7 @@ class Manager(object):
                 self._getInstance().setBuffer(content[:self._initial_count])
                 self._getInstance().setStlResultsCount(len(content), True)
                 self._result_content = []
+            self._previewResult(False)
             return
 
         if self._cli.isFuzzy:
