@@ -454,7 +454,7 @@ class Manager(object):
                 buffer_len = len(vim.buffers[source])
             else:
                 try:
-                    lfCmd("let content = readfile('%s', '', 1000)" % escQuote(source))
+                    lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
                 except vim.error as e:
                     lfPrintError(e)
                     return
@@ -550,7 +550,7 @@ class Manager(object):
                 buffer_len = len(vim.buffers[source])
             else:
                 try:
-                    lfCmd("let content = readfile('%s', '', 1000)" % escQuote(source))
+                    lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
                 except vim.error as e:
                     lfPrintError(e)
                     return
@@ -680,7 +680,7 @@ class Manager(object):
                 buffer_len = len(vim.buffers[source])
             else:
                 try:
-                    lfCmd("let content = readfile('%s', '', 1000)" % escQuote(source))
+                    lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
                 except vim.error as e:
                     lfPrintError(e)
                     return
@@ -787,7 +787,7 @@ class Manager(object):
                 lfCmd("silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
             else:
                 try:
-                    lfCmd("let content = readfile('%s', '', 1000)" % escQuote(source))
+                    lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
                 except vim.error as e:
                     lfPrintError(e)
                     return
