@@ -630,7 +630,7 @@ class Manager(object):
                 options["minheight"] = maxheight
 
             if isinstance(source, int):
-                lfCmd("silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
+                lfCmd("noautocmd silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
             else:
                 lfCmd("silent! let winid = popup_create(content, %s)" % json.dumps(options))
                 lfCmd("call win_execute(winid, 'doautocmd filetypedetect BufNewFile %s')" % escQuote(source))
@@ -786,7 +786,7 @@ class Manager(object):
                 options["minheight"] = maxheight
 
             if isinstance(source, int):
-                lfCmd("silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
+                lfCmd("noautocmd silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
             else:
                 try:
                     lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))

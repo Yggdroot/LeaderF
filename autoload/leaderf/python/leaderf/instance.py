@@ -478,7 +478,6 @@ class LfInstance(object):
                 lfCmd("call nvim_win_set_option(%d, 'cursorlineopt', 'both')" % winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_inputText')" % winid)
-            lfCmd("silent! call nvim_buf_set_option(%d, 'filetype', 'leaderf')" % buf_number)
             def getWindow(number):
                 for w in vim.windows:
                     if number == w.number:
@@ -527,7 +526,6 @@ class LfInstance(object):
                     lfCmd("call nvim_win_set_option(%d, 'cursorlineopt', 'both')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_blank')" % winid)
-                lfCmd("silent! call nvim_buf_set_option(%d, 'filetype', 'leaderf')" % buf_number)
                 self._popup_instance.statusline_win = FloatWindow(winid, getWindow(int(lfEval("win_id2win(%d)" % winid))), vim.buffers[buf_number], vim.current.tabpage, line + 1 + floatwin_height)
 
             if "--recall" in self._arguments:
@@ -556,7 +554,7 @@ class LfInstance(object):
                     "filter":          "leaderf#PopupFilter",
                     }
 
-            lfCmd("silent noswapfile let winid = popup_create(%d, %s)" % (buf_number, str(options)))
+            lfCmd("noautocmd silent noswapfile let winid = popup_create(%d, %s)" % (buf_number, str(options)))
             self._popup_winid = int(lfEval("winid"))
             lfCmd("call win_execute(%d, 'setlocal nobuflisted')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal buftype=nofile')" % self._popup_winid)
@@ -602,7 +600,7 @@ class LfInstance(object):
                 self._input_buffer_number = int(lfEval("bufadd('')"))
 
             buf_number = self._input_buffer_number
-            lfCmd("silent let winid = popup_create(%d, %s)" % (buf_number, str(input_win_options)))
+            lfCmd("noautocmd silent let winid = popup_create(%d, %s)" % (buf_number, str(input_win_options)))
             winid = int(lfEval("winid"))
             lfCmd("call win_execute(%d, 'setlocal nobuflisted')" % winid)
             lfCmd("call win_execute(%d, 'setlocal buftype=nofile')" % winid)
@@ -620,7 +618,6 @@ class LfInstance(object):
             # lfCmd("call win_execute(%d, 'silent! setlocal signcolumn=no')" % winid)
             lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_inputText')" % winid)
-            lfCmd("call win_execute(%d, 'silent! setlocal filetype=leaderf')" % winid)
 
             self._popup_instance.input_win = PopupWindow(winid, vim.buffers[buf_number], vim.current.tabpage, line)
 
@@ -641,7 +638,7 @@ class LfInstance(object):
                     self._stl_buffer_number = int(lfEval("bufadd('')"))
 
                 buf_number = self._stl_buffer_number
-                lfCmd("silent let winid = popup_create(%d, %s)" % (buf_number, str(statusline_win_options)))
+                lfCmd("noautocmd silent let winid = popup_create(%d, %s)" % (buf_number, str(statusline_win_options)))
                 winid = int(lfEval("winid"))
                 lfCmd("call win_execute(%d, 'setlocal nobuflisted')" % winid)
                 lfCmd("call win_execute(%d, 'setlocal buftype=nofile')" % winid)
@@ -659,7 +656,6 @@ class LfInstance(object):
                 # lfCmd("call win_execute(%d, 'silent! setlocal signcolumn=no')" % winid)
                 lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % winid)
                 lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_blank')" % winid)
-                lfCmd("call win_execute(%d, 'silent! setlocal filetype=leaderf')" % winid)
 
                 self._popup_instance.statusline_win = PopupWindow(winid, vim.buffers[buf_number], vim.current.tabpage, line + 1 + self._window_object.height)
 
