@@ -365,11 +365,11 @@ endfunction
 function! leaderf#popupModePreviewFilter(winid, key) abort
     let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
     if key ==? "<ESC>"
-        call popup_close(a:winid)
+        noautocmd call popup_close(a:winid)
         redraw
         return 0
     elseif key ==? "<CR>"
-        call popup_close(a:winid)
+        noautocmd call popup_close(a:winid)
         " https://github.com/vim/vim/issues/5216
         "redraw
         return 0
@@ -396,7 +396,7 @@ function! leaderf#popupModePreviewFilter(winid, key) abort
                 redraw
                 return 1
             else
-                call popup_close(a:winid)
+                noautocmd call popup_close(a:winid)
                 call win_execute(v:mouse_winid, "exec v:mouse_lnum")
                 call win_execute(v:mouse_winid, "exec 'norm!'.v:mouse_col.'|'")
                 redraw
@@ -418,11 +418,11 @@ endfunction
 function! leaderf#normalModePreviewFilter(id, winid, key) abort
     let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
     if key ==? "<ESC>"
-        call popup_close(a:winid)
+        noautocmd call popup_close(a:winid)
         redraw
         return 1
     elseif key ==? "<CR>"
-        call popup_close(a:winid)
+        noautocmd call popup_close(a:winid)
         " https://github.com/vim/vim/issues/5216
         "redraw
         return 0
@@ -432,7 +432,7 @@ function! leaderf#normalModePreviewFilter(id, winid, key) abort
             call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
             return 1
         else
-            call popup_close(a:winid)
+            noautocmd call popup_close(a:winid)
             redraw
             call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
             exec g:Lf_py "import ctypes"
@@ -578,7 +578,7 @@ function! leaderf#PopupClosed(id_list, manager_id, winid, result) abort
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:manager_id)
         for id in a:id_list
             if id != a:winid
-                call popup_close(id)
+                noautocmd call popup_close(id)
             endif
         endfor
     endif

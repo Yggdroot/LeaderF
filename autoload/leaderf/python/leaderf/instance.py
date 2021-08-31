@@ -151,7 +151,7 @@ class PopupWindow(object):
         return self._init_line
 
     def close(self):
-        lfCmd("call popup_close(%d)" % self._winid)
+        lfCmd("noautocmd call popup_close(%d)" % self._winid)
 
     def show(self):
         lfCmd("call popup_show(%d)" % self._winid)

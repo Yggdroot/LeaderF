@@ -363,11 +363,11 @@ class Manager(object):
         if lfEval("has('nvim')") == '1':
             if self._preview_winid:
                 if int(lfEval("nvim_win_is_valid(%d) == v:true" % self._preview_winid)):
-                    lfCmd("call nvim_win_close(%d, 1)" % self._preview_winid)
+                    lfCmd("noautocmd call nvim_win_close(%d, 1)" % self._preview_winid)
                 self._preview_winid = 0
         else:
             if self._preview_winid:
-                lfCmd("call popup_close(%d)" % self._preview_winid)
+                lfCmd("noautocmd call popup_close(%d)" % self._preview_winid)
                 self._preview_winid = 0
 
     def _previewResult(self, preview):
