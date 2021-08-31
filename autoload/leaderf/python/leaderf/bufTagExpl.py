@@ -474,9 +474,11 @@ class BufTagExplManager(Manager):
         if self._getInstance().getWinPos() == 'floatwin':
             self._cli.buildPopupPrompt()
 
-        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1' and \
-                self._orig_line != self._getInstance().currentLine:
-            self._closePreviewPopup()
+        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
+            if self._orig_line != self._getInstance().currentLine:
+                self._closePreviewPopup()
+            else:
+                return
 
         if not self._needPreview(preview):
             return

@@ -374,9 +374,11 @@ class Manager(object):
         if self._getInstance().getWinPos() == 'floatwin':
             self._cli.buildPopupPrompt()
 
-        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1' and \
-                self._orig_line != self._getInstance().currentLine:
-            self._closePreviewPopup()
+        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
+            if self._orig_line != self._getInstance().currentLine:
+                self._closePreviewPopup()
+            else:
+                return
 
         if not self._needPreview(preview):
             return
@@ -2373,7 +2375,7 @@ class Manager(object):
             else:
                 raise self._read_content_exception[1]
 
-        if bang == False and self._preview_open == False and self._getInstance().getWinPos() in ('popup', 'floatwin') \
+        if bang == False and self._preview_open == False and lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1' \
                 and not self._getInstance().empty():
             self._previewResult(False)
             self._preview_open = True
