@@ -420,7 +420,7 @@ class LfInstance(object):
                     "row"     : line + 1,
                     "col"     : col
                     }
-            lfCmd("silent noswapfile let winid = nvim_open_win(%d, 1, %s)" % (buf_number, str(config)))
+            lfCmd("noautocmd silent noswapfile let winid = nvim_open_win(%d, 1, %s)" % (buf_number, str(config)))
             self._popup_winid = int(lfEval("winid"))
             self._setAttributes()
             if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0':
@@ -454,7 +454,7 @@ class LfInstance(object):
                 self._input_buffer_number = int(lfEval("bufadd('')"))
 
             buf_number = self._input_buffer_number
-            lfCmd("silent let winid = nvim_open_win(%d, 0, %s)" % (buf_number, str(input_win_config)))
+            lfCmd("noautocmd silent let winid = nvim_open_win(%d, 0, %s)" % (buf_number, str(input_win_config)))
             winid = int(lfEval("winid"))
             lfCmd("call nvim_buf_set_option(%d, 'buflisted', v:false)" % buf_number)
             lfCmd("call nvim_buf_set_option(%d, 'buftype', 'nofile')" % buf_number)
@@ -502,7 +502,7 @@ class LfInstance(object):
                     self._stl_buffer_number = int(lfEval("bufadd('')"))
 
                 buf_number = self._stl_buffer_number
-                lfCmd("silent let winid = nvim_open_win(%d, 0, %s)" % (buf_number, str(stl_win_config)))
+                lfCmd("noautocmd silent let winid = nvim_open_win(%d, 0, %s)" % (buf_number, str(stl_win_config)))
                 winid = int(lfEval("winid"))
                 lfCmd("call nvim_buf_set_option(%d, 'buflisted', v:false)" % buf_number)
                 lfCmd("call nvim_buf_set_option(%d, 'buftype', 'nofile')" % buf_number)
