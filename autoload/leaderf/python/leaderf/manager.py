@@ -1799,12 +1799,13 @@ class Manager(object):
             if self._getExplorer().getStlCategory() != "Jumps":
                 lfCmd("norm! m'")
 
-            if mode == '':
-                pass
-            elif mode == 'h':
-                lfCmd("split")
-            elif mode == 'v':
-                lfCmd("bel vsplit")
+            if self._getExplorer().getStlCategory() != "Help":
+                if mode == '':
+                    pass
+                elif mode == 'h':
+                    lfCmd("split")
+                elif mode == 'v':
+                    lfCmd("bel vsplit")
 
             kwargs["mode"] = mode
             tabpage_count = len(vim.tabpages)

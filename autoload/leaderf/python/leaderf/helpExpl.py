@@ -64,7 +64,14 @@ class HelpExplManager(Manager):
             return
         line = args[0]
         cmd = line.split(None, 1)[0]
-        lfCmd("help " + cmd)
+        if kwargs.get("mode", '') == 't':
+            lfCmd("tab help " + cmd)
+        elif kwargs.get("mode", '') == 'v':
+            lfCmd("vertical help " + cmd)
+        elif kwargs.get("mode", '') == 'h':
+            lfCmd("help " + cmd)
+        else:
+            lfCmd("help " + cmd + " | only")
 
     def _getDigest(self, line, mode):
         """
