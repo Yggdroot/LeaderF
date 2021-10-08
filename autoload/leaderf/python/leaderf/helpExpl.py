@@ -71,7 +71,7 @@ class HelpExplManager(Manager):
         elif kwargs.get("mode", '') == 'h':
             lfCmd("help " + cmd)
         else:
-            lfCmd("help " + cmd + " | hide only")
+            lfCmd("help " + cmd)
 
     def _getDigest(self, line, mode):
         """
