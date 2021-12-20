@@ -13,7 +13,7 @@ echo Begin to compile C extension of Python2 ...
 cd autoload\leaderf\fuzzyMatch_C
 py -2 setup.py build
 if %errorlevel% neq 0 goto second
-pushd build\lib*2.?
+pushd build\lib*2.*
 xcopy /y *.pyd ..\..\..\python\
 if %errorlevel% equ 0 (
     echo=
@@ -28,7 +28,7 @@ echo=
 echo Begin to compile C extension of Python3 ...
 py -3 setup.py build
 if %errorlevel% neq 0 goto end
-pushd build\lib*3.?
+pushd build\lib*3.*
 xcopy /y *.pyd ..\..\..\python\
 if %errorlevel% equ 0 (
     echo=
