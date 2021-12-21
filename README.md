@@ -7,7 +7,7 @@ An efficient fuzzy finder that helps to locate files, buffers, mrus, gtags, etc.
  - Support fuzzy and regex searching.
  - Full-featured.
  - [Well-designed fuzzy matching algorithm](https://github.com/Yggdroot/testFuzzyMatch).
- - [Extensible](https://github.com/Yggdroot/LeaderF-marks).
+ - [Extensible](https://github.com/Yggdroot/LeaderF/wiki/Extensions).
 
 Changelog
 ---------
@@ -18,6 +18,11 @@ Wiki
 ----
 
 [Wiki](https://github.com/Yggdroot/LeaderF/wiki).
+
+Extensions
+----------
+
+A list of community extensions can be found in the [Extensions](https://github.com/Yggdroot/LeaderF/wiki/Extensions) wiki.
 
 Screenshots
 -----------
