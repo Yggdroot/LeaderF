@@ -108,6 +108,7 @@ optional arguments:
   --popup-width <POPUP_WIDTH>
                         specifies the width of popup window, only available in popup mode.
   --no-sort             do not sort the result.
+  --case-insensitive    fuzzy search case insensitively.
 
 subcommands:
 

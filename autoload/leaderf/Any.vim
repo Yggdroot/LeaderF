@@ -223,6 +223,7 @@ let g:Lf_CommonArguments = [
             \ {"name": ["--popup-height"], "nargs": 1, "help": "specifies the maximum height of popup window, only available in popup mode."},
             \ {"name": ["--popup-width"], "nargs": 1, "help": "specifies the width of popup window, only available in popup mode."},
             \ {"name": ["--no-sort"], "nargs": 0, "help": "do not sort the result."},
+            \ {"name": ["--case-insensitive"], "nargs": 0, "help": "fuzzy search case insensitively."},
             \]
 
 " arguments is something like g:Lf_CommonArguments

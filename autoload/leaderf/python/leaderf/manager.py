@@ -2167,6 +2167,7 @@ class Manager(object):
             self._arguments["--next"] = arguments_dict["--next"]
         else:
             self.setArguments(arguments_dict)
+        self._cli.setArguments(arguments_dict)
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
         self._orig_line = ''

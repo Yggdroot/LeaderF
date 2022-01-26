@@ -63,12 +63,15 @@ class LfCli(object):
         self._spin_symbols = lfEval("get(g:, 'Lf_SpinSymbols', [])")
         if not self._spin_symbols:
             if platform.system() == "Linux":
-                self._spin_symbols = ['△', '▲', '▷', '▶', '▽', '▼', '◁', '◀']
+                self._spin_symbols = ['✵', '⋆', '✶','✷','✸','✹', '✺']
             else:
                 self._spin_symbols = ['🌘', '🌗', '🌖', '🌕', '🌔', '🌓', '🌒', '🌑']
 
     def setInstance(self, instance):
         self._instance = instance
+
+    def setArguments(self, arguments):
+        self._arguments = arguments
 
     def _setDefaultMode(self):
         mode = lfEval("g:Lf_DefaultMode")
@@ -369,11 +372,17 @@ class LfCli(object):
         lfCmd("redraw")
 
     def _buildPattern(self):
+        case_insensitive = "--case-insensitive" in self._arguments
         if self._is_fuzzy:
             if self._and_delimiter in ''.join(self._cmdline).lstrip(self._and_delimiter) \
                     and self._delimiter not in self._cmdline:
                 self._is_and_mode = True
-                patterns = re.split(r'['+self._and_delimiter+']+', ''.join(self._cmdline).strip(self._and_delimiter))
+                if case_insensitive:
+                    patterns = re.split(r'['+self._and_delimiter+']+',
+                                        ''.join(self._cmdline).strip(self._and_delimiter).lower())
+                else:
+                    patterns = re.split(r'['+self._and_delimiter+']+',
+                                        ''.join(self._cmdline).strip(self._and_delimiter))
                 pattern_dict = OrderedDict([])
                 for p in patterns:
                     if p in pattern_dict:
@@ -391,13 +400,20 @@ class LfCli(object):
                         self._supports_refine) and self._delimiter in self._cmdline):
                     self._refine = True
                     idx = self._cmdline.index(self._delimiter)
-                    self._pattern = (''.join(self._cmdline[:idx]),
-                                     ''.join(self._cmdline[idx+1:]))
+                    if case_insensitive:
+                        self._pattern = (''.join(self._cmdline[:idx]).lower(),
+                                         ''.join(self._cmdline[idx+1:]).lower())
+                    else:
+                        self._pattern = (''.join(self._cmdline[:idx]),
+                                         ''.join(self._cmdline[idx+1:]))
                     if self._pattern == ('', ''):
                         self._pattern = None
                 else:
                     self._refine = False
-                    self._pattern = ''.join(self._cmdline)
+                    if case_insensitive:
+                        self._pattern = ''.join(self._cmdline).lower()
+                    else:
+                        self._pattern = ''.join(self._cmdline)
         else:
             self._is_and_mode = False
             self._pattern = ''.join(self._cmdline)
