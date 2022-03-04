@@ -145,7 +145,7 @@ class Manager(object):
 
     def _defineCommonMaps(self):
         normal_map = lfEval("get(g:, 'Lf_NormalMap', {})")
-        if "_" not in normal_map: 
+        if "_" not in normal_map:
             return
 
         for [lhs, rhs] in normal_map["_"]:
@@ -1872,7 +1872,7 @@ class Manager(object):
                 self._getInstance().exitBuffer()
 
             # https://github.com/Yggdroot/LeaderF/issues/257
-            win_local_cwd = lfEval("getcwd(winnr())")
+            win_local_cwd = lfEval("getcwd()")
             if cwd != win_local_cwd:
                 chdir(cwd)
 
@@ -1909,7 +1909,7 @@ class Manager(object):
                     self._getInstance().exitBuffer()
 
             # https://github.com/Yggdroot/LeaderF/issues/257
-            win_local_cwd = lfEval("getcwd(winnr())")
+            win_local_cwd = lfEval("getcwd()")
             if cwd != win_local_cwd:
                 chdir(cwd)
 
@@ -2244,7 +2244,7 @@ class Manager(object):
         self._bang_count = 0
 
         self._getInstance().buffer.vars['Lf_category'] = self._getExplorer().getStlCategory()
- 
+
         self._read_content_exception = None
         if isinstance(content, list):
             self._is_content_list = True
@@ -2283,7 +2283,7 @@ class Manager(object):
                 if not remember_last_status and not self._cli.pattern and empty_query:
                     self._gotoFirstLine()
                     self._guessSearch(self._content)
-                    if self._result_content: # self._result_content is [] only if 
+                    if self._result_content: # self._result_content is [] only if
                                              #  self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] not in [b'', '']:
                         self._getInstance().appendBuffer(self._result_content[self._initial_count:])
                     else:
@@ -2419,7 +2419,7 @@ class Manager(object):
                 elif self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
                     self._guessSearch(self._content)
                     if bang:
-                        if self._result_content: # self._result_content is [] only if 
+                        if self._result_content: # self._result_content is [] only if
                                                  #  self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] != b'':
                             self._getInstance().appendBuffer(self._result_content[self._initial_count:])
                         else:
