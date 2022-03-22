@@ -1983,6 +1983,7 @@ static void rg_getDigest(char** str, uint32_t* length, RgParameter* param)
             {
                 if ( *p == ':' )
                 {
+                    minus = 0;
                     ++colon;
                     if ( (colon == 2 && !param->has_column) || colon == 3 )
                     {
@@ -1993,6 +1994,7 @@ static void rg_getDigest(char** str, uint32_t* length, RgParameter* param)
                 }
                 else if ( *p == '-' )
                 {
+                    colon = 0;
                     ++minus;
                     if ( minus == 2 )
                     {
@@ -2000,6 +2002,11 @@ static void rg_getDigest(char** str, uint32_t* length, RgParameter* param)
                         *length -= (uint32_t)(*str - s);
                         return;
                     }
+                }
+                else if ( !isdigit(*p) && colon + minus > 0 )
+                {
+                    colon = 0;
+                    minus = 0;
                 }
             }
         }
@@ -2018,6 +2025,10 @@ static void rg_getDigest(char** str, uint32_t* length, RgParameter* param)
                     *length -= (uint32_t)(*str - s);
                     return;
                 }
+            }
+            else if ( !isdigit(*p) && colon > 0 )
+            {
+                colon = 0;
             }
         }
     }
