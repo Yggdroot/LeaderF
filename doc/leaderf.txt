@@ -807,6 +807,8 @@ g:Lf_PopupPreviewPosition                       *g:Lf_PopupPreviewPosition*
     The value can be one of the following:
     'top': the preview window is on the top of the main LeaderF window.
     'bottom': the preview window is at the bottom of the main LeaderF window.
+    'left': the preview window is on the left of the main LeaderF window.
+    'right': the preview window is on the right of the main LeaderF window.
     'cursor': the preview window is at the cursor position in the main LeaderF
               window.
 

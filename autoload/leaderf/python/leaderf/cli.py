@@ -241,7 +241,7 @@ class LfCli(object):
                                                                                sep,
                                                                                part3,
                                                                                sep_width=len(sep),
-                                                                               part1_width=part1_width,
+                                                                               part1_width=max(0, part1_width),
                                                                                part2_width=len(part2),
                                                                                part3_width=len(part3))
         if self._instance.getWinPos() == 'popup':

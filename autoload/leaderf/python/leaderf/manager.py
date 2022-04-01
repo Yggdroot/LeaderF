@@ -447,7 +447,7 @@ class Manager(object):
         self._is_previewed = True
         if lfEval("has('nvim')") == '1':
             width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
-            if width == 0:
+            if width <= 0:
                 maxwidth = int(lfEval("&columns"))//2
             else:
                 maxwidth = min(width, int(lfEval("&columns")))
@@ -468,6 +468,8 @@ class Manager(object):
             float_window = self._getInstance().window
             float_win_row = int(float(lfEval("nvim_win_get_config(%d).row" % float_window.id)))
             float_win_col = int(float(lfEval("nvim_win_get_config(%d).col" % float_window.id)))
+            float_win_height = int(float(lfEval("nvim_win_get_config(%d).height" % float_window.id)))
+            float_win_width= int(float(lfEval("nvim_win_get_config(%d).width" % float_window.id)))
             preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
             if preview_pos.lower() == 'bottom':
                 anchor = "NW"
@@ -489,6 +491,26 @@ class Manager(object):
                 if height < 1:
                     return
                 width = float_window.width
+            elif preview_pos.lower() == 'right':
+                anchor = "NW"
+                row = float_win_row - 1
+                col = float_win_col + float_window.width
+                height = float_win_height + 1
+                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+                    height += 1
+                if width == 0:
+                    width = float_win_width
+                width = min(width, int(lfEval("&columns")) - col)
+            elif preview_pos.lower() == 'left':
+                anchor = "NE"
+                row = float_win_row - 1
+                col = float_win_col
+                height = float_win_height + 1
+                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+                    height += 1
+                if width == 0:
+                    width = float_win_width
+                width = min(width, col)
             else:
                 anchor = "SW"
                 start = int(lfEval("line('w0')")) - 1
@@ -543,7 +565,7 @@ class Manager(object):
             popup_pos = lfEval("popup_getpos(%d)" % popup_window.id)
 
             width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
-            if width == 0:
+            if width <= 0:
                 maxwidth = int(lfEval("&columns"))//2 - 1
             else:
                 maxwidth = min(width, int(lfEval("&columns")))
@@ -587,6 +609,30 @@ class Manager(object):
 
                 pos = "botleft"
                 line = maxheight + 1
+            elif preview_pos.lower() == 'right':
+                col = int(popup_pos["col"]) + int(popup_pos["width"])
+                line = int(popup_pos["line"]) - 1
+                maxheight = int(popup_pos["height"])
+                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+                    maxheight += 1
+                pos = "topleft"
+                if width == 0:
+                    maxwidth = int(popup_pos["width"])
+                if buffer_len >= maxheight: # scrollbar appear
+                    maxwidth -= 1
+                maxwidth = min(maxwidth, int(lfEval("&columns")) - col + 1)
+            elif preview_pos.lower() == 'left':
+                col = int(popup_pos["col"]) - 1
+                line = int(popup_pos["line"]) - 1
+                maxheight = int(popup_pos["height"])
+                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+                    maxheight += 1
+                pos = "topright"
+                if width == 0:
+                    maxwidth = int(popup_pos["width"])
+                if buffer_len >= maxheight: # scrollbar appear
+                    maxwidth -= 1
+                maxwidth = min(maxwidth, col)
             else: # cursor
                 lfCmd("""call win_execute(%d, "let numberwidth = &numberwidth")""" % popup_window.id)
                 col = int(popup_pos["core_col"]) + int(lfEval("numberwidth")) + popup_window.cursor[1]
