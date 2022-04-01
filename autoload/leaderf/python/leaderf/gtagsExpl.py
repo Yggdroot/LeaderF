@@ -119,7 +119,10 @@ class GtagsExplorer(Explorer):
 
         auto_jump = False
         self._last_result_format = self._result_format
-        self._result_format = None
+        self._result_format = 'ctags-mod'
+        if "--result" in arguments_dict:
+            self._result_format = arguments_dict["--result"][0]
+
         if "-d" in arguments_dict:
             pattern = arguments_dict["-d"][0]
             pattern_option = "-d -e %s " % pattern
@@ -241,9 +244,10 @@ class GtagsExplorer(Explorer):
         env = os.environ
         env["GTAGSROOT"] = root
         env["GTAGSDBPATH"] = dbpath
-        cmd = 'global {}--gtagslabel={} {} {}{}{}{}--color=never --result=ctags-mod'.format(
+        cmd = 'global {}--gtagslabel={} {} {}{}{}{}--color=never --result={}'.format(
                     '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
-                    self._gtagslabel, pattern_option, path_style, scope, literal, ignorecase)
+                    self._gtagslabel, pattern_option, path_style, scope, literal,
+                    ignorecase, self._result_format)
 
         executor = AsyncExecutor()
         self._executor.append(executor)
@@ -263,9 +267,10 @@ class GtagsExplorer(Explorer):
                     if path_style == "--path-style abslib ":
                         path_style = "--path-style absolute "
 
-                    cmd = 'global {}--gtagslabel={} {} {}{}{}{}--color=never --result=ctags-mod -q'.format(
+                    cmd = 'global {}--gtagslabel={} {} {}{}{}{}--color=never --result={} -q'.format(
                                 '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
-                                self._gtagslabel, pattern_option, path_style, scope, literal, ignorecase)
+                                self._gtagslabel, pattern_option, path_style, scope, literal,
+                                ignorecase, self._result_format)
 
                     executor = AsyncExecutor()
                     self._executor.append(executor)
