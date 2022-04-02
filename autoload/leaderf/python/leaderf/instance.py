@@ -396,7 +396,17 @@ class LfInstance(object):
             line = min(line, int(lfEval("&lines")) - maxheight)
 
         if col == 0:
-            col = (int(lfEval("&columns")) - maxwidth) // 2
+            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
+            if preview_pos.lower() == 'right':
+                col = max(0, (int(lfEval("&columns")) - maxwidth*2) // 2)
+            elif preview_pos.lower() == 'left':
+                col = (int(lfEval("&columns")) - maxwidth*2) // 2
+                if col < 0:
+                    col = int(lfEval("&columns")) // 2
+                else:
+                    col += maxwidth
+            else:
+                col = (int(lfEval("&columns")) - maxwidth) // 2
         else:
             col = min(col, int(lfEval("&columns")) - maxwidth)
 
