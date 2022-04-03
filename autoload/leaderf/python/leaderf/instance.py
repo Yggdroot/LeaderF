@@ -420,7 +420,10 @@ class LfInstance(object):
 
         if lfEval("has('nvim')") == '1':
             self._win_pos = "floatwin"
-            floatwin_height = 1
+            if lfEval("get(g:, 'Lf_PopupAutoAjustHeight', 1)") == '1':
+                floatwin_height = 1
+            else:
+                floatwin_height = self._popup_maxheight
 
             config = {
                     "relative": "editor",
@@ -549,11 +552,16 @@ class LfInstance(object):
             lfCmd("augroup END")
         else:
             self._win_pos = "popup"
+            if lfEval("get(g:, 'Lf_PopupAutoAjustHeight', 1)") == '1':
+                minheight = 1
+            else:
+                minheight = self._popup_maxheight
 
             options = {
                     "maxwidth":        maxwidth,
                     "minwidth":        maxwidth,
                     "maxheight":       self._popup_maxheight,
+                    "minheight":       minheight,
                     "zindex":          20480,
                     "pos":             "topleft",
                     "line":            line + 1,      # there is an input window above
@@ -1199,6 +1207,9 @@ class LfInstance(object):
             self.buffer.options['modifiable'] = False
 
     def refreshPopupStatusline(self):
+        if lfEval("get(g:, 'Lf_PopupAutoAjustHeight', 1)") == '0':
+            return
+
         statusline_win = self._popup_instance.statusline_win
         buffer_len = len(self._buffer_object)
         if self._win_pos == 'popup':
