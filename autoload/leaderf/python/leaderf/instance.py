@@ -1438,4 +1438,10 @@ class LfInstance(object):
     def getPopupInstance(self):
         return self._popup_instance
 
+    def getPopupHeight(self):
+        if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+            return self._popup_maxheight + 1
+        else:
+            return self._popup_maxheight
+
 #  vim: set ts=4 sw=4 tw=0 et :

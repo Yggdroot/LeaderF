@@ -495,9 +495,7 @@ class Manager(object):
                 anchor = "NW"
                 row = float_win_row - 1
                 col = float_win_col + float_window.width
-                height = float_win_height + 1
-                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
-                    height += 1
+                height = self._getInstance().getPopupHeight()
                 if width == 0:
                     width = float_win_width
                 width = min(width, int(lfEval("&columns")) - col)
@@ -505,9 +503,7 @@ class Manager(object):
                 anchor = "NE"
                 row = float_win_row - 1
                 col = float_win_col
-                height = float_win_height + 1
-                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
-                    height += 1
+                height = self._getInstance().getPopupHeight()
                 if width == 0:
                     width = float_win_width
                 width = min(width, col)
@@ -612,9 +608,7 @@ class Manager(object):
             elif preview_pos.lower() == 'right':
                 col = int(popup_pos["col"]) + int(popup_pos["width"])
                 line = int(popup_pos["line"]) - 1
-                maxheight = int(popup_pos["height"])
-                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
-                    maxheight += 1
+                maxheight = self._getInstance().getPopupHeight()
                 pos = "topleft"
                 if width == 0:
                     maxwidth = int(popup_pos["width"])
@@ -624,9 +618,7 @@ class Manager(object):
             elif preview_pos.lower() == 'left':
                 col = int(popup_pos["col"]) - 1
                 line = int(popup_pos["line"]) - 1
-                maxheight = int(popup_pos["height"])
-                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
-                    maxheight += 1
+                maxheight = self._getInstance().getPopupHeight()
                 pos = "topright"
                 if width == 0:
                     maxwidth = int(popup_pos["width"])
