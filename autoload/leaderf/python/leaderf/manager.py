@@ -896,6 +896,9 @@ class Manager(object):
             preview:
                 if True, always preview the result no matter what `g:Lf_PreviewResult` is.
         """
+        if "--auto-preview" in self._arguments:
+            return True
+
         preview_dict = {k.lower(): v for k, v in lfEval("g:Lf_PreviewResult").items()}
         category = self._getExplorer().getStlCategory()
         if not preview and int(preview_dict.get(category.lower(), 0)) == 0:

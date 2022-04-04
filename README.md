@@ -109,6 +109,7 @@ optional arguments:
                         specifies the width of popup window, only available in popup mode.
   --no-sort             do not sort the result.
   --case-insensitive    fuzzy search case insensitively.
+  --auto-preview        open preview window automatically.
 
 subcommands:
 
