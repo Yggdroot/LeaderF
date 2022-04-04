@@ -2244,7 +2244,7 @@ class Manager(object):
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" in arguments_dict:
-            self._arguments["--recall"] = arguments_dict["--recall"]
+            self._arguments.update(arguments_dict)
         elif "--previous" in arguments_dict:
             self._arguments["--previous"] = arguments_dict["--previous"]
         elif "--next" in arguments_dict:
