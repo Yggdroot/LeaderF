@@ -114,6 +114,7 @@ if &background ==? 'dark'
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
+    highlight def link Lf_hl_popupBorder        VertSplit
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -228,6 +229,7 @@ else
     highlight def Lf_hl_gtagsHighlight guifg=#4d4d4d guibg=#cccc66 gui=NONE ctermfg=239 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
+    highlight def link Lf_hl_popupBorder        VertSplit
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement

@@ -471,6 +471,7 @@ class Manager(object):
             float_win_height = int(float(lfEval("nvim_win_get_config(%d).height" % float_window.id)))
             float_win_width= int(float(lfEval("nvim_win_get_config(%d).width" % float_window.id)))
             preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
+            borderchars = ['+','-','+','|','+','-','+','|']
             if preview_pos.lower() == 'bottom':
                 anchor = "NW"
                 if self._getInstance().getPopupInstance().statusline_win:
@@ -483,19 +484,26 @@ class Manager(object):
                 if height < 1:
                     return
                 width = float_window.width
+                borderchars = ['','','','|','+','-','+','|']
             elif preview_pos.lower() == 'top':
                 anchor = "SW"
                 row = float_win_row - 1
+                if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                    row -= 1
                 col = float_win_col
                 height = row
                 if height < 1:
                     return
                 width = float_window.width
+                borderchars = ['+','-','+','|','','','','|']
             elif preview_pos.lower() == 'right':
                 anchor = "NW"
                 row = float_win_row - 1
                 col = float_win_col + float_window.width
-                height = self._getInstance().getPopupHeight()
+                if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                    row -= 1
+                    col += 2
+                height = self._getInstance().getPopupHeight() + 1
                 if width == 0:
                     width = float_win_width
                 width = min(width, int(lfEval("&columns")) - col)
@@ -503,7 +511,10 @@ class Manager(object):
                 anchor = "NE"
                 row = float_win_row - 1
                 col = float_win_col
-                height = self._getInstance().getPopupHeight()
+                if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                    row -= 1
+                    col -= 2
+                height = self._getInstance().getPopupHeight() + 1
                 if width == 0:
                     width = float_win_width
                 width = min(width, col)
@@ -524,8 +535,13 @@ class Manager(object):
                     "height"  : height,
                     "width"   : width,
                     "row"     : row,
-                    "col"     : col
+                    "col"     : col,
+                    "noautocmd": 1
                     }
+
+            if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                config["border"] = borderchars
+
             if isinstance(source, int):
                 self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (source, str(config))))
             else:
@@ -544,6 +560,8 @@ class Manager(object):
             lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'foldmethod', 'manual')" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '0')" % self._preview_winid)
+            lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % self._preview_winid)
             if lfEval("exists('+cursorlineopt')") == '1':
                 lfCmd("call nvim_win_set_option(%d, 'cursorlineopt', 'both')" % self._preview_winid)
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
@@ -657,9 +675,34 @@ class Manager(object):
                     "filter":          "leaderf#popupModePreviewFilter",
                     }
 
+            if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                options["borderchars"] = ['-','|','-','|','+','+','+','+']
+                options["maxwidth"] -= 2
+                options["minwidth"] -= 2
+                options["borderhighlight"] = ["Lf_hl_popupBorder"]
+
             if preview_pos.lower() == 'bottom':
                 del options["title"]
                 options["border"] = [0, 0, 1, 0]
+                if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                    options["border"] = [0, 1, 1, 1]
+            elif preview_pos.lower() == 'top':
+                if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                    options["border"] = [1, 1, 0, 1]
+            elif preview_pos.lower() == 'right':
+                if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                    options["border"] = [1, 1, 1, 1]
+                    options["line"] -= 1
+                    # options["col"] += 1
+                    options["maxheight"] += 1
+                    options["minheight"] += 1
+            elif preview_pos.lower() == 'left':
+                if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                    options["border"] = [1, 1, 1, 1]
+                    options["line"] -= 1
+                    # options["col"] -= 1
+                    options["maxheight"] += 1
+                    options["minheight"] += 1
             elif preview_pos.lower() == 'cursor' and maxheight < int(lfEval("&lines"))//2 - 2:
                 maxheight = int(lfEval("&lines")) - maxheight - 5
                 del options["title"]
@@ -683,7 +726,7 @@ class Manager(object):
             if lfEval("exists('+cursorlineopt')") == '1':
                 lfCmd("call win_execute(%d, 'setlocal cursorlineopt=both')" % self._preview_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
-            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0':
+            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0' or lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
                 lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % self._preview_winid)
             else:
                 lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._preview_winid)
