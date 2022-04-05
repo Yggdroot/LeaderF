@@ -879,6 +879,23 @@ g:Lf_PopupShowBorder                            *g:Lf_PopupShowBorder*
 
     Default value is 0.
 
+g:Lf_PopupBorders                               *g:Lf_PopupBorders*
+    Specifies a list of characters, defining the character to use for the
+    top/right/bottom/left border, followed by the character to use for the
+    topleft/topright/botright/botleft corner.
+    Example: >
+    let g:Lf_PopupBorders = ["─","│","─","│","╭","╮","╯","╰"]
+    let g:Lf_PopupBorders = ["─","│","─","│","┌","┐","┘","└"]
+    let g:Lf_PopupBorders = ["━","┃","━","┃","┏","┓","┛","┗"]
+    let g:Lf_PopupBorders = ["═","║","═","║","╔","╗","╝","╚"]
+<
+    For some terminals, the non-ascii characters can not be displayed
+    properly for borders, see https://github.com/neovim/neovim/issues/17996.
+    To have a good display for non-ascii characters, perhaps you need to set
+    the value of |ambiwidth| as "single".
+
+    Default value is ["-","|","-","|","+","+","+","+"].
+
 g:Lf_AutoResize                                 *g:Lf_AutoResize*
     Auto resize the LeaderF window height automatically.
 

@@ -436,11 +436,14 @@ class LfInstance(object):
                     "col"     : col
                     }
 
+            popup_borders = lfEval("g:Lf_PopupBorders")
+            borderchars = [popup_borders[4], popup_borders[0], popup_borders[5], popup_borders[1],
+                    popup_borders[6], popup_borders[2], popup_borders[7], popup_borders[3]]
             if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
                 if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
-                    config["border"] = ['','','','|','','','','|']
+                    config["border"] = ['','','',borderchars[3],'','','',borderchars[7]]
                 else:
-                    config["border"] = ['','','','|','+','-','+','|']
+                    config["border"] = ['','',''] + borderchars[3:]
                 config["row"] += 1
                 config["width"] -= 2
 
@@ -475,7 +478,7 @@ class LfInstance(object):
                     }
 
             if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
-                input_win_config["border"] = ['+','-','+','|','','','','|']
+                input_win_config["border"] = borderchars[:4] + ['','','', borderchars[7]]
                 input_win_config["width"] -= 2
 
             if self._input_buffer_number == -1:
@@ -527,7 +530,7 @@ class LfInstance(object):
                         }
 
                 if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
-                    stl_win_config["border"] = ['','','','|','+','-','+','|']
+                    stl_win_config["border"] = ['','',''] + borderchars[3:]
                     stl_win_config["width"] -= 2
 
                 if self._stl_buffer_number == -1:
@@ -592,7 +595,7 @@ class LfInstance(object):
                     "filter":          "leaderf#PopupFilter",
                     }
 
-            borderchars = ['-','|','-','|','+','+','+','+']
+            borderchars = lfEval("g:Lf_PopupBorders")
             if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
                 if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
                     options["border"] = [0, 1, 0, 1]

@@ -471,7 +471,9 @@ class Manager(object):
             float_win_height = int(float(lfEval("nvim_win_get_config(%d).height" % float_window.id)))
             float_win_width= int(float(lfEval("nvim_win_get_config(%d).width" % float_window.id)))
             preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
-            borderchars = ['+','-','+','|','+','-','+','|']
+            popup_borders = lfEval("g:Lf_PopupBorders")
+            borderchars = [popup_borders[4], popup_borders[0], popup_borders[5], popup_borders[1],
+                    popup_borders[6], popup_borders[2], popup_borders[7], popup_borders[3]]
             if preview_pos.lower() == 'bottom':
                 anchor = "NW"
                 if self._getInstance().getPopupInstance().statusline_win:
@@ -484,7 +486,9 @@ class Manager(object):
                 if height < 1:
                     return
                 width = float_window.width
-                borderchars = ['','','','|','+','-','+','|']
+                borderchars[0] = ''
+                borderchars[1] = ''
+                borderchars[2] = ''
             elif preview_pos.lower() == 'top':
                 anchor = "SW"
                 row = float_win_row - 1
@@ -495,7 +499,9 @@ class Manager(object):
                 if height < 1:
                     return
                 width = float_window.width
-                borderchars = ['+','-','+','|','','','','|']
+                borderchars[4] = ''
+                borderchars[5] = ''
+                borderchars[6] = ''
             elif preview_pos.lower() == 'right':
                 anchor = "NW"
                 row = float_win_row - 1
@@ -676,7 +682,7 @@ class Manager(object):
                     }
 
             if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
-                options["borderchars"] = ['-','|','-','|','+','+','+','+']
+                options["borderchars"] = lfEval("g:Lf_PopupBorders")
                 options["maxwidth"] -= 2
                 options["minwidth"] -= 2
                 options["borderhighlight"] = ["Lf_hl_popupBorder"]

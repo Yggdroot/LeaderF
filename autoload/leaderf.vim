@@ -137,6 +137,7 @@ call s:InitDict('g:Lf_GtagsfilesCmd', {
             \ 'default': 'rg --no-messages --files'
             \})
 call s:InitVar('g:Lf_HistoryEditPromptIfEmpty', 1)
+call s:InitVar('g:Lf_PopupBorders', ['-','|','-','|','+','+','+','+'])
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
