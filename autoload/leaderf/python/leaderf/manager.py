@@ -466,6 +466,7 @@ class Manager(object):
                 lfCmd("call nvim_buf_set_option(scratch_buffer, 'bufhidden', 'wipe')")
 
             float_window = self._getInstance().window
+            # row and col start from 0
             float_win_row = int(float(lfEval("nvim_win_get_config(%d).row" % float_window.id)))
             float_win_col = int(float(lfEval("nvim_win_get_config(%d).col" % float_window.id)))
             float_win_height = int(float(lfEval("nvim_win_get_config(%d).height" % float_window.id)))
@@ -505,14 +506,17 @@ class Manager(object):
             elif preview_pos.lower() == 'right':
                 anchor = "NW"
                 row = float_win_row - 1
-                col = float_win_col + float_window.width
+                col = float_win_col + float_win_width
                 if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
                     row -= 1
                     col += 2
                 height = self._getInstance().getPopupHeight() + 1
-                if width == 0:
+                if width <= 0:
                     width = float_win_width
-                width = min(width, int(lfEval("&columns")) - col)
+                if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
+                    width = min(width, int(lfEval("&columns")) - col - 2)
+                else:
+                    width = min(width, int(lfEval("&columns")) - col)
             elif preview_pos.lower() == 'left':
                 anchor = "NE"
                 row = float_win_row - 1
@@ -521,7 +525,7 @@ class Manager(object):
                     row -= 1
                     col -= 2
                 height = self._getInstance().getPopupHeight() + 1
-                if width == 0:
+                if width <= 0:
                     width = float_win_width
                 width = min(width, col)
             else:
@@ -614,8 +618,6 @@ class Manager(object):
                 if maxheight < 1:
                     return
 
-                if buffer_len >= maxheight: # scrollbar appear
-                    maxwidth -= 1
             elif preview_pos.lower() == 'top':
                 maxwidth = int(popup_pos["width"])
                 col = int(popup_pos["col"])
@@ -623,9 +625,6 @@ class Manager(object):
                 maxheight = int(popup_pos["line"]) - 3
                 if maxheight < 1:
                     return
-
-                if buffer_len >= maxheight: # scrollbar appear
-                    maxwidth -= 1
 
                 pos = "botleft"
                 line = maxheight + 1
@@ -636,8 +635,6 @@ class Manager(object):
                 pos = "topleft"
                 if width == 0:
                     maxwidth = int(popup_pos["width"])
-                if buffer_len >= maxheight: # scrollbar appear
-                    maxwidth -= 1
                 maxwidth = min(maxwidth, int(lfEval("&columns")) - col + 1)
             elif preview_pos.lower() == 'left':
                 col = int(popup_pos["col"]) - 1
@@ -646,8 +643,6 @@ class Manager(object):
                 pos = "topright"
                 if width == 0:
                     maxwidth = int(popup_pos["width"])
-                if buffer_len >= maxheight: # scrollbar appear
-                    maxwidth -= 1
                 maxwidth = min(maxwidth, col)
             else: # cursor
                 lfCmd("""call win_execute(%d, "let numberwidth = &numberwidth")""" % popup_window.id)
@@ -674,6 +669,7 @@ class Manager(object):
                     "pos":             pos,
                     "line":            line,
                     "col":             col,
+                    "scrollbar":       0,
                     "padding":         [0, 0, 0, 0],
                     "border":          [1, 0, 0, 0],
                     "borderchars":     [' '],

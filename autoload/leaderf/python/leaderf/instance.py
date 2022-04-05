@@ -404,9 +404,9 @@ class LfInstance(object):
             elif preview_pos.lower() == 'left':
                 col = (int(lfEval("&columns")) - maxwidth*2) // 2
                 if col < 0:
-                    col = int(lfEval("&columns")) // 2
+                    col = int(lfEval("&columns")) - maxwidth + 1
                 else:
-                    col += maxwidth
+                    col += maxwidth + 1
             else:
                 col = (int(lfEval("&columns")) - maxwidth) // 2
         else:
@@ -417,6 +417,9 @@ class LfInstance(object):
 
         if col <= 0:
             col = 1
+
+        if lfEval("has('nvim')") == '1':
+            col -= 1
 
         self._popup_maxheight = max(maxheight - 2, 1) # there is an input window above
 
