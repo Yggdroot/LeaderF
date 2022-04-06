@@ -250,6 +250,8 @@ class Manager(object):
     def _beforeEnter(self):
         self._resetAutochdir()
         self._cur_buffer = vim.current.buffer
+        self._laststatus = lfEval("&laststatus")
+        lfCmd("set laststatus=2")
 
     def _afterEnter(self):
         if self._vim_file_autoloaded == False:
@@ -313,7 +315,7 @@ class Manager(object):
         self._match_ids = []
 
     def _afterExit(self):
-        pass
+        lfCmd("set laststatus=%s" % self._laststatus)
 
     def _bangEnter(self):
         self._preview_open = False
