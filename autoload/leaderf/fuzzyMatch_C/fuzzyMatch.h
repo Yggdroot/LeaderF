@@ -19,7 +19,7 @@
 
 #include "mystdint.h"
 
-#define MIN_WEIGHT (-10000.0f)
+#define MIN_WEIGHT (-1000000.0f)
 
 typedef struct PatternContext
 {

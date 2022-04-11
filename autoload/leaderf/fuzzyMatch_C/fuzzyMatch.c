@@ -538,8 +538,13 @@ ValueElements* evaluate(TextContext* pText_ctxt,
                         score = prefix_score + pVal->score - 0.3f * (pVal->beg - i);
                         end_pos = pVal->end;
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
             }
+
             if ( score > max_score )
             {
                 max_score = score;
@@ -1267,6 +1272,10 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
                             cur_highlights.positions[0].len = n;
                             memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end_index * sizeof(HighlightPos));
                             cur_highlights.end_index = pGroup->end_index + 1;
+                        }
+                        else
+                        {
+                            break;
                         }
                     }
                 }
