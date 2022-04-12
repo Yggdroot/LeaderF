@@ -428,7 +428,6 @@ ValueElements* evaluate(TextContext* pText_ctxt,
         }
         if ( bits == 0 )
         {
-            memset(val, 0, sizeof(ValueElements));
             return val;
         }
         else
@@ -1260,23 +1259,20 @@ HighlightGroup* evaluateHighlights(TextContext* pText_ctxt,
                     max_prefix_score = prefix_score;
                     pText_ctxt->offset = i;
                     HighlightGroup* pGroup = evaluateHighlights(pText_ctxt, pPattern_ctxt, k + n, groups);
-                    if ( pGroup )
+                    if ( pGroup && pGroup->end )
                     {
-                        if ( pGroup->end )
-                        {
-                            score = prefix_score + pGroup->score - 0.3f * (pGroup->beg - i);
-                            cur_highlights.score = score;
-                            cur_highlights.beg = i - n;
-                            cur_highlights.end = pGroup->end;
-                            cur_highlights.positions[0].col = i - n + 1;
-                            cur_highlights.positions[0].len = n;
-                            memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end_index * sizeof(HighlightPos));
-                            cur_highlights.end_index = pGroup->end_index + 1;
-                        }
-                        else
-                        {
-                            break;
-                        }
+                        score = prefix_score + pGroup->score - 0.3f * (pGroup->beg - i);
+                        cur_highlights.score = score;
+                        cur_highlights.beg = i - n;
+                        cur_highlights.end = pGroup->end;
+                        cur_highlights.positions[0].col = i - n + 1;
+                        cur_highlights.positions[0].len = n;
+                        memcpy(cur_highlights.positions + 1, pGroup->positions, pGroup->end_index * sizeof(HighlightPos));
+                        cur_highlights.end_index = pGroup->end_index + 1;
+                    }
+                    else
+                    {
+                        break;
                     }
                 }
             }
