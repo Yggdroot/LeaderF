@@ -44,6 +44,8 @@ class GtagsExplorer(Explorer):
         self._last_command = ""
         self._content = []
         self._with_gutentags = lfEval("get(g:, 'Lf_GtagsGutentags', 0)") != '0'
+        self._global = lfEval("get(g:, 'Lf_Global', 'global')")
+        self._gtags = lfEval("get(g:, 'Lf_Gtags', 'gtags')")
         self._is_debug = False
         self._cmd = ''
 
@@ -174,12 +176,13 @@ class GtagsExplorer(Explorer):
             env["GTAGSDBPATH"] = dbpath
 
             if pattern_option is None:  # '--all' or empty means the whole project
-                cmd = 'global -P | global -L- -f {}--gtagslabel={} {}--color=never --result={}'.format(
+                cmd = '{} -P | {} -L- -f {}--gtagslabel={} {}--color=never --result={}'.format(
+                            self._global, self._global,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, path_style, self._result_format)
             else:
-                cmd = 'global {}--gtagslabel={} {} {}--color=never --result={}'.format(
-                            '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
+                cmd = '{} {}--gtagslabel={} {} {}--color=never --result={}'.format(
+                            self._global, '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, pattern_option, path_style, self._result_format)
 
             if not self._isDBModified(os.path.join(dbpath, 'GTAGS')) and self._content \
@@ -244,8 +247,8 @@ class GtagsExplorer(Explorer):
         env = os.environ
         env["GTAGSROOT"] = root
         env["GTAGSDBPATH"] = dbpath
-        cmd = 'global {}--gtagslabel={} {} {}{}{}{}--color=never --result={}'.format(
-                    '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
+        cmd = '{} {}--gtagslabel={} {} {}{}{}{}--color=never --result={}'.format(
+                    self._global, '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                     self._gtagslabel, pattern_option, path_style, scope, literal,
                     ignorecase, self._result_format)
 
@@ -267,8 +270,8 @@ class GtagsExplorer(Explorer):
                     if path_style == "--path-style abslib ":
                         path_style = "--path-style absolute "
 
-                    cmd = 'global {}--gtagslabel={} {} {}{}{}{}--color=never --result={} -q'.format(
-                                '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
+                    cmd = '{} {}--gtagslabel={} {} {}{}{}{}--color=never --result={} -q'.format(
+                                self._global, '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                                 self._gtagslabel, pattern_option, path_style, scope, literal,
                                 ignorecase, self._result_format)
 
@@ -507,8 +510,8 @@ class GtagsExplorer(Explorer):
         self._updateLibGtags(root, dbpath)
         if single_update:
             if exists:
-                cmd = 'cd {}"{}" && gtags {}{}{}{}--gtagslabel {} --single-update "{}" "{}"'.format(self._cd_option, root,
-                            self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+                cmd = 'cd {}"{}" && {} {}{}{}{}--gtagslabel {} --single-update "{}" "{}"'.format(self._cd_option, root,
+                            self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, filename, dbpath)
                 env = os.environ
@@ -545,8 +548,8 @@ class GtagsExplorer(Explorer):
             libdbpath = self._generateDbpath(path)
             if not os.path.exists(libdbpath):
                 os.makedirs(libdbpath)
-            cmd = 'cd {}"{}" && gtags -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, path,
-                        self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+            cmd = 'cd {}"{}" && {} -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, path,
+                        self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                         '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                         self._gtagslabel, libdbpath)
 
@@ -836,18 +839,18 @@ class GtagsExplorer(Explorer):
         cmd = self._file_list_cmd(root)
         if cmd:
             if os.name == 'nt':
-                cmd = 'cd {}"{}" && ( {} ) | gtags -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
-                            self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+                cmd = 'cd {}"{}" && ( {} ) | {} -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
+                            self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, dbpath)
             else:
-                cmd = 'cd {}"{}" && {{ {}; }} | gtags -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
-                            self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+                cmd = 'cd {}"{}" && {{ {}; }} | {} -i {}{}{}{}--gtagslabel {} -f- "{}"'.format(self._cd_option, root, cmd,
+                            self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                             '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                             self._gtagslabel, dbpath)
         else:
-            cmd = 'cd {}"{}" && gtags -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, root,
-                        self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
+            cmd = 'cd {}"{}" && {} -i {}{}{}{}--gtagslabel {} "{}"'.format(self._cd_option, root,
+                        self._gtags, self._accept_dotfiles, self._skip_unreadable, self._skip_symlink,
                         '--gtagsconf %s ' % self._gtagsconf if self._gtagsconf else "",
                         self._gtagslabel, dbpath)
 

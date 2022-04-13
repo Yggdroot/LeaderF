@@ -622,6 +622,18 @@ g:Lf_NoChdir                                    *g:Lf_NoChdir*
     to `dir`.
     Default value is 1.
 
+g:Lf_Global                                      *g:Lf_Global*
+    Use this option to customize the global executable to use. e.g., >
+    let g:Lf_Global = "/bin/global"
+<
+    Default value is "global".
+
+g:Lf_Gtags                                       *g:Lf_Gtags*
+    Use this option to customize the global executable to use. e.g., >
+    let g:Lf_Gtags = "/bin/gtags"
+<
+    Default value is "gtags".
+
 g:Lf_GtagsAutoGenerate                          *g:Lf_GtagsAutoGenerate*
     If the value is 1 and there is a rootmark defined by |g:Lf_RootMarkers|
     under the project root directory, gtags files will be generated
