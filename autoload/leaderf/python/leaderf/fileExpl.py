@@ -580,6 +580,48 @@ class FileExplorer(Explorer):
         if lfEval("g:Lf_UseCache") == '1':
             self._writeCache(content)
 
+    def getContentFromMultiDirs(self, dirs, **kwargs):
+        no_ignore = kwargs.get("arguments", {}).get("--no-ignore")
+        if no_ignore != self._no_ignore:
+            self._no_ignore = no_ignore
+            arg_changes = True
+        else:
+            arg_changes = False
+
+        dirs = { os.path.abspath(os.path.expanduser(lfDecode(dir.strip('"').rstrip('\\/')))) for dir in dirs }
+        if arg_changes or lfEval("g:Lf_UseMemoryCache") == '0' or dirs != self._cur_dir or \
+                not self._content:
+            self._cur_dir = dirs
+
+            cmd = ''
+            for dir in dirs:
+                if not os.path.exists(dir):
+                    lfCmd("echoe ' Unknown directory `%s`'" % dir)
+                    return None
+
+                command = self._buildCmd(dir, **kwargs)
+                if command:
+                    if cmd == '':
+                        cmd = command
+                    else:
+                        cmd += ' && ' + command
+
+            if cmd:
+                executor = AsyncExecutor()
+                self._executor.append(executor)
+                if cmd.split(None, 1)[0] == "dir":
+                    content = executor.execute(cmd, format_line)
+                else:
+                    if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
+                        content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=format_line)
+                    else:
+                        content = executor.execute(cmd, encoding=lfEval("&encoding"))
+                self._cmd_start_time = time.time()
+                return content
+
+        return self._content
+
+
     def getContent(self, *args, **kwargs):
         files = kwargs.get("arguments", {}).get("--file", [])
         if files:
@@ -589,6 +631,9 @@ class FileExplorer(Explorer):
 
         self._cmd_work_dir = ""
         directory = kwargs.get("arguments", {}).get("directory")
+        if directory and len(directory) > 1:
+            return self.getContentFromMultiDirs(directory, **kwargs)
+
         if directory and directory[0] not in ['""', "''"]:
             dir = directory[0].strip('"').rstrip('\\/')
             if os.path.exists(os.path.expanduser(lfDecode(dir))):
@@ -599,8 +644,7 @@ class FileExplorer(Explorer):
                     dir = os.path.abspath(os.path.expanduser(lfDecode(dir)))
                     self._cmd_work_dir = dir
             else:
-                lfCmd("echohl ErrorMsg | redraw | echon "
-                      "'Unknown directory `%s`' | echohl NONE" % dir)
+                lfCmd("echoe ' Unknown directory `%s`'" % dir)
                 return None
 
         no_ignore = kwargs.get("arguments", {}).get("--no-ignore")
