@@ -71,8 +71,9 @@ class MruExplorer(Explorer):
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(line))))
                                     for line in lines)
+        show_absolute = "--absolute-path" in kwargs.get("arguments", {})
         for i, line in enumerate(lines):
-            if lfEval("g:Lf_ShowRelativePath") == '1':
+            if lfEval("g:Lf_ShowRelativePath") == '1' and show_absolute == False:
                 line = lfRelpath(line)
             basename = getBasename(line)
             dirname = getDirname(line)
