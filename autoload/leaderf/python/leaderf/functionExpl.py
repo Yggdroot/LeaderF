@@ -293,7 +293,7 @@ class FunctionExplManager(Manager):
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcReturnType'', ''^\w\t\zs.\{-}\ze\s*[~]\=\w\+\W\{-}[(\[]'')')"""
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcReturnType'', ''^\w\t\zs.\{-}\ze\s*[~]\=\(\w\|[#:]\)\+\W\{-}[(\[]'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
@@ -301,7 +301,7 @@ class FunctionExplManager(Manager):
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcName'', ''^\w\t.\{-}\s*\zs[~]\=\w\+\W\{-}\ze[(\[]'')')"""
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcName'', ''^\w\t.\{-}\s*\zs[~]\=\(\w\|[#:]\)\+\W\{-}\ze[(\[]'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
@@ -316,11 +316,11 @@ class FunctionExplManager(Manager):
         else:
             id = int(lfEval('''matchadd('Lf_hl_funcKind', '^\w')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_funcReturnType', '^\w\t\zs.\{-}\ze\s*[~]\=\w\+\W\{-}[(\[]')'''))
+            id = int(lfEval('''matchadd('Lf_hl_funcReturnType', '^\w\t\zs.\{-}\ze\s*[~]\=\(\w\|[#:]\)\+\W\{-}[(\[]')'''))
             self._match_ids.append(id)
             id = int(lfEval('''matchadd('Lf_hl_funcScope', '\w*\(<[^>]*>\)\=::')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_funcName', '^\w\t.\{-}\s*\zs[~]\=\w\+\W\{-}\ze[(\[]')'''))
+            id = int(lfEval('''matchadd('Lf_hl_funcName', '^\w\t.\{-}\s*\zs[~]\=\(\w\|[#:]\)\+\W\{-}\ze[(\[]')'''))
             self._match_ids.append(id)
             id = int(lfEval('''matchadd('Lf_hl_funcDirname', '\t\zs\[.*:\d\+ \d\+]$')'''))
             self._match_ids.append(id)
