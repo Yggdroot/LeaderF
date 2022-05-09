@@ -66,7 +66,7 @@ function! leaderf#Gtags#getPattern(type)
     if a:type == 0
         return expand('<cword>')
     elseif a:type == 1
-        return escape(expand('<cWORD>'))
+        return '"' . escape(expand('<cWORD>'), '"') . '"'
     elseif a:type == 2
         return leaderf#Gtags#visual()
     else
