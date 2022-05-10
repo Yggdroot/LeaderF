@@ -113,7 +113,6 @@ class Manager(object):
         self._highlight_refine_pos = []
         self._highlight_ids = []
         self._orig_line = ''
-        self._ctrlp_pressed = False
         self._fuzzy_engine = None
         self._result_content = []
         self._reader_thread = None
@@ -903,6 +902,7 @@ class Manager(object):
                 if True, always preview the result no matter what `g:Lf_PreviewResult` is.
         """
         if "--auto-preview" in self._arguments:
+            self._orig_line = self._getInstance().currentLine
             return True
 
         preview_dict = {k.lower(): v for k, v in lfEval("g:Lf_PreviewResult").items()}
@@ -922,7 +922,7 @@ class Manager(object):
                 vim.current.buffer != self._getInstance().buffer):
             return False
 
-        if self._ctrlp_pressed == True:
+        if preview:
             return True
 
         line = self._getInstance().currentLine
@@ -2759,9 +2759,7 @@ class Manager(object):
             elif equal(cmd, '<C-L>'):
                 self.clearSelections()
             elif equal(cmd, '<C-P>'):
-                self._ctrlp_pressed = True
                 self._previewResult(True)
-                self._ctrlp_pressed = False
             elif equal(cmd, '<PageUp>'):
                 self._pageUp()
                 self._previewResult(False)
