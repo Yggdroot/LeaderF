@@ -512,7 +512,7 @@ class LfInstance(object):
                 lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % winid)
             except vim.error:
                 lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '0')" % winid)
-            # lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
+            lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
             lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
             if lfEval("exists('+cursorlineopt')") == '1':
                 lfCmd("call nvim_win_set_option(%d, 'cursorlineopt', 'both')" % winid)
@@ -564,7 +564,7 @@ class LfInstance(object):
                     lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % winid)
                 except vim.error:
                     lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '0')" % winid)
-                # lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
+                lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
                 lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
                 if lfEval("exists('+cursorlineopt')") == '1':
                     lfCmd("call nvim_win_set_option(%d, 'cursorlineopt', 'both')" % winid)
