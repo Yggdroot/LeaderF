@@ -1884,6 +1884,7 @@ class Manager(object):
         self.clearSelections()
         self._resetHighlights()
 
+    @ignoreEvent('BufUnload')
     def _accept(self, file, mode, *args, **kwargs):
         if file:
             if self._getExplorer().getStlCategory() != "Jumps":
