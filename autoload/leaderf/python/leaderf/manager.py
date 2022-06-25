@@ -1636,7 +1636,7 @@ class Manager(object):
             icon = ''
         if self._fuzzy_engine:
             filter_method = partial(fuzzyEngine.guessMatch, engine=self._fuzzy_engine, filename=filename,
-                                    suffix=suffix, dirname=dirname, icon=icon, sort_results=True)
+                                    suffix=suffix, dirname=dirname, icon=icon, sort_results=False)
             step = len(content)
 
             _, self._result_content = self._filter(step, filter_method, content, is_continue, True)
@@ -1647,7 +1647,7 @@ class Manager(object):
             pairs.sort(key=operator.itemgetter(0), reverse=True)
             self._result_content = self._getList(pairs)
 
-        #self._getInstance().setBuffer(self._result_content[:self._initial_count])
+        self._getInstance().setBuffer(self._result_content[:self._initial_count])
         self._getInstance().setStlResultsCount(len(self._result_content), True)
 
     def _highlight_and_mode(self, highlight_methods):
