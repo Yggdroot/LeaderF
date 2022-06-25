@@ -1628,7 +1628,7 @@ class Manager(object):
             icon = ''
         if self._fuzzy_engine:
             filter_method = partial(fuzzyEngine.guessMatch, engine=self._fuzzy_engine, filename=filename,
-                                    suffix=suffix, dirname=dirname, icon=icon, sort_results=True)
+                                    suffix=suffix, dirname=dirname, icon=icon, sort_results=False)
             step = len(content)
 
             _, self._result_content = self._filter(step, filter_method, content, is_continue, True)
