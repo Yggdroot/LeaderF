@@ -1164,7 +1164,7 @@ class Manager(object):
             if self._empty_query and self._getExplorer().getStlCategory() in ["File"]:
                 self._guessSearch(self._content)
             else:
-                self._getInstance().setBuffer(content[:self._initial_count])
+                #self._getInstance().setBuffer(content[:self._initial_count])
                 self._getInstance().setStlResultsCount(len(content), True)
                 self._result_content = []
             self._previewResult(False)
@@ -1586,8 +1586,11 @@ class Manager(object):
             if "--no-sort" not in self._arguments:
                 pairs.sort(key=operator.itemgetter(0), reverse=True)
             self._result_content = self._getList(pairs)
+            f = open('/dev/shm/debug.txt','w')
+            f.write(str(self._result_content))
+            f.close()
 
-        self._getInstance().setBuffer(self._result_content[:self._initial_count])
+        #self._getInstance().setBuffer(self._result_content[:self._initial_count])
         self._getInstance().setStlResultsCount(len(self._result_content), True)
 
         if self._cli.isAndMode:
@@ -1609,6 +1612,9 @@ class Manager(object):
 
     def _guessSearch(self, content, is_continue=False, step=0):
         if self._cur_buffer.name == '' or self._cur_buffer.options["buftype"] not in [b'', '']:
+            f = open('/dev/shm/debug.txt','w')
+            f.write(str(self._content))
+            f.close()
             self._getInstance().setBuffer(content[:self._initial_count])
             self._getInstance().setStlResultsCount(len(content), True)
             self._result_content = []
@@ -1641,7 +1647,7 @@ class Manager(object):
             pairs.sort(key=operator.itemgetter(0), reverse=True)
             self._result_content = self._getList(pairs)
 
-        self._getInstance().setBuffer(self._result_content[:self._initial_count])
+        #self._getInstance().setBuffer(self._result_content[:self._initial_count])
         self._getInstance().setStlResultsCount(len(self._result_content), True)
 
     def _highlight_and_mode(self, highlight_methods):
@@ -1852,7 +1858,7 @@ class Manager(object):
         if not is_continue and not self._cli.isPrefix:
             self._index = 0
         self._result_content = self._filter(8000, self._regexFilter, content, is_continue)
-        self._getInstance().setBuffer(self._result_content[:self._initial_count])
+        #self._getInstance().setBuffer(self._result_content[:self._initial_count])
         self._getInstance().setStlResultsCount(len(self._result_content), True)
 
     def clearSelections(self):
@@ -2144,11 +2150,10 @@ class Manager(object):
 
     def refresh(self, normal_mode=True):
         self._getExplorer().cleanup()
-        content = self._getExplorer().getFreshContent()
+        content = '' #self._getExplorer().getFreshContent()
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
-
         if normal_mode: # when called in Normal mode
             self._getInstance().buffer.options['modifiable'] = True
 
@@ -2352,7 +2357,8 @@ class Manager(object):
                 self._getInstance().setStlTotal(len(self._content)//self._getUnit())
                 self._getInstance().setStlResultsCount(len(self._content))
                 if not empty_query:
-                    self._getInstance().setBuffer(self._content[:self._initial_count])
+                    pass
+                    #self._getInstance().setBuffer(self._content[:self._initial_count])
 
             if lfEval("has('nvim')") == '1':
                 lfCmd("redrawstatus")
@@ -2401,7 +2407,7 @@ class Manager(object):
                     if "--append" in self.getArguments():
                         self._offset_in_content = len(self._content)
                         if self._pattern_bak:
-                            self._getInstance().setBuffer(self._content, need_copy=False)
+                            #self._getInstance().setBuffer(self._content, need_copy=False)
                             self._createHelpHint()
                     else:
                         self._getInstance().clearBuffer()
@@ -2456,12 +2462,6 @@ class Manager(object):
         except Exception:
             self._read_finished = 1
             self._read_content_exception = sys.exc_info()
-
-    def _setResultContent(self):
-        if len(self._result_content) > len(self._getInstance().buffer):
-            self._getInstance().setBuffer(self._result_content)
-        elif self._index == 0:
-            self._getInstance().setBuffer(self._content, need_copy=True)
 
     @catchException
     def _workInIdle(self, content=None, bang=False):
@@ -2545,7 +2545,7 @@ class Manager(object):
 
                         lfCmd("echohl WarningMsg | redraw | echo ' Done!' | echohl NONE")
                     else:
-                        self._getInstance().setBuffer(self._content[:self._initial_count])
+                        pass#self._getInstance().setBuffer(self._content[:self._initial_count])
 
                     self._getInstance().setStlResultsCount(len(self._content))
 
@@ -2606,7 +2606,7 @@ class Manager(object):
                         lfCmd("echohl WarningMsg | redraw | echo ' searching %s' | echohl NONE" % ('.' * self._bang_count))
                         self._bang_count = (self._bang_count + 1) % 9
                 elif len(self._getInstance().buffer) < min(cur_len, self._initial_count):
-                    self._getInstance().setBuffer(self._content[:self._initial_count])
+                    return #self._getInstance().setBuffer(self._content[:self._initial_count])
 
     @modifiableController
     def input(self):
