@@ -27,6 +27,18 @@ function! leaderf#Any#Maps(category)
     nnoremap <buffer> <silent> i             :exec g:Lf_py b:Lf_AnyExplManager."input()"<CR>
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py b:Lf_AnyExplManager."input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py b:Lf_AnyExplManager."toggleHelp()"<CR>
+    nnoremap <buffer> <silent> p             :exec g:Lf_py b:Lf_AnyExplManager."_previewResult(True)"<CR>
+    nnoremap <buffer> <silent> j             j:exec g:Lf_py b:Lf_AnyExplManager."_previewResult(False)"<CR>
+    nnoremap <buffer> <silent> k             k:exec g:Lf_py b:Lf_AnyExplManager."_previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py b:Lf_AnyExplManager."_previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py b:Lf_AnyExplManager."_previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py b:Lf_AnyExplManager."_previewResult(False)"<CR>
+    nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py b:Lf_AnyExplManager."_previewResult(False)"<CR>
+    if has("nvim")
+        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py b:Lf_AnyExplManager."_toUpInPopup()"<CR>
+        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py b:Lf_AnyExplManager."_toDownInPopup()"<CR>
+        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py b:Lf_AnyExplManager."_closePreviewPopup()"<CR>
+    endif
     if has_key(g:Lf_NormalMap, a:category)
         for i in g:Lf_NormalMap[a:category]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
