@@ -719,6 +719,7 @@ class Manager(object):
                 lfCmd("noautocmd silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
             else:
                 lfCmd("silent! let winid = popup_create(content, %s)" % json.dumps(options))
+                lfCmd("call win_execute(winid, 'setlocal nomodeline')")
                 lfCmd("call win_execute(winid, 'doautocmd filetypedetect BufNewFile %s')" % escQuote(source))
 
             self._preview_winid = int(lfEval("winid"))
@@ -880,6 +881,7 @@ class Manager(object):
                     lfPrintError(e)
                     return
                 lfCmd("silent! let winid = popup_create(content, %s)" % json.dumps(options))
+                lfCmd("call win_execute(winid, 'setlocal nomodeline')")
                 lfCmd("call win_execute(winid, 'doautocmd filetypedetect BufNewFile %s')" % escQuote(source))
 
             self._preview_winid = int(lfEval("winid"))
