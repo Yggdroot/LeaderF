@@ -391,6 +391,7 @@ class Manager(object):
         if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
             line_nr = self._getInstance().window.cursor[0]
             self._previewInPopup(line, self._getInstance().buffer, line_nr)
+            lfCmd("redraw")
             return
 
         orig_pos = self._getInstance().getOriginalPos()

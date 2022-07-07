@@ -359,6 +359,7 @@ class FunctionExplManager(Manager):
         line = self._getInstance().currentLine
         if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
             self._previewInPopup(line)
+            lfCmd("redraw")
             return
 
         orig_pos = self._getInstance().getOriginalPos()
