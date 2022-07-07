@@ -516,6 +516,7 @@ class BufTagExplManager(Manager):
             self._relocateCursor()
 
     def _bangReadFinished(self):
+        super(BufTagExplManager, self)._bangReadFinished()
         self._relocateCursor()
 
     def _relocateCursor(self):

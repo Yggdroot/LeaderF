@@ -387,6 +387,7 @@ class FunctionExplManager(Manager):
             self._relocateCursor()
 
     def _bangReadFinished(self):
+        super(FunctionExplManager, self)._bangReadFinished()
         self._relocateCursor()
 
     def _relocateCursor(self):

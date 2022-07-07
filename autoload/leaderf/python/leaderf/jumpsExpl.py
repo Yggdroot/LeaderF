@@ -176,6 +176,7 @@ class JumpsExplManager(Manager):
                 break
 
     def _bangReadFinished(self):
+        super(JumpsExplManager, self)._bangReadFinished()
         self._readFinished()
 
     def _previewInPopup(self, *args, **kwargs):
