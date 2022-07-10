@@ -58,20 +58,20 @@ class MruExplorer(Explorer):
             self.show_icon = True
             self._prefix_length = webDevIconsStrLen()
 
+        show_absolute = "--absolute-path" in kwargs.get("arguments", {})
         if "--no-split-path" in kwargs.get("arguments", {}):
-            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "0":
-                return lines
-
-            for line in lines:
-                return [
+            if lfEval("g:Lf_ShowRelativePath") == '1' and show_absolute == False:
+                lines = [lfRelpath(line) for line in lines]
+            if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
+                lines = [
                     webDevIconsGetFileTypeSymbol(getBasename(line)) + line
                     for line in lines
                 ]
+            return lines
 
         self._max_bufname_len = max(int(lfEval("strdisplaywidth('%s')"
                                         % escQuote(getBasename(line))))
                                     for line in lines)
-        show_absolute = "--absolute-path" in kwargs.get("arguments", {})
         for i, line in enumerate(lines):
             if lfEval("g:Lf_ShowRelativePath") == '1' and show_absolute == False:
                 line = lfRelpath(line)
