@@ -548,6 +548,7 @@ class Manager(object):
                     "anchor"  : anchor,
                     "height"  : height,
                     "width"   : width,
+                    "zindex"  : 20481,
                     "row"     : row,
                     "col"     : col,
                     "noautocmd": 1
@@ -804,6 +805,7 @@ class Manager(object):
                     "anchor"  : anchor,
                     "height"  : height,
                     "width"   : width,
+                    "zindex"  : 20480,
                     "row"     : row,
                     "col"     : col
                     }
