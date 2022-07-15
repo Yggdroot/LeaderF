@@ -533,14 +533,20 @@ class Manager(object):
                     width = float_win_width
                 width = min(width, col)
             else:
-                anchor = "SW"
                 start = int(lfEval("line('w0')")) - 1
                 end = int(lfEval("line('.')")) - 1
                 col_width = float_window.width - int(lfEval("&numberwidth")) - 1
                 delta_height = lfActualLineCount(self._getInstance().buffer, start, end, col_width)
-                row = float_win_row + delta_height
+                win_height = int(lfEval("&lines"))
+                if float_win_row + delta_height < win_height // 2:
+                    anchor = "NW"
+                    row = float_win_row + delta_height + 1
+                    height = win_height - int(lfEval("&cmdheight")) - row
+                else:
+                    anchor = "SW"
+                    row = float_win_row + delta_height
+                    height = row
                 col = float_win_col + int(lfEval("&numberwidth")) + 1 + float_window.cursor[1]
-                height = row
                 width = maxwidth
 
             config = {
@@ -548,6 +554,7 @@ class Manager(object):
                     "anchor"  : anchor,
                     "height"  : height,
                     "width"   : width,
+                    "zindex"  : 20481,
                     "row"     : row,
                     "col"     : col,
                     "noautocmd": 1
@@ -804,6 +811,7 @@ class Manager(object):
                     "anchor"  : anchor,
                     "height"  : height,
                     "width"   : width,
+                    "zindex"  : 20480,
                     "row"     : row,
                     "col"     : col
                     }
