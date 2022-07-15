@@ -425,6 +425,7 @@ class LfInstance(object):
             col = 1
 
         if lfEval("has('nvim')") == '1':
+            line -= 1
             col -= 1
 
         self._popup_maxheight = max(maxheight - 2, 1) # there is an input window above
