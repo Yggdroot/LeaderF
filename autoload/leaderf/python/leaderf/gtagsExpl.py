@@ -862,7 +862,7 @@ class GtagsExplorer(Explorer):
         def print_log(args):
             print(args)
 
-        if error:
+        if proc.returncode != 0:
             if self._has_nvim:
                 vim.async_call(print_log, cmd)
                 vim.async_call(print_log, error)
