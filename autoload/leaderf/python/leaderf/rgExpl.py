@@ -952,13 +952,13 @@ class RgExplManager(Manager):
 
     def outputToQflist(self, *args, **kwargs):
         items = self._getFormatedContents()
-        lfCmd("call setqflist(%s, 'r')" % json.dumps(items))
+        lfCmd("call setqflist(%s, 'r')" % json.dumps(items, ensure_ascii=False))
         lfCmd("echohl WarningMsg | redraw | echo ' Output result to quickfix list.' | echohl NONE")
 
     def outputToLoclist(self, *args, **kwargs):
         items = self._getFormatedContents()
         winnr = lfEval('bufwinnr(%s)' % self._cur_buffer.number)
-        lfCmd("call setloclist(%d, %s, 'r')" % (int(winnr), json.dumps(items)))
+        lfCmd("call setloclist(%d, %s, 'r')" % (int(winnr), json.dumps(items, ensure_ascii=False)))
         lfCmd("echohl WarningMsg | redraw | echo ' Output result to location list.' | echohl NONE")
 
     def _getFormatedContents(self):
