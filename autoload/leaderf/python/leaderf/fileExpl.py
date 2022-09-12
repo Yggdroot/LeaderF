@@ -911,7 +911,16 @@ class FileExplManager(Manager):
                             and not vim.current.buffer.options["modified"]):
                         lfCmd("setlocal bufhidden=wipe")
 
-                    lfCmd("hide edit %s" % escSpecial(file))
+                    m=lfEval("get(g:, 'Lf_FileActions', {})") 
+                    if m != '{}':
+                        try:
+                            from pathlib import Path                    
+                            filecmd = m[Path(file).suffix]
+                            lfCmd(f"{filecmd} %s" % escSpecial(file))
+                        except KeyError:
+                            lfCmd("hide edit %s" % escSpecial(file))
+                    else:
+                        lfCmd("hide edit %s" % escSpecial(file))
         except vim.error: # E37
             lfPrintTraceback()
 
