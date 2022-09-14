@@ -914,8 +914,11 @@ class FileExplManager(Manager):
                     m=lfEval("get(g:, 'Lf_FileActions', {})") 
                     if m != '{}':
                         try:
-                            from pathlib import Path                    
-                            filecmd = m[Path(file).suffix]
+                            extension = ''
+                            i = file.rfind('.')
+                            if 0 < i < len(file) - 1:
+                                extension = file[i:]
+                            filecmd = m[extension]
                             lfCmd(f"{filecmd} %s" % escSpecial(file))
                         except KeyError:
                             lfCmd("hide edit %s" % escSpecial(file))
