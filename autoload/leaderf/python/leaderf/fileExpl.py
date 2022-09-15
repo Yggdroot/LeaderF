@@ -911,13 +911,12 @@ class FileExplManager(Manager):
                             and not vim.current.buffer.options["modified"]):
                         lfCmd("setlocal bufhidden=wipe")
 
-                    m=lfEval("get(g:, 'Lf_FileActions', {})") 
+                    m = lfEval("get(g:, 'Lf_FileActions', {})")
                     if m != {}:
                         try:
-                            from os.path import splitext
-                            extension = splitext(file)[-1]
+                            extension = os.path.splitext(file)[-1]
                             filecmd = m[extension]
-                            lfCmd(f"{filecmd} %s" % escSpecial(file))
+                            lfCmd("%s %s" % (filecmd, escSpecial(file)))
                         except KeyError:
                             lfCmd("hide edit %s" % escSpecial(file))
                     else:
