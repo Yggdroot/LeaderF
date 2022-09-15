@@ -1001,6 +1001,24 @@ g:Lf_SpinSymbols                                *g:Lf_SpinSymbols*
     For Linux platform, the default value is ['△', '▲', '▷', '▶', '▽', '▼', '◁', '◀'],
     for Windows and MacOS, the default value is ['🌘', '🌗', '🌖', '🌕', '🌔', '🌓', '🌒', '🌑']
 
+g:Lf_FileActions                                *g:Lf_FileActions*
+    Specify the command to handle the user seleted file instead the default
+    vim edit command.
+
+    e.g.: >
+    " _vimrc or .vimrc adding the following code
+    let g:Lf_FileActions = { '.pdf': '!start'
+                           \,'.doc':'!start'
+                           \,'.docx':'!start'
+                           \,'.odt':'!start'
+                           \,'.xlsx':'!start'
+                           \,'.jpg':'!start'
+                           \}
+<
+    then if the user select "da\db\c.pdf", leaderf will execute command as following: >
+    :!start da\db\c.pdf
+<
+    to open "da\db\c.pdf" with pdfreader in Windows OS.
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
