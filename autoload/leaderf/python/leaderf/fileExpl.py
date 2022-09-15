@@ -912,12 +912,10 @@ class FileExplManager(Manager):
                         lfCmd("setlocal bufhidden=wipe")
 
                     m=lfEval("get(g:, 'Lf_FileActions', {})") 
-                    if m != '{}':
+                    if m != {}:
                         try:
-                            extension = ''
-                            i = file.rfind('.')
-                            if 0 < i < len(file) - 1:
-                                extension = file[i:]
+                            from os.path import splitext
+                            extension = splitext(file)[-1]
                             filecmd = m[extension]
                             lfCmd(f"{filecmd} %s" % escSpecial(file))
                         except KeyError:
