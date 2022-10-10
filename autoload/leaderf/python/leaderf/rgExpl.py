@@ -105,6 +105,8 @@ class RgExplorer(Explorer):
             is_perl = False
         if "-v" in arguments_dict:
             zero_args_options += "-v "
+        if "--binary" in arguments_dict:
+            zero_args_options += "--binary "
         if "--hidden" in arguments_dict:
             zero_args_options += "--hidden "
         if "--no-config" in arguments_dict:
