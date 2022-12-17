@@ -60,7 +60,7 @@ class Mru(object):
         if not buf_names:
             return
 
-        with lfOpen(self._cache_file, 'r+', errors='ignore') as f:
+        with lfOpen(self._cache_file, 'r+', errors='ignore', encoding='utf-8') as f:
             lines = f.readlines()
             for name in buf_names:
                 nocase = False
