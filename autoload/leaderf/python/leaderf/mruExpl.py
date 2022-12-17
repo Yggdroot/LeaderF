@@ -31,7 +31,7 @@ class MruExplorer(Explorer):
         mru.saveToCache(lfEval("readfile(lfMru#CacheFileName())"))
         lfCmd("call writefile([], lfMru#CacheFileName())")
 
-        with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore') as f:
+        with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore', encoding='utf8') as f:
             lines = f.readlines()
             lines = [name for name in lines if os.path.exists(lfDecode(name.rstrip()))]
             f.seek(0)
@@ -102,7 +102,7 @@ class MruExplorer(Explorer):
         return True
 
     def delFromCache(self, name):
-        with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore') as f:
+        with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore', encoding='utf8') as f:
             lines = f.readlines()
             lines.remove(lfEncode(os.path.abspath(lfDecode(name))) + '\n')
             f.seek(0)
