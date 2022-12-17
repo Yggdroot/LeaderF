@@ -1042,25 +1042,27 @@ class Manager(object):
 
     def _toUpInPopup(self):
         if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
+            scroll_step_size = int(lfEval("get(g:, 'Lf_PreviewScrollStepSize', 1)"))
             if lfEval("has('nvim')") == '1':
                 cur_winid = lfEval("win_getid()")
                 lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
-                lfCmd("norm! k")
+                lfCmd("norm! %dk" % (scroll_step_size))
                 lfCmd("redraw")
                 lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
             else:
-                lfCmd("call win_execute(%d, 'norm! k')" % (self._preview_winid))
+                lfCmd("call win_execute(%d, 'norm! %dk')" % (self._preview_winid, scroll_step_size))
 
     def _toDownInPopup(self):
         if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
+            scroll_step_size = int(lfEval("get(g:, 'Lf_PreviewScrollStepSize', 1)"))
             if lfEval("has('nvim')") == '1':
                 cur_winid = lfEval("win_getid()")
                 lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
-                lfCmd("norm! j")
+                lfCmd("norm! %dj" % (scroll_step_size))
                 lfCmd("redraw")
                 lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
             else:
-                lfCmd("call win_execute(%d, 'norm! j')" % (self._preview_winid))
+                lfCmd("call win_execute(%d, 'norm! %dj')" % (self._preview_winid, scroll_step_size))
 
     def _toUp(self):
         if self._getInstance().getWinPos() == 'popup':
