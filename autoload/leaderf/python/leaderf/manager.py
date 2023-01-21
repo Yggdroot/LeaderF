@@ -724,6 +724,7 @@ class Manager(object):
                 options["minheight"] = maxheight
 
             if isinstance(source, int):
+                lfCmd("call bufload(%d)" % source)
                 lfCmd("noautocmd silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
             else:
                 lfCmd("silent! let winid = popup_create(content, %s)" % json.dumps(options))
@@ -882,6 +883,7 @@ class Manager(object):
                 options["minheight"] = maxheight
 
             if isinstance(source, int):
+                lfCmd("call bufload(%d)" % source)
                 lfCmd("noautocmd silent! let winid = popup_create(%d, %s)" % (source, json.dumps(options)))
             else:
                 try:
