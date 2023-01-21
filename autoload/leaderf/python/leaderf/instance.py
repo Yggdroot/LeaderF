@@ -234,7 +234,7 @@ class LfInstance(object):
         self._tabpage_object = None
         self._window_object = None
         self._buffer_object = None
-        self._buffer_name = lfEval("expand('$VIMRUNTIME/')") + category + '/LeaderF'
+        self._buffer_name = 'Leaderf://' + category + '/LeaderF'
         self._input_buffer_number = -1
         self._stl_buffer_number = -1
         self._win_height = float(lfEval("g:Lf_WindowHeight"))
