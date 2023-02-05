@@ -496,6 +496,8 @@ class RgExplManager(Manager):
                         file, line_num = m.group(1, 3)
             else:
                 m = re.match(r'^(.+?):(\d+):', line)
+                if m is None:
+                    return (None, None)
                 file, line_num = m.group(1, 2)
                 if not re.search(r"\d+_'No_Name_(\d+)'", file):
                     if not os.path.isabs(file):
