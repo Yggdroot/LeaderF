@@ -290,6 +290,8 @@ class BufExplManager(Manager):
 
     def _previewInPopup(self, *args, **kwargs):
         line = args[0]
+        if line == '':
+            return
         buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
         self._createPopupPreview(vim.buffers[buf_number].name, buf_number, 0)
 
