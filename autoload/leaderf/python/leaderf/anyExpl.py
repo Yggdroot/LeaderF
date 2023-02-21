@@ -380,7 +380,7 @@ class AnyExplManager(Manager):
                     filename, line_num, jump_cmd = result
                     # for backward compatibility
                     if isinstance(filename, int): # it is a buffer number
-                        pass
+                        lfCmd("call bufload(%d)" % filename)
                     elif lfEval("bufloaded('%s')" % escQuote(filename)) == '1':
                         if not self._has_nvim:  # py3 in nvim return str, in vim return bytes
                             filename = lfBytes2Str(filename)
