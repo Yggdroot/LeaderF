@@ -26,6 +26,7 @@ class MruExplorer(Explorer):
     def __init__(self):
         self._prefix_length = 0
         self._max_bufname_len = 0
+        self._root_markers = lfEval("g:Lf_RootMarkers")
 
     def getContent(self, *args, **kwargs):
         mru.saveToCache(lfEval("readfile(lfMru#CacheFileName())"))
@@ -38,8 +39,15 @@ class MruExplorer(Explorer):
             f.truncate(0)
             f.writelines(lines)
 
-        if "--cwd" in kwargs.get("arguments", {}):
+        arguments_dict = kwargs.get("arguments", {})
+        if "--cwd" in arguments_dict:
             lines = [name for name in lines if lfDecode(name).startswith(lfGetCwd())]
+        elif "--project" in arguments_dict:
+            project_root = lfGetCwd()
+            ancestor = nearestAncestor(self._root_markers, project_root)
+            if ancestor != "":
+                project_root = ancestor
+            lines = [name for name in lines if lfDecode(name).startswith(project_root)]
 
         lines = [line.rstrip() for line in lines] # remove the '\n'
         wildignore = lfEval("g:Lf_MruWildIgnore")
@@ -58,8 +66,8 @@ class MruExplorer(Explorer):
             self.show_icon = True
             self._prefix_length = webDevIconsStrLen()
 
-        show_absolute = "--absolute-path" in kwargs.get("arguments", {})
-        if "--no-split-path" in kwargs.get("arguments", {}):
+        show_absolute = "--absolute-path" in arguments_dict
+        if "--no-split-path" in arguments_dict:
             if lfEval("g:Lf_ShowRelativePath") == '1' and show_absolute == False:
                 lines = [lfRelpath(line) for line in lines]
             if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
