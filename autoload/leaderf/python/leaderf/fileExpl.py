@@ -743,31 +743,6 @@ class FileExplManager(Manager):
         help.append('" ---------------------------------------------------------')
         return help
 
-    def _nearestAncestor(self, markers, path):
-        """
-        return the nearest ancestor path(including itself) of `path` that contains
-        one of files or directories in `markers`.
-        `markers` is a list of file or directory names.
-        """
-        if os.name == 'nt':
-            # e.g. C:\\
-            root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
-        else:
-            root = '/'
-
-        path = os.path.abspath(path)
-        while path != root:
-            for name in markers:
-                if os.path.exists(os.path.join(path, name)):
-                    return path
-            path = os.path.abspath(os.path.join(path, ".."))
-
-        for name in markers:
-            if os.path.exists(os.path.join(path, name)):
-                return path
-
-        return ""
-
     def _afterEnter(self):
         super(FileExplManager, self)._afterEnter()
         lfCmd("augroup Lf_File")
@@ -824,14 +799,14 @@ class FileExplManager(Manager):
         cur_buf_name = lfDecode(vim.current.buffer.name)
         fall_back = False
         if 'a' in mode:
-            working_dir = self._nearestAncestor(root_markers, self._orig_cwd)
+            working_dir = nearestAncestor(root_markers, self._orig_cwd)
             if working_dir: # there exists a root marker in nearest ancestor path
                 chdir(working_dir)
             else:
                 fall_back = True
         elif 'A' in mode:
             if cur_buf_name:
-                working_dir = self._nearestAncestor(root_markers, os.path.dirname(cur_buf_name))
+                working_dir = nearestAncestor(root_markers, os.path.dirname(cur_buf_name))
             else:
                 working_dir = ""
             if working_dir: # there exists a root marker in nearest ancestor path

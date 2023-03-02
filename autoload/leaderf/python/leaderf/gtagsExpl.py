@@ -373,36 +373,11 @@ class GtagsExplorer(Explorer):
 
         return r'\v' + vim_regex
 
-    def _nearestAncestor(self, markers, path):
-        """
-        return the nearest ancestor path(including itself) of `path` that contains
-        one of files or directories in `markers`.
-        `markers` is a list of file or directory names.
-        """
-        if os.name == 'nt':
-            # e.g. C:\\
-            root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
-        else:
-            root = '/'
-
-        path = os.path.abspath(path)
-        while path != root:
-            for name in markers:
-                if os.path.exists(os.path.join(path, name)):
-                    return path
-            path = os.path.abspath(os.path.join(path, ".."))
-
-        for name in markers:
-            if os.path.exists(os.path.join(path, name)):
-                return path
-
-        return ""
-
     def _isVersionControl(self, filename):
         if self._project_root and filename.startswith(self._project_root):
             return True
 
-        ancestor = self._nearestAncestor(self._root_markers, os.path.dirname(filename))
+        ancestor = nearestAncestor(self._root_markers, os.path.dirname(filename))
         if ancestor:
             self._project_root = ancestor
             return True
@@ -440,12 +415,12 @@ class GtagsExplorer(Explorer):
         if self._project_root and filename.startswith(self._project_root):
             root = self._project_root
         else:
-            ancestor = self._nearestAncestor(self._root_markers, os.path.dirname(filename))
+            ancestor = nearestAncestor(self._root_markers, os.path.dirname(filename))
             if ancestor:
                 self._project_root = ancestor
                 root = self._project_root
             else:
-                ancestor = self._nearestAncestor(self._root_markers, lfGetCwd())
+                ancestor = nearestAncestor(self._root_markers, lfGetCwd())
                 if ancestor:
                     self._project_root = ancestor
                     root = self._project_root
@@ -1200,9 +1175,9 @@ class GtagsExplManager(Manager):
             else:
                 path = lfGetCwd()
             root_markers = lfEval("g:Lf_RootMarkers")
-            project_root = self._getExplorer()._nearestAncestor(root_markers, path)
+            project_root = nearestAncestor(root_markers, path)
             if project_root == "" and path != lfGetCwd():
-                project_root = self._getExplorer()._nearestAncestor(root_markers, lfGetCwd())
+                project_root = nearestAncestor(root_markers, lfGetCwd())
             if project_root:
                 chdir(project_root)
 

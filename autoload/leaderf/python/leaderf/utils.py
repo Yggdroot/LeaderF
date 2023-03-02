@@ -221,3 +221,28 @@ def lfDrop(type, file_name, line_num=None):
                     lfCmd("hide edit +%d %s" % (line_num, escSpecial(file_name)))
                 else:
                     lfCmd("hide edit %s" % escSpecial(file_name))
+
+def nearestAncestor(markers, path):
+    """
+    return the nearest ancestor path(including itself) of `path` that contains
+    one of files or directories in `markers`.
+    `markers` is a list of file or directory names.
+    """
+    if os.name == 'nt':
+        # e.g. C:\\
+        root = os.path.splitdrive(os.path.abspath(path))[0] + os.sep
+    else:
+        root = '/'
+
+    path = os.path.abspath(path)
+    while path != root:
+        for name in markers:
+            if os.path.exists(os.path.join(path, name)):
+                return path
+        path = os.path.abspath(os.path.join(path, ".."))
+
+    for name in markers:
+        if os.path.exists(os.path.join(path, name)):
+            return path
+
+    return ""
