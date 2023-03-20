@@ -896,8 +896,9 @@ class FileExplManager(Manager):
                             lfCmd("hide edit %s" % escSpecial(file))
                     else:
                         lfCmd("hide edit %s" % escSpecial(file))
-        except vim.error: # E37
-            lfPrintTraceback()
+        except vim.error as e: # E37
+            if 'E325' not in str(e).split(':'):
+                lfPrintTraceback()
 
 #*****************************************************
 # fileExplManager is a singleton

@@ -932,8 +932,9 @@ class GtagsExplManager(Manager):
                 self._cursorline_dict[vim.current.window] = vim.current.window.options["cursorline"]
 
             lfCmd("setlocal cursorline")
-        except vim.error:
-            lfPrintTraceback()
+        except vim.error as e: # E37
+            if 'E325' not in str(e).split(':'):
+                lfPrintTraceback()
 
     def updateGtags(self, filename, single_update, auto=True):
         self._getExplorer().updateGtags(filename, single_update, auto)
