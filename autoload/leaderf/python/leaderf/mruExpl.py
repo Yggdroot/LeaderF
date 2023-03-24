@@ -47,7 +47,7 @@ class MruExplorer(Explorer):
             ancestor = nearestAncestor(self._root_markers, project_root)
             if ancestor != "":
                 project_root = ancestor
-            lines = [name for name in lines if lfDecode(name).startswith(project_root)]
+            lines = [name for name in lines if lfDecode(name).startswith(os.path.join(project_root, ''))]
 
         lines = [line.rstrip() for line in lines] # remove the '\n'
         wildignore = lfEval("g:Lf_MruWildIgnore")
