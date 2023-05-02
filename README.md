@@ -295,7 +295,7 @@ Customization
     " Show icons, icons are shown by default
     let g:Lf_ShowDevIcons = 1
     " For GUI vim, the icon font can be specify like this, for example
-    let g:Lf_DevIconsFont = "DroidSansMono Nerd Font Mono"
+    let g:Lf_DevIconsFont = "DroidSansM Nerd Font Mono"
     " If needs
     set ambiwidth=double
     ```
