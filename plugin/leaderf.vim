@@ -107,10 +107,12 @@ function! s:Normalize(filename)
     endif
 endfunction
 
-augroup LeaderF_Mru
-    autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(s:Normalize(expand('<afile>:p'))) |
-                \ call lfMru#recordBuffer(expand('<abuf>'))
-augroup END
+if get(g:, 'Lf_MruEnable', 1) == 1
+    augroup LeaderF_Mru
+        autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(s:Normalize(expand('<afile>:p'))) |
+                    \ call lfMru#recordBuffer(expand('<abuf>'))
+    augroup END
+endif
 
 augroup LeaderF_Gtags
     autocmd!

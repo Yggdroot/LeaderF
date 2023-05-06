@@ -1024,6 +1024,10 @@ g:Lf_FileActions                                *g:Lf_FileActions*
     :!start da\db\c.pdf
 <
     to open "da\db\c.pdf" with pdfreader in Windows OS.
+
+g:Lf_MruEnable                                *g:Lf_MruEnable*
+    Enable `Leaderf mru` or not.
+    Default value is 1.
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
