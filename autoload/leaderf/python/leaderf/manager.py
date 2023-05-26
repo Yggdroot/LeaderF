@@ -280,10 +280,10 @@ class Manager(object):
             self._defineMaps()
             self._defineCommonMaps()
 
-            id = int(lfEval("matchadd('Lf_hl_cursorline', '.*\%#.*', 9)"))
+            id = int(lfEval("matchadd('Lf_hl_cursorline', '.*\%#.*', -100)"))
             self._match_ids.append(id)
         else:
-            lfCmd("""call win_execute({}, 'let matchid = matchadd(''Lf_hl_cursorline'', ''.*\%#.*'', 9)')"""
+            lfCmd("""call win_execute({}, 'let matchid = matchadd(''Lf_hl_cursorline'', ''.*\%#.*'', -100)')"""
                     .format(self._getInstance().getPopupWinId()))
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
