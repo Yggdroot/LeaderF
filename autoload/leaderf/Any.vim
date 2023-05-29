@@ -109,6 +109,7 @@ let g:Lf_Arguments = {
             \           {"name": ["-B", "--before-context"], "nargs": 1, "metavar": "<NUM>", "help": "Show NUM lines before each match."},
             \           {"name": ["-C", "--context"], "nargs": 1, "metavar": "<NUM>", "help": "Show NUM lines before and after each match."},
             \           {"name": ["--context-separator"], "nargs": 1, "metavar": "<SEPARATOR>", "help": "The string used to separate non-contiguous context lines in the output."},
+            \           {"name": ["--crlf"], "nargs": 0, "help": "ripgrep will treat CRLF ('\r\n') as a line terminator instead of just '\n'."},
             \           {"name": ["-e", "--regexp"], "action": "append", "metavar": "<PATTERN>...",
             \               "help": "A pattern to search for. This option can be provided multiple times, where all patterns given are searched."},
             \           {"name": ["-F", "--fixed-strings"], "nargs": 0, "help": "Treat the pattern as a literal string instead of a regular expression."},

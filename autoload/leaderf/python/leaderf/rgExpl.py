@@ -127,6 +127,8 @@ class RgExplorer(Explorer):
             zero_args_options += "-U "
         if "--multiline-dotall" in arguments_dict:
             zero_args_options += "--multiline-dotall "
+        if "--crlf" in arguments_dict:
+            zero_args_options += "--crlf "
 
         one_args_options = ''
         if "--context-separator" in arguments_dict:
