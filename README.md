@@ -6,7 +6,7 @@ An efficient fuzzy finder that helps to locate files, buffers, mrus, gtags, etc.
  - Written in Python.
  - Support fuzzy and regex searching.
  - Full-featured.
- - [Well-designed fuzzy matching algorithm](https://github.com/Yggdroot/testFuzzyMatch).
+ - Well-designed fuzzy matching algorithm.
  - [Extensible](https://github.com/Yggdroot/LeaderF/wiki/Extensions).
 
 Changelog
