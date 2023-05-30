@@ -107,6 +107,8 @@ class RgExplorer(Explorer):
             zero_args_options += "-v "
         if "--binary" in arguments_dict:
             zero_args_options += "--binary "
+        if "--column" in arguments_dict:
+            zero_args_options += "--column "
         if "--hidden" in arguments_dict:
             zero_args_options += "--hidden "
         if "--no-config" in arguments_dict:
@@ -567,7 +569,7 @@ class RgExplManager(Manager):
     def setArguments(self, arguments):
         self._arguments = arguments
         self._match_path = "--match-path" in arguments
-        self._has_column = "--column" in lfEval("get(g:, 'Lf_RgConfig', [])")
+        self._has_column = "--column" in lfEval("get(g:, 'Lf_RgConfig', [])") or "--column" in self._arguments
 
     def _getDigest(self, line, mode):
         """

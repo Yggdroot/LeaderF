@@ -122,6 +122,7 @@ let g:Lf_Arguments = {
             \           {"name": ["-w", "--word-regexp"], "nargs": 0, "help": "Only show matches surrounded by word boundaries. This is roughly equivalent to putting \\b before and after all of the search patterns."},
             \           {"name": ["-x", "--line-regexp"], "nargs": 0, "help": "Only show matches surrounded by line boundaries."},
             \           {"name": ["--binary"], "nargs": 0, "help": "Enabling this flag will cause ripgrep to search binary files."},
+            \           {"name": ["--column"], "nargs": 0, "help": "Show column numbers (1-based). This only shows the column numbers for the first match on each line."},
             \           {"name": ["--hidden"], "nargs": 0, "help": "Search hidden files and directories. By default, hidden files and directories are skipped."},
             \           {"name": ["--heading"], "nargs": 0, "help": "Prints the file path above clusters of matches from each file instead of printing the file path as a prefix for each matched line."},
             \           {"name": ["--no-config"], "nargs": 0, "help": "Never read configuration files. When this flag is present, rg will not respect the RIPGREP_CONFIG_PATH environment variable."},
