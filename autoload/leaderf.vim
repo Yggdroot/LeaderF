@@ -327,6 +327,17 @@ endfunction
 
 call s:InitCommandMap('g:Lf_CommandMap', s:Lf_CommandMap)
 
+function! leaderf#execute(cmd)
+    if exists('*execute')
+        return execute(a:cmd)
+    else
+        redir => l:output
+        silent! execute a:cmd
+        redir END
+        return l:output
+    endif
+endfunction
+
 function! leaderf#versionCheck()
     if g:Lf_PythonVersion == 2 && pyeval("sys.version_info < (2, 7)")
         echohl Error

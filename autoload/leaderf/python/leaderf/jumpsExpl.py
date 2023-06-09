@@ -21,7 +21,7 @@ class JumpsExplorer(Explorer):
         return self.getFreshContent(*args, **kwargs)
 
     def getFreshContent(self, *args, **kwargs):
-        content = lfEval("split(execute('jumps'), '\n')")
+        content = lfEval("split(leaderf#execute('jumps'), '\n')")
 
         flag = ' '
         self._content = []
