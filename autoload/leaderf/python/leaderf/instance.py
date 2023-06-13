@@ -259,6 +259,7 @@ class LfInstance(object):
         self._win_pos = None
         self._stl_buf_namespace = None
         self._auto_resize = lfEval("get(g:, 'Lf_AutoResize', 0)") == '1'
+        self._window_id = 0
 
     def _initStlVar(self):
         if int(lfEval("!exists('g:Lf_{}_StlCategory')".format(self._category))):
@@ -459,6 +460,7 @@ class LfInstance(object):
 
             lfCmd("noautocmd silent noswapfile let winid = nvim_open_win(%d, 1, %s)" % (buf_number, str(config)))
             self._popup_winid = int(lfEval("winid"))
+            self._window_id = self._popup_winid
             self._setAttributes()
             if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0' or lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1':
                 try:
@@ -619,6 +621,7 @@ class LfInstance(object):
 
             lfCmd("noautocmd silent noswapfile let winid = popup_create(%d, %s)" % (buf_number, str(options)))
             self._popup_winid = int(lfEval("winid"))
+            self._window_id = self._popup_winid
             lfCmd("call win_execute(%d, 'setlocal nobuflisted')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal buftype=nofile')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal bufhidden=hide')" % self._popup_winid)
@@ -818,6 +821,8 @@ class LfInstance(object):
 
         lfCmd("doautocmd WinEnter")
 
+        if lfEval("exists('*win_getid')") == '1':
+            self._window_id = int(lfEval("win_getid()"))
         self._tabpage_object = vim.current.tabpage
         self._window_object = vim.current.window
         self._initial_win_height = self._window_object.height
@@ -1422,15 +1427,16 @@ class LfInstance(object):
         return self._window_object
 
     @property
+    def windowId(self):
+        return self._window_id
+
+    @property
     def buffer(self):
         return self._buffer_object
 
     @property
     def currentLine(self):
-        if self._win_pos in ('popup', 'floatwin'):
-            return self._buffer_object[self._window_object.cursor[0] - 1]
-        else:
-            return vim.current.line if self._buffer_object == vim.current.buffer else None
+        return self._buffer_object[self._window_object.cursor[0] - 1]
 
     def empty(self):
         return len(self._buffer_object) == 1 and self._buffer_object[0] == ''

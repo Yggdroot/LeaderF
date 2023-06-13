@@ -71,7 +71,6 @@ class ColorschemeExplorer(Explorer):
 class ColorschemeExplManager(Manager):
     def __init__(self):
         super(ColorschemeExplManager, self).__init__()
-        self._orig_line = ''
 
     def _getExplClass(self):
         return ColorschemeExplorer

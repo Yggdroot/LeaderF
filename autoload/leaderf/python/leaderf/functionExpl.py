@@ -207,7 +207,6 @@ class FunctionExplorer(Explorer):
 class FunctionExplManager(Manager):
     def __init__(self):
         super(FunctionExplManager, self).__init__()
-        self._orig_line = ''
 
     def _getExplClass(self):
         return FunctionExplorer
@@ -342,37 +341,6 @@ class FunctionExplManager(Manager):
 
     def removeCache(self, buf_number):
         self._getExplorer().removeCache(buf_number)
-
-    def _previewResult(self, preview):
-        if self._getInstance().getWinPos() == 'floatwin':
-            self._cli.buildPopupPrompt()
-
-        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
-            if self._orig_line != self._getInstance().currentLine:
-                self._closePreviewPopup()
-            else:
-                return
-
-        if not self._needPreview(preview):
-            return
-
-        line = self._getInstance().currentLine
-        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
-            self._previewInPopup(line)
-            lfCmd("redraw")
-            return
-
-        orig_pos = self._getInstance().getOriginalPos()
-        cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
-
-        saved_eventignore = vim.options['eventignore']
-        vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
-        try:
-            vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
-            self._acceptSelection(line, preview=True)
-        finally:
-            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
-            vim.options['eventignore'] = saved_eventignore
 
     def _bangEnter(self):
         super(FunctionExplManager, self)._bangEnter()

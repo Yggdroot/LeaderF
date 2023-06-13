@@ -18,11 +18,21 @@ def cursorController(func):
         if lfEval("exists('g:lf_gcr_stack')") == '0':
             lfCmd("let g:lf_gcr_stack = []")
         lfCmd("call add(g:lf_gcr_stack, &gcr)")
-        lfCmd("set gcr=a:invisible")
-        if lfEval("exists('g:lf_t_ve_stack')") == '0':
-            lfCmd("let g:lf_t_ve_stack = []")
-        lfCmd("call add(g:lf_t_ve_stack, &t_ve)")
-        lfCmd("set t_ve=")
+        if lfEval("has('nvim')") == '1':
+            if lfEval("exists('g:lf_termgcr_stack')") == '0':
+                lfCmd("let g:lf_termgcr_stack = []")
+            lfCmd("call add(g:lf_termgcr_stack, &termguicolors)")
+            lfCmd("set termguicolors")
+            lfCmd("hi Cursor blend=100")
+            lfCmd("set guicursor+=a:Cursor/lCursor")
+        else:
+            lfCmd("set gcr=a:invisible")
+
+            if lfEval("exists('g:lf_t_ve_stack')") == '0':
+                lfCmd("let g:lf_t_ve_stack = []")
+            lfCmd("call add(g:lf_t_ve_stack, &t_ve)")
+            lfCmd("set t_ve=")
+
         lfCmd("let g:Lf_ttimeoutlen_orig = &ttimeoutlen")
         lfCmd("set ttimeoutlen=0")
         try:
@@ -32,8 +42,13 @@ def cursorController(func):
             lfCmd("let &ttimeoutlen = g:Lf_ttimeoutlen_orig")
             lfCmd("set gcr&")
             lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
-            lfCmd("set t_ve&")
-            lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
+            if lfEval("has('nvim')") == '1':
+                lfCmd("hi Cursor blend=0")
+                lfCmd("set termguicolors&")
+                lfCmd("let &termguicolors = remove(g:lf_termgcr_stack, -1)")
+            else:
+                lfCmd("set t_ve&")
+                lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
     return deco
 
 
@@ -167,28 +182,6 @@ class LfCli(object):
         self._cmdline = list(pattern)
         self._cursor_pos = len(self._cmdline)
         self._buildPattern()
-
-    # https://github.com/neovim/neovim/issues/6538
-    def _buildNvimPrompt(self):
-        lfCmd("redraw")
-        if self._is_fuzzy:
-            if self._is_full_path:
-                lfCmd("echohl Constant | echon '>F> {}' | echohl NONE".format(self._additional_prompt_string))
-            else:
-                lfCmd("echohl Constant | echon '>>> {}' | echohl NONE".format(self._additional_prompt_string))
-        else:
-            lfCmd("echohl Constant | echon 'R>> {}' | echohl NONE".format(self._additional_prompt_string))
-
-        lfCmd("echohl Normal | echon '%s' | echohl NONE" %
-              escQuote(''.join(self._cmdline[:self._cursor_pos])))
-        if self._cursor_pos < len(self._cmdline):
-            lfCmd("hi! default link Lf_hl_cursor Cursor")
-            lfCmd("echohl Lf_hl_cursor | echon '%s' | echohl NONE" %
-                  escQuote(''.join(self._cmdline[self._cursor_pos])))
-            lfCmd("echohl Normal | echon '%s' | echohl NONE" %
-                  escQuote(''.join(self._cmdline[self._cursor_pos+1:])))
-        else:
-            lfCmd("hi! default link Lf_hl_cursor NONE")
 
     def _buildPopupPrompt(self):
         self._instance.mimicCursor()
@@ -328,10 +321,6 @@ class LfCli(object):
         lfCmd("silent! redraw")
 
     def _buildPrompt(self):
-        if lfEval("has('nvim')") == '1' and self._instance.getWinPos() != 'floatwin':
-            self._buildNvimPrompt()
-            return
-
         if self._idle and datetime.now() - self._start_time < timedelta(milliseconds=500): # 500ms
             return
         else:
@@ -821,13 +810,9 @@ class LfCli(object):
                     elif equal(cmd, '<Right>'):
                         self._toRight()
                     elif equal(cmd, '<ScrollWheelUp>'):
-                        yield '<C-K>'
-                        yield '<C-K>'
-                        yield '<C-K>'
+                        yield '<ScrollWheelUp>'
                     elif equal(cmd, '<ScrollWheelDown>'):
-                        yield '<C-J>'
-                        yield '<C-J>'
-                        yield '<C-J>'
+                        yield '<ScrollWheelDown>'
                     elif equal(cmd, '<C-C>'):
                         yield '<Quit>'
                     else:

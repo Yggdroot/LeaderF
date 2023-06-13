@@ -293,6 +293,9 @@ class BufExplManager(Manager):
         if line == '':
             return
         buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
+        if lfEval("bufloaded(%d)" % buf_number) == '0':
+            lfCmd("silent call bufload(%d)" % buf_number)
+
         self._createPopupPreview(vim.buffers[buf_number].name, buf_number, 0)
 
 

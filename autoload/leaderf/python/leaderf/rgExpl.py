@@ -891,6 +891,8 @@ class RgExplManager(Manager):
         else:
             lfCmd("setlocal nomodifiable")
 
+        self._previewResult(False)
+
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0:
             return

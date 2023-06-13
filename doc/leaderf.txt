@@ -911,7 +911,7 @@ g:Lf_PopupBorders                               *g:Lf_PopupBorders*
     To have a good display for non-ascii characters, perhaps you need to set
     the value of |ambiwidth| as "single".
 
-    Default value is ["-","|","-","|","+","+","+","+"].
+    Default value is ["─","│","─","│","╭","╮","╯","╰"].
 
 g:Lf_AutoResize                                 *g:Lf_AutoResize*
     Auto resize the LeaderF window height automatically.
