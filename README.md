@@ -36,7 +36,7 @@ Requirements
 
  - vim7.3 or higher. Only support 7.4.1126+ after [v1.01](https://github.com/Yggdroot/LeaderF/releases/tag/v1.01).
  - Python2.7+ or Python3.1+.
- - To use the popup mode, neovim 0.42+ or vim 8.1.1615+ are required.
+ - To use the popup mode, neovim 0.4.2+ or vim 8.1.1615+ are required.
 
 Installation
 ------------

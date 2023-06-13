@@ -128,6 +128,9 @@ class Manager(object):
         self._arguments = {}
         self._getExplClass()
         self._preview_filetype = None
+        if lfEval("has('patch-8.1.1615') || has('nvim-0.4.2')") == '0':
+            lfCmd("let g:Lf_PreviewInPopup = 0")
+
 
     #**************************************************************
     # abstract methods, in fact all the functions can be overridden
