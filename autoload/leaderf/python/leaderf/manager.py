@@ -2323,6 +2323,17 @@ class Manager(object):
     def _readFinished(self):
         pass
 
+    def _previewFirstLine(self, content):
+        try:
+            first_line = next(content)
+            content = itertools.chain([first_line], content)
+            self._getInstance().setBuffer([first_line])
+            self._previewResult(False)
+        except StopIteration:
+            pass
+
+        return content
+
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" in arguments_dict:
@@ -2426,6 +2437,7 @@ class Manager(object):
                 self._getInstance().setStlResultsCount(len(self._content))
                 if not empty_query:
                     self._getInstance().setBuffer(self._content[:self._initial_count])
+                    self._previewResult(False)
 
             if lfEval("has('nvim')") == '1':
                 lfCmd("redrawstatus")
@@ -2467,6 +2479,7 @@ class Manager(object):
             self._callback = self._workInIdle
             if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
+                self._previewResult(False)
                 self._read_finished = 1
                 self._offset_in_content = 0
             else:
@@ -2487,6 +2500,7 @@ class Manager(object):
                 self._read_finished = 0
 
                 self._stop_reader_thread = False
+                content = self._previewFirstLine(content)
                 self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
                 self._reader_thread.daemon = True
                 self._reader_thread.start()
@@ -2500,9 +2514,11 @@ class Manager(object):
                 self._getInstance().mimicCursor()
         else:
             self._is_content_list = False
+            content = self._previewFirstLine(content)
             self._callback = partial(self._workInIdle, content)
             if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
+                self._previewResult(False)
                 self._read_finished = 1
                 self._offset_in_content = 0
             else:
@@ -2710,6 +2726,7 @@ class Manager(object):
         elif self._empty_query and self._getExplorer().getStlCategory() in ["File"] \
                 and "--recall" not in self._arguments:
             self._guessSearch(self._content)
+            self._previewResult(False)
 
         for cmd in self._cli.input(self._callback):
             cur_len = len(self._content)

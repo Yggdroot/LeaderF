@@ -201,7 +201,10 @@ class AsyncExecutor(object):
             return self
 
         def __iter__(self):
-            return self._g
+            return self
+
+        def __next__(self):
+            return next(self._g)
 
 
 if __name__ == "__main__":
