@@ -19,12 +19,8 @@ def cursorController(func):
             lfCmd("let g:lf_gcr_stack = []")
         lfCmd("call add(g:lf_gcr_stack, &gcr)")
         if lfEval("has('nvim')") == '1':
-            if lfEval("exists('g:lf_termgcr_stack')") == '0':
-                lfCmd("let g:lf_termgcr_stack = []")
-            lfCmd("call add(g:lf_termgcr_stack, &termguicolors)")
-            lfCmd("set termguicolors")
             lfCmd("hi Cursor blend=100")
-            lfCmd("set guicursor+=a:Cursor/lCursor")
+            lfCmd("set gcr+=a:ver1-Cursor/lCursor")
         else:
             lfCmd("set gcr=a:invisible")
 
@@ -44,8 +40,6 @@ def cursorController(func):
             lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
             if lfEval("has('nvim')") == '1':
                 lfCmd("hi Cursor blend=0")
-                lfCmd("set termguicolors&")
-                lfCmd("let &termguicolors = remove(g:lf_termgcr_stack, -1)")
             else:
                 lfCmd("set t_ve&")
                 lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
