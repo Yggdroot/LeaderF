@@ -886,7 +886,7 @@ g:Lf_PopupShowFoldcolumn                        *g:Lf_PopupShowFoldcolumn*
 
     Default value is 1.
 
-g:Lf_PopupAutoAjustHeight                       *g:Lf_PopupAutoAjustHeight*
+g:Lf_PopupAutoAdjustHeight                      *g:Lf_PopupAutoAdjustHeight*
     Specifies whether to adjust the height of popup window automatically.
 
     Default value is 1.
