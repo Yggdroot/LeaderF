@@ -323,7 +323,6 @@ class Manager(object):
             lfCmd("set laststatus=%s" % self._laststatus)
 
     def _bangEnter(self):
-        self._preview_open = False
         self._current_mode = 'NORMAL'
         if self._getInstance().getWinPos() == 'popup':
             self._cli.hideCursor()
@@ -341,9 +340,7 @@ class Manager(object):
                 self._getInstance().appendBuffer(self._result_content[self._initial_count:])
 
     def _bangReadFinished(self):
-        if self._preview_open == False and self._getInstance().getWinPos() in ('popup', 'floatwin'):
-            self._previewResult(False)
-            self._preview_open = True
+        pass
 
     def _getList(self, pairs):
         """
@@ -2568,11 +2565,6 @@ class Manager(object):
             else:
                 raise self._read_content_exception[1]
 
-        if bang == False and self._preview_open == False and lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1' \
-                and not self._getInstance().empty():
-            self._previewResult(False)
-            self._preview_open = True
-
         if self._is_content_list:
             if self._cli.pattern and (self._index < len(self._content) or len(self._cb_content) > 0):
                 if self._fuzzy_engine:
@@ -2702,7 +2694,6 @@ class Manager(object):
 
     @modifiableController
     def input(self):
-        self._preview_open = False
         self._current_mode = 'INPUT'
         self._getInstance().hideMimicCursor()
         if self._getInstance().getWinPos() in ('popup', 'floatwin'):
