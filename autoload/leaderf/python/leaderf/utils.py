@@ -6,10 +6,13 @@ import sys
 import re
 import os
 import os.path
+import time
 import locale
 import traceback
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+from functools import wraps
 
 
 lfCmd = vim.command
@@ -1404,3 +1407,28 @@ def getExtension(path):
             return "help"
 
         return extension_ft.get(ext, None)
+
+def ignoreEvent(events):
+    def wrapper(func):
+        @wraps(func)
+        def deco(self, *args, **kwargs):
+            try:
+                saved_eventignore = vim.options['eventignore']
+                vim.options['eventignore'] = events
+
+                func(self, *args, **kwargs)
+            finally:
+                vim.options['eventignore'] = saved_eventignore
+        return deco
+    return wrapper
+
+def printTime(func):
+    @wraps(func)
+    def deco(self, *args, **kwargs):
+        try:
+            start = time.time()
+            return func(self, *args, **kwargs)
+        finally:
+            print(func.__name__, time.time() - start)
+
+    return deco

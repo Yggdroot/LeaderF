@@ -80,20 +80,6 @@ def catchException(func):
                 self._timer_id = None
     return deco
 
-def ignoreEvent(events):
-    def wrapper(func):
-        @wraps(func)
-        def deco(self, *args, **kwargs):
-            try:
-                saved_eventignore = vim.options['eventignore']
-                vim.options['eventignore'] = events
-
-                func(self, *args, **kwargs)
-            finally:
-                vim.options['eventignore'] = saved_eventignore
-        return deco
-    return wrapper
-
 #*****************************************************
 # Manager
 #*****************************************************
