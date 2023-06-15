@@ -757,6 +757,7 @@ class Manager(object):
             if isinstance(source, int):
                 lfCmd("noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
                 lfCmd("noautocmd call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
+                self._preview_filetype = ''
             else:
                 try:
                     lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
