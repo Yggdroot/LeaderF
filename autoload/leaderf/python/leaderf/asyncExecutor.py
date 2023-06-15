@@ -206,6 +206,9 @@ class AsyncExecutor(object):
         def __next__(self):
             return next(self._g)
 
+        # for python2
+        def next(self):
+            return next(self._g)
 
 if __name__ == "__main__":
     executor = AsyncExecutor()
