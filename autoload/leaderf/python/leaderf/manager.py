@@ -2330,6 +2330,7 @@ class Manager(object):
             content = itertools.chain([first_line], content)
             self._getInstance().setBuffer([first_line])
             self._previewResult(False)
+            self._getInstance().clearBuffer()
         except StopIteration:
             pass
 
