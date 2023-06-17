@@ -116,6 +116,8 @@ class Manager(object):
         self._preview_filetype = None
         if lfEval("has('patch-8.1.1615') || has('nvim-0.4.2')") == '0':
             lfCmd("let g:Lf_PreviewInPopup = 0")
+        if lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')").lower() == 'bottom':
+            lfCmd("let g:Lf_PopupAutoAdjustHeight = 0")
 
 
     #**************************************************************
