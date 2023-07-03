@@ -1658,7 +1658,7 @@ class Manager(object):
             self._highlight_method()
 
         if len(self._cli.pattern) > 1 and not is_continue:
-            lfCmd("redraw")
+            lfCmd("silent! redraw")
 
     def _guessFilter(self, filename, suffix, dirname, icon, iterable):
         """
