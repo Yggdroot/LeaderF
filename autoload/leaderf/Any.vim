@@ -247,7 +247,10 @@ let g:Lf_CommonArguments = [
             \ {"name": ["--popup-width"], "nargs": 1, "help": "specifies the width of popup window, only available in popup mode."},
             \ {"name": ["--no-sort"], "nargs": 0, "help": "do not sort the result."},
             \ {"name": ["--case-insensitive"], "nargs": 0, "help": "fuzzy search case insensitively."},
-            \ {"name": ["--auto-preview"], "nargs": 0, "help": "open preview window automatically."},
+            \ [
+            \   {"name": ["--auto-preview"], "nargs": 0, "help": "open preview window automatically."},
+            \   {"name": ["--no-auto-preview"], "nargs": 0, "help": "don't open preview window automatically."},
+            \ ],
             \]
 
 " arguments is something like g:Lf_CommonArguments

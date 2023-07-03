@@ -75,7 +75,8 @@ Usage
 usage: Leaderf[!] [-h] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                   [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen | --popup]
                   [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap] [--next | --previous]
-                  [--recall] [--popup-height <POPUP_HEIGHT>] [--popup-width <POPUP_WIDTH>]
+                  [--recall] [--popup-height <POPUP_HEIGHT>] [--popup-width <POPUP_WIDTH>] [--no-sort]
+                  [--case-insensitive] [--auto-preview | --no-auto-preview]
                   
                   {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,
                       self,bufTag,buffer,rg,filetype,command,window,quickfix,loclist,jumps}
@@ -110,6 +111,7 @@ optional arguments:
   --no-sort             do not sort the result.
   --case-insensitive    fuzzy search case insensitively.
   --auto-preview        open preview window automatically.
+  --no-auto-preview     don't open preview window automatically.
 
 subcommands:
 

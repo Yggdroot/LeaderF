@@ -985,6 +985,9 @@ class Manager(object):
         if "--auto-preview" in self._arguments:
             return True
 
+        if "--no-auto-preview" in self._arguments:
+            return False
+
         preview_dict = {k.lower(): v for k, v in lfEval("g:Lf_PreviewResult").items()}
         category = self._getExplorer().getStlCategory()
         if int(preview_dict.get(category.lower(), 0)) == 0:
