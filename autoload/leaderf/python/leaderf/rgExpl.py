@@ -47,7 +47,7 @@ class RgExplorer(Explorer):
 
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
-        if "--recall" in arguments_dict:
+        if "--recall" in arguments_dict and "--live" not in arguments_dict:
             return []
 
         self._cmd_work_dir = lfGetCwd()
@@ -938,26 +938,33 @@ class RgExplManager(Manager):
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
         self._getInstance().setArguments(self._arguments)
 
-        self._getInstance().setCwd(lfGetCwd())
-
-        pattern = arguments_dict.get("--input", [""])[0]
-        if len(pattern) > 1 and (pattern[0] == '"' and pattern[-1] == '"'
-                or pattern[0] == "'" and pattern[-1] == "'"):
-            pattern = pattern[1:-1]
-
-        self._cli.setPattern(pattern)
-
-        if pattern:
-            content = self._getExplorer().getContent(*args, **kwargs, pattern=self._cli.pattern)
+        remember_last_status = "--recall" in self._arguments \
+                or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern
+        if remember_last_status:
+            content = iter(self._content)
+            self._getInstance().useLastReverseOrder()
+            win_pos = self._getInstance().getWinPos()
         else:
-            content = self._getExplorer().getContent(*args, **kwargs)
+            self._getInstance().setCwd(lfGetCwd())
+
+            pattern = arguments_dict.get("--input", [""])[0]
+            if len(pattern) > 1 and (pattern[0] == '"' and pattern[-1] == '"'
+                    or pattern[0] == "'" and pattern[-1] == "'"):
+                pattern = pattern[1:-1]
+
+            self._cli.setPattern(pattern)
+
+            if pattern:
+                content = self._getExplorer().getContent(*args, **kwargs, pattern=self._cli.pattern)
+            else:
+                content = self._getExplorer().getContent(*args, **kwargs)
 
         # clear the buffer only when the content is not a list
         self._getInstance().enterBuffer(win_pos, not isinstance(content, list))
         self._initial_count = self._getInstance().getInitialWinHeight()
 
         self._getInstance().setStlCategory(self._getExplorer().getStlCategory())
-        self._setStlMode(**kwargs)
+        self._setStlMode(the_mode="Live", **kwargs)
         self._getInstance().setStlCwd(self._getExplorer().getStlCurDir())
 
         if kwargs.get('bang', 0):
@@ -1061,7 +1068,7 @@ class RgExplManager(Manager):
                 if cur_buf_name and not os.path.dirname(cur_buf_name).startswith(self._orig_cwd):
                     chdir(os.path.dirname(cur_buf_name))
 
-        if "--live" in arguments_dict:
+        if "--live" in arguments_dict or ("--recall" in arguments_dict and "--live" in self._arguments):
             self.startLiveGrep(win_pos, *args, **kwargs)
         else:
             super(RgExplManager, self).startExplorer(win_pos, *args, **kwargs)

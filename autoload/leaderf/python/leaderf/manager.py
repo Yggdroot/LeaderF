@@ -203,7 +203,7 @@ class Manager(object):
     def _createHelp(self):
         return []
 
-    def _setStlMode(self, **kwargs):
+    def _setStlMode(self, the_mode=None, **kwargs):
         if self._cli.isFuzzy:
             if self._getExplorer().supportsNameOnly():
                 if self._cli.isFullPath:
@@ -212,12 +212,10 @@ class Manager(object):
                     mode = 'NameOnly'
             else:
                 mode = 'Fuzzy'
-        elif self._cli._is_live:
-            mode = 'Fuzzy'
         else:
             mode = 'Regex'
 
-        modes = {"--live", "--nameOnly", "--fullPath", "--fuzzy", "--regexMode"}
+        modes = {"--nameOnly", "--fullPath", "--fuzzy", "--regexMode"}
         for opt in kwargs.get("arguments", {}):
             if opt in modes:
                 if opt == "--regexMode":
@@ -234,10 +232,11 @@ class Manager(object):
                             mode = 'NameOnly'
                 elif opt in ("--nameOnly", "--fullPath", "--fuzzy"):
                     mode = 'Fuzzy'
-                elif opt == "--live":
-                    mode = 'Live'
 
                 break
+
+        if the_mode is not None:
+            mode = the_mode
 
         self._getInstance().setStlMode(mode)
         self._cli.setCurrentMode(mode)
@@ -2436,6 +2435,8 @@ class Manager(object):
                 if not empty_query:
                     self._getInstance().setBuffer(self._content[:self._initial_count])
                     self._previewResult(False)
+            else:
+                self._previewResult(False)
 
             if lfEval("has('nvim')") == '1':
                 lfCmd("redrawstatus")
