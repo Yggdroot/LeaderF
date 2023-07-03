@@ -60,7 +60,7 @@ function! leaderf#Rg#visual()
         let x_save = getreg("x", 1)
         let type = getregtype("x")
         norm! gv"xy
-        return '"' . escape(@x, '"') . '"'
+        return '"' . escape(@x, '\"') . '"'
     finally
         call setreg("x", x_save, type)
     endtry

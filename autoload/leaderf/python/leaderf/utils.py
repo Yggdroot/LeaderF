@@ -1416,7 +1416,7 @@ def ignoreEvent(events):
                 saved_eventignore = vim.options['eventignore']
                 vim.options['eventignore'] = events
 
-                func(self, *args, **kwargs)
+                return func(self, *args, **kwargs)
             finally:
                 vim.options['eventignore'] = saved_eventignore
         return deco

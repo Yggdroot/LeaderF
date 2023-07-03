@@ -292,8 +292,20 @@ class GtagsExplorer(Explorer):
         """
         copied from RgExplorer
         """
+
+        def replace(text, pattern, repl):
+            """
+            only replace pattern with even number of \ preceding it
+            """
+            result = ''
+            for s in re.split(r'((?:\\\\)+)', text):
+                result += re.sub(pattern, repl, s)
+
+            return result
+
         vim_regex = regex
 
+        vim_regex = vim_regex.replace(r"\\", "\\")
         vim_regex = re.sub(r'([%@&])', r'\\\1', vim_regex)
 
         # non-greedy pattern
@@ -319,12 +331,12 @@ class GtagsExplorer(Explorer):
             vim_regex = re.sub(r'\(\?>(.+?)\)', r'(\1)@>', vim_regex)
 
         # this won't hurt although they are not the same
-        vim_regex = vim_regex.replace(r'\A', r'^')
-        vim_regex = vim_regex.replace(r'\z', r'$')
-        vim_regex = vim_regex.replace(r'\B', r'')
+        vim_regex = replace(vim_regex, r'\\A', r'^')
+        vim_regex = replace(vim_regex, r'\\z', r'$')
+        vim_regex = replace(vim_regex, r'\\B', r'')
 
         # word boundary
-        vim_regex = re.sub(r'\\b', r'(<|>)', vim_regex)
+        vim_regex = replace(vim_regex, r'\\b', r'(<|>)')
 
         # case-insensitive
         vim_regex = vim_regex.replace(r'(?i)', r'\c')
@@ -339,19 +351,19 @@ class GtagsExplorer(Explorer):
         # \a          bell (\x07)
         # \f          form feed (\x0C)
         # \v          vertical tab (\x0B)
-        vim_regex = vim_regex.replace(r'\a', r'%x07')
-        vim_regex = vim_regex.replace(r'\f', r'%x0C')
-        vim_regex = vim_regex.replace(r'\v', r'%x0B')
+        vim_regex = replace(vim_regex, r'\\a', r'%x07')
+        vim_regex = replace(vim_regex, r'\\f', r'%x0C')
+        vim_regex = replace(vim_regex, r'\\v', r'%x0B')
 
         # \123        octal character code (up to three digits) (when enabled)
         # \x7F        hex character code (exactly two digits)
-        vim_regex = re.sub(r'\\(x[0-9A-Fa-f][0-9A-Fa-f])', r'%\1', vim_regex)
+        vim_regex = replace(vim_regex, r'\\(x[0-9A-Fa-f][0-9A-Fa-f])', r'%\1')
         # \x{10FFFF}  any hex character code corresponding to a Unicode code point
         # \u007F      hex character code (exactly four digits)
         # \u{7F}      any hex character code corresponding to a Unicode code point
         # \U0000007F  hex character code (exactly eight digits)
         # \U{7F}      any hex character code corresponding to a Unicode code point
-        vim_regex = re.sub(r'\\([uU])', r'%\1', vim_regex)
+        vim_regex = replace(vim_regex, r'\\([uU])', r'%\1')
 
         vim_regex = re.sub(r'\[\[:ascii:\]\]', r'[\\x00-\\x7F]', vim_regex)
         vim_regex = re.sub(r'\[\[:word:\]\]', r'[0-9A-Za-z_]', vim_regex)

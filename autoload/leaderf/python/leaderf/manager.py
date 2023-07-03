@@ -212,10 +212,12 @@ class Manager(object):
                     mode = 'NameOnly'
             else:
                 mode = 'Fuzzy'
+        elif self._cli._is_live:
+            mode = 'Fuzzy'
         else:
             mode = 'Regex'
 
-        modes = {"--nameOnly", "--fullPath", "--fuzzy", "--regexMode"}
+        modes = {"--live", "--nameOnly", "--fullPath", "--fuzzy", "--regexMode"}
         for opt in kwargs.get("arguments", {}):
             if opt in modes:
                 if opt == "--regexMode":
@@ -231,7 +233,9 @@ class Manager(object):
                         else:
                             mode = 'NameOnly'
                 elif opt in ("--nameOnly", "--fullPath", "--fuzzy"):
-                        mode = 'Fuzzy'
+                    mode = 'Fuzzy'
+                elif opt == "--live":
+                    mode = 'Live'
 
                 break
 
@@ -795,17 +799,18 @@ class Manager(object):
                 if the type is int, it is a buffer number
                 if the type is str, it is a file name
 
+        return False if use existing window, otherwise True
         """
         self._is_previewed = True
         line_nr = int(line_nr)
 
         if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
             self._useExistingWindow(title, source, line_nr, jump_cmd)
-            return
+            return False
 
         if self._getInstance().getWinPos() in ('popup', 'floatwin'):
             self._createPopupModePreview(title, source, line_nr, jump_cmd)
-            return
+            return True
 
         if lfEval("has('nvim')") == '1':
             width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
@@ -825,7 +830,7 @@ class Manager(object):
                     lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
                 except vim.error as e:
                     lfPrintError(e)
-                    return
+                    return False
                 buffer_len = int(lfEval("len(content)"))
                 lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
                 lfCmd("noautocmd call setbufline(g:Lf_preview_scratch_buffer, 1, content)")
@@ -936,7 +941,7 @@ class Manager(object):
                     lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
                 except vim.error as e:
                     lfPrintError(e)
-                    return
+                    return False
 
             lfCmd("silent! let winid = popup_create(content, %s)" % json.dumps(options))
             lfCmd("call win_execute(winid, 'setlocal nomodeline')")
@@ -955,6 +960,8 @@ class Manager(object):
             lfCmd("call win_execute(%d, 'setlocal foldmethod=manual')" % self._preview_winid)
             if lfEval("exists('+cursorlineopt')") == '1':
                 lfCmd("call win_execute(%d, 'setlocal cursorlineopt=both')" % self._preview_winid)
+
+        return True
 
     def _needPreview(self, preview):
         """
@@ -2372,7 +2379,7 @@ class Manager(object):
                 return
 
             self._index = 0
-            pattern = kwargs.get("pattern", "") or arguments_dict.get("--input", [""])[0]
+            pattern = arguments_dict.get("--input", [""])[0]
             if len(pattern) > 1 and (pattern[0] == '"' and pattern[-1] == '"'
                     or pattern[0] == "'" and pattern[-1] == "'"):
                 pattern = pattern[1:-1]
@@ -2702,7 +2709,8 @@ class Manager(object):
         self._hideHelp()
         self._resetHighlights()
 
-        if self._cli.pattern:    # --input xxx or from normal mode to input mode
+        # --input xxx or from normal mode to input mode
+        if self._cli.pattern and "--live" not in self._arguments:
             if self._index == 0: # --input xxx
                 self._search(self._content)
         elif self._empty_query and self._getExplorer().getStlCategory() in ["File"] \
@@ -2735,7 +2743,7 @@ class Manager(object):
                 else:
                     self._gotoFirstLine()
                 self._index = 0 # search from beginning
-                if self._cli.pattern:
+                if self._cli.pattern and "--live" not in self._arguments:
                     self._search(cur_content)
             elif equal(cmd, '<C-K>'):
                 self._toUp()

@@ -182,6 +182,7 @@ class AsyncExecutor(object):
                 except OSError:
                     pass
 
+            self._process.poll()
             self._process = None
 
     class Result(object):

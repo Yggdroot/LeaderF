@@ -112,7 +112,10 @@ let g:Lf_Arguments = {
             \           {"name": ["--crlf"], "nargs": 0, "help": "ripgrep will treat CRLF ('\r\n') as a line terminator instead of just '\n'."},
             \           {"name": ["-e", "--regexp"], "action": "append", "metavar": "<PATTERN>...",
             \               "help": "A pattern to search for. This option can be provided multiple times, where all patterns given are searched."},
-            \           {"name": ["-F", "--fixed-strings"], "nargs": 0, "help": "Treat the pattern as a literal string instead of a regular expression."},
+            \           [
+            \               {"name": ["-F", "--fixed-strings"], "nargs": 0, "help": "Treat the pattern as a literal string instead of a regular expression."},
+            \               {"name": ["--no-fixed-strings"], "nargs": 0, "help": "Treat the pattern as a regular expression."},
+            \           ],
             \           {"name": ["-i", "--ignore-case"], "nargs": 0, "help": "Searches case insensitively."},
             \           {"name": ["-L", "--follow"], "nargs": 0, "help": "Follow symbolic links while traversing directories."},
             \           {"name": ["-P", "--pcre2"], "nargs": 0, "help": "When this flag is present, rg will use the PCRE2 regex engine instead of its default regex engine."},
@@ -166,6 +169,7 @@ let g:Lf_Arguments = {
             \           {"name": ["--append"], "nargs": 0, "help": "Append to the previous search results."},
             \           {"name": ["--match-path"], "nargs": 0, "help": "Match the file path when fuzzy searching."},
             \           {"name": ["--wd-mode"], "nargs": 1, "metavar": "<MODE>", "help": "Specify the working directory mode, value has the same meaning as g:Lf_WorkingDirectoryMode."},
+            \           {"name": ["--live"], "nargs": 0, "help": "Perform the so called live grep. This option implies `-F`"},
             \   ],
             \ "gtags":[
             \           [

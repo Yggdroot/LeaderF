@@ -68,6 +68,7 @@ class LfCli(object):
         self._running_status = 0
         self._input_buf_namespace = None
         self._setDefaultMode()
+        self._is_live = False
         self._additional_prompt_string = ''
         self._spin_symbols = lfEval("get(g:, 'Lf_SpinSymbols', [])")
         if not self._spin_symbols:
@@ -107,6 +108,9 @@ class LfCli(object):
         elif mode == 'Fuzzy':     # fuzzy mode
             self._is_fuzzy = True
             self._is_full_path = False
+        elif mode == 'Live':     # live mode
+            self._is_fuzzy = False
+            self._is_live = True
         else:               # regex mode
             self._is_fuzzy = False
 
@@ -185,6 +189,8 @@ class LfCli(object):
                 prompt = ' >F> {}'.format(self._additional_prompt_string)
             else:
                 prompt = ' >>> {}'.format(self._additional_prompt_string)
+        elif self._is_live:
+            prompt = ' >>> {}'.format(self._additional_prompt_string)
         else:
             prompt = ' R>> {}'.format(self._additional_prompt_string)
 
@@ -342,6 +348,8 @@ class LfCli(object):
                 lfCmd("echohl Constant | echon '>F> {}' | echohl NONE".format(self._additional_prompt_string))
             else:
                 lfCmd("echohl Constant | echon '>>> {}' | echohl NONE".format(self._additional_prompt_string))
+        elif self._is_live:
+            lfCmd("echohl Constant | echon '>>> {}' | echohl NONE".format(self._additional_prompt_string))
         else:
             lfCmd("echohl Constant | echon 'R>> {}' | echohl NONE".format(self._additional_prompt_string))
 
@@ -753,9 +761,10 @@ class LfCli(object):
                             self._buildPattern()
                             yield '<Mode>'
                     elif equal(cmd, '<C-R>'):
-                        self._is_fuzzy = not self._is_fuzzy
-                        self._buildPattern()
-                        yield '<Mode>'
+                        if not self._is_live:
+                            self._is_fuzzy = not self._is_fuzzy
+                            self._buildPattern()
+                            yield '<Mode>'
                     elif equal(cmd, '<BS>') or equal(cmd, '<C-H>'):
                         if not self._pattern and self._refine == False:
                             continue
