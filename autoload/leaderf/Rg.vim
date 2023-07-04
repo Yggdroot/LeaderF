@@ -22,12 +22,12 @@ function! leaderf#Rg#Maps(heading)
     nnoremap <buffer> <silent> v             :exec g:Lf_py "rgExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "rgExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "rgExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             j:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> k             k:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "rgExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> j             :exec g:Lf_py "rgExplManager.moveAndPreview('j')"<CR>
+    nnoremap <buffer> <silent> k             :exec g:Lf_py "rgExplManager.moveAndPreview('k')"<CR>
+    nnoremap <buffer> <silent> <Up>          :exec g:Lf_py "rgExplManager.moveAndPreview('Up')"<CR>
+    nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "rgExplManager.moveAndPreview('Down')"<CR>
+    nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "rgExplManager.moveAndPreview('PageUp')"<CR>
+    nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "rgExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "rgExplManager.quit()"<CR>
     " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "rgExplManager.quit()"<CR>
     if a:heading == 0

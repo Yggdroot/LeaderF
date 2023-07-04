@@ -27,12 +27,12 @@ function! leaderf#Line#Maps()
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "lineExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "lineExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "lineExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             j:exec g:Lf_py "lineExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> k             k:exec g:Lf_py "lineExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "lineExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "lineExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "lineExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "lineExplManager._previewResult(False)"<CR>
+    nnoremap <buffer> <silent> j             :exec g:Lf_py "lineExplManager.moveAndPreview('j')"<CR>
+    nnoremap <buffer> <silent> k             :exec g:Lf_py "lineExplManager.moveAndPreview('k')"<CR>
+    nnoremap <buffer> <silent> <Up>          :exec g:Lf_py "lineExplManager.moveAndPreview('Up')"<CR>
+    nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "lineExplManager.moveAndPreview('Down')"<CR>
+    nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "lineExplManager.moveAndPreview('PageUp')"<CR>
+    nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "lineExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> Q             :exec g:Lf_py "lineExplManager.outputToQflist()"<CR>
     nnoremap <buffer> <silent> L             :exec g:Lf_py "lineExplManager.outputToLoclist()"<CR>
     if has("nvim")

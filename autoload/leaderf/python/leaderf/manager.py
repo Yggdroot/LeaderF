@@ -1116,6 +1116,20 @@ class Manager(object):
             else:
                 lfCmd("call win_execute(%d, 'norm! %dj')" % (self._preview_winid, scroll_step_size))
 
+    def moveAndPreview(self, direction):
+        """
+        direction is in {'j', 'k', 'Down', 'Up', 'PageDown', 'PageUp'}
+        """
+        if len(direction) > 1:
+            lfCmd('noautocmd exec "norm! \<{}>"'.format(direction))
+        else:
+            lfCmd('noautocmd exec "norm! {}"'.format(direction))
+
+        if self._getInstance().getWinPos() == 'floatwin':
+            self._cli.buildPopupPrompt()
+
+        self._previewResult(False)
+
     def _toUp(self):
         if self._getInstance().getWinPos() == 'popup':
             lfCmd("noautocmd call win_execute(%d, 'norm! k')" % (self._getInstance().getPopupWinId()))
@@ -1168,7 +1182,7 @@ class Manager(object):
                     and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
                 self._highlight_method()
 
-        lfCmd('exec "norm! \<PageUp>"')
+        lfCmd('noautocmd exec "norm! \<PageUp>"')
 
         self._getInstance().setLineNumber()
 
@@ -1181,7 +1195,7 @@ class Manager(object):
         if not self._getInstance().isReverseOrder():
             self._setResultContent()
 
-        lfCmd('exec "norm! \<PageDown>"')
+        lfCmd('noautocmd exec "norm! \<PageDown>"')
 
         self._getInstance().setLineNumber()
 
