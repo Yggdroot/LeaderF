@@ -1234,13 +1234,13 @@ class RgExplManager(Manager):
             string = lfEval("input('Replace with: ')")
             flags = lfEval("input('flags: ', 'gc')")
             if "--heading" in self._arguments:
-                lfCmd('%d;$s/\(^\d\+[:-].\{-}\)\@<=%s/%s/%s'
-                        % (self._getInstance().helpLength + 1, escQuote(pattern.replace('/', '\/')),
-                            escQuote(string.replace('/', '\/')), escQuote(flags)))
+                lfCmd("""%d;$s/\%%(^\d\+[:-].\{-}\)\@<=%s/%s/%s"""
+                        % (self._getInstance().helpLength + 1, pattern.replace('/', '\/'),
+                           string.replace('/', '\/'), flags))
             else:
-                lfCmd('%d;$s/\(^.\+\(:\d\+:\|-\d\+-\).\{-}\)\@<=%s/%s/%s'
-                        % (self._getInstance().helpLength + 1, escQuote(pattern.replace('/', '\/')),
-                            escQuote(string.replace('/', '\/')), escQuote(flags)))
+                lfCmd("""%d;$s/\%%(^.\+\%%(:\d\+:\|-\d\+-\).\{-}\)\@<=%s/%s/%s"""
+                        % (self._getInstance().helpLength + 1, pattern.replace('/', '\/'),
+                           string.replace('/', '\/'), flags))
             lfCmd("call histdel('search', -1)")
             lfCmd("let @/ = histget('search', -1)")
             lfCmd("nohlsearch")
