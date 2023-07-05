@@ -1126,7 +1126,7 @@ class Manager(object):
             lfCmd('noautocmd exec "norm! {}"'.format(direction))
 
         if self._getInstance().getWinPos() == 'floatwin':
-            self._cli.buildPopupPrompt()
+            self._cli._buildPopupPrompt()
 
         self._previewResult(False)
 
@@ -1161,7 +1161,7 @@ class Manager(object):
             return
 
         if not self._getInstance().isReverseOrder() \
-                and self._getInstance().getCurrentPos()[0] == self._getInstance().window.height:
+                and self._getInstance().getCurrentPos()[0] == self._initial_count:
             self._setResultContent()
 
         lfCmd("noautocmd norm! j")
