@@ -260,6 +260,7 @@ class LfInstance(object):
         self._stl_buf_namespace = None
         self._auto_resize = lfEval("get(g:, 'Lf_AutoResize', 0)") == '1'
         self._window_id = 0
+        self._float_win_view = None
 
     def _initStlVar(self):
         if int(lfEval("!exists('g:Lf_{}_StlCategory')".format(self._category))):
@@ -584,6 +585,9 @@ class LfInstance(object):
                                                                                          self._popup_instance.statusline_win.id if show_stl else -1,
                                                                                          show_stl, id(self._manager)))
             lfCmd("augroup END")
+
+            if self._float_win_view is not None:
+                lfCmd("call winrestview(%s)" % self._float_win_view)
         else:
             self._win_pos = "popup"
             if lfEval("get(g:, 'Lf_PopupAutoAdjustHeight', 1)") == '1':
@@ -1124,6 +1128,7 @@ class LfInstance(object):
             lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
             lfCmd("set t_ve&")
             lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
+            self._float_win_view = lfEval("winsaveview()")
             self._popup_instance.close()
             if self._orig_win_id is not None:
                 lfCmd("call win_gotoid(%d)" % self._orig_win_id)
