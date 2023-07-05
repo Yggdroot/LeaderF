@@ -1,7 +1,7 @@
 if &background ==? 'dark'
     highlight def Lf_hl_popup_inputText    guifg=#ABB2BF ctermfg=145 guibg=#3B4048 ctermbg=238
-    highlight def Lf_hl_popup_window       guifg=#ABB2BF ctermfg=145 guibg=#3B4048 ctermbg=238
-    highlight def Lf_hl_popup_blank        guibg=#3E4452 ctermbg=237
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
     highlight def Lf_hl_popup_cursor       guifg=#657b83 ctermfg=66  guibg=#98C379 ctermbg=114
     highlight def Lf_hl_popup_prompt       guifg=#D19A66 ctermfg=173 guibg=#3B4048 ctermbg=238  gui=bold cterm=bold
     highlight def Lf_hl_popup_spin         guifg=#ABB2BF ctermfg=145 guibg=#3B4048 ctermbg=238
@@ -16,7 +16,7 @@ if &background ==? 'dark'
     highlight def Lf_hl_popup_lineInfo     guifg=#ABB2BF ctermfg=145 guibg=#3E4452 ctermbg=237
     highlight def Lf_hl_popup_total        guifg=#2C323C ctermfg=236 guibg=#ABB2BF ctermbg=145
 
-    highlight def link Lf_hl_popupBorder   Default
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
 
     highlight def Lf_hl_cursorline         guifg=#ABB2BF ctermfg=145 guibg=NONE    ctermbg=NONE
 

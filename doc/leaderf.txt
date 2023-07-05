@@ -896,9 +896,9 @@ g:Lf_PopupAutoAdjustHeight                      *g:Lf_PopupAutoAdjustHeight*
     Default value is 1.
 
 g:Lf_PopupShowBorder                            *g:Lf_PopupShowBorder*
-    Specifies whether to show border for popup window.
+    Specifies whether to show borders for popup window.
 
-    Default value is 0.
+    Default value is 1.
 
 g:Lf_PopupBorders                               *g:Lf_PopupBorders*
     Specifies a list of characters, defining the character to use for the

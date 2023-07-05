@@ -10,14 +10,16 @@
 if &background ==# 'dark'
     if get(g:, 'gruvbox_material_background', 'medium') ==# 'hard'
         highlight Lf_hl_popup_inputText guifg=#ddc7a1 guibg=#3c3836 gui=NONE ctermfg=223 ctermbg=237 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#3c3836 gui=NONE ctermfg=223 ctermbg=237 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#3c3836 gui=NONE ctermfg=223 ctermbg=237 cterm=NONE
     elseif get(g:, 'gruvbox_material_background', 'medium') ==# 'medium'
         highlight Lf_hl_popup_inputText guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
     elseif get(g:, 'gruvbox_material_background', 'medium') ==# 'soft'
         highlight Lf_hl_popup_inputText guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
     endif
+
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
 
     highlight Lf_hl_popup_prompt guifg=#89b482 ctermfg=108
     highlight Lf_hl_popup_spin guifg=#d8a657 ctermfg=214
@@ -112,7 +114,7 @@ if &background ==# 'dark'
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    highlight def link Lf_hl_popupBorder        VertSplit
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -128,14 +130,16 @@ if &background ==# 'dark'
 else
     if get(g:, 'gruvbox_material_background', 'medium') ==# 'hard'
         highlight Lf_hl_popup_inputText guifg=#4f3829 guibg=#f2e5bc gui=NONE ctermfg=237 ctermbg=228 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#4f3829 guibg=#f2e5bc gui=NONE ctermfg=237 ctermbg=228 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#4f3829 guibg=#f2e5bc gui=NONE ctermfg=237 ctermbg=228 cterm=NONE
     elseif get(g:, 'gruvbox_material_background', 'medium') ==# 'medium'
         highlight Lf_hl_popup_inputText guifg=#4f3829 guibg=#ebdbb2 gui=NONE ctermfg=237 ctermbg=223 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#4f3829 guibg=#ebdbb2 gui=NONE ctermfg=237 ctermbg=223 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#4f3829 guibg=#ebdbb2 gui=NONE ctermfg=237 ctermbg=223 cterm=NONE
     elseif get(g:, 'gruvbox_material_background', 'medium') ==# 'soft'
         highlight Lf_hl_popup_inputText guifg=#4f3829 guibg=#d5c4a1 gui=NONE ctermfg=237 ctermbg=250 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#4f3829 guibg=#d5c4a1 gui=NONE ctermfg=237 ctermbg=250 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#4f3829 guibg=#d5c4a1 gui=NONE ctermfg=237 ctermbg=250 cterm=NONE
     endif
+
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
 
     highlight Lf_hl_popup_prompt guifg=#4c7a5d ctermfg=165
     highlight Lf_hl_popup_spin guifg=#b47109 ctermfg=136
@@ -230,7 +234,7 @@ else
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    highlight def link Lf_hl_popupBorder        VertSplit
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement

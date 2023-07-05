@@ -129,6 +129,59 @@ function! leaderf#colorscheme#popup#link_no_reverse(from, to) abort
     exec hiCmd
 endfunction
 
+" link to bg's background color and fg's foreground color
+function! leaderf#colorscheme#popup#link_two(from, bg, fg, no_attr) abort
+    let bg_sid = synIDtrans(hlID(a:bg))
+    if synIDattr(bg_sid, "reverse") || synIDattr(bg_sid, "inverse")
+        let guibg = synIDattr(bg_sid, "fg", "gui")
+        let ctermbg = synIDattr(bg_sid, "fg", "cterm")
+    else
+        let guibg = synIDattr(bg_sid, "bg", "gui")
+        let ctermbg = synIDattr(bg_sid, "bg", "cterm")
+    endif
+
+    let fg_sid = synIDtrans(hlID(a:fg))
+    if synIDattr(fg_sid, "reverse") || synIDattr(fg_sid, "inverse")
+        let guifg = synIDattr(fg_sid, "bg", "gui")
+        if guifg == guibg
+            let guifg = synIDattr(fg_sid, "fg", "gui")
+        endif
+        let ctermfg = synIDattr(fg_sid, "bg", "cterm")
+        if ctermfg == ctermbg
+            let ctermfg = synIDattr(fg_sid, "fg", "cterm")
+        endif
+    else
+        let guifg = synIDattr(fg_sid, "fg", "gui")
+        if guifg == guibg
+            let guifg = synIDattr(fg_sid, "bg", "gui")
+        endif
+        let ctermfg = synIDattr(fg_sid, "fg", "cterm")
+        if ctermfg == ctermbg
+            let ctermfg = synIDattr(fg_sid, "bg", "cterm")
+        endif
+    endif
+
+    if a:no_attr
+        let attr = "gui=NONE cterm=NONE"
+    else
+        let bold = synIDattr(fg_sid, "bold") ? "bold" : ""
+        let italic = synIDattr(fg_sid, "italic") ? "italic" : ""
+        if bold == "" && italic == ""
+            let attr = "gui=NONE cterm=NONE"
+        elseif bold == "bold" && italic == "italic"
+            let attr = "gui=bold,italic cterm=bold,italic"
+        elseif bold == "bold"
+            let attr = "gui=bold cterm=bold"
+        else
+            let attr = "gui=italic cterm=italic"
+        endif
+    endif
+    let hiCmd = printf("hi def %s %s", a:from, attr)
+    let hiCmd .= printf(" guifg=%s guibg=%s", guifg == '' ? 'NONE': guifg, guibg == '' ? 'NONE': guibg)
+    let hiCmd .= printf(" ctermfg=%s ctermbg=%s", ctermfg == '' ? 'NONE': ctermfg, ctermbg == '' ? 'NONE': ctermbg)
+    exec hiCmd
+endfunction
+
 " mode can be:
 " 1. INPUT mode
 " 2. NORMAL mode
