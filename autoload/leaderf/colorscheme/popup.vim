@@ -187,8 +187,8 @@ endfunction
 function! leaderf#colorscheme#popup#link_cursor(from) abort
     if has("nvim")
         let sid = synIDtrans(hlID("Cursor"))
-        if synIDattr(sid, "reverse") || synIDattr(sid, "inverse")
-            exec printf("hi %s gui=reverse guifg=NONE guibg=NONE cterm=reverse ctermfg=NONE ctermbg=NONE", a:from)
+        if synIDattr(sid, "bg") == '' || synIDattr(sid, "fg") == ''
+            exec printf("hi def %s gui=reverse guifg=NONE guibg=NONE cterm=reverse ctermfg=NONE ctermbg=NONE", a:from)
         else
             exec printf("hi def link %s Cursor", a:from)
         endif
