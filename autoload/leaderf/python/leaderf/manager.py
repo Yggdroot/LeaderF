@@ -487,7 +487,7 @@ class Manager(object):
                     statusline_height = 0
                 row = float_win_row + float_window.height + statusline_height
                 col = float_win_col
-                height = int(lfEval("&lines")) - row - 2
+                height = int(lfEval("&lines")) - row - 3
                 if height < 1:
                     return
                 width = float_window.width
@@ -628,7 +628,7 @@ class Manager(object):
                     statusline_height = 0
                 line = int(popup_pos["line"]) + int(popup_pos["height"]) + statusline_height
                 pos = "topleft"
-                maxheight = int(lfEval("&lines")) - line
+                maxheight = int(lfEval("&lines")) - line - 2
                 if maxheight < 1:
                     return
 
