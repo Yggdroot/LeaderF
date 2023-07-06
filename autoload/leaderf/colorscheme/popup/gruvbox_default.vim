@@ -23,7 +23,10 @@ if &background ==? 'dark'
     " Lf_hl_popup_blank is the wincolor of statusline window
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
     highlight def Lf_hl_popup_prompt guifg=#fabd2f guibg=NONE gui=NONE ctermfg=214 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_popup_spin guifg=#e6e666 guibg=NONE gui=NONE ctermfg=185 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_popup_normalMode guifg=#282828 guibg=#a89984 gui=bold ctermfg=235 ctermbg=137 cterm=bold
@@ -137,7 +140,10 @@ else
     " Lf_hl_popup_blank is the wincolor of statusline window
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
     highlight def Lf_hl_popup_prompt guifg=#c77400 guibg=NONE gui=NONE ctermfg=172 cterm=NONE
     highlight def Lf_hl_popup_spin guifg=#f12d2d guibg=NONE gui=NONE ctermfg=196 cterm=NONE
     highlight def Lf_hl_popup_normalMode guifg=#fbf1c7 guibg=#a89984 gui=bold ctermfg=230 ctermbg=137 cterm=bold

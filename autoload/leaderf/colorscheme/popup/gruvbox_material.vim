@@ -36,7 +36,10 @@ if &background ==# 'dark'
     highlight Lf_hl_popup_lineInfo guifg=#ddc7a1 guibg=#665c54 gui=NONE ctermfg=223 ctermbg=241 cterm=NONE
     highlight Lf_hl_popup_total guifg=#282828 guibg=#a89984 gui=NONE ctermfg=235 ctermbg=246 cterm=NONE
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
     " the color of the cursorline
     highlight def Lf_hl_cursorline guifg=#d4be98 guibg=NONE gui=NONE ctermfg=223 ctermbg=NONE cterm=NONE
 
@@ -156,7 +159,10 @@ else
     highlight Lf_hl_popup_lineInfo guifg=#4f3829 guibg=#bdae93 gui=NONE ctermfg=237 ctermbg=248 cterm=NONE
     highlight Lf_hl_popup_total guifg=#ebdbb2 guibg=#7c6f64 gui=NONE ctermfg=235 ctermbg=243 cterm=NONE
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
     " the color of the cursorline
     highlight def Lf_hl_cursorline guifg=#654735 guibg=NONE gui=NONE ctermfg=237 ctermbg=NONE cterm=NONE
 

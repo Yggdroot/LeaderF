@@ -23,7 +23,10 @@ if &background ==? 'dark'
     " Lf_hl_popup_blank is the wincolor of statusline window
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
     highlight def Lf_hl_popup_prompt guifg=#ffcd4a guibg=NONE gui=NONE ctermfg=221 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_popup_spin guifg=#e6e666 guibg=NONE gui=NONE ctermfg=185 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_popup_normalMode guifg=#333300 guibg=#c1ce96 gui=bold ctermfg=58 ctermbg=187 cterm=bold
@@ -42,10 +45,10 @@ if &background ==? 'dark'
     highlight def Lf_hl_cursorline guifg=Yellow guibg=NONE gui=NONE ctermfg=226 ctermbg=NONE cterm=NONE
 
     " the color of matching character
-    highlight def Lf_hl_match  guifg=SpringGreen guibg=NONE gui=bold ctermfg=85 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match  guifg=#afff5f guibg=NONE gui=bold ctermfg=155 ctermbg=NONE cterm=bold
 
     " the color of matching character in `And mode`
-    highlight def Lf_hl_match0 guifg=SpringGreen guibg=NONE gui=bold ctermfg=85 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match0 guifg=#afff5f guibg=NONE gui=bold ctermfg=155 ctermbg=NONE cterm=bold
     highlight def Lf_hl_match1 guifg=#fe8019 guibg=NONE gui=bold ctermfg=208 ctermbg=NONE cterm=bold
     highlight def Lf_hl_match2 guifg=#3ff5d1 guibg=NONE gui=bold ctermfg=50 ctermbg=NONE cterm=bold
     highlight def Lf_hl_match3 guifg=#ff7272 guibg=NONE gui=bold ctermfg=203 ctermbg=NONE cterm=bold
@@ -138,7 +141,10 @@ else
     " Lf_hl_popup_blank is the wincolor of statusline window
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
     highlight def Lf_hl_popup_prompt guifg=#c77400 guibg=NONE gui=NONE ctermfg=172 cterm=NONE
     highlight def Lf_hl_popup_spin guifg=#f12d2d guibg=NONE gui=NONE ctermfg=196 cterm=NONE
     highlight def Lf_hl_popup_normalMode guifg=#808000 guibg=#ccc88e gui=bold ctermfg=100 ctermbg=186 cterm=bold
