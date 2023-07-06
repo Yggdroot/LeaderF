@@ -368,21 +368,23 @@ class Manager(object):
         self._preview_filetype = None
 
     def _previewResult(self, preview):
-        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
-            if preview == False and self._orig_line == self._getInstance().currentLine:
-                return
+        preview_in_popup = (lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1'
+                            or self._getInstance().getWinPos() in ('popup', 'floatwin'))
+
+        if preview == False and self._orig_line == self._getInstance().currentLine:
+            return
 
         self._orig_line = self._getInstance().currentLine
 
-        if not self._needPreview(preview):
-            if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
+        if not self._needPreview(preview, preview_in_popup):
+            if preview_in_popup:
                 self._closePreviewPopup()
             return
 
         line_nr = self._getInstance().window.cursor[0]
         line = self._getInstance().buffer[line_nr - 1]
 
-        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
+        if preview_in_popup:
             self._previewInPopup(line, self._getInstance().buffer, line_nr)
             return
 
@@ -969,11 +971,15 @@ class Manager(object):
 
         return True
 
-    def _needPreview(self, preview):
+    def _needPreview(self, preview, preview_in_popup):
         """
         Args:
             preview:
                 if True, always preview the result no matter what `g:Lf_PreviewResult` is.
+
+            preview_in_popup:
+                whether preview in popup, if value is true, it means
+                (lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1' or self._getInstance().getWinPos() in ('popup', 'floatwin'))
         """
         if self._getInstance().isReverseOrder():
             if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
@@ -984,9 +990,9 @@ class Manager(object):
         if preview:
             return True
 
-        # # non popup mode does not support automatic preview
-        # if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '0':
-        #     return False
+        # non popup preview does not support automatic preview
+        if not preview_in_popup:
+            return False
 
         if "--auto-preview" in self._arguments:
             return True

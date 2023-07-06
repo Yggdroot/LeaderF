@@ -123,7 +123,7 @@ class ColorschemeExplManager(Manager):
         super(ColorschemeExplManager, self)._beforeExit()
 
     def _previewResult(self, preview):
-        if not self._needPreview(preview):
+        if not self._needPreview(preview, True):
             return
 
         self._acceptSelection(self._getInstance().currentLine)
