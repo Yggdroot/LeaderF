@@ -116,7 +116,7 @@ class Manager(object):
         self._preview_filetype = None
         if lfEval("has('patch-8.1.1615') || has('nvim-0.4.2')") == '0':
             lfCmd("let g:Lf_PreviewInPopup = 0")
-        if lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')").lower() == 'bottom':
+        if lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')").lower() == 'bottom':
             lfCmd("let g:Lf_PopupAutoAdjustHeight = 0")
 
 
@@ -467,7 +467,7 @@ class Manager(object):
             float_win_col = int(float(lfEval("nvim_win_get_config(%d).col" % float_window.id)))
             float_win_height = int(float(lfEval("nvim_win_get_config(%d).height" % float_window.id)))
             float_win_width= int(float(lfEval("nvim_win_get_config(%d).width" % float_window.id)))
-            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
+            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
             popup_borders = lfEval("g:Lf_PopupBorders")
             borderchars = [
                     [popup_borders[4],  "Lf_hl_popupBorder"],
@@ -527,7 +527,6 @@ class Manager(object):
                 col = float_win_col
                 if lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
                     row -= 1
-                    col -= 2
                 height = self._getInstance().getPopupHeight() + 1
                 if width <= 0:
                     width = float_win_width
@@ -618,7 +617,7 @@ class Manager(object):
                     return
                 buffer_len = int(lfEval("len(content)"))
 
-            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
+            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
             if preview_pos.lower() == 'bottom':
                 maxwidth = int(popup_pos["width"])
                 col = int(popup_pos["col"])

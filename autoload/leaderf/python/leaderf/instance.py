@@ -363,7 +363,7 @@ class LfInstance(object):
 
         buf_number = int(lfEval("bufadd('{}')".format(escQuote(self._buffer_name))))
 
-        preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'top')")
+        preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
         width = lfEval("get(g:, 'Lf_PopupWidth', 0)")
         width = self._arguments.get("--popup-width", [width])[0]
         width = width.strip('"').strip("'")
@@ -372,7 +372,7 @@ class LfInstance(object):
             if preview_pos.lower() in ('right', 'left'):
                 maxwidth = int(int(lfEval("&columns")) * 2 // 5)
             else:
-                maxwidth = int(int(lfEval("&columns")) * 2 // 3)
+                maxwidth = int(int(lfEval("&columns")) * 0.618)
         elif width < 1:
             maxwidth = int(int(lfEval("&columns")) * width)
             maxwidth = max(20, maxwidth)
@@ -402,7 +402,12 @@ class LfInstance(object):
 
         line, col = [int(i) for i in lfEval("get(g:, 'Lf_PopupPosition', [0, 0])")]
         if line == 0:
-            line = (int(lfEval("&lines")) - 2 - maxheight) // 2
+            if preview_pos.lower() == 'top':
+                line = (int(lfEval("&lines")) - 2 - maxheight) * 4 // 5
+            elif preview_pos.lower() == 'bottom':
+                line = (int(lfEval("&lines")) - 2 - maxheight) // 5
+            else:
+                line = (int(lfEval("&lines")) - 2 - maxheight) // 2
         else:
             line = min(line, int(lfEval("&lines")) - maxheight)
 
@@ -417,6 +422,9 @@ class LfInstance(object):
                     col += maxwidth + 1
             else:
                 col = (int(lfEval("&columns")) - maxwidth) // 2
+
+            # to the left a bit
+            col -= 3
         else:
             col = min(col, int(lfEval("&columns")) - maxwidth)
 

@@ -833,7 +833,7 @@ g:Lf_PopupPreviewPosition                       *g:Lf_PopupPreviewPosition*
     'cursor': the preview window is at the cursor position in the main LeaderF
               window.
 
-    Default value is 'top'.
+    Default value is 'right'.
 
 g:Lf_PopupColorscheme                           *g:Lf_PopupColorscheme*
     You can configure the colorscheme of LeaderF in popup mode.
