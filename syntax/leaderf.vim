@@ -30,7 +30,7 @@ endif
 let b:current_syntax = "leaderf"
 
 function! g:LfDefineDefaultColors() abort
-    highlight def link Lf_hl_popup_cursor Cursor
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
     highlight def Lf_hl_cursorline guifg=Yellow guibg=NONE gui=NONE ctermfg=226 ctermbg=NONE cterm=NONE
 
     " the color of matching character

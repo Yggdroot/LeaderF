@@ -185,13 +185,9 @@ endfunction
 " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
 " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
 function! leaderf#colorscheme#popup#link_cursor(from) abort
-    if has("nvim")
-        let sid = synIDtrans(hlID("Cursor"))
-        if synIDattr(sid, "bg") == '' || synIDattr(sid, "fg") == ''
-            exec printf("hi def %s gui=reverse guifg=NONE guibg=NONE cterm=reverse ctermfg=NONE ctermbg=NONE", a:from)
-        else
-            exec printf("hi def link %s Cursor", a:from)
-        endif
+    let sid = synIDtrans(hlID("Cursor"))
+    if synIDattr(sid, "bg") == '' || synIDattr(sid, "fg") == ''
+        exec printf("hi def %s gui=reverse guifg=NONE guibg=NONE cterm=reverse ctermfg=NONE ctermbg=NONE", a:from)
     else
         exec printf("hi def link %s Cursor", a:from)
     endif

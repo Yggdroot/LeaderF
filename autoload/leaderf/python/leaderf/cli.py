@@ -326,10 +326,7 @@ class LfCli(object):
         else:
             self._start_time = datetime.now()
             if self._blinkon:
-                if self._instance.getWinPos() in ('popup', 'floatwin'):
-                    lfCmd("hi! default link Lf_hl_cursor Lf_hl_popup_cursor")
-                else:
-                    lfCmd("hi! default link Lf_hl_cursor Cursor")
+                lfCmd("hi! default link Lf_hl_cursor Lf_hl_popup_cursor")
             else:
                 lfCmd("hi! default link Lf_hl_cursor NONE")
 
