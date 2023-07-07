@@ -198,7 +198,10 @@ class RgExplorer(Explorer):
 
         if "--live" in arguments_dict:
             pattern_list = [kwargs["pattern"]]
-            no_error_message = " 2>/dev/null"
+            if os.name == 'nt':
+                no_error_message = " 2>NUL"
+            else:
+                no_error_message = " 2>/dev/null"
             # --live implies -F
             if "-F" not in arguments_dict and "--no-fixed-strings" not in arguments_dict:
                 zero_args_options += "-F "
@@ -955,9 +958,9 @@ class RgExplManager(Manager):
             self._cli.setPattern(pattern)
 
             if pattern:
-                content = self._getExplorer().getContent(*args, **kwargs, pattern=self._cli.pattern)
-            else:
-                content = self._getExplorer().getContent(*args, **kwargs)
+                kwargs['pattern'] = self._cli.pattern
+
+            content = self._getExplorer().getContent(*args, **kwargs)
 
         # clear the buffer only when the content is not a list
         self._getInstance().enterBuffer(win_pos, not isinstance(content, list))
