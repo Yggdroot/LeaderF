@@ -237,6 +237,8 @@ class Manager(object):
 
         if the_mode is not None:
             mode = the_mode
+        elif self._cli._is_live:
+            mode = 'Fuzzy'
 
         self._getInstance().setStlMode(mode)
         self._cli.setCurrentMode(mode)

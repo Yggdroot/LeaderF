@@ -99,6 +99,7 @@ class LfCli(object):
             self._is_full_path = True
 
     def setCurrentMode(self, mode):
+        self._is_live = False
         if mode == 'NameOnly':       # nameOnly mode
             self._is_fuzzy = True
             self._is_full_path = False
