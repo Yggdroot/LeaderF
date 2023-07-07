@@ -745,7 +745,7 @@ g:Lf_IgnoreCurrentBufferName                    *g:Lf_IgnoreCurrentBufferName*
 g:Lf_PreviewInPopup                             *g:Lf_PreviewInPopup*
     This option specifies whether to preview the result in a popup window.
 
-    Default value is 0.
+    Default value is 1.
 
 g:Lf_PreviewHorizontalPosition                  *g:Lf_PreviewHorizontalPosition*
     Specify where to locate the preview window horizontally. The value can be

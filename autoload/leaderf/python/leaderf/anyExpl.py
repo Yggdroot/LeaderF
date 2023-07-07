@@ -744,6 +744,9 @@ class AnyHub(object):
         kwargs["arguments"] = arguments
         kwargs["positional_args"] = positional_args
 
+        if lfEval("has('patch-8.1.1615') || has('nvim-0.4.2')") == '0':
+            win_pos = "--bottom"
+
         manager.startExplorer(win_pos[2:], *args, **kwargs)
 
     def start(self, arg_line, *args, **kwargs):

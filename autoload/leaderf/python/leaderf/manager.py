@@ -368,7 +368,7 @@ class Manager(object):
         self._preview_filetype = None
 
     def _previewResult(self, preview):
-        preview_in_popup = (lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1'
+        preview_in_popup = (lfEval("get(g:, 'Lf_PreviewInPopup', 1)") == '1'
                             or self._getInstance().getWinPos() in ('popup', 'floatwin'))
 
         if preview == False and self._orig_line == self._getInstance().currentLine:
@@ -979,7 +979,7 @@ class Manager(object):
 
             preview_in_popup:
                 whether preview in popup, if value is true, it means
-                (lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1' or self._getInstance().getWinPos() in ('popup', 'floatwin'))
+                (lfEval("get(g:, 'Lf_PreviewInPopup', 1)") == '1' or self._getInstance().getWinPos() in ('popup', 'floatwin'))
         """
         if self._getInstance().isReverseOrder():
             if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
