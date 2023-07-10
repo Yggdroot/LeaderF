@@ -159,6 +159,8 @@ class RgExplorer(Explorer):
             one_args_options += "-E %s " % arguments_dict["-E"][0]
         if "-M" in arguments_dict:
             one_args_options += "-M %s " % arguments_dict["-M"][0]
+        else:
+            one_args_options += "-M 512 "
         if "-m" in arguments_dict:
             one_args_options += "-m %s " % arguments_dict["-m"][0]
         if "--max-depth" in arguments_dict:
@@ -997,17 +999,17 @@ class RgExplManager(Manager):
             self._read_finished = 1
             self._offset_in_content = 0
         else:
-            self._getInstance().clearBuffer()
             self._content = []
             self._offset_in_content = 0
 
             self._read_finished = 0
 
             self._stop_reader_thread = False
-            content = self._previewFirstLine(content)
             self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
             self._reader_thread.daemon = True
             self._reader_thread.start()
+            # for the case of --input
+            self._previewFirstLine()
 
         self.input()
 

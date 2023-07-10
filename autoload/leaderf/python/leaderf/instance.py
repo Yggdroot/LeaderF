@@ -210,6 +210,20 @@ class LfPopupInstance(object):
     def getWinIdList(self):
         return [win.id for win in self._popup_wins.values() if win is not None]
 
+    @property
+    def tabpage(self):
+        if self._popup_wins["input_win"] is None:
+            return None
+        else:
+            return self._popup_wins["input_win"].tabpage
+
+    def valid(self):
+        for win in self._popup_wins.values():
+            if win is None or not win.valid:
+                return False
+
+        return True
+
 #*****************************************************
 # LfInstance
 #*****************************************************
@@ -339,24 +353,14 @@ class LfInstance(object):
                   .format(self.buffer.number, self._stl))
             lfCmd("augroup END")
 
-    def _createPopupWindow(self, clear):
-        # `type(self._window_object) != type(vim.current.window)` is necessary, error occurs if
-        # `Leaderf file --popup` after `Leaderf file` without it.
-        if self._window_object is not None and type(self._window_object) != type(vim.current.window)\
-                and isinstance(self._window_object, PopupWindow): # type is PopupWindow
-            if self._window_object.tabpage == vim.current.tabpage and lfEval("get(g:, 'Lf_Popup_VimResized', 0)") == '0' \
+    def _createPopupWindow(self):
+        if lfEval("has('nvim')") == '0' and self._popup_instance.valid():
+            if self._popup_instance.tabpage == vim.current.tabpage and lfEval("get(g:, 'Lf_Popup_VimResized', 0)") == '0' \
                     and "--popup-width" not in self._arguments and "--popup-height" not in self._arguments:
-                if self._popup_winid > 0 and self._window_object.valid: # invalid if cleared by popup_clear()
-                    # clear the buffer first to avoid a flash
-                    if clear and lfEval("g:Lf_RememberLastSearch") == '0' \
-                            and "--append" not in self._arguments \
-                            and "--recall" not in self._arguments:
-                        self.buffer.options['modifiable'] = True
-                        del self._buffer_object[:]
-                        self.refreshPopupStatusline()
-
-                    self._popup_instance.show()
-                    return
+                self._win_pos = "popup"
+                self._window_object = self._popup_instance.content_win
+                self._popup_instance.show()
+                return
             else:
                 lfCmd("let g:Lf_Popup_VimResized = 0")
                 self._popup_instance.close()
@@ -1076,6 +1080,18 @@ class LfInstance(object):
             self._running_status = 0
             lfCmd("let g:Lf_{}_StlRunning = ''".format(self._category))
 
+    def clearBufferObject(self):
+        """
+        https://github.com/vim/vim/issues/1737
+        https://github.com/vim/vim/issues/1738
+        """
+        if (self._buffer_object is not None and self._buffer_object.valid
+                and lfEval("g:Lf_RememberLastSearch") == '0'
+                and "--append" not in self._arguments
+                and "--recall" not in self._arguments):
+            self.buffer.options['modifiable'] = True
+            del self._buffer_object[:]
+
     def enterBuffer(self, win_pos, clear):
         if self._enterOpeningBuffer():
             return
@@ -1093,6 +1109,9 @@ class LfInstance(object):
 
         self._before_enter()
 
+        if clear:
+            self.clearBufferObject()
+
         if win_pos in ('popup', 'floatwin'):
             if lfEval("exists('g:lf_gcr_stack')") == '0':
                 lfCmd("let g:lf_gcr_stack = []")
@@ -1104,7 +1123,7 @@ class LfInstance(object):
             lfCmd("set t_ve=")
             self._orig_win_nr = vim.current.window.number
             self._orig_win_id = lfWinId(self._orig_win_nr)
-            self._createPopupWindow(clear)
+            self._createPopupWindow()
             self._arguments["popup_winid"] = self._popup_winid
         elif win_pos == 'fullScreen':
             self._orig_tabpage = vim.current.tabpage

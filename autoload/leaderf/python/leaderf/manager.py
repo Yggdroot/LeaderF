@@ -751,6 +751,9 @@ class Manager(object):
             else:
                 lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._preview_winid)
 
+    def isPreviewWindowOpen(self):
+        return self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1
+
     def _useExistingWindow(self, title, source, line_nr, jump_cmd):
         if lfEval("has('nvim')") == '1':
             if isinstance(source, int):
@@ -814,7 +817,7 @@ class Manager(object):
         self._is_previewed = True
         line_nr = int(line_nr)
 
-        if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
+        if self.isPreviewWindowOpen():
             self._useExistingWindow(title, source, line_nr, jump_cmd)
             return False
 
@@ -983,10 +986,7 @@ class Manager(object):
                 whether preview in popup, if value is true, it means
                 (lfEval("get(g:, 'Lf_PreviewInPopup', 1)") == '1' or self._getInstance().getWinPos() in ('popup', 'floatwin'))
         """
-        if self._getInstance().isReverseOrder():
-            if self._getInstance().window.cursor[0] > len(self._getInstance().buffer) - self._help_length:
-                return False
-        elif self._getInstance().window.cursor[0] <= self._help_length:
+        if self._inHelpLines():
             return False
 
         if preview:
@@ -1108,7 +1108,7 @@ class Manager(object):
             lfCmd("set autochdir")
 
     def _toUpInPopup(self):
-        if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
+        if self.isPreviewWindowOpen():
             scroll_step_size = int(lfEval("get(g:, 'Lf_PreviewScrollStepSize', 1)"))
             if lfEval("has('nvim')") == '1':
                 cur_winid = lfEval("win_getid()")
@@ -1120,7 +1120,7 @@ class Manager(object):
                 lfCmd("call win_execute(%d, 'norm! %dk')" % (self._preview_winid, scroll_step_size))
 
     def _toDownInPopup(self):
-        if self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1:
+        if self.isPreviewWindowOpen():
             scroll_step_size = int(lfEval("get(g:, 'Lf_PreviewScrollStepSize', 1)"))
             if lfEval("has('nvim')") == '1':
                 cur_winid = lfEval("win_getid()")
@@ -2348,17 +2348,13 @@ class Manager(object):
     def _readFinished(self):
         pass
 
-    def _previewFirstLine(self, content):
-        try:
-            first_line = next(content)
-            content = itertools.chain([first_line], content)
+    def _previewFirstLine(self):
+        time.sleep(0.005)
+        if len(self._content) > 0:
+            first_line = self._content[0]
             self._getInstance().setBuffer([first_line])
             self._previewResult(False)
             self._getInstance().clearBuffer()
-        except StopIteration:
-            pass
-
-        return content
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -2518,7 +2514,6 @@ class Manager(object):
                             self._getInstance().setBuffer(self._content, need_copy=False)
                             self._createHelpHint()
                     else:
-                        self._getInstance().clearBuffer()
                         self._content = []
                         self._offset_in_content = 0
                 else:
@@ -2528,10 +2523,10 @@ class Manager(object):
                 self._read_finished = 0
 
                 self._stop_reader_thread = False
-                content = self._previewFirstLine(content)
                 self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
                 self._reader_thread.daemon = True
                 self._reader_thread.start()
+                self._previewFirstLine()
 
             if not kwargs.get('bang', 0):
                 self.input()
@@ -2542,7 +2537,6 @@ class Manager(object):
                 self._getInstance().mimicCursor()
         else:
             self._is_content_list = False
-            content = self._previewFirstLine(content)
             self._callback = partial(self._workInIdle, content)
             if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
                 self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
@@ -2661,6 +2655,9 @@ class Manager(object):
 
                     self._getInstance().setStlResultsCount(len(self._content))
 
+                    if not self.isPreviewWindowOpen():
+                        self._previewResult(False)
+
                 if self._getInstance().getWinPos() not in ('popup', 'floatwin'):
                     lfCmd("redrawstatus")
 
@@ -2719,6 +2716,10 @@ class Manager(object):
                         self._bang_count = (self._bang_count + 1) % 9
                 elif len(self._getInstance().buffer) < min(cur_len, self._initial_count):
                     self._getInstance().setBuffer(self._content[:self._initial_count])
+
+                if not self.isPreviewWindowOpen():
+                    self._previewResult(False)
+
 
     @modifiableController
     def input(self):
