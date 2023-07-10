@@ -160,7 +160,11 @@ class RgExplorer(Explorer):
         if "-M" in arguments_dict:
             one_args_options += "-M %s " % arguments_dict["-M"][0]
         else:
-            one_args_options += "-M 512 "
+            for opt in rg_config:
+                if opt.lstrip().startswith("--max-columns=") or opt.lstrip().startswith("-M "):
+                    break
+            else:
+                one_args_options += "-M 512 "
         if "-m" in arguments_dict:
             one_args_options += "-m %s " % arguments_dict["-m"][0]
         if "--max-depth" in arguments_dict:
