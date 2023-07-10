@@ -435,6 +435,18 @@ class Manager(object):
 
     #**************************************************************
 
+    def _setWinOptions(self, winid):
+        lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % winid)
+        lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % winid)
+        lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % winid)
+        lfCmd("call nvim_win_set_option(%d, 'foldmethod', 'manual')" % winid)
+        lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '0')" % winid)
+        lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
+        if lfEval("exists('+cursorlineopt')") == '1':
+            lfCmd("call nvim_win_set_option(%d, 'cursorlineopt', 'both')" % winid)
+        lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
+        lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % winid)
+
     @ignoreEvent('BufWinEnter,BufEnter')
     def _createPopupModePreview(self, title, source, line_nr, jump_cmd):
         """
@@ -464,6 +476,7 @@ class Manager(object):
                 lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
                 lfCmd("noautocmd call setbufline(g:Lf_preview_scratch_buffer, 1, content)")
                 lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'bufhidden', 'wipe')")
+                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
 
             float_window = self._getInstance().window
             # row and col start from 0
@@ -581,16 +594,8 @@ class Manager(object):
             if buffer_len >= line_nr > 0:
                 lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
 
-            lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % self._preview_winid)
-            lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % self._preview_winid)
-            lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
-            lfCmd("call nvim_win_set_option(%d, 'foldmethod', 'manual')" % self._preview_winid)
-            lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '0')" % self._preview_winid)
-            lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % self._preview_winid)
-            if lfEval("exists('+cursorlineopt')") == '1':
-                lfCmd("call nvim_win_set_option(%d, 'cursorlineopt', 'both')" % self._preview_winid)
-            lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % self._preview_winid)
-            lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % self._preview_winid)
+            self._setWinOptions(self._preview_winid)
+
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
             if not isinstance(source, int):
@@ -758,7 +763,7 @@ class Manager(object):
         if lfEval("has('nvim')") == '1':
             if isinstance(source, int):
                 lfCmd("noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
-                lfCmd("noautocmd call nvim_win_set_option(%d, 'cursorline', v:true)" % self._preview_winid)
+                self._setWinOptions(self._preview_winid)
                 self._preview_filetype = ''
             else:
                 try:
@@ -768,6 +773,7 @@ class Manager(object):
                     return
                 if lfEval("!exists('g:Lf_preview_scratch_buffer') || !bufexists(g:Lf_preview_scratch_buffer)") == '1':
                     lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
+                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
                 lfCmd("noautocmd call nvim_buf_set_lines(g:Lf_preview_scratch_buffer, 0, -1, v:false, content)")
                 lfCmd("noautocmd call nvim_win_set_buf(%d, g:Lf_preview_scratch_buffer)" % self._preview_winid)
 
@@ -2349,7 +2355,7 @@ class Manager(object):
         pass
 
     def _previewFirstLine(self):
-        time.sleep(0.005)
+        time.sleep(0.002)
         if len(self._content) > 0:
             first_line = self._content[0]
             self._getInstance().setBuffer([first_line])
