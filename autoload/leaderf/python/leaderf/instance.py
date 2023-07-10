@@ -406,12 +406,7 @@ class LfInstance(object):
 
         line, col = [int(i) for i in lfEval("get(g:, 'Lf_PopupPosition', [0, 0])")]
         if line == 0:
-            if preview_pos.lower() == 'top':
-                line = (int(lfEval("&lines")) - 2 - maxheight) * 4 // 5
-            elif preview_pos.lower() == 'bottom':
-                line = (int(lfEval("&lines")) - 2 - maxheight) // 5
-            else:
-                line = (int(lfEval("&lines")) - 2 - maxheight) // 2
+            line = (int(lfEval("&lines")) - 2 - maxheight) // 2
         else:
             line = min(line, int(lfEval("&lines")) - maxheight)
 
