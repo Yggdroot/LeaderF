@@ -3,6 +3,7 @@ if &background ==? 'dark'
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
     highlight def Lf_hl_popup_cursor       guifg=#657b83 ctermfg=66  guibg=#98C379 ctermbg=114
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
     highlight def Lf_hl_popup_prompt       guifg=#D19A66 ctermfg=173 guibg=#3B4048 ctermbg=238  gui=bold cterm=bold
     highlight def Lf_hl_popup_spin         guifg=#ABB2BF ctermfg=145 guibg=#3B4048 ctermbg=238
     highlight def Lf_hl_popup_normalMode   guifg=#2C323C ctermfg=236 guibg=#98C379 ctermbg=114  gui=bold cterm=bold
@@ -82,7 +83,6 @@ if &background ==? 'dark'
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement

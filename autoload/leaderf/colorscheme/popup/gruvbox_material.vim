@@ -40,6 +40,8 @@ if &background ==# 'dark'
     " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
     call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
 
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
+
     " the color of the cursorline
     highlight def Lf_hl_cursorline guifg=#d4be98 guibg=NONE gui=NONE ctermfg=223 ctermbg=NONE cterm=NONE
 
@@ -117,7 +119,6 @@ if &background ==# 'dark'
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -167,6 +168,8 @@ else
     " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
     " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
     call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
 
     " the color of the cursorline
     highlight def Lf_hl_cursorline guifg=#654735 guibg=NONE gui=NONE ctermfg=237 ctermbg=NONE cterm=NONE
@@ -245,7 +248,6 @@ else
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement

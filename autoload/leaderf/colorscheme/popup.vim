@@ -288,10 +288,14 @@ endfunction
 
 function! leaderf#colorscheme#popup#load(category, name)
     exec 'runtime autoload/leaderf/colorscheme/popup/'.a:name.'.vim'
+    " in case a:name does not exist
+    if a:name != "default"
+        exec 'runtime autoload/leaderf/colorscheme/popup/default.vim'
+    endif
+
     if !has("nvim")
         call s:AddPropType()
     endif
     call s:LoadFromPalette()
     call s:HighlightSeperator(a:category)
-    call g:LfDefineDefaultColors()
 endfunction

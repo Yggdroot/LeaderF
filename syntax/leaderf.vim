@@ -31,11 +31,3 @@ let b:current_syntax = "leaderf"
 
 " define the highlight groups
 " new highlight groups will be defined in autoload/leaderf/colorscheme/popup/default.vim
-" there are also duplicates defined here so that other colorschemes can also
-" own these highlight groups
-function! g:LfDefineDefaultColors() abort
-    "highlight def link Lf_hl_jumpsTitle         Title
-    "highlight def link Lf_hl_jumpsNumber        Number
-    "highlight def link Lf_hl_jumpsLineCol       String
-    "highlight def link Lf_hl_jumpsIndicator     Type
-endfunction

@@ -3,6 +3,7 @@ if &background ==? 'dark'
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
     highlight def Lf_hl_popup_cursor       guifg=#657b83 ctermfg=66  guibg=#93a1a1 ctermbg=109
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
     highlight def Lf_hl_popup_prompt       guifg=#b58900 ctermfg=136 guibg=#002b36 ctermbg=17   gui=bold cterm=bold
     highlight def Lf_hl_popup_spin         guifg=#fdf6e3 ctermfg=230 guibg=#002b36 ctermbg=17
     highlight def Lf_hl_popup_normalMode   guifg=#fdf6e3 ctermfg=230 guibg=#93a1a1 ctermbg=109  gui=bold cterm=bold
@@ -87,7 +88,6 @@ if &background ==? 'dark'
     highlight def Lf_hl_gtagsHighlight guifg=#4d4d4d guibg=#cccc66 gui=NONE ctermfg=239 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -110,6 +110,7 @@ else
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
     highlight def Lf_hl_popup_cursor       guifg=#b58900 ctermfg=136 guibg=#586e75 ctermbg=60
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
     highlight def Lf_hl_popup_prompt       guifg=#073642 ctermfg=23  guibg=#fdf6e3 ctermbg=230  gui=bold cterm=bold
     highlight def Lf_hl_popup_spin         guifg=#002b36 ctermfg=17  guibg=#fdf6e3 ctermbg=230
     highlight def Lf_hl_popup_normalMode   guifg=#fdf6e3 ctermfg=230 guibg=#586e75 ctermbg=60   gui=bold cterm=bold
@@ -194,7 +195,6 @@ else
     highlight def Lf_hl_gtagsHighlight guifg=#4d4d4d guibg=#cccc66 gui=NONE ctermfg=239 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
