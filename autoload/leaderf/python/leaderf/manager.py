@@ -1010,7 +1010,7 @@ class Manager(object):
 
         preview_dict = {k.lower(): v for k, v in lfEval("g:Lf_PreviewResult").items()}
         category = self._getExplorer().getStlCategory()
-        if int(preview_dict.get(category.lower(), 0)) == 0:
+        if int(preview_dict.get(category.lower(), 1)) == 0:
             return False
 
         if self._getInstance().empty():

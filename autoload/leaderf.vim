@@ -129,6 +129,7 @@ call s:InitDict('g:Lf_PreviewResult', {
             \ 'Function': 1,
             \ 'Line': 1,
             \ 'Colorscheme': 0,
+            \ 'Rg': 1,
             \ 'Jumps': 1
             \})
 call s:InitDict('g:Lf_NormalMap', {})
