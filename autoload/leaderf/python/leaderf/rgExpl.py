@@ -918,6 +918,21 @@ class RgExplManager(Manager):
             except vim.error:
                 pass
 
+    def _resume(self, bang):
+        if self._getInstance().getWinPos() == 'popup':
+            self._cli.hideCursor()
+            if lfEval("exists('*leaderf#%s#NormalModeFilter')" % self._getExplorer().getStlCategory()) == '1':
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', '%s')" % (self._getInstance().getPopupWinId(),
+                        'leaderf#%s#NormalModeFilter' % self._getExplorer().getStlCategory()))
+            else:
+                lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', function('leaderf#NormalModeFilter', [%d]))"
+                        % (self._getInstance().getPopupWinId(), id(self)))
+
+        self._previewResult(False)
+
+        if not bang:
+            self.input()
+
     def startLiveGrep(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" in arguments_dict:
@@ -950,7 +965,7 @@ class RgExplManager(Manager):
         remember_last_status = "--recall" in self._arguments \
                 or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern
         if remember_last_status:
-            content = iter(self._content)
+            content = self._content
             self._getInstance().useLastReverseOrder()
             win_pos = self._getInstance().getWinPos()
         else:
@@ -984,36 +999,33 @@ class RgExplManager(Manager):
                 % (self._getExplorer().getStlCategory(), self._current_mode))
 
         self._getInstance().setPopupStl(self._current_mode)
+
+        self._getInstance().buffer.vars['Lf_category'] = self._getExplorer().getStlCategory()
+
+        if remember_last_status:
+            self._resume(kwargs.get('bang', 0))
+            return
+
+        self._start_time = time.time()
+
+        self._read_content_exception = None
+
         self._getInstance().setStlResultsCount(0)
         self._getInstance().setStlTotal(0)
         self._getInstance().setStlRunning(False)
 
-        self._start_time = time.time()
-        self._bang_start_time = self._start_time
-        self._bang_count = 0
-
-        self._getInstance().buffer.vars['Lf_category'] = self._getExplorer().getStlCategory()
-
-        self._read_content_exception = None
-
         self._callback = self._writeBuffer
-        if lfEval("get(g:, 'Lf_NoAsync', 0)") == '1':
-            self._content = self._getInstance().initBuffer(content, self._getUnit(), self._getExplorer().setContent)
-            self._previewResult(False)
-            self._read_finished = 1
-            self._offset_in_content = 0
-        else:
-            self._content = []
-            self._offset_in_content = 0
+        self._content = []
+        self._offset_in_content = 0
 
-            self._read_finished = 0
+        self._read_finished = 0
 
-            self._stop_reader_thread = False
-            self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
-            self._reader_thread.daemon = True
-            self._reader_thread.start()
-            # for the case of --input
-            self._previewFirstLine()
+        self._stop_reader_thread = False
+        self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
+        self._reader_thread.daemon = True
+        self._reader_thread.start()
+        # for the case of --input
+        self._previewFirstLine()
 
         self.input()
 
@@ -1501,6 +1513,7 @@ class RgExplManager(Manager):
             self._getInstance().setStlResultsCount(0)
             self._getInstance().setStlTotal(len(self._content)//self._getUnit())
             self._getInstance().setStlRunning(False)
+            self._getInstance().refreshPopupStatusline()
             self._previewResult(False)
             return
 
