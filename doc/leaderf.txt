@@ -59,11 +59,11 @@ g:Lf_WindowPosition                             *g:Lf_WindowPosition*
     Setting this option can change the position of the LeaderF window.
     The value can be 'fullScreen', 'top', 'bottom', 'left', 'right'.
     'fullScreen' - the LeaderF window take up the full screen
-    'top' - the LeaderF window is at the top of the screen.
+    'top'    - the LeaderF window is at the top of the screen.
     'bottom' - the LeaderF window is at the bottom of the screen.
-    'left' - the LeaderF window is at the left of the screen.
-    'right' - the LeaderF window is at the right of the screen.
-    'popup' - the LeaderF window is a popup window or floating window.
+    'left'   - the LeaderF window is at the left of the screen.
+    'right'  - the LeaderF window is at the right of the screen.
+    'popup'  - the LeaderF window is a popup window or floating window.
     Default value is 'bottom'.
 
 g:Lf_WindowHeight                               *g:Lf_WindowHeight*
@@ -748,6 +748,10 @@ g:Lf_PreviewInPopup                             *g:Lf_PreviewInPopup*
     Default value is 1.
 
 g:Lf_PreviewHorizontalPosition                  *g:Lf_PreviewHorizontalPosition*
+    [[This option is deprecated. Use |g:Lf_PreviewPosition| instead.]]
+    [[This option is deprecated. Use |g:Lf_PreviewPosition| instead.]]
+    [[This option is deprecated. Use |g:Lf_PreviewPosition| instead.]]
+
     Specify where to locate the preview window horizontally. The value can be
     one of the following:
     'left': the preview window is on the left side of the screen.
@@ -758,8 +762,9 @@ g:Lf_PreviewHorizontalPosition                  *g:Lf_PreviewHorizontalPosition*
     Default value is 'right'.
 
 g:Lf_PreviewPopupWidth                          *g:Lf_PreviewPopupWidth*
-    Specify the width of preview popup window, the value should be a non-negative
-    integer. If the value is 0, the width is half of the screen's width.
+    Specify the width of preview window, the value should be a non-negative
+    integer. If the value is 0, the width of preview window is the same as the
+    width of the main LeaderF window.
 
     Default value is 0.
 
@@ -822,7 +827,7 @@ g:Lf_PopupShowStatusline                        *g:Lf_PopupShowStatusline*
     Default value is 1.
 
 g:Lf_PopupPreviewPosition                       *g:Lf_PopupPreviewPosition*
-    Specify where to locate the preview window when LeaderF is in popup mode.
+    Specify where to place the preview window when LeaderF is in popup mode.
     `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup' is in the
     options list of `Leaderf` command.
     The value can be one of the following:
@@ -830,10 +835,19 @@ g:Lf_PopupPreviewPosition                       *g:Lf_PopupPreviewPosition*
     'bottom': the preview window is at the bottom of the main LeaderF window.
     'left': the preview window is on the left of the main LeaderF window.
     'right': the preview window is on the right of the main LeaderF window.
-    'cursor': the preview window is at the cursor position in the main LeaderF
-              window.
 
     Default value is 'right'.
+
+g:Lf_PreviewPosition                            *g:Lf_PreviewPosition*
+    Specify where to place the preview window when LeaderF is in non-popup mode.
+
+    The value can be one of the following:
+    'top': the preview window is on the top of the main LeaderF window.
+    'topleft': the preview window is on the topleft of the main LeaderF window.
+    'topright': the preview window is on the topright of the main LeaderF window.
+    'right': the preview window is on the right of the main LeaderF window.
+
+    Default value is 'top'.
 
 g:Lf_PopupColorscheme                           *g:Lf_PopupColorscheme*
     You can configure the colorscheme of LeaderF in popup mode.

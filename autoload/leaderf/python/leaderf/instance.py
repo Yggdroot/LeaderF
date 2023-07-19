@@ -322,8 +322,7 @@ class LfInstance(object):
         lfCmd("setlocal cursorline")
         if lfEval("exists('+cursorlineopt')") == '1':
             lfCmd("setlocal cursorlineopt=both")
-        if lfEval("has('nvim')") == '1':
-            lfCmd("silent! setlocal signcolumn=no")   # make vim flicker
+        lfCmd("silent! setlocal signcolumn=no")   # make vim flicker
         lfCmd("setlocal colorcolumn=")
         if self._reverse_order:
             lfCmd("setlocal nonumber")
