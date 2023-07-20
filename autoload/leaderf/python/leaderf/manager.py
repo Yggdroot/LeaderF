@@ -711,7 +711,7 @@ class Manager(object):
                 line = maxheight + 1
 
             options = {
-                    "title":           title,
+                    "title":           " Preview ",
                     "maxwidth":        maxwidth,
                     "minwidth":        maxwidth,
                     "maxheight":       maxheight,
@@ -792,8 +792,6 @@ class Manager(object):
                     lfCmd("call win_execute(%d, 'doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(source)))
                     self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
         else:
-            if lfEval("popup_getoptions(%d).title != ''" % self._preview_winid) == '1':
-                lfCmd("noautocmd call leaderf#ResetPopupOptions(%d, 'title', '%s')" % (self._preview_winid, title))
             if isinstance(source, int):
                 lfCmd("noautocmd call popup_settext(%d, getbufline(%d, 1, '$'))" % (self._preview_winid, source) )
                 filename = vim.buffers[source].name
@@ -930,7 +928,7 @@ class Manager(object):
                 col = 1
 
             options = {
-                    "title":           title,
+                    "title":           " Preview ",
                     "maxwidth":        maxwidth,
                     "minwidth":        maxwidth,
                     "maxheight":       maxheight,
