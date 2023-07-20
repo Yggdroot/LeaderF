@@ -80,6 +80,21 @@ def catchException(func):
                 self._timer_id = None
     return deco
 
+def windo(func):
+    if lfEval("has('nvim')") == '0':
+        return func
+
+    @wraps(func)
+    def deco(self, *args, **kwargs):
+        try:
+            cur_winid = lfEval("win_getid()")
+            lfCmd("noautocmd call win_gotoid(%d)" % self._getInstance().window.id)
+            return func(self, *args, **kwargs)
+        finally:
+            lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+
+    return deco
+
 #*****************************************************
 # Manager
 #*****************************************************
@@ -1743,6 +1758,7 @@ class Manager(object):
         self._highlight_pos_list = []
         self._highlight_refine_pos = []
 
+    @windo
     def _resetHighlights(self):
         self._clearHighlights()
 
