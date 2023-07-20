@@ -463,9 +463,9 @@ class Manager(object):
                 lfCmd("noautocmd call setbufline(g:Lf_preview_scratch_buffer, 1, content)")
                 lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'bufhidden', 'wipe')")
                 lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
+                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'modeline', v:true)")
 
                 self._preview_winid = int(lfEval("nvim_open_win(g:Lf_preview_scratch_buffer, 0, %s)" % str(config)))
-                self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
 
             if jump_cmd:
                 cur_winid = lfEval("win_getid()")
@@ -480,10 +480,11 @@ class Manager(object):
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
             if not isinstance(source, int):
-                lfCmd("doautocmd filetypedetect BufNewFile %s" % source)
+                lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % source)
             lfCmd("silent! %foldopen!")
             lfCmd("norm! zz")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
         else:
             if isinstance(source, int):
                 lfCmd("let content = getbufline(%d, 1, '$')" % source)
@@ -497,8 +498,8 @@ class Manager(object):
                     return
 
             lfCmd("noautocmd silent! let winid = popup_create(content, %s)" % json.dumps(config))
-            lfCmd("call win_execute(winid, 'setlocal nomodeline')")
-            lfCmd("call win_execute(winid, 'doautocmd filetypedetect BufNewFile %s')" % escQuote(filename))
+            lfCmd("call win_execute(winid, 'setlocal modeline')")
+            lfCmd("call win_execute(winid, 'silent! doautocmd filetypedetect BufNewFile %s')" % escQuote(filename))
 
             self._preview_winid = int(lfEval("winid"))
             self._preview_filetype = lfEval("getbufvar(winbufnr(winid), '&ft')")
@@ -784,12 +785,13 @@ class Manager(object):
                 if lfEval("!exists('g:Lf_preview_scratch_buffer') || !bufexists(g:Lf_preview_scratch_buffer)") == '1':
                     lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
                 lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
+                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'modeline', v:true)")
                 lfCmd("noautocmd call nvim_buf_set_lines(g:Lf_preview_scratch_buffer, 0, -1, v:false, content)")
                 lfCmd("noautocmd call nvim_win_set_buf(%d, g:Lf_preview_scratch_buffer)" % self._preview_winid)
 
                 cur_filetype = getExtension(source)
                 if cur_filetype != self._preview_filetype:
-                    lfCmd("call win_execute(%d, 'doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(source)))
+                    lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(source)))
                     self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
         else:
             if isinstance(source, int):
@@ -806,7 +808,7 @@ class Manager(object):
 
             cur_filetype = getExtension(filename)
             if cur_filetype != self._preview_filetype:
-                lfCmd("call win_execute(%d, 'doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(filename)))
+                lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(filename)))
                 self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
 
         if jump_cmd:

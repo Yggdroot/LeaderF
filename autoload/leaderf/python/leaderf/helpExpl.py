@@ -16,6 +16,7 @@ from leaderf.manager import *
 class HelpExplorer(Explorer):
     def __init__(self):
         self._content = []
+        self._file_ids = {}
 
     def getContent(self, *args, **kwargs):
         if self._content:
@@ -26,6 +27,7 @@ class HelpExplorer(Explorer):
     def getFreshContent(self, *args, **kwargs):
         self._content = []
         lfCmd("silent! helptags ALL")
+        file_id = 0
         for dir in lfEval("&rtp").split(','):
             tags_file = os.path.join(dir, "doc", "tags")
             try:
@@ -33,9 +35,12 @@ class HelpExplorer(Explorer):
                     lines = f.readlines()
                     for line in lines:
                         tag, file = line.split()[:2]
-                        self._content.append("{:<40} {}".format(tag, file))
+                        self._content.append("{:<40} {} {}".format(tag, file, file_id))
             except IOError:
                 pass
+
+            self._file_ids[file_id] = os.path.dirname(tags_file)
+            file_id += 1
 
         return self._content
 
@@ -133,6 +138,16 @@ class HelpExplManager(Manager):
 
     def _supportsRefine(self):
         return True
+
+    def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+        tagname, tagfile, file_id = line.split(None, 2)
+        tagfile = os.path.join(self._getExplorer()._file_ids[int(file_id)], tagfile)
+        jump_cmd = "call search('\m\*%s\*', 'w')" % escQuote(tagname)
+        self._createPopupPreview("", tagfile, 0, jump_cmd)
 
 
 #*****************************************************
