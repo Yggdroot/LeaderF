@@ -88,7 +88,7 @@ def windo(func):
     def deco(self, *args, **kwargs):
         try:
             cur_winid = lfEval("win_getid()")
-            lfCmd("noautocmd call win_gotoid(%d)" % self._getInstance().window.id)
+            lfCmd("noautocmd call win_gotoid(%d)" % self._getInstance().windowId)
             return func(self, *args, **kwargs)
         finally:
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
