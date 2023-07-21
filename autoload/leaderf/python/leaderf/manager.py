@@ -514,10 +514,12 @@ class Manager(object):
 
             lfCmd("noautocmd silent! let winid = popup_create(content, %s)" % json.dumps(config))
             lfCmd("call win_execute(winid, 'setlocal modeline')")
+            lfCmd("call win_execute(winid, 'setlocal nofoldenable')")
             lfCmd("call win_execute(winid, 'silent! doautocmd filetypedetect BufNewFile %s')" % escQuote(filename))
 
             self._preview_winid = int(lfEval("winid"))
             self._preview_filetype = lfEval("getbufvar(winbufnr(winid), '&ft')")
+
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
                 lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
