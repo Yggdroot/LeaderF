@@ -420,9 +420,6 @@ class LfInstance(object):
                     col += maxwidth + 1
             else:
                 col = (int(lfEval("&columns")) - maxwidth) // 2
-
-            # to the left a bit
-            col -= 3
         else:
             col = min(col, int(lfEval("&columns")) - maxwidth)
 
