@@ -502,9 +502,9 @@ g:Lf_WorkingDirectoryMode                       *g:Lf_WorkingDirectoryMode*
 
 g:Lf_WorkingDirectory                           *g:Lf_WorkingDirectory*
     Set LeaderF's working directory. It will ignore the |g:Lf_RootMarkers| and
-	|g:Lf_WorkingDirectoryMode| option set.
-	e.g., >
-	let g:Lf_WorkingDirectory = finddir('.git', '.;')
+    |g:Lf_WorkingDirectoryMode| option set.
+    e.g., >
+    let g:Lf_WorkingDirectory = finddir('.git', '.;')
 <
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
@@ -646,12 +646,12 @@ g:Lf_GtagsAutoGenerate                          *g:Lf_GtagsAutoGenerate*
     generated manually by using `Leaderf gtags --update` .
     Default value is 0.
 
-g:Lf_GtagsGutentags								*g:Lf_GtagsGutentags*
-	if you use https://github.com/ludovicchabant/vim-gutentags to generate
-		gtags; Firstly, you should let g:Lf_GtagsAutoGenerate = 0 and let  g:Lf_GtagsGutentags = 1.
-        Then, you should config gutentags like this: g:Lf_CacheDirectory =
-        expand('~') and g:gutentags_cache_dir = expand(g:Lf_CacheDirectory.'/.LfCache/gtags')
-	Default value is 0
+g:Lf_GtagsGutentags                             *g:Lf_GtagsGutentags*
+    if you use https://github.com/ludovicchabant/vim-gutentags to generate
+    gtags; Firstly, you should let g:Lf_GtagsAutoGenerate = 0 and let g:Lf_GtagsGutentags = 1.
+    Then, you should config gutentags like this: g:Lf_CacheDirectory = expand('~')
+    and g:gutentags_cache_dir = expand(g:Lf_CacheDirectory.'/.LfCache/gtags')
+    Default value is 0
 
 g:Lf_GtagsAutoUpdate                            *g:Lf_GtagsAutoUpdate*
     If the value is 1 and the gtags database already exists, gtags database
