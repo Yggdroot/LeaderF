@@ -739,7 +739,7 @@ class AnyHub(object):
             arguments["win_pos"] = win_pos[2:]
 
         if "--cword" in arguments:
-            kwargs["pattern"] = lfEval("expand('<cword>')")
+            arguments["--input"]= [lfEval("expand('<cword>')")]
 
         kwargs["arguments"] = arguments
         kwargs["positional_args"] = positional_args
