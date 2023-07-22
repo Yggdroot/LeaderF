@@ -454,6 +454,7 @@ class Manager(object):
         lfCmd("call nvim_win_set_option(%d, 'number', v:true)" % winid)
         lfCmd("call nvim_win_set_option(%d, 'relativenumber', v:false)" % winid)
         lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % winid)
+        lfCmd("call nvim_win_set_option(%d, 'foldenable', v:false)" % winid)
         lfCmd("call nvim_win_set_option(%d, 'foldmethod', 'manual')" % winid)
         lfCmd("call nvim_win_set_option(%d, 'foldcolumn', '0')" % winid)
         lfCmd("call nvim_win_set_option(%d, 'signcolumn', 'no')" % winid)
@@ -482,6 +483,8 @@ class Manager(object):
 
                 self._preview_winid = int(lfEval("nvim_open_win(g:Lf_preview_scratch_buffer, 0, %s)" % str(config)))
 
+            self._setWinOptions(self._preview_winid)
+
             if jump_cmd:
                 cur_winid = lfEval("win_getid()")
                 lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
@@ -490,13 +493,10 @@ class Manager(object):
             if buffer_len >= line_nr > 0:
                 lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
 
-            self._setWinOptions(self._preview_winid)
-
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
             if not isinstance(source, int):
                 lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % source)
-            lfCmd("silent! %foldopen!")
             lfCmd("norm! zz")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
             self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
@@ -513,8 +513,18 @@ class Manager(object):
                     return
 
             lfCmd("noautocmd silent! let winid = popup_create(content, %s)" % json.dumps(config))
+            lfCmd("call win_execute(winid, 'setlocal wincolor=Lf_hl_popup_window')")
             lfCmd("call win_execute(winid, 'setlocal modeline')")
+            lfCmd("call win_execute(winid, 'setlocal cursorline number norelativenumber colorcolumn=')")
             lfCmd("call win_execute(winid, 'setlocal nofoldenable')")
+            lfCmd("call win_execute(winid, 'setlocal foldmethod=manual')")
+            if lfEval("exists('+cursorlineopt')") == '1':
+                lfCmd("call win_execute(winid, 'setlocal cursorlineopt=both')")
+            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0' or lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+                lfCmd("call win_execute(winid, 'setlocal foldcolumn=0')")
+            else:
+                lfCmd("call win_execute(winid, 'setlocal foldcolumn=1')")
+
             lfCmd("call win_execute(winid, 'silent! doautocmd filetypedetect BufNewFile %s')" % escQuote(filename))
 
             self._preview_winid = int(lfEval("winid"))
@@ -526,15 +536,6 @@ class Manager(object):
             elif line_nr > 0:
                 lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_nr))
                 lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
-            lfCmd("call win_execute(%d, 'setlocal cursorline number norelativenumber colorcolumn= ')" % self._preview_winid)
-            lfCmd("call win_execute(%d, 'setlocal foldmethod=manual')" % self._preview_winid)
-            if lfEval("exists('+cursorlineopt')") == '1':
-                lfCmd("call win_execute(%d, 'setlocal cursorlineopt=both')" % self._preview_winid)
-            lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._preview_winid)
-            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0' or lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
-                lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % self._preview_winid)
-            else:
-                lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._preview_winid)
 
     @ignoreEvent('BufWinEnter,BufEnter')
     def _createPopupModePreview(self, title, source, line_nr, jump_cmd):
