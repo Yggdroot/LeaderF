@@ -296,7 +296,7 @@ class LfInstance(object):
         stl += "%#Lf_hl_stlCwd# %<%{{g:Lf_{0}_StlCwd}} "
         stl += "%#Lf_hl_{0}_stlSeparator3#%{{g:Lf_StlSeparator.left}}"
         stl += "%#Lf_hl_{0}_stlBlank#%="
-        stl += "%#Lf_hl_stlSpin#%{{g:Lf_{0}_StlRunning}} "
+        stl += "%#Lf_hl_stlSpin#%{{g:Lf_{0}_StlRunning}}"
         stl += "%#Lf_hl_{0}_stlSeparator4#%{{g:Lf_StlSeparator.right}}"
         if self._reverse_order:
             stl += "%#Lf_hl_stlLineInfo# %{{g:Lf_{0}_StlLineNumber}}/%{{g:Lf_{0}_StlResultsCount}} "
@@ -1047,7 +1047,7 @@ class LfInstance(object):
             return
 
         if running:
-            spin = "{}".format(self._cli._spin_symbols[self._running_status])
+            spin = "{} ".format(self._cli._spin_symbols[self._running_status])
             self._running_status = (self._running_status + 1) % len(self._cli._spin_symbols)
             lfCmd("let g:Lf_{}_StlRunning = '{}'".format(self._category, spin))
         else:
