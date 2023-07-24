@@ -13,11 +13,11 @@ if !isdirectory(g:Lf_CacheDirectory)
     call mkdir(g:Lf_CacheDirectory, "p")
 endif
 
-if !isdirectory(g:Lf_CacheDirectory . '/.LfCache')
-    call mkdir(g:Lf_CacheDirectory . '/.LfCache', "p")
+if !isdirectory(g:Lf_CacheDirectory . '/LeaderF')
+    call mkdir(g:Lf_CacheDirectory . '/LeaderF', "p")
 endif
 
-let g:Lf_MruCacheFileName = g:Lf_CacheDirectory . '/.LfCache/tempMru'
+let g:Lf_MruCacheFileName = g:Lf_CacheDirectory . '/LeaderF/tempMru'
 
 if !filereadable(g:Lf_MruCacheFileName)
     call writefile([], g:Lf_MruCacheFileName)

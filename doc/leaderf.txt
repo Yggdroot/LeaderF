@@ -108,7 +108,9 @@ g:Lf_CacheDirectory                              *g:Lf_CacheDirectory*
     e.g. >
     let g:Lf_CacheDirectory = '/root'
 <
-    Default value is $HOME.
+    On Windows, default value is '%APPDATA%'.
+    On Linux, default value is '$XDG_CACHE_HOME' if $XDG_CACHE_HOME is defined,
+    otherwise, default value is '$HOME/.cache'.
 
 g:Lf_NeedCacheTime                              *g:Lf_NeedCacheTime*
     This option set a threshold, if the time of indexing files is greater than
@@ -650,7 +652,7 @@ g:Lf_GtagsGutentags                             *g:Lf_GtagsGutentags*
     if you use https://github.com/ludovicchabant/vim-gutentags to generate
     gtags; Firstly, you should let g:Lf_GtagsAutoGenerate = 0 and let g:Lf_GtagsGutentags = 1.
     Then, you should config gutentags like this: g:Lf_CacheDirectory = expand('~')
-    and g:gutentags_cache_dir = expand(g:Lf_CacheDirectory.'/.LfCache/gtags')
+    and g:gutentags_cache_dir = expand(g:Lf_CacheDirectory.'/LeaderF/gtags')
     Default value is 0
 
 g:Lf_GtagsAutoUpdate                            *g:Lf_GtagsAutoUpdate*

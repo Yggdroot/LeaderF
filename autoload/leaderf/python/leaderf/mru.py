@@ -15,7 +15,7 @@ from .utils import *
 class Mru(object):
     def __init__(self):
         self._cache_dir = os.path.join(lfEval("g:Lf_CacheDirectory"),
-                                       '.LfCache',
+                                       'LeaderF',
                                        'python' + lfEval("g:Lf_PythonVersion"),
                                        'mru')
         self._cache_file = os.path.join(self._cache_dir, 'mruCache')

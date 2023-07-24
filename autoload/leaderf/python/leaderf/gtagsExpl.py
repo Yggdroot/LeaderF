@@ -30,7 +30,7 @@ class GtagsExplorer(Explorer):
             self._cd_option = ''
         self._root_markers = lfEval("g:Lf_RootMarkers")
         self._db_location = os.path.join(lfEval("g:Lf_CacheDirectory"),
-                                     '.LfCache',
+                                     'LeaderF',
                                      'gtags')
         self._store_in_project = lfEval("get(g:, 'Lf_GtagsStoreInProject', 0)") == '1'
         self._store_in_rootmarker = lfEval("get(g:, 'Lf_GtagsStoreInRootMarker', 0)") == '1'

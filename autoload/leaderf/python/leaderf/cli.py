@@ -530,7 +530,7 @@ class LfCli(object):
         else:
             pattern = self._pattern
 
-        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
+        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), 'LeaderF', 'history', category)
         if self._is_fuzzy:
             history_file = os.path.join(history_dir, 'fuzzy.txt')
         else:
@@ -560,7 +560,7 @@ class LfCli(object):
             f.writelines(lines)
 
     def previousHistory(self, category):
-        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
+        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), 'LeaderF', 'history', category)
         if self._is_fuzzy:
             history_file = os.path.join(history_dir, 'fuzzy.txt')
         else:
@@ -583,7 +583,7 @@ class LfCli(object):
         return True
 
     def nextHistory(self, category):
-        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
+        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), 'LeaderF', 'history', category)
         if self._is_fuzzy:
             history_file = os.path.join(history_dir, 'fuzzy.txt')
         else:
