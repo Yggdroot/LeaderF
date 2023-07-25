@@ -426,6 +426,7 @@ class LfInstance(object):
             maxwidth = min(width, int(lfEval("&columns")))
             maxwidth = max(20, maxwidth)
 
+        show_borders = lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1'
         height = lfEval("get(g:, 'Lf_PopupHeight', 0)")
         height = self._arguments.get("--popup-height", [height])[0]
         height = height.strip('"').strip("'")
@@ -442,7 +443,7 @@ class LfInstance(object):
         else:
             height = int(height)
             maxheight = min(height, int(lfEval("&lines")) - 2)
-            if lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+            if show_borders:
                 maxheight -= 2
 
         line, col = [int(i) for i in lfEval("get(g:, 'Lf_PopupPosition', [0, 0])")]
@@ -489,8 +490,10 @@ class LfInstance(object):
                     "anchor"  : "NW",
                     "height"  : floatwin_height,
                     "width"   : maxwidth,
+                    "zindex"  : 20480,
                     "row"     : line + 1,
-                    "col"     : col
+                    "col"     : col,
+                    "noautocmd": 1
                     }
 
             popup_borders = lfEval("g:Lf_PopupBorders")
@@ -504,7 +507,7 @@ class LfInstance(object):
                     [popup_borders[7],  "Lf_hl_popupBorder"],
                     [popup_borders[3],  "Lf_hl_popupBorder"]
                     ]
-            if lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+            if show_borders:
                 if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
                     config["border"] = ['','','',borderchars[3],'','','',borderchars[7]]
                 else:
@@ -516,7 +519,7 @@ class LfInstance(object):
             self._popup_winid = int(lfEval("winid"))
             self._window_id = self._popup_winid
             self._setAttributes()
-            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0' or lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0' or show_borders:
                 try:
                     lfCmd("call nvim_win_set_option(%d, 'foldcolumn', 0)" % self._popup_winid)
                 except vim.error:
@@ -540,11 +543,13 @@ class LfInstance(object):
                     "anchor"  : "NW",
                     "height"  : 1,
                     "width"   : maxwidth,
+                    "zindex"  : 20480,
                     "row"     : line,
-                    "col"     : col
+                    "col"     : col,
+                    "noautocmd": 1
                     }
 
-            if lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+            if show_borders:
                 input_win_config["border"] = borderchars[:4] + ['','','', borderchars[7]]
                 input_win_config["width"] -= 2
 
@@ -574,11 +579,13 @@ class LfInstance(object):
                         "anchor"  : "NW",
                         "height"  : 1,
                         "width"   : maxwidth,
+                        "zindex"  : 20480,
                         "row"     : config["row"] + floatwin_height,
-                        "col"     : col
+                        "col"     : col,
+                        "noautocmd": 1
                         }
 
-                if lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+                if show_borders:
                     stl_win_config["border"] = ['','',''] + borderchars[3:]
                     stl_win_config["width"] -= 2
 
@@ -633,7 +640,7 @@ class LfInstance(object):
                     }
 
             borderchars = lfEval("g:Lf_PopupBorders")
-            if lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+            if show_borders:
                 if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
                     options["border"] = [0, 1, 0, 1]
                 else:
@@ -650,7 +657,7 @@ class LfInstance(object):
             self._vim_set_options(self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal number')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal cursorline')" % self._popup_winid)
-            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0' or lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+            if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0' or show_borders:
                 lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % self._popup_winid)
             else:
                 lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._popup_winid)
@@ -675,7 +682,7 @@ class LfInstance(object):
                     "borderhighlight": ["Lf_hl_previewTitle"],
                     }
 
-            if lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+            if show_borders:
                 input_win_options["border"] = [1, 1, 0, 1]
                 input_win_options["borderchars"] = borderchars
                 input_win_options["maxwidth"] -= 2
@@ -707,7 +714,7 @@ class LfInstance(object):
                         "borderhighlight": ["Lf_hl_previewTitle"],
                         }
 
-                if lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
+                if show_borders:
                     statusline_win_options["border"] = [0, 1, 1, 1]
                     statusline_win_options["borderchars"] = borderchars
                     statusline_win_options["maxwidth"] -= 2

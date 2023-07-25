@@ -129,7 +129,7 @@ class Manager(object):
         self._arguments = {}
         self._getExplClass()
         self._preview_filetype = None
-        if lfEval("has('patch-8.1.1615') || has('nvim-0.4.2')") == '0':
+        if lfEval("has('patch-8.1.1615') || has('nvim-0.5.0')") == '0':
             lfCmd("let g:Lf_PreviewInPopup = 0")
         if lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')").lower() == 'bottom':
             lfCmd("let g:Lf_PopupAutoAdjustHeight = 0")
@@ -659,8 +659,9 @@ class Manager(object):
 
             if show_borders:
                 config["border"] = borderchars
-                config["title"] = " Preview "
-                config["title_pos"] = "center"
+                if lfEval("has('nvim-0.9.0')") == '1':
+                    config["title"] = " Preview "
+                    config["title_pos"] = "center"
 
             self._createPreviewWindow(config, source, line_nr, jump_cmd)
             lfCmd("let g:Lf_PreviewWindowID[%d] = %d" % (id(self), self._preview_winid))
@@ -917,8 +918,9 @@ class Manager(object):
                 config["border"] = borderchars
                 config["height"] -= 2
                 config["width"] -= 2
-                config["title"] = " Preview "
-                config["title_pos"] = "center"
+                if lfEval("has('nvim-0.9.0')") == '1':
+                    config["title"] = " Preview "
+                    config["title_pos"] = "center"
 
             self._createPreviewWindow(config, source, line_nr, jump_cmd)
         else:
