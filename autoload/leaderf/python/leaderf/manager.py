@@ -1165,7 +1165,10 @@ class Manager(object):
 
     def _toUp(self):
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("noautocmd call win_execute(%d, 'norm! k')" % (self._getInstance().getPopupWinId()))
+            if self._getInstance().window.cursor[0] == 1:
+                lfCmd("noautocmd call win_execute(%d, 'norm! G')" % (self._getInstance().getPopupWinId()))
+            else:
+                lfCmd("noautocmd call win_execute(%d, 'norm! k')" % (self._getInstance().getPopupWinId()))
             self._getInstance().refreshPopupStatusline()
             return
 
@@ -1178,7 +1181,10 @@ class Manager(object):
                     and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
                 self._highlight_method()
 
-        lfCmd("noautocmd norm! k")
+        if self._getInstance().window.cursor[0] == 1:
+            lfCmd("noautocmd norm! G")
+        else:
+            lfCmd("noautocmd norm! k")
 
         if adjust:
             lfCmd("norm! zt")
@@ -1189,7 +1195,10 @@ class Manager(object):
 
     def _toDown(self):
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("noautocmd call win_execute(%d, 'norm! j')" % (self._getInstance().getPopupWinId()))
+            if self._getInstance().window.cursor[0] == len(self._getInstance().buffer):
+                lfCmd("noautocmd call win_execute(%d, 'norm! gg')" % (self._getInstance().getPopupWinId()))
+            else:
+                lfCmd("noautocmd call win_execute(%d, 'norm! j')" % (self._getInstance().getPopupWinId()))
             self._getInstance().refreshPopupStatusline()
             return
 
@@ -1197,7 +1206,10 @@ class Manager(object):
                 and self._getInstance().getCurrentPos()[0] == self._initial_count:
             self._setResultContent()
 
-        lfCmd("noautocmd norm! j")
+        if self._getInstance().window.cursor[0] == len(self._getInstance().buffer):
+            lfCmd("noautocmd norm! gg")
+        else:
+            lfCmd("noautocmd norm! j")
         self._getInstance().setLineNumber()
         lfCmd("setlocal cursorline!")   # these two help to redraw the statusline,
         lfCmd("setlocal cursorline!")   # also fix a weird bug of vim
