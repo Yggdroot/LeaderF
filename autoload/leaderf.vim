@@ -492,13 +492,13 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
     endif
 
     if key ==# "j" || key ==? "<Down>"
-        call win_execute(a:winid, "norm! j")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.move('j')", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         "redraw
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
     elseif key ==# "k" || key ==? "<Up>"
-        call win_execute(a:winid, "norm! k")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.move('k')", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         "redraw
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)

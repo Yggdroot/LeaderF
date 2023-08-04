@@ -1133,14 +1133,30 @@ class Manager(object):
             else:
                 lfCmd("call win_execute(%d, 'norm! %dj')" % (self._preview_winid, scroll_step_size))
 
+    def move(self, direction):
+        """
+        direction is in {'j', 'k'}
+        """
+        if direction == 'j' and self._getInstance().window.cursor[0] == len(self._getInstance().buffer):
+            lfCmd("noautocmd call win_execute(%d, 'norm! gg')" % (self._getInstance().getPopupWinId()))
+        elif direction == 'k' and self._getInstance().window.cursor[0] == 1:
+            lfCmd("noautocmd call win_execute(%d, 'norm! G')" % (self._getInstance().getPopupWinId()))
+        else:
+            lfCmd("noautocmd call win_execute(%d, 'norm! %s')" % (self._getInstance().getPopupWinId(), direction))
+
     def moveAndPreview(self, direction):
         """
         direction is in {'j', 'k', 'Down', 'Up', 'PageDown', 'PageUp'}
         """
-        if len(direction) > 1:
-            lfCmd('noautocmd exec "norm! \<{}>"'.format(direction))
+        if direction in ("j", "Down") and self._getInstance().window.cursor[0] == len(self._getInstance().buffer):
+            lfCmd('noautocmd exec "norm! gg"')
+        elif direction in ("k", "Up") and self._getInstance().window.cursor[0] == 1:
+            lfCmd('noautocmd exec "norm! G"')
         else:
-            lfCmd('noautocmd exec "norm! {}"'.format(direction))
+            if len(direction) > 1:
+                lfCmd('noautocmd exec "norm! \<{}>"'.format(direction))
+            else:
+                lfCmd('noautocmd exec "norm! {}"'.format(direction))
 
         if self._getInstance().getWinPos() == 'floatwin':
             self._cli._buildPopupPrompt()
