@@ -34,11 +34,9 @@ function! leaderf#Jumps#Maps()
     nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "jumpsExplManager.moveAndPreview('Down')"<CR>
     nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "jumpsExplManager.moveAndPreview('PageUp')"<CR>
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "jumpsExplManager.moveAndPreview('PageDown')"<CR>
-    if has("nvim")
-        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "jumpsExplManager._toUpInPopup()"<CR>
-        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "jumpsExplManager._toDownInPopup()"<CR>
-        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "jumpsExplManager._closePreviewPopup()"<CR>
-    endif
+    nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "jumpsExplManager._toUpInPopup()"<CR>
+    nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "jumpsExplManager._toDownInPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "jumpsExplManager._closePreviewPopup()"<CR>
     if has_key(g:Lf_NormalMap, "Jumps")
         for i in g:Lf_NormalMap["Jumps"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

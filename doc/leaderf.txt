@@ -451,6 +451,8 @@ g:Lf_UseCache                                   *g:Lf_UseCache*
     Default value is 1.
 
 g:Lf_NormalMap                                  *g:Lf_NormalMap*
+    This option is deprecated in favor of |g:Lf_NormalCommandMap|.
+
     Use this option to customize the mappings in normal mode.
     The mapping with the key `"_"` applies to all categories.
     Also, `"_"` is overridden by the mapping of each category.
@@ -515,6 +517,41 @@ g:Lf_CommandMap                                 *g:Lf_CommandMap*
     change the default command <ESC> to <C-A> and <C-B>: >
     let g:Lf_CommandMap = {'<C-F>': ['<C-D>'], '<ESC>': ['<C-A>', '<C-B>']}
 <
+    Note: The key of the dictionary is the old command, the value of the
+    dictionary is the new command.
+
+g:Lf_NormalCommandMap                                  *g:Lf_NormalCommandMap*
+    Use this option to customize the mappings in normal mode.
+    The mapping with the key `"*"` applies to all categories.
+    Also, `"*"` is overridden by the mapping of each category.
+
+    Note: The key of the dictionary is the old command, the value of the
+    dictionary is the new command.
+
+    e.g., >
+    let g:Lf_NormalCommandMap = {
+        \ "*":      {
+        \               "<C-Down>": "<C-J>",
+        \               "<C-Up>":   "<C-K>"
+        \           },
+        \ "File":   {
+        \               "q":     "<Esc>",
+        \               "a":     "<C-A>",
+        \               "<Esc>": "<C-W>",
+        \           },
+        \ "Buffer": {},
+        \ "Mru":    {},
+        \ "Tag":    {},
+        \ "BufTag": {},
+        \ "Function": {},
+        \ "Line":   {},
+        \ "History":{},
+        \ "Help":   {},
+        \ "Rg":     {},
+        \ "Gtags":  {},
+        \ "Colorscheme": {}
+        \}
+
 g:Lf_HideHelp                                   *g:Lf_HideHelp*
     To specify whether to show the hint "Press <F1> for help" in normal mode.
     You can set the value to 1 to hide the hint.

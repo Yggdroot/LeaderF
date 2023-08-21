@@ -35,11 +35,9 @@ function! leaderf#Buffer#Maps()
     nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "bufExplManager.moveAndPreview('Down')"<CR>
     nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "bufExplManager.moveAndPreview('PageUp')"<CR>
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "bufExplManager.moveAndPreview('PageDown')"<CR>
-    if has("nvim")
-        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "bufExplManager._toUpInPopup()"<CR>
-        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "bufExplManager._toDownInPopup()"<CR>
-        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "bufExplManager._closePreviewPopup()"<CR>
-    endif
+    nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "bufExplManager._toUpInPopup()"<CR>
+    nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "bufExplManager._toDownInPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufExplManager._closePreviewPopup()"<CR>
     if has_key(g:Lf_NormalMap, "Buffer")
         for i in g:Lf_NormalMap["Buffer"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -48,7 +46,8 @@ function! leaderf#Buffer#Maps()
 endfunction
 
 function! leaderf#Buffer#NormalModeFilter(winid, key) abort
-    let key = get(g:Lf_KeyMap, a:key, a:key)
+    let key = leaderf#RemapKey(g:Lf_PyEval("id(bufExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
+
     if key ==# "d"
         exec g:Lf_py "bufExplManager.deleteBuffer(1)"
     elseif key ==# "D"

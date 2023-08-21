@@ -32,7 +32,7 @@ function! leaderf#Window#Maps()
 endfunction
 
 function! leaderf#Window#NormalModeFilter(winid, key) abort
-    let key = get(g:Lf_KeyMap, a:key, a:key)
+    let key = leaderf#RemapKey(g:Lf_PyEval("id(windowExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
 
     if key ==# "x"
     elseif key ==# "v"

@@ -35,11 +35,9 @@ function! leaderf#Gtags#Maps()
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "gtagsExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "gtagsExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> d             :exec g:Lf_py "gtagsExplManager.deleteCurrentLine()"<CR>
-    if has("nvim")
-        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "gtagsExplManager._toUpInPopup()"<CR>
-        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "gtagsExplManager._toDownInPopup()"<CR>
-        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "gtagsExplManager._closePreviewPopup()"<CR>
-    endif
+    nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "gtagsExplManager._toUpInPopup()"<CR>
+    nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "gtagsExplManager._toDownInPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "gtagsExplManager._closePreviewPopup()"<CR>
     if has_key(g:Lf_NormalMap, "Gtags")
         for i in g:Lf_NormalMap["Gtags"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -107,7 +105,8 @@ EOF
 endfunction
 
 function! leaderf#Gtags#NormalModeFilter(winid, key) abort
-    let key = get(g:Lf_KeyMap, a:key, a:key)
+    let key = leaderf#RemapKey(g:Lf_PyEval("id(gtagsExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
+
     if key ==# "d"
         exec g:Lf_py "gtagsExplManager.deleteCurrentLine()"
     elseif key ==# "s"

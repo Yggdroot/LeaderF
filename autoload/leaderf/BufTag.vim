@@ -33,11 +33,9 @@ function! leaderf#BufTag#Maps()
     nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "bufTagExplManager.moveAndPreview('Down')"<CR>
     nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "bufTagExplManager.moveAndPreview('PageUp')"<CR>
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "bufTagExplManager.moveAndPreview('PageDown')"<CR>
-    if has("nvim")
-        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "bufTagExplManager._toUpInPopup()"<CR>
-        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "bufTagExplManager._toDownInPopup()"<CR>
-        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "bufTagExplManager._closePreviewPopup()"<CR>
-    endif
+    nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "bufTagExplManager._toUpInPopup()"<CR>
+    nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "bufTagExplManager._toDownInPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufTagExplManager._closePreviewPopup()"<CR>
     if has_key(g:Lf_NormalMap, "BufTag")
         for i in g:Lf_NormalMap["BufTag"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

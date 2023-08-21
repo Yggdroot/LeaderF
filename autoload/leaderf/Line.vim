@@ -35,11 +35,9 @@ function! leaderf#Line#Maps()
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "lineExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> Q             :exec g:Lf_py "lineExplManager.outputToQflist()"<CR>
     nnoremap <buffer> <silent> L             :exec g:Lf_py "lineExplManager.outputToLoclist()"<CR>
-    if has("nvim")
-        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "lineExplManager._toUpInPopup()"<CR>
-        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "lineExplManager._toDownInPopup()"<CR>
-        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "lineExplManager._closePreviewPopup()"<CR>
-    endif
+    nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "lineExplManager._toUpInPopup()"<CR>
+    nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "lineExplManager._toDownInPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "lineExplManager._closePreviewPopup()"<CR>
     if has_key(g:Lf_NormalMap, "Line")
         for i in g:Lf_NormalMap["Line"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -48,7 +46,8 @@ function! leaderf#Line#Maps()
 endfunction
 
 function! leaderf#Line#NormalModeFilter(winid, key) abort
-    let key = get(g:Lf_KeyMap, a:key, a:key)
+    let key = leaderf#RemapKey(g:Lf_PyEval("id(lineExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
+
     if key ==? "<F5>"
         exec g:Lf_py "lineExplManager.refresh()"
     elseif key ==# "Q"

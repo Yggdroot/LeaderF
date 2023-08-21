@@ -29,7 +29,7 @@ function! leaderf#History#Maps()
 endfunction
 
 function! leaderf#History#NormalModeFilter(winid, key) abort
-    let key = get(g:Lf_KeyMap, a:key, a:key)
+    let key = leaderf#RemapKey(g:Lf_PyEval("id(historyExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
 
     if key ==# "x"
     elseif key ==# "v"

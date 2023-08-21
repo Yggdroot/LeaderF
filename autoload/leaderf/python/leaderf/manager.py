@@ -149,6 +149,23 @@ class Manager(object):
     def _defineMaps(self):
         pass
 
+    def _defineNormalCommandMaps(self):
+        normal_map = lfEval("get(g:, 'Lf_NormalCommandMap', {})")
+        if not normal_map:
+            return
+
+        command_map = normal_map.get("*", {})
+        command_map.update(normal_map.get(self._getExplorer().getStlCategory(), {}))
+        new_commands = set(i.lower() if i.startswith('<') else i for i in command_map.values())
+        map_rhs = {k: lfEval("maparg('{}', 'n', 0, 1)".format(k)) for k in command_map}
+        for old, new in command_map.items():
+            maparg = map_rhs[old]
+            if maparg and maparg["buffer"] == '1':
+                lfCmd("silent! nnoremap <buffer> <silent> {} {}".format(new, maparg["rhs"]))
+                old_cmd = old.lower() if old.startswith('<') else old
+                if old_cmd not in new_commands:
+                    lfCmd("silent! nunmap <buffer> {}".format(old))
+
     def _defineCommonMaps(self):
         normal_map = lfEval("get(g:, 'Lf_NormalMap', {})")
         if "_" not in normal_map:
@@ -291,6 +308,7 @@ class Manager(object):
         if self._getInstance().getWinPos() != 'popup':
             self._defineMaps()
             self._defineCommonMaps()
+            self._defineNormalCommandMaps()
 
             id = int(lfEval("matchadd('Lf_hl_cursorline', '.*\%#.*', -100)"))
             self._match_ids.append(id)

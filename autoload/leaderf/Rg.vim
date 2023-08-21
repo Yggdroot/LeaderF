@@ -42,11 +42,9 @@ function! leaderf#Rg#Maps(heading)
     nnoremap <buffer> <silent> w             :call leaderf#Rg#ApplyChangesAndSave(0)<CR>
     nnoremap <buffer> <silent> W             :call leaderf#Rg#ApplyChangesAndSave(1)<CR>
     nnoremap <buffer> <silent> U             :call leaderf#Rg#UndoLastChange()<CR>
-    if has("nvim")
-        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "rgExplManager._toUpInPopup()"<CR>
-        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "rgExplManager._toDownInPopup()"<CR>
-        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "rgExplManager._closePreviewPopup()"<CR>
-    endif
+    nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "rgExplManager._toUpInPopup()"<CR>
+    nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "rgExplManager._toDownInPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "rgExplManager._closePreviewPopup()"<CR>
     if has_key(g:Lf_NormalMap, "Rg")
         for i in g:Lf_NormalMap["Rg"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
@@ -182,7 +180,8 @@ endfunction
 
 
 function! leaderf#Rg#NormalModeFilter(winid, key) abort
-    let key = get(g:Lf_KeyMap, a:key, a:key)
+    let key = leaderf#RemapKey(g:Lf_PyEval("id(rgExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
+
     if key ==# "i" || key ==? "<Tab>"
         if g:Lf_py == "py "
             let has_heading = pyeval("'--heading' in rgExplManager._arguments")
