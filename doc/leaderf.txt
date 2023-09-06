@@ -885,6 +885,8 @@ g:Lf_PreviewPosition                            *g:Lf_PreviewPosition*
     'topleft': the preview window is on the topleft of the main LeaderF window.
     'topright': the preview window is on the topright of the main LeaderF window.
     'right': the preview window is on the right of the main LeaderF window.
+    'bottom': the preview window is at the bottom of the main LeaderF window.
+              (only available when LeaderF window is on the top)
 
     Default value is 'top'.
 

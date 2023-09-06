@@ -878,37 +878,82 @@ class Manager(object):
             self._createPopupModePreview(title, source, line_nr, jump_cmd)
             return True
 
+        win_pos = self._getInstance().getWinPos()
         show_borders = lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1'
         preview_pos = lfEval("get(g:, 'Lf_PreviewPosition', 'top')")
         if lfEval("has('nvim')") == '1':
-            if preview_pos.lower() == 'topleft':
+            if win_pos == 'bottom':
+                if preview_pos.lower() == 'topleft':
+                    relative = 'editor'
+                    anchor = "SW"
+                    width = self._getInstance().window.width // 2
+                    height = self._getInstance().window.row
+                    row = self._getInstance().window.row
+                    col = 0
+                elif preview_pos.lower() == 'topright':
+                    relative = 'editor'
+                    anchor = "SW"
+                    width = self._getInstance().window.width // 2
+                    height = self._getInstance().window.row
+                    row = self._getInstance().window.row
+                    col = self._getInstance().window.width - width
+                elif preview_pos.lower() == 'right':
+                    relative = 'editor'
+                    anchor = "NW"
+                    width = self._getInstance().window.width // 2
+                    height = self._getInstance().window.height
+                    row = self._getInstance().window.row
+                    col = self._getInstance().window.width - width
+                else: # preview_pos.lower() == 'top'
+                    relative = 'editor'
+                    anchor = "SW"
+                    width = self._getInstance().window.width
+                    height = self._getInstance().window.row
+                    row = self._getInstance().window.row
+                    col = 0
+            elif win_pos == 'top':
+                if preview_pos.lower() == 'bottom':
+                    relative = 'editor'
+                    anchor = "NW"
+                    width = self._getInstance().window.width
+                    height = int(lfEval("&lines")) - self._getInstance().window.height - 2
+                    row = self._getInstance().window.height
+                    col = 0
+                else: # preview_pos.lower() == 'right'
+                    relative = 'editor'
+                    anchor = "NW"
+                    width = self._getInstance().window.width // 2
+                    height = self._getInstance().window.height
+                    row = self._getInstance().window.row
+                    col = self._getInstance().window.width - width
+            elif win_pos == 'left':
                 relative = 'editor'
-                anchor = "SW"
-                width = self._getInstance().window.width // 2
-                height = self._getInstance().window.row
+                anchor = "NW"
+                width = int(lfEval("&columns")) - 1 - self._getInstance().window.width
+                height = self._getInstance().window.height
+                row = self._getInstance().window.row
+                col = self._getInstance().window.width + 1
+            elif win_pos == 'right':
+                relative = 'editor'
+                anchor = "NW"
+                width = int(lfEval("&columns")) - 1 - self._getInstance().window.width
+                height = self._getInstance().window.height
                 row = self._getInstance().window.row
                 col = 0
-            elif preview_pos.lower() == 'topright':
-                relative = 'editor'
-                anchor = "SW"
-                width = self._getInstance().window.width // 2
-                height = self._getInstance().window.row
-                row = self._getInstance().window.row
-                col = self._getInstance().window.width - width
-            elif preview_pos.lower() == 'right':
+            elif win_pos == 'fullScreen':
                 relative = 'editor'
                 anchor = "NW"
                 width = self._getInstance().window.width // 2
                 height = self._getInstance().window.height
                 row = self._getInstance().window.row
                 col = self._getInstance().window.width - width
-            else: # preview_pos.lower() == 'top'
+            else:
                 relative = 'editor'
-                anchor = "SW"
-                width = self._getInstance().window.width
-                height = self._getInstance().window.row
+                anchor = "NW"
+                width = self._getInstance().window.width // 2
+                height = self._getInstance().window.height
                 row = self._getInstance().window.row
-                col = 0
+                col = self._getInstance().window.col + self._getInstance().window.width - width
 
             config = {
                     "relative": relative,
@@ -942,30 +987,68 @@ class Manager(object):
 
             self._createPreviewWindow(config, source, line_nr, jump_cmd)
         else:
-            if preview_pos.lower() == 'topleft':
-                maxwidth = self._getInstance().window.width // 2
-                maxheight = self._getInstance().window.row - 1
-                pos = "botleft"
-                line = self._getInstance().window.row
+            if win_pos == 'bottom':
+                if preview_pos.lower() == 'topleft':
+                    maxwidth = self._getInstance().window.width // 2
+                    maxheight = self._getInstance().window.row - 1
+                    pos = "botleft"
+                    line = self._getInstance().window.row
+                    col = 1
+                elif preview_pos.lower() == 'topright':
+                    maxwidth = self._getInstance().window.width // 2
+                    maxheight = self._getInstance().window.row - 1
+                    pos = "botleft"
+                    line = self._getInstance().window.row
+                    col = self._getInstance().window.width - maxwidth + 1
+                elif preview_pos.lower() == 'right':
+                    maxwidth = self._getInstance().window.width // 2
+                    maxheight = self._getInstance().window.height - 1
+                    pos = "topleft"
+                    line = self._getInstance().window.row + 1
+                    col = self._getInstance().window.width - maxwidth + 1
+                else: # preview_pos.lower() == 'top'
+                    maxwidth = self._getInstance().window.width
+                    maxheight = self._getInstance().window.row - 1
+                    pos = "botleft"
+                    line = self._getInstance().window.row
+                    col = 1
+            elif win_pos == 'top':
+                if preview_pos.lower() == 'bottom':
+                    maxwidth = self._getInstance().window.width
+                    maxheight = int(lfEval("&lines")) - self._getInstance().window.height - 3
+                    pos = "topleft"
+                    line = self._getInstance().window.height + 1
+                    col = 1
+                else: # preview_pos.lower() == 'right'
+                    maxwidth = self._getInstance().window.width // 2
+                    maxheight = self._getInstance().window.height - 1
+                    pos = "topleft"
+                    line = self._getInstance().window.row + 1
+                    col = self._getInstance().window.width - maxwidth + 1
+            elif win_pos == 'left':
+                maxwidth = int(lfEval("&columns")) - 1 - self._getInstance().window.width
+                maxheight = self._getInstance().window.height - 1
+                pos = "topleft"
+                line = self._getInstance().window.row + 1
+                col = self._getInstance().window.width + 2
+            elif win_pos == 'right':
+                maxwidth = int(lfEval("&columns")) - 1 - self._getInstance().window.width
+                maxheight = self._getInstance().window.height - 1
+                pos = "topleft"
+                line = self._getInstance().window.row + 1
                 col = 1
-            elif preview_pos.lower() == 'topright':
-                maxwidth = self._getInstance().window.width // 2
-                maxheight = self._getInstance().window.row - 1
-                pos = "botleft"
-                line = self._getInstance().window.row
-                col = self._getInstance().window.width - maxwidth + 1
-            elif preview_pos.lower() == 'right':
+            elif win_pos == 'fullScreen':
                 maxwidth = self._getInstance().window.width // 2
                 maxheight = self._getInstance().window.height - 1
                 pos = "topleft"
                 line = self._getInstance().window.row + 1
                 col = self._getInstance().window.width - maxwidth + 1
-            else: # preview_pos.lower() == 'top'
-                maxwidth = self._getInstance().window.width
-                maxheight = self._getInstance().window.row - 1
-                pos = "botleft"
-                line = self._getInstance().window.row
-                col = 1
+            else:
+                maxwidth = self._getInstance().window.width // 2
+                maxheight = self._getInstance().window.height - 1
+                pos = "topleft"
+                line = self._getInstance().window.row + 1
+                col = self._getInstance().window.col + self._getInstance().window.width - maxwidth + 1
 
             options = {
                     "title":           " Preview ",
