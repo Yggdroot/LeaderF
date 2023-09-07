@@ -89,9 +89,12 @@ class LfCli(object):
             quick_select_value = 1
         else:
             quick_select_value = int(quick_select[0])
-        self._quick_select = (not self._instance.isReverseOrder()
-                              and (bool(quick_select_value)
-                              or bool(int(lfEval("get(g:, 'Lf_QuickSelect', 0)")))))
+
+        if "--quick-select" in self._arguments:
+            self._quick_select = not self._instance.isReverseOrder() and bool(quick_select_value)
+        else:
+            self._quick_select = (not self._instance.isReverseOrder()
+                                  and bool(int(lfEval("get(g:, 'Lf_QuickSelect', 0)"))))
 
     def _setDefaultMode(self):
         mode = lfEval("g:Lf_DefaultMode")
