@@ -1382,6 +1382,33 @@ class Manager(object):
         else:
             self._toDown()
 
+    def _quickSelect(self):
+        selection = int(self._cli.last_char)
+        if selection == 0:
+            selection = 10
+
+        line_num = self._help_length + selection
+        if line_num > len(self._getInstance().buffer):
+            return False
+
+        if self._getInstance().isReverseOrder():
+            pass
+        else:
+            if self._getInstance().getWinPos() == 'popup':
+                lfCmd("""call win_execute(%d, "exec %d")""" % (self._getInstance().getPopupWinId(), line_num))
+            else:
+                lfCmd("exec %d" % line_num)
+
+            action = lfEval("get(g:, 'Lf_QuickSelectAction', 'c')")
+            if action != '' and action in "hvtc":
+                if action == 'c':
+                    action = ''
+                self.accept(action)
+                return True
+            else:
+                self._previewResult(False)
+                return False
+
     def _search(self, content, is_continue=False, step=0):
         if not is_continue:
             self.clearSelections()
@@ -2498,7 +2525,9 @@ class Manager(object):
             self._arguments["--next"] = arguments_dict["--next"]
         else:
             self.setArguments(arguments_dict)
-        self._cli.setArguments(arguments_dict)
+
+        self._getInstance().setArguments(self._arguments)
+        self._cli.setArguments(self._arguments)
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
         self._orig_line = None
@@ -2520,7 +2549,6 @@ class Manager(object):
         self._cleanup()
 
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
-        self._getInstance().setArguments(self._arguments)
         empty_query = self._empty_query and self._getExplorer().getStlCategory() in ["File"]
         remember_last_status = "--recall" in self._arguments \
                 or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern
@@ -2658,7 +2686,8 @@ class Manager(object):
                 self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
                 self._reader_thread.daemon = True
                 self._reader_thread.start()
-                self._previewFirstLine()
+                if not self._getInstance().isReverseOrder():
+                    self._previewFirstLine()
 
             if not kwargs.get('bang', 0):
                 self.input()
@@ -3025,6 +3054,9 @@ class Manager(object):
             elif equal(cmd, '<ScrollWheelDown>'):
                 self._scrollDown()
                 self._previewResult(False)
+            elif equal(cmd, '<QuickSelect>'):
+                if self._quickSelect():
+                    break
             else:
                 if self._cmdExtension(cmd):
                     break

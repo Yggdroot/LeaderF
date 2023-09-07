@@ -1087,6 +1087,29 @@ g:Lf_FileActions                                *g:Lf_FileActions*
 g:Lf_MruEnable                                *g:Lf_MruEnable*
     Enable `Leaderf mru` or not.
     Default value is 1.
+
+g:Lf_QuickSelect                              *g:Lf_QuickSelect*
+    Enable quick-select mode or not. When enabled, characters [0-9] are not
+    treated as literal characters, but are used to select the [0-9]th entry. 0
+    means the 10th entry.
+    NOTE: Appending '--quick-select' in the arguments list of `Leaderf` command
+    will override this option.
+
+    Default value is 0.
+
+g:Lf_QuickSelectAction                        *g:Lf_QuickSelectAction*
+    This option specify what action to do when quick-select mode is enabled
+    and an entry is seleted.
+
+    The value can be one of the following:
+    '':  do nothing.
+    'c': open the seleted entry in the current window.
+    'h': open the seleted entry in a horizontal split window.
+    'v': open the seleted entry in a vertical split window.
+    't': open the seleted entry in a new tabpage.
+
+    Default value is 'c'.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

@@ -70,6 +70,8 @@ class LfCli(object):
         self._setDefaultMode()
         self._is_live = False
         self._additional_prompt_string = ''
+        self._quick_select = False
+        self.last_char = ''
         self._spin_symbols = lfEval("get(g:, 'Lf_SpinSymbols', [])")
         if not self._spin_symbols:
             if platform.system() == "Linux":
@@ -82,6 +84,14 @@ class LfCli(object):
 
     def setArguments(self, arguments):
         self._arguments = arguments
+        quick_select = self._arguments.get("--quick-select", [0])
+        if len(quick_select) == 0:
+            quick_select_value = 1
+        else:
+            quick_select_value = int(quick_select[0])
+        self._quick_select = (not self._instance.isReverseOrder()
+                              and (bool(quick_select_value)
+                              or bool(int(lfEval("get(g:, 'Lf_QuickSelect', 0)")))))
 
     def _setDefaultMode(self):
         mode = lfEval("g:Lf_DefaultMode")
@@ -725,11 +735,17 @@ class LfCli(object):
                     self._blinkon = True
 
                 if lfEval("!type(nr) && nr >= 0x20") == '1':
+                    char = lfEval("ch")
+                    if self._quick_select and char in "0123456789":
+                        self.last_char = char
+                        yield '<QuickSelect>'
+                        continue
+
                     if update == False:
                         update = True
                         prefix = ''.join(self._cmdline)
 
-                    self._insert(lfEval("ch"))
+                    self._insert(char)
                     self._buildPattern()
                     if self._pattern is None or (self._refine and self._pattern[1] == ''): # e.g. abc;
                         continue
