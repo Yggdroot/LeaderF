@@ -48,7 +48,7 @@ fileNodesExtensionSymbols = {
         'Rmd'        : '', 'es'        : '', 'less'    : '',  'rej'         : '',
         'Smd'        : '', 'ex'        : '', 'lhs'     : '',  'rlib'        : '',
         'ai'         : '', 'exs'       : '', 'lisp'    : '',  'rmd'         : '',
-        'awk'        : '', 'f#'        : '', 'lock'    : '',  'rmeta'       : '',
+        'awk'        : '', 'f#'        : '', 'lock'    : '',  'rmeta'       : '',
         'bash'       : '', 'fish'      : '', 'log'     : '',  'rs'          : '',
         'bat'        : '', 'fs'        : '', 'lsp'     : '',  'rss'         : '',
         'bin'        : '', 'fsi'       : '', 'lua'     : '',  'sass'        : '',
