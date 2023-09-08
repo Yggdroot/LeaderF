@@ -591,7 +591,7 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
     elseif key ==? "<C-Down>"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._toDownInPopup()", a:id)
     elseif key ==? "<ESC>"
-        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._closePreviewPopup()", a:id)
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.closePreviewPopupOrQuit()", a:id)
     endif
 
     return 1

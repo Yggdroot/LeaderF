@@ -39,7 +39,7 @@ function! leaderf#File#Maps()
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "fileExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "fileExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "fileExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "fileExplManager._closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "fileExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "File")
         for i in g:Lf_NormalMap["File"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

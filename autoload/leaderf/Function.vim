@@ -35,7 +35,7 @@ function! leaderf#Function#Maps()
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "functionExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "functionExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "functionExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "functionExplManager._closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "functionExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "Function")
         for i in g:Lf_NormalMap["Function"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

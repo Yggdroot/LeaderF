@@ -37,7 +37,7 @@ function! leaderf#Buffer#Maps()
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "bufExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "bufExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "bufExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufExplManager._closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "Buffer")
         for i in g:Lf_NormalMap["Buffer"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

@@ -36,7 +36,7 @@ function! leaderf#Tag#Maps()
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "tagExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "tagExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "tagExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "tagExplManager._closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "tagExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "Tag")
         for i in g:Lf_NormalMap["Tag"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

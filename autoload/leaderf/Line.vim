@@ -37,7 +37,7 @@ function! leaderf#Line#Maps()
     nnoremap <buffer> <silent> L             :exec g:Lf_py "lineExplManager.outputToLoclist()"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "lineExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "lineExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "lineExplManager._closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "lineExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "Line")
         for i in g:Lf_NormalMap["Line"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

@@ -36,7 +36,7 @@ function! leaderf#Jumps#Maps()
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "jumpsExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "jumpsExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "jumpsExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "jumpsExplManager._closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "jumpsExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "Jumps")
         for i in g:Lf_NormalMap["Jumps"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

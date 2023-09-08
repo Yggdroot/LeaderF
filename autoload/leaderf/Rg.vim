@@ -44,7 +44,7 @@ function! leaderf#Rg#Maps(heading)
     nnoremap <buffer> <silent> U             :call leaderf#Rg#UndoLastChange()<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "rgExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "rgExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "rgExplManager._closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "rgExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "Rg")
         for i in g:Lf_NormalMap["Rg"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

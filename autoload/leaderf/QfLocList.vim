@@ -28,7 +28,7 @@ function! leaderf#QfLocList#Maps()
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "qfloclistExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "qfloclistExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "qfloclistExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "qfloclistExplManager._closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "qfloclistExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "QfLocList")
         for i in g:Lf_NormalMap["QfLocList"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

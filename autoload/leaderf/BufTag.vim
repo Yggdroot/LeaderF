@@ -35,7 +35,7 @@ function! leaderf#BufTag#Maps()
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "bufTagExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "bufTagExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "bufTagExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufTagExplManager._closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufTagExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "BufTag")
         for i in g:Lf_NormalMap["BufTag"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

@@ -36,7 +36,7 @@ function! leaderf#Any#Maps(category)
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py b:Lf_AnyExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py b:Lf_AnyExplManager."_toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py b:Lf_AnyExplManager."_toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py b:Lf_AnyExplManager."_closePreviewPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py b:Lf_AnyExplManager."closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, a:category)
         for i in g:Lf_NormalMap[a:category]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

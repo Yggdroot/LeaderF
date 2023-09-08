@@ -389,6 +389,14 @@ class Manager(object):
     def _previewInPopup(self, *args, **kwargs):
         pass
 
+    def closePreviewPopupOrQuit(self):
+        if self._getInstance().getWinPos() in ('popup', 'floatwin'):
+            self.quit()
+        elif self._preview_winid:
+            self._closePreviewPopup()
+        else:
+            self.quit()
+
     def _closePreviewPopup(self):
         if lfEval("has('nvim')") == '1':
             if self._preview_winid:
