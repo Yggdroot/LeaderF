@@ -75,6 +75,8 @@ class JumpsExplManager(Manager):
             file_text = file_text[:-1]
             orig_buf_num = self._getInstance().getOriginalPos()[2].number
             orig_buf = vim.buffers[orig_buf_num]
+            if self._preview_winid:
+                self._closePreviewPopup()
             # it's text
             if int(line) <= len(orig_buf) and orig_buf[int(line) - 1].lstrip().startswith(file_text):
                 self._getInstance().gotoOriginalWindow()

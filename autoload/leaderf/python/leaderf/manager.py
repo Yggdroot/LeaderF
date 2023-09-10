@@ -2223,6 +2223,8 @@ class Manager(object):
                     self._getInstance().cursorRow = self._getInstance().window.cursor[0]
                 self._getInstance().helpLength = self._help_length
                 try:
+                    if self._preview_winid:
+                        self._closePreviewPopup()
                     vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
                 except vim.error: # error if original buffer is an No Name buffer
                     pass
@@ -2260,6 +2262,8 @@ class Manager(object):
                         self._getInstance().cursorRow = self._getInstance().window.cursor[0]
                     self._getInstance().helpLength = self._help_length
                     try:
+                        if self._preview_winid:
+                            self._closePreviewPopup()
                         vim.current.tabpage, vim.current.window, vim.current.buffer = self._getInstance().getOriginalPos()
                     except vim.error: # error if original buffer is an No Name buffer
                         pass
