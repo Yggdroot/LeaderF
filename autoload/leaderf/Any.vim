@@ -86,6 +86,7 @@ let g:Lf_Arguments = {
             \           ],
             \           {"name": ["--no-split-path"], "nargs": 0, "help": "do not split the path"},
             \           {"name": ["--absolute-path"], "nargs": 0, "help": "show absolute path"},
+            \           {"name": ["--frecency"], "nargs": 0, "help": "enable the frecency algorithm"},
             \   ],
             \ "tag":[],
             \ "bufTag":[

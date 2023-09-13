@@ -1088,6 +1088,11 @@ g:Lf_MruEnable                                *g:Lf_MruEnable*
     Enable `Leaderf mru` or not.
     Default value is 1.
 
+g:Lf_MruEnableFrecency                        *g:Lf_MruEnableFrecency*
+    This option specifies whether `Leaderf mru` uses frecency algorithm.
+    `--frecency` can override this option.
+    Default value is 0.
+
 g:Lf_QuickSelect                              *g:Lf_QuickSelect*
     Enable or disable quick-select mode. If enabled, the characters [0-9] are not
     treated as literal characters, but are used to select the [0-9]th entry. 0
