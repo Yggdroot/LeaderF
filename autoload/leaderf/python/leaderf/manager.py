@@ -508,7 +508,10 @@ class Manager(object):
                 self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (source, str(config))))
             else:
                 try:
-                    lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
+                    if self._isBinaryFile(source):
+                        lfCmd("""let content = map(range(128), '"^@"')""")
+                    else:
+                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
                 except vim.error as e:
                     lfPrintError(e)
                     return
@@ -544,7 +547,10 @@ class Manager(object):
             else:
                 filename = source
                 try:
-                    lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
+                    if self._isBinaryFile(filename):
+                        lfCmd("""let content = map(range(128), '"^@"')""")
+                    else:
+                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
                 except vim.error as e:
                     lfPrintError(e)
                     return
@@ -817,6 +823,21 @@ class Manager(object):
     def isPreviewWindowOpen(self):
         return self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1
 
+    def _isBinaryFile(self, filename):
+        try:
+            is_binary = False
+            with lfOpen(filename, 'r', encoding='utf-8', errors='ignore') as f:
+                data = f.read(128)
+                for i in data:
+                    if i == '\0':
+                        is_binary = True
+                        break
+
+            return is_binary
+        except Exception as e:
+            lfPrintError(e)
+            return True
+
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
         if lfEval("has('nvim')") == '1':
             if isinstance(source, int):
@@ -825,7 +846,10 @@ class Manager(object):
                 self._preview_filetype = ''
             else:
                 try:
-                    lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
+                    if self._isBinaryFile(source):
+                        lfCmd("""let content = map(range(128), '"^@"')""")
+                    else:
+                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
                 except vim.error as e:
                     lfPrintError(e)
                     return
@@ -847,7 +871,10 @@ class Manager(object):
             else:
                 filename = source
                 try:
-                    lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
+                    if self._isBinaryFile(filename):
+                        lfCmd("""let content = map(range(128), '"^@"')""")
+                    else:
+                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
                 except vim.error as e:
                     lfPrintError(e)
                     return
