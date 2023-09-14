@@ -424,11 +424,11 @@ class Manager(object):
                 self._closePreviewPopup()
             return
 
-        line_nr = self._getInstance().window.cursor[0]
-        line = self._getInstance().buffer[line_nr - 1]
+        line_num = self._getInstance().window.cursor[0]
+        line = self._getInstance().buffer[line_num - 1]
 
         if preview_in_popup:
-            self._previewInPopup(line, self._getInstance().buffer, line_nr)
+            self._previewInPopup(line, self._getInstance().buffer, line_num)
             return
 
         orig_pos = self._getInstance().getOriginalPos()
@@ -438,8 +438,8 @@ class Manager(object):
         vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
         try:
             vim.current.tabpage, vim.current.window = orig_pos[:2]
-            line_nr = self._getInstance().window.cursor[0]
-            self._acceptSelection(line, self._getInstance().buffer, line_nr, preview=True)
+            line_num = self._getInstance().window.cursor[0]
+            self._acceptSelection(line, self._getInstance().buffer, line_num, preview=True)
             lfCmd("augroup Lf_Cursorline")
             lfCmd("autocmd! BufwinEnter <buffer> setlocal cursorline<")
             lfCmd("augroup END")
@@ -501,7 +501,7 @@ class Manager(object):
             lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % winid)
 
-    def _createPreviewWindow(self, config, source, line_nr, jump_cmd):
+    def _createPreviewWindow(self, config, source, line_num, jump_cmd):
         if lfEval("has('nvim')") == '1':
             if isinstance(source, int):
                 buffer_len = len(vim.buffers[source])
@@ -521,23 +521,22 @@ class Manager(object):
 
                 self._preview_winid = int(lfEval("nvim_open_win(g:Lf_preview_scratch_buffer, 0, %s)" % str(config)))
 
-            if jump_cmd:
-                cur_winid = lfEval("win_getid()")
-                lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
-                lfCmd(jump_cmd)
-                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
-            if buffer_len >= line_nr > 0:
-                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_nr))
-
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
             if not isinstance(source, int):
                 lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % source)
-            lfCmd("norm! zz")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
 
             self._setWinOptions(self._preview_winid)
             self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
+
+            lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            if jump_cmd:
+                lfCmd(jump_cmd)
+            if buffer_len >= line_num > 0:
+                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_num))
+            lfCmd("norm! zz")
+            lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
         else:
             if isinstance(source, int):
                 lfCmd("let content = getbufline(%d, 1, '$')" % source)
@@ -562,12 +561,12 @@ class Manager(object):
             if jump_cmd:
                 lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
                 lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
-            elif line_nr > 0:
-                lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_nr))
+            elif line_num > 0:
+                lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_num))
                 lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
 
     @ignoreEvent('BufWinEnter,BufEnter')
-    def _createPopupModePreview(self, title, source, line_nr, jump_cmd):
+    def _createPopupModePreview(self, title, source, line_num, jump_cmd):
         """
         Args:
             source:
@@ -692,7 +691,7 @@ class Manager(object):
                     config["title"] = " Preview "
                     config["title_pos"] = "center"
 
-            self._createPreviewWindow(config, source, line_nr, jump_cmd)
+            self._createPreviewWindow(config, source, line_num, jump_cmd)
             lfCmd("let g:Lf_PreviewWindowID[%d] = %d" % (id(self), self._preview_winid))
         else:
             popup_window = self._getInstance().window
@@ -812,13 +811,13 @@ class Manager(object):
                 options["maxheight"] = maxheight
                 options["minheight"] = maxheight
 
-            self._createPreviewWindow(options, source, line_nr, jump_cmd)
+            self._createPreviewWindow(options, source, line_num, jump_cmd)
 
 
     def isPreviewWindowOpen(self):
         return self._preview_winid > 0 and int(lfEval("winbufnr(%d)" % self._preview_winid)) != -1
 
-    def _useExistingWindow(self, title, source, line_nr, jump_cmd):
+    def _useExistingWindow(self, title, source, line_num, jump_cmd):
         if lfEval("has('nvim')") == '1':
             if isinstance(source, int):
                 lfCmd("noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
@@ -864,14 +863,14 @@ class Manager(object):
         if jump_cmd:
             lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
             lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
-        elif line_nr > 0:
-            lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_nr))
+        elif line_num > 0:
+            lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_num))
             lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
         else:
             lfCmd("call win_execute(%d, 'norm! gg')" % self._preview_winid)
 
     @ignoreEvent('BufRead,BufReadPre,BufReadPost')
-    def _createPopupPreview(self, title, source, line_nr, jump_cmd=''):
+    def _createPopupPreview(self, title, source, line_num, jump_cmd=''):
         """
         Args:
             source:
@@ -881,14 +880,14 @@ class Manager(object):
         return False if use existing window, otherwise True
         """
         self._is_previewed = True
-        line_nr = int(line_nr)
+        line_num = int(line_num)
 
         if self.isPreviewWindowOpen():
-            self._useExistingWindow(title, source, line_nr, jump_cmd)
+            self._useExistingWindow(title, source, line_num, jump_cmd)
             return False
 
         if self._getInstance().getWinPos() in ('popup', 'floatwin'):
-            self._createPopupModePreview(title, source, line_nr, jump_cmd)
+            self._createPopupModePreview(title, source, line_num, jump_cmd)
             return True
 
         win_pos = self._getInstance().getWinPos()
@@ -998,7 +997,7 @@ class Manager(object):
                     config["title"] = " Preview "
                     config["title_pos"] = "center"
 
-            self._createPreviewWindow(config, source, line_nr, jump_cmd)
+            self._createPreviewWindow(config, source, line_num, jump_cmd)
         else:
             if win_pos == 'bottom':
                 if preview_pos.lower() == 'topleft':
@@ -1088,7 +1087,7 @@ class Manager(object):
                 options["minheight"] -= 1
                 options["borderhighlight"] = ["Lf_hl_popupBorder"]
 
-            self._createPreviewWindow(options, source, line_nr, jump_cmd)
+            self._createPreviewWindow(options, source, line_num, jump_cmd)
 
         return True
 
@@ -2259,7 +2258,7 @@ class Manager(object):
             need_exit = True
         else:
             file = self._getInstance().currentLine
-            line_nr = self._getInstance().window.cursor[0]
+            line_num = self._getInstance().window.cursor[0]
             need_exit = self._needExit(file, self._arguments)
             if need_exit:
                 if "--stayOpen" in self._arguments:
@@ -2281,7 +2280,7 @@ class Manager(object):
                 chdir(cwd)
 
             orig_cwd = lfGetCwd()
-            self._accept(file, mode, self._getInstance().buffer, line_nr) # for bufTag
+            self._accept(file, mode, self._getInstance().buffer, line_num) # for bufTag
             if lfGetCwd() != orig_cwd:
                 dir_changed_by_autocmd = True
             else:
@@ -2313,20 +2312,20 @@ class Manager(object):
                 instance.window.options["cursorline"] = True
 
                 instance.gotoOriginalWindow()
-                line_nr = self._getInstance().window.cursor[0]
-                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_nr)
+                line_num = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_num)
             else:
                 if instance.cursorRow > len(instance.buffer) - instance.helpLength:
                     instance.cursorRow = len(instance.buffer) - instance.helpLength
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                 elif instance.cursorRow == 1: # at the last line
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                     instance.cursorRow = len(instance.buffer) - instance.helpLength
                 else:
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                     instance.cursorRow -= 1
 
-                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_nr)
+                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_num)
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE"
                         % (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1,
                             len(instance.buffer) - instance.helpLength))
@@ -2341,20 +2340,20 @@ class Manager(object):
                 instance.window.options["cursorline"] = True
 
                 instance.gotoOriginalWindow()
-                line_nr = self._getInstance().window.cursor[0]
-                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_nr)
+                line_num = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_num)
             else:
                 if instance.cursorRow <= instance.helpLength:
                     instance.cursorRow = instance.helpLength + 1
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                 elif instance.cursorRow == len(instance.buffer): # at the last line
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                     instance.cursorRow = instance.helpLength + 1
                 else:
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                     instance.cursorRow += 1
 
-                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_nr)
+                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_num)
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
                         (instance.cursorRow - instance.helpLength, len(instance.buffer) - instance.helpLength))
 
@@ -2374,17 +2373,17 @@ class Manager(object):
                 instance.window.options["cursorline"] = True
 
                 instance.gotoOriginalWindow()
-                line_nr = self._getInstance().window.cursor[0]
-                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_nr)
+                line_num = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_num)
             else:
                 if instance.cursorRow >= len(instance.buffer) - instance.helpLength:
                     instance.cursorRow = 1
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                 else:
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                     instance.cursorRow += 1
 
-                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_nr)
+                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_num)
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE"
                         % (len(instance.buffer) - instance.cursorRow - instance.helpLength + 1,
                             len(instance.buffer) - instance.helpLength))
@@ -2397,17 +2396,17 @@ class Manager(object):
                 instance.window.options["cursorline"] = True
 
                 instance.gotoOriginalWindow()
-                line_nr = self._getInstance().window.cursor[0]
-                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_nr)
+                line_num = self._getInstance().window.cursor[0]
+                self._accept(instance.buffer[instance.window.cursor[0] - 1], "", self._getInstance().buffer, line_num)
             else:
                 if instance.cursorRow <= instance.helpLength + 1:
                     instance.cursorRow = len(instance.buffer)
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                 else:
-                    line_nr = instance.cursorRow
+                    line_num = instance.cursorRow
                     instance.cursorRow -= 1
 
-                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_nr)
+                self._accept(instance.buffer[instance.cursorRow - 1], "", self._getInstance().buffer, line_num)
                 lfCmd("echohl WarningMsg | redraw | echo ' (%d of %d)' | echohl NONE" % \
                         (instance.cursorRow - instance.helpLength, len(instance.buffer) - instance.helpLength))
 
@@ -2453,13 +2452,13 @@ class Manager(object):
                 lfCmd("exec v:mouse_lnum")
                 lfCmd("exec 'norm!'.v:mouse_col.'|'")
 
-        line_nr = self._getInstance().window.cursor[0]
+        line_num = self._getInstance().window.cursor[0]
         if self._getInstance().isReverseOrder():
-            if line_nr > len(self._getInstance().buffer) - self._help_length:
+            if line_num > len(self._getInstance().buffer) - self._help_length:
                 lfCmd("norm! k")
                 return
         else:
-            if line_nr <= self._help_length:
+            if line_num <= self._help_length:
                 if self._getInstance().getWinPos() == 'popup':
                     lfCmd("call win_execute({}, 'norm! j')".format(self._getInstance().getPopupWinId()))
                 else:
@@ -2470,20 +2469,20 @@ class Manager(object):
 
                 return
 
-        if line_nr in self._selections:
+        if line_num in self._selections:
             if self._getInstance().getWinPos() == 'popup':
-                lfCmd("call matchdelete(%d, %d)" % (self._selections[line_nr], self._getInstance().getPopupWinId()))
+                lfCmd("call matchdelete(%d, %d)" % (self._selections[line_num], self._getInstance().getPopupWinId()))
             else:
-                lfCmd("call matchdelete(%d)" % self._selections[line_nr])
-            del self._selections[line_nr]
+                lfCmd("call matchdelete(%d)" % self._selections[line_num])
+            del self._selections[line_num]
         else:
             if self._getInstance().getWinPos() == 'popup':
                 lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_selection', '\\\\%%%dl.')")"""
-                        % (self._getInstance().getPopupWinId(), line_nr))
+                        % (self._getInstance().getPopupWinId(), line_num))
                 id = int(lfEval("matchid"))
             else:
-                id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % line_nr))
-            self._selections[line_nr] = id
+                id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % line_num))
+            self._selections[line_num] = id
 
     def selectMulti(self):
         orig_line = self._getInstance().window.cursor[0]

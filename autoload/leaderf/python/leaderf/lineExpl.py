@@ -65,8 +65,8 @@ class LineExplManager(Manager):
             return
         line = args[0]
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
-        line_nr, buf_number = line.rsplit(":", 1)[1].split()
-        lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
+        line_num, buf_number = line.rsplit(":", 1)[1].split()
+        lfCmd("hide buffer +%s %s" % (line_num, buf_number))
         lfCmd("norm! ^zv")
         lfCmd("norm! zz")
 
@@ -136,9 +136,9 @@ class LineExplManager(Manager):
 
         line = args[0]
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
-        line_nr, buf_number = line.rsplit(":", 1)[1].split()
+        line_num, buf_number = line.rsplit(":", 1)[1].split()
         buf_number = int(buf_number)
-        self._createPopupPreview(vim.buffers[int(buf_number)].name, buf_number, line_nr)
+        self._createPopupPreview(vim.buffers[int(buf_number)].name, buf_number, line_num)
 
     def outputToQflist(self, *args, **kwargs):
         items = self._getFormatedContents()
@@ -156,10 +156,10 @@ class LineExplManager(Manager):
         for line in self._instance._buffer_object[self._help_length:]:
             text, info = line.rsplit("\t", 1)
             info = info[1:-1]    # file:line buf_number
-            line_nr, buf_number = info.rsplit(":", 1)[1].split()
+            line_num, buf_number = info.rsplit(":", 1)[1].split()
             items.append({
                 "filename": lfEval("getbufinfo(%d)[0]['name']" % int(buf_number)),
-                "lnum": line_nr,
+                "lnum": line_num,
                 "col": 1,
                 "text": text,
             })

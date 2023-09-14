@@ -224,21 +224,21 @@ class BufTagExplManager(Manager):
         line = args[0]
         if line[0].isspace(): # if g:Lf_PreviewCode == 1
             buffer = args[1]
-            line_nr = args[2]
+            line_num = args[2]
             if self._getInstance().isReverseOrder():
-                line = buffer[line_nr]
+                line = buffer[line_num]
             else:
-                line = buffer[line_nr - 2]
+                line = buffer[line_num - 2]
         # {tag} {kind} {scope} {file}:{line} {buf_number}
         items = re.split(" *\t *", line)
         tagname = items[0]
-        line_nr = items[3].rsplit(":", 1)[1]
+        line_num = items[3].rsplit(":", 1)[1]
         buf_number = items[4]
         if kwargs.get("mode", '') == 't':
             buf_name = lfEval("bufname(%s)" % buf_number)
-            lfDrop('tab', buf_name, line_nr)
+            lfDrop('tab', buf_name, line_num)
         else:
-            lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
+            lfCmd("hide buffer +%s %s" % (line_num, buf_number))
         if "preview" not in kwargs:
             lfCmd("norm! ^")
             lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
@@ -494,7 +494,7 @@ class BufTagExplManager(Manager):
         inst = self._getInstance()
         if inst.empty():
             return
-        orig_buf_nr = inst.getOriginalPos()[2].number
+        orig_buf_num = inst.getOriginalPos()[2].number
         orig_line = inst.getOriginalCursor()[0]
         tags = []
         for index, line in enumerate(inst.buffer, 1):
@@ -505,10 +505,10 @@ class BufTagExplManager(Manager):
                 elif index & 1 == 0:
                     continue
             items = re.split(" *\t *", line)
-            line_nr = int(items[3].rsplit(":", 1)[1])
+            line_num = int(items[3].rsplit(":", 1)[1])
             buf_number = int(items[4])
-            if orig_buf_nr == buf_number:
-                tags.append((index, buf_number, line_nr))
+            if orig_buf_num == buf_number:
+                tags.append((index, buf_number, line_num))
 
         if self._getInstance().isReverseOrder():
             tags = tags[::-1]
@@ -542,18 +542,18 @@ class BufTagExplManager(Manager):
         line = args[0]
         if line[0].isspace(): # if g:Lf_PreviewCode == 1
             buffer = args[1]
-            line_nr = args[2]
+            line_num = args[2]
             if self._getInstance().isReverseOrder():
-                line = buffer[line_nr]
+                line = buffer[line_num]
             else:
-                line = buffer[line_nr - 2]
+                line = buffer[line_num - 2]
         # {tag} {kind} {scope} {file}:{line} {buf_number}
         items = re.split(" *\t *", line)
         tagname = items[0]
-        line_nr = items[3].rsplit(":", 1)[1]
+        line_num = items[3].rsplit(":", 1)[1]
         buf_number = int(items[4])
 
-        self._createPopupPreview(tagname, buf_number, line_nr)
+        self._createPopupPreview(tagname, buf_number, line_num)
 
 
 #*****************************************************

@@ -28,13 +28,13 @@ let g:Lf_Extensions = {
     \       "format_list": funcref ([], arguments),
     \       "need_exit": funcref (line, arguments),
     \       "accept": funcref (line, arguments),
-    \       "preview": funcref (orig_buf_nr, orig_cursor, arguments),
+    \       "preview": funcref (orig_buf_num, orig_cursor, arguments),
     \       "supports_name_only": 0,
     \       "get_digest": funcref (line, mode),
     \       "before_enter": funcref (arguments),
-    \       "after_enter": funcref (orig_buf_nr, orig_cursor, arguments),
-    \       "bang_enter": funcref (orig_buf_nr, orig_cursor, arguments),
-    \       "before_exit": funcref (orig_buf_nr, orig_cursor, arguments),
+    \       "after_enter": funcref (orig_buf_num, orig_cursor, arguments),
+    \       "bang_enter": funcref (orig_buf_num, orig_cursor, arguments),
+    \       "before_exit": funcref (orig_buf_num, orig_cursor, arguments),
     \       "after_exit": funcref (arguments),
     \       "highlights_def": {
     \               "Lf_hl_apple": '^\s*\zs\d\+',
@@ -275,15 +275,15 @@ class AnyExplManager(Manager):
         super(AnyExplManager, self)._afterEnter()
         after_enter = self._config.get("after_enter")
         if after_enter:
-            orig_buf_nr = self._getInstance().getOriginalPos()[2].number
+            orig_buf_num = self._getInstance().getOriginalPos()[2].number
             line, col = self._getInstance().getOriginalCursor()
             try:
                 if self._getInstance().getWinPos() == 'popup':
                     lfCmd("""call win_execute(%d, "call %s(%d, [%d, %d], %s)")"""
-                            % (self._getInstance().getPopupWinId(), after_enter, orig_buf_nr, line, col+1, str(self._arguments)))
+                            % (self._getInstance().getPopupWinId(), after_enter, orig_buf_num, line, col+1, str(self._arguments)))
                 else:
                     after_enter = lfFunction(after_enter)
-                    after_enter(orig_buf_nr, [line, col+1], self._arguments)
+                    after_enter(orig_buf_num, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(after_enter), err))
 
@@ -321,15 +321,15 @@ class AnyExplManager(Manager):
         super(AnyExplManager, self)._bangEnter()
         bang_enter = self._config.get("bang_enter")
         if bang_enter:
-            orig_buf_nr = self._getInstance().getOriginalPos()[2].number
+            orig_buf_num = self._getInstance().getOriginalPos()[2].number
             line, col = self._getInstance().getOriginalCursor()
             try:
                 if self._getInstance().getWinPos() == 'popup':
                     lfCmd("""call win_execute(%d, "call %s(%d, [%d, %d], %s)")"""
-                            % (self._getInstance().getPopupWinId(), bang_enter, orig_buf_nr, line, col+1, str(self._arguments)))
+                            % (self._getInstance().getPopupWinId(), bang_enter, orig_buf_num, line, col+1, str(self._arguments)))
                 else:
                     bang_enter = lfFunction(bang_enter)
-                    bang_enter(orig_buf_nr, [line, col+1], self._arguments)
+                    bang_enter(orig_buf_num, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(bang_enter), err))
 
@@ -337,15 +337,15 @@ class AnyExplManager(Manager):
         super(AnyExplManager, self)._beforeExit()
         before_exit = self._config.get("before_exit")
         if before_exit:
-            orig_buf_nr = self._getInstance().getOriginalPos()[2].number
+            orig_buf_num = self._getInstance().getOriginalPos()[2].number
             line, col = self._getInstance().getOriginalCursor()
             try:
                 if self._getInstance().getWinPos() == 'popup':
                     lfCmd("""call win_execute(%d, "call %s(%d, [%d, %d], %s)")"""
-                            % (self._getInstance().getPopupWinId(), before_exit, orig_buf_nr, line, col+1, str(self._arguments)))
+                            % (self._getInstance().getPopupWinId(), before_exit, orig_buf_num, line, col+1, str(self._arguments)))
                 else:
                     before_exit = lfFunction(before_exit)
-                    before_exit(orig_buf_nr, [line, col+1], self._arguments)
+                    before_exit(orig_buf_num, [line, col+1], self._arguments)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(before_exit), err))
 
@@ -371,11 +371,11 @@ class AnyExplManager(Manager):
 
         preview = self._config.get("preview")
         if preview:
-            orig_buf_nr = self._getInstance().getOriginalPos()[2].number
+            orig_buf_num = self._getInstance().getOriginalPos()[2].number
             l, c = self._getInstance().getOriginalCursor()
             try:
                 preview = lfFunction(preview)
-                result = preview(orig_buf_nr, [l, c+1], line, self._arguments)
+                result = preview(orig_buf_num, [l, c+1], line, self._arguments)
                 if result:
                     filename, line_num, jump_cmd = result
                     # for backward compatibility

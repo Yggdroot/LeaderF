@@ -1102,8 +1102,8 @@ class LfInstance(object):
                 lfCmd("let g:lf_t_ve_stack = []")
             lfCmd("call add(g:lf_t_ve_stack, &t_ve)")
             lfCmd("set t_ve=")
-            self._orig_win_nr = vim.current.window.number
-            self._orig_win_id = lfWinId(self._orig_win_nr)
+            self._orig_win_num = vim.current.window.number
+            self._orig_win_id = lfWinId(self._orig_win_num)
             self._createPopupWindow()
             self._arguments["popup_winid"] = self._popup_winid
         elif win_pos == 'fullScreen':
@@ -1112,8 +1112,8 @@ class LfInstance(object):
                 lfCmd("set showtabline=0")
             self._createBufWindow(win_pos)
         else:
-            self._orig_win_nr = vim.current.window.number
-            self._orig_win_id = lfWinId(self._orig_win_nr)
+            self._orig_win_num = vim.current.window.number
+            self._orig_win_id = lfWinId(self._orig_win_num)
             self._createBufWindow(win_pos)
 
         if not self._is_icon_colorscheme_autocmd_set:
@@ -1178,7 +1178,7 @@ class LfInstance(object):
                     lfCmd("call win_gotoid(%d)" % self._orig_win_id)
                 else:
                     # 'silent!' is used to skip error E16.
-                    lfCmd("silent! exec '%d wincmd w'" % self._orig_win_nr)
+                    lfCmd("silent! exec '%d wincmd w'" % self._orig_win_num)
                 if lfEval("get(g:, 'Lf_VimResized', 0)") == '0' \
                         and self._orig_win_count == len(vim.windows):
                     lfCmd(self._restore_sizes) # why this line does not take effect?
@@ -1492,8 +1492,8 @@ class LfInstance(object):
 
     def setLineNumber(self):
         if self._reverse_order:
-            line_nr = 1 + len(self._buffer_object) - self._window_object.cursor[0]
-            lfCmd("let g:Lf_{}_StlLineNumber = '{}'".format(self._category, line_nr))
+            line_num = 1 + len(self._buffer_object) - self._window_object.cursor[0]
+            lfCmd("let g:Lf_{}_StlLineNumber = '{}'".format(self._category, line_num))
 
     def setCwd(self, cwd):
         self._current_working_directory = cwd
@@ -1522,7 +1522,7 @@ class LfInstance(object):
             lfCmd("keepj call win_gotoid(%d)" % self._orig_win_id)
         else:
             # 'silent!' is used to skip error E16.
-            lfCmd("keepj silent! exec '%d wincmd w'" % self._orig_win_nr)
+            lfCmd("keepj silent! exec '%d wincmd w'" % self._orig_win_num)
 
     def getWinPos(self):
         return self._win_pos

@@ -100,8 +100,8 @@ class TagExplManager(Manager):
             if len(res) > 1:
                 result = re.search('(?<=\t)line:\d+', res[1])
                 if result:
-                    line_nr = result.group(0).split(':')[1]
-                    lfCmd(line_nr)
+                    line_num = result.group(0).split(':')[1]
+                    lfCmd(line_num)
                 else: # for c, c++
                     keyword = "(class|enum|struct|union)"
                     result = re.search('(?<=\t)%s:\S+' % keyword, res[1])
@@ -225,8 +225,8 @@ class TagExplManager(Manager):
             if len(res) > 1:
                 result = re.search('(?<=\t)line:\d+', res[1])
                 if result:
-                    line_nr = result.group(0).split(':')[1]
-                    self._createPopupPreview("", tagfile, line_nr)
+                    line_num = result.group(0).split(':')[1]
+                    self._createPopupPreview("", tagfile, line_num)
                 else: # for c, c++
                     keyword = "(class|enum|struct|union)"
                     result = re.search('(?<=\t)%s:\S+' % keyword, res[1])

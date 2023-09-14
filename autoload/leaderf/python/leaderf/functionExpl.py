@@ -220,12 +220,12 @@ class FunctionExplManager(Manager):
         line = args[0]
         # {kind} {code} {file} {line}
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
-        line_nr, buf_number = line.rsplit(":", 1)[1].split()
+        line_num, buf_number = line.rsplit(":", 1)[1].split()
         if kwargs.get("mode", '') == 't':
             buf_name = lfEval("bufname(%s)" % buf_number)
-            lfDrop('tab', buf_name, line_nr)
+            lfDrop('tab', buf_name, line_num)
         else:
-            lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
+            lfCmd("hide buffer +%s %s" % (line_num, buf_number))
         lfCmd("norm! ^zv")
         lfCmd("norm! zz")
 
@@ -367,15 +367,15 @@ class FunctionExplManager(Manager):
         inst = self._getInstance()
         if inst.empty():
             return
-        orig_buf_nr = inst.getOriginalPos()[2].number
+        orig_buf_num = inst.getOriginalPos()[2].number
         orig_line = inst.getOriginalCursor()[0]
         tags = []
         for index, line in enumerate(inst.buffer, 1):
             line = line.rsplit("\t", 1)[1][1:-1]
-            line_nr, buf_number = line.rsplit(":", 1)[1].split()
-            line_nr, buf_number = int(line_nr), int(buf_number)
-            if orig_buf_nr == buf_number:
-                tags.append((index, buf_number, line_nr))
+            line_num, buf_number = line.rsplit(":", 1)[1].split()
+            line_num, buf_number = int(line_num), int(buf_number)
+            if orig_buf_num == buf_number:
+                tags.append((index, buf_number, line_num))
 
         if self._getInstance().isReverseOrder():
             tags = tags[::-1]
@@ -409,10 +409,10 @@ class FunctionExplManager(Manager):
         line = args[0]
         # {kind} {code} {file} {line}
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
-        line_nr, buf_number = line.rsplit(":", 1)[1].split()
+        line_num, buf_number = line.rsplit(":", 1)[1].split()
         buf_number = int(buf_number)
 
-        self._createPopupPreview("", buf_number, line_nr)
+        self._createPopupPreview("", buf_number, line_num)
 
 
 #*****************************************************

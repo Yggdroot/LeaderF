@@ -1146,7 +1146,7 @@ class RgExplManager(Manager):
                     pass
                 lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
 
-    def _createPopupPreview(self, title, source, line_nr, jump_cmd=''):
+    def _createPopupPreview(self, title, source, line_num, jump_cmd=''):
         """
         Args:
             source:
@@ -1156,7 +1156,7 @@ class RgExplManager(Manager):
         return False if use existing window, otherwise True
         """
 
-        if (super(RgExplManager, self)._createPopupPreview(title, source, line_nr, jump_cmd)
+        if (super(RgExplManager, self)._createPopupPreview(title, source, line_num, jump_cmd)
             and lfEval("get(g:, 'Lf_RgHighlightInPreview', 1)") == '1'):
 
             self._highlightInPreview()
