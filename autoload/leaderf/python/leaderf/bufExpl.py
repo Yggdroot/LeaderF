@@ -289,9 +289,10 @@ class BufExplManager(Manager):
             lfCmd("setlocal nomodifiable")
 
     def _previewInPopup(self, *args, **kwargs):
-        line = args[0]
-        if line == '':
+        if len(args) == 0 or args[0] == '':
             return
+
+        line = args[0]
         buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
         if lfEval("bufloaded(%d)" % buf_number) == '0':
             lfCmd("silent call bufload(%d)" % buf_number)

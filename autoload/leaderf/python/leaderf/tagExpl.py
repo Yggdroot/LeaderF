@@ -211,8 +211,9 @@ class TagExplManager(Manager):
             instance.window.options["cursorline"] = True
 
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
+
         line = args[0]
         # {tagname}<Tab>{tagfile}<Tab>{tagaddress}[;"<Tab>{tagfield}..]
         tagname, tagfile, right = line.split('\t', 2)

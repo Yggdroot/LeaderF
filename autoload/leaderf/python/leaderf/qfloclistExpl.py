@@ -188,7 +188,7 @@ class QfLocListExplManager(Manager):
         return help
 
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]

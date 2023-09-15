@@ -1165,7 +1165,7 @@ class RgExplManager(Manager):
         return False
 
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         if args[0] == self._getExplorer().getContextSeparator():

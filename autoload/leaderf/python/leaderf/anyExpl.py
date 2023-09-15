@@ -367,6 +367,9 @@ class AnyExplManager(Manager):
         super(AnyExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
     def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0 or args[0] == '':
+            return
+
         line = args[0]
 
         preview = self._config.get("preview")

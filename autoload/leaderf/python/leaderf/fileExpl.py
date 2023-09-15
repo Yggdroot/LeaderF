@@ -828,6 +828,9 @@ class FileExplManager(Manager):
 
     @removeDevIcons
     def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0 or args[0] == '':
+            return
+
         line = args[0]
         if not os.path.isabs(line):
             if self._getExplorer()._cmd_work_dir:

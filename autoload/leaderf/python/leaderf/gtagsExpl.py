@@ -1197,7 +1197,7 @@ class GtagsExplManager(Manager):
         super(GtagsExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]
