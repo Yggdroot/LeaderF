@@ -398,9 +398,14 @@ class FunctionExplManager(Manager):
                 else:
                     lfCmd("call leaderf#ResetPopupOptions(%d, 'filter', function('leaderf#NormalModeFilter', [%d]))"
                             % (self._getInstance().getPopupWinId(), id(self)))
+                self._cli._buildPopupPrompt()
             else:
                 lfCmd(str(index))
+                if self._getInstance().getWinPos() == 'floatwin':
+                    self._cli._buildPopupPrompt()
                 lfCmd("norm! zz")
+
+            self._previewResult(False)
 
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0 or args[0] == '':
