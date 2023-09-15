@@ -275,6 +275,8 @@ class LfInstance(object):
         self._auto_resize = lfEval("get(g:, 'Lf_AutoResize', 0)") == '1'
         self._window_id = 0
         self._float_win_view = None
+        self._auto_adjust_height = lfEval("get(g:, 'Lf_PopupAutoAdjustHeight', 1)") == '1'
+        self._preview_position = None
 
     def _initStlVar(self):
         if int(lfEval("!exists('g:Lf_{}_StlCategory')".format(self._category))):
@@ -395,9 +397,16 @@ class LfInstance(object):
         lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % winid)
 
     def _createPopupWindow(self):
+        preview_pos = self._arguments.get("--preview-position", [""])[0]
+        if preview_pos == "":
+            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
+
         if lfEval("has('nvim')") == '0' and self._popup_instance.valid():
-            if self._popup_instance.tabpage == vim.current.tabpage and lfEval("get(g:, 'Lf_Popup_VimResized', 0)") == '0' \
-                    and "--popup-width" not in self._arguments and "--popup-height" not in self._arguments:
+            if (self._popup_instance.tabpage == vim.current.tabpage
+                and lfEval("get(g:, 'Lf_Popup_VimResized', 0)") == '0'
+                and "--popup-width" not in self._arguments
+                and "--popup-height" not in self._arguments
+                and preview_pos == self._preview_position):
                 self._win_pos = "popup"
                 self._window_object = self._popup_instance.content_win
                 self._popup_instance.show()
@@ -408,7 +417,10 @@ class LfInstance(object):
 
         buf_number = int(lfEval("bufadd('{}')".format(escQuote(self._buffer_name))))
 
-        preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
+        self._preview_position = preview_pos
+        if preview_pos == "bottom":
+            self._auto_adjust_height = False
+
         width = lfEval("get(g:, 'Lf_PopupWidth', 0)")
         width = self._arguments.get("--popup-width", [width])[0]
         width = width.strip('"').strip("'")
@@ -480,7 +492,7 @@ class LfInstance(object):
 
         if lfEval("has('nvim')") == '1':
             self._win_pos = "floatwin"
-            if lfEval("get(g:, 'Lf_PopupAutoAdjustHeight', 1)") == '1':
+            if self._auto_adjust_height:
                 floatwin_height = 1
             else:
                 floatwin_height = self._popup_maxheight
@@ -618,7 +630,7 @@ class LfInstance(object):
                 lfCmd("call winrestview(%s)" % self._float_win_view)
         else:
             self._win_pos = "popup"
-            if lfEval("get(g:, 'Lf_PopupAutoAdjustHeight', 1)") == '1':
+            if self._auto_adjust_height:
                 minheight = 1
             else:
                 minheight = self._popup_maxheight
@@ -1298,7 +1310,7 @@ class LfInstance(object):
             self.buffer.options['modifiable'] = False
 
     def refreshPopupStatusline(self):
-        if lfEval("get(g:, 'Lf_PopupAutoAdjustHeight', 1)") == '0':
+        if not self._auto_adjust_height:
             return
 
         statusline_win = self._popup_instance.statusline_win

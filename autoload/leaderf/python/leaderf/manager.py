@@ -131,9 +131,6 @@ class Manager(object):
         self._preview_filetype = None
         if lfEval("has('patch-8.1.1615') || has('nvim-0.5.0')") == '0':
             lfCmd("let g:Lf_PreviewInPopup = 0")
-        if lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')").lower() == 'bottom':
-            lfCmd("let g:Lf_PopupAutoAdjustHeight = 0")
-
 
     #**************************************************************
     # abstract methods, in fact all the functions can be overridden
@@ -583,6 +580,9 @@ class Manager(object):
         self._is_previewed = True
 
         show_borders = lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1'
+        preview_pos = self._arguments.get("--preview-position", [""])[0]
+        if preview_pos == "":
+            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
 
         if lfEval("has('nvim')") == '1':
             width = int(lfEval("get(g:, 'Lf_PreviewPopupWidth', 0)"))
@@ -597,7 +597,6 @@ class Manager(object):
             float_win_col = int(float(lfEval("nvim_win_get_config(%d).col" % float_window.id)))
             float_win_height = int(float(lfEval("nvim_win_get_config(%d).height" % float_window.id)))
             float_win_width= int(float(lfEval("nvim_win_get_config(%d).width" % float_window.id)))
-            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
             popup_borders = lfEval("g:Lf_PopupBorders")
             borderchars = [
                     [popup_borders[4],  "Lf_hl_popupBorder"],
@@ -709,7 +708,6 @@ class Manager(object):
             else:
                 maxwidth = min(width, int(lfEval("&columns")))
 
-            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
             if preview_pos.lower() == 'bottom':
                 maxwidth = int(popup_pos["width"])
                 col = int(popup_pos["col"])
@@ -919,7 +917,10 @@ class Manager(object):
 
         win_pos = self._getInstance().getWinPos()
         show_borders = lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1'
-        preview_pos = lfEval("get(g:, 'Lf_PreviewPosition', 'top')")
+        preview_pos = self._arguments.get("--preview-position", [""])[0]
+        if preview_pos == "":
+            preview_pos = lfEval("get(g:, 'Lf_PreviewPosition', 'top')")
+
         if lfEval("has('nvim')") == '1':
             if win_pos == 'bottom':
                 if preview_pos.lower() == 'topleft':

@@ -251,6 +251,7 @@ let g:Lf_CommonArguments = [
             \   {"name": ["--no-auto-preview"], "nargs": 0, "help": "don't open preview window automatically."},
             \ ],
             \ {"name": ["--quick-select"], "nargs": "?", "choices":[0, 1], "metavar": "<VALUE>", "help": "Enable quick-select mode or not. <VALUE> can be '1' or '0', which means 'true' or 'false' respectively. If <VALUE> is omitted, it means enable quick-select mode."},
+            \ {"name": ["--preview-position"], "nargs": 1, "choices": ["top", "topleft", "topright", "right", "bottom", "left"], "metavar": "<POSITION>", "help": "Specify where to place the preview window."},
             \]
 
 " arguments is something like g:Lf_CommonArguments
