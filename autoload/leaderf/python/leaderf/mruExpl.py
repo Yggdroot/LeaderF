@@ -63,11 +63,14 @@ class MruExplorer(Explorer):
 
             if len(data_list) == 0:
                 # import old data
-                with lfOpen(mru.getOldCacheFileName(), 'r+', errors='ignore', encoding='utf8') as old_f:
-                    current_time = time.time()
-                    data_list = [[int(current_time), 1, filename] for filename in old_f.readlines()
-                                 if os.path.exists(lfDecode(filename.rstrip()))
-                                 ]
+                try:
+                    with lfOpen(mru.getOldCacheFileName(), 'r+', errors='ignore', encoding='utf8') as old_f:
+                        current_time = time.time()
+                        data_list = [[int(current_time), 1, filename] for filename in old_f.readlines()
+                                     if os.path.exists(lfDecode(filename.rstrip()))
+                                     ]
+                except FileNotFoundError:
+                    pass
 
             arguments_dict = kwargs.get("arguments", {})
             if "--frecency" in arguments_dict or lfEval("get(g:, 'Lf_MruEnableFrecency', 0)") == '1':
