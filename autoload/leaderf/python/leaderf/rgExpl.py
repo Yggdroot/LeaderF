@@ -943,6 +943,7 @@ class RgExplManager(Manager):
             self._arguments["--next"] = arguments_dict["--next"]
         else:
             self.setArguments(arguments_dict)
+        self._getInstance().setArguments(self._arguments)
         self._cli.setArguments(arguments_dict)
         self._cli.setNameOnlyFeature(self._getExplorer().supportsNameOnly())
         self._cli.setRefineFeature(self._supportsRefine())
@@ -960,7 +961,6 @@ class RgExplManager(Manager):
         self._cleanup()
 
         # lfCmd("echohl WarningMsg | redraw | echo ' searching ...' | echohl NONE")
-        self._getInstance().setArguments(self._arguments)
 
         remember_last_status = "--recall" in self._arguments \
                 or lfEval("g:Lf_RememberLastSearch") == '1' and self._cli.pattern

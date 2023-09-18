@@ -101,9 +101,14 @@ def windo(func):
 class Manager(object):
     def __init__(self):
         self._autochdir = 0
-        self._instance = None
         self._cli = LfCli()
         self._explorer = None
+        self._instance = LfInstance(self, self._getExplorer().getStlCategory(),
+                                    self._cli,
+                                    self._beforeEnter,
+                                    self._afterEnter,
+                                    self._beforeExit,
+                                    self._afterExit)
         self._content = []
         self._index = 0
         self._help_length = 0
