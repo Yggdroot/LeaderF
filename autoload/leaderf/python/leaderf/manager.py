@@ -103,12 +103,7 @@ class Manager(object):
         self._autochdir = 0
         self._cli = LfCli()
         self._explorer = None
-        self._instance = LfInstance(self, self._getExplorer().getStlCategory(),
-                                    self._cli,
-                                    self._beforeEnter,
-                                    self._afterEnter,
-                                    self._beforeExit,
-                                    self._afterExit)
+        self._instance = None
         self._content = []
         self._index = 0
         self._help_length = 0
@@ -1161,6 +1156,13 @@ class Manager(object):
         return True
 
     def _getInstance(self):
+        if self._instance is None:
+            self._instance = LfInstance(self, self._getExplorer().getStlCategory(),
+                                        self._cli,
+                                        self._beforeEnter,
+                                        self._afterEnter,
+                                        self._beforeExit,
+                                        self._afterExit)
         return self._instance
 
     def _createHelpHint(self):
