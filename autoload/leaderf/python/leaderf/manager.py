@@ -129,6 +129,7 @@ class Manager(object):
         self._arguments = {}
         self._getExplClass()
         self._preview_filetype = None
+        self._preview_config = {}
         if lfEval("has('patch-8.1.1615') || has('nvim-0.5.0')") == '0':
             lfCmd("let g:Lf_PreviewInPopup = 0")
 
@@ -499,6 +500,8 @@ class Manager(object):
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % winid)
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
+        self._preview_config = config
+
         if lfEval("has('nvim')") == '1':
             if isinstance(source, int):
                 buffer_len = len(vim.buffers[source])
@@ -837,6 +840,20 @@ class Manager(object):
             return True
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
+        preview_pos = self._arguments.get("--preview-position", [""])[0]
+        if preview_pos == "":
+            preview_pos = lfEval("get(g:, 'Lf_PreviewPosition', 'top')")
+
+        if preview_pos == "cursor" and self._getInstance().getWinPos() not in ('popup', 'floatwin'):
+            show_borders = lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1'
+            self._updateOptions(preview_pos, show_borders, self._preview_config)
+            if lfEval("has('nvim')") == '1':
+                if 'noautocmd' in self._preview_config:
+                    del self._preview_config['noautocmd']
+                lfCmd("call nvim_win_set_config(%d, %s)" % (self._preview_winid, str(self._preview_config)))
+            else:
+                lfCmd("call popup_setoptions(%d, %s)" % (self._preview_winid, str(self._preview_config)))
+
         if lfEval("has('nvim')") == '1':
             if isinstance(source, int):
                 lfCmd("noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
@@ -1006,25 +1023,7 @@ class Manager(object):
                     "noautocmd": 1
                     }
 
-            if show_borders:
-                popup_borders = lfEval("g:Lf_PopupBorders")
-                borderchars = [
-                        [popup_borders[4],  "Lf_hl_popupBorder"],
-                        [popup_borders[0],  "Lf_hl_popupBorder"],
-                        [popup_borders[5],  "Lf_hl_popupBorder"],
-                        [popup_borders[1],  "Lf_hl_popupBorder"],
-                        [popup_borders[6],  "Lf_hl_popupBorder"],
-                        [popup_borders[2],  "Lf_hl_popupBorder"],
-                        [popup_borders[7],  "Lf_hl_popupBorder"],
-                        [popup_borders[3],  "Lf_hl_popupBorder"]
-                        ]
-                config["border"] = borderchars
-                config["height"] -= 2
-                config["width"] -= 2
-                if lfEval("has('nvim-0.9.0')") == '1':
-                    config["title"] = " Preview "
-                    config["title_pos"] = "center"
-
+            self._updateOptions(preview_pos, show_borders, config)
             self._createPreviewWindow(config, source, line_num, jump_cmd)
         else:
             if win_pos == 'bottom':
@@ -1106,6 +1105,61 @@ class Manager(object):
                     "filter":          "leaderf#popupModePreviewFilter",
                     }
 
+            self._updateOptions(preview_pos, show_borders, options)
+            self._createPreviewWindow(options, source, line_num, jump_cmd)
+
+        return True
+
+    def _updateOptions(self, preview_pos, show_borders, options):
+        if lfEval("has('nvim')") == '1':
+            if preview_pos.lower() == 'cursor':
+                options["anchor"] = "NW"
+                options["width"] = self._getInstance().window.width
+                row = int(lfEval("screenpos(%d, line('.'), 1)" % self._getInstance().windowId)['row'])
+                height = int(lfEval("&lines")) - 2 - row
+
+                if height * 2 < int(lfEval("&lines")) - 2:
+                    height = row - 1
+                    row = 0
+
+                options["height"] = height
+                options["row"] = row
+                options["col"] = self._getInstance().window.col
+
+            if show_borders:
+                popup_borders = lfEval("g:Lf_PopupBorders")
+                borderchars = [
+                        [popup_borders[4],  "Lf_hl_popupBorder"],
+                        [popup_borders[0],  "Lf_hl_popupBorder"],
+                        [popup_borders[5],  "Lf_hl_popupBorder"],
+                        [popup_borders[1],  "Lf_hl_popupBorder"],
+                        [popup_borders[6],  "Lf_hl_popupBorder"],
+                        [popup_borders[2],  "Lf_hl_popupBorder"],
+                        [popup_borders[7],  "Lf_hl_popupBorder"],
+                        [popup_borders[3],  "Lf_hl_popupBorder"]
+                        ]
+                options["border"] = borderchars
+                options["height"] -= 2
+                options["width"] -= 2
+                if lfEval("has('nvim-0.9.0')") == '1':
+                    options["title"] = " Preview "
+                    options["title_pos"] = "center"
+        else:
+            if preview_pos.lower() == 'cursor':
+                options["maxwidth"] = self._getInstance().window.width
+                options["minwidth"] = self._getInstance().window.width
+                row = int(lfEval("screenpos(%d, line('.'), 1)" % self._getInstance().windowId)['row'])
+                maxheight = int(lfEval("&lines")) - 2 - row - 1
+
+                if maxheight * 2 < int(lfEval("&lines")) - 3:
+                    maxheight = int(lfEval("&lines")) - maxheight - 5
+
+                options["maxheight"] = maxheight
+                options["minheight"] = maxheight
+                options["pos"] = "botleft"
+                options["line"] = "cursor-1"
+                options["col"] = self._getInstance().window.col + 1
+
             if show_borders:
                 options["border"] = []
                 options["borderchars"] = lfEval("g:Lf_PopupBorders")
@@ -1114,10 +1168,6 @@ class Manager(object):
                 options["maxheight"] -= 1
                 options["minheight"] -= 1
                 options["borderhighlight"] = ["Lf_hl_popupBorder"]
-
-            self._createPreviewWindow(options, source, line_num, jump_cmd)
-
-        return True
 
     def _needPreview(self, preview, preview_in_popup):
         """
