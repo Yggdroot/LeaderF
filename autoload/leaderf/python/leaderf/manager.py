@@ -184,8 +184,8 @@ class Manager(object):
 
     @removeDevIcons
     def _argaddFiles(self, files):
-        # It will raise E480 without 'silent!'
-        lfCmd("silent! argdelete *")
+        # simply delete all, without err print
+        lfCmd("%argdelete")
         for file in files:
             lfCmd("argadd %s" % escSpecial(file))
 
