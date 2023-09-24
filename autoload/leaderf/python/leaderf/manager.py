@@ -187,6 +187,13 @@ class Manager(object):
         # simply delete all, without err print
         lfCmd("%argdelete")
         for file in files:
+            if not os.path.isabs(file):
+                if self._getExplorer()._cmd_work_dir:
+                    file = os.path.join(self._getExplorer()._cmd_work_dir, lfDecode(file))
+                else:
+                    file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
+                file = os.path.normpath(lfEncode(file))
+
             lfCmd("argadd %s" % escSpecial(file))
 
     def _issue_422_set_option(self):
