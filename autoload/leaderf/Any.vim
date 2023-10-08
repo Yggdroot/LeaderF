@@ -65,6 +65,9 @@ let g:Lf_Helps = {
             \ "quickfix":       "navigate quickfix",
             \ "loclist":        "navigate location list",
             \ "jumps":          "navigate jumps list",
+            \ "git.log":        "git log",
+            \ "git.diff":       "git diff",
+            \ "git.blame":      "git blame",
             \ }
 
 let g:Lf_Arguments = {
@@ -211,6 +214,12 @@ let g:Lf_Arguments = {
             \ "quickfix": [],
             \ "loclist": [],
             \ "jumps": [],
+            \ "git.log":[
+            \   ],
+            \ "git.diff":[
+            \   ],
+            \ "git.blame":[
+            \   ],
             \}
 
 let g:Lf_CommonArguments = [
