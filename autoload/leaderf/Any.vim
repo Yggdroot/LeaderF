@@ -65,9 +65,10 @@ let g:Lf_Helps = {
             \ "quickfix":       "navigate quickfix",
             \ "loclist":        "navigate location list",
             \ "jumps":          "navigate jumps list",
-            \ "git.log":        "git log",
-            \ "git.diff":       "git diff",
-            \ "git.blame":      "git blame",
+            \ "git":            "use git",
+            \ "git-log":        "Shows the commit logs",
+            \ "git-diff":       "Show changes between commits, commit and working tree, etc",
+            \ "git-blame":      "Show what revision and author last modified each line of a file",
             \ }
 
 let g:Lf_Arguments = {
@@ -214,12 +215,17 @@ let g:Lf_Arguments = {
             \ "quickfix": [],
             \ "loclist": [],
             \ "jumps": [],
-            \ "git.log":[
-            \   ],
-            \ "git.diff":[
-            \   ],
-            \ "git.blame":[
-            \   ],
+            \ "git":{
+            \       "log": [
+            \           {"name": ["--xyz"], "nargs": 0, "help": ""},
+            \       ],
+            \       "diff": [
+            \           {"name": ["--abc"], "nargs": 0, "help": ""},
+            \       ],
+            \       "blame": [
+            \           {"name": ["--xyz"], "nargs": 0, "help": ""},
+            \       ],
+            \   },
             \}
 
 let g:Lf_CommonArguments = [
@@ -355,6 +361,15 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos) abort
         else
             let arguments = []
         endif
+
+        if type(arguments) == type({})
+            if argNum == 2 || argNum == 3 && a:argLead != ""
+                return filter(keys(arguments), 'v:val =~? "^'.a:argLead.'"')
+            else
+                let arguments = arguments[argList[2]]
+            endif
+        endif
+
         let argDict = s:Lf_GenDict(arguments + g:Lf_CommonArguments)
         for opt in s:Lf_Refine(arguments + g:Lf_CommonArguments)
             if type(opt) == type([])
