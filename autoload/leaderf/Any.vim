@@ -220,10 +220,12 @@ let g:Lf_Arguments = {
             \           {"name": ["--xyz"], "nargs": 0, "help": ""},
             \       ],
             \       "diff": [
-            \           {"name": ["--abc"], "nargs": 0, "help": ""},
+            \           {"name": ["--cached"], "nargs": 0, "help": "run 'git diff --cached'"},
+            \           {"name": ["--current-file"], "nargs": 0, "help": "show diffs of current file"},
+            \           {"name": ["-s", "--side-by-side"], "nargs": 0, "help": "show diffs in a side-by-side view"},
             \       ],
             \       "blame": [
-            \           {"name": ["--xyz"], "nargs": 0, "help": ""},
+            \           {"name": ["--abc"], "nargs": 0, "help": ""},
             \       ],
             \   },
             \}
@@ -364,7 +366,7 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos) abort
 
         if type(arguments) == type({})
             if argNum == 2 || argNum == 3 && a:argLead != ""
-                return filter(keys(arguments), 'v:val =~? "^'.a:argLead.'"')
+                return filter(keys(arguments), "s:Lf_FuzzyMatch(a:argLead, v:val)")
             else
                 let arguments = arguments[argList[2]]
             endif
