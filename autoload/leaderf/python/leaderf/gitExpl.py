@@ -80,13 +80,19 @@ class GitCommandView(object):
         self._window_id = window_id
         self._executor = AsyncExecutor()
         self._buffer = None
+        self._reader_thread = None
 
     def create(self):
+        self._content = []
+        self._offset_in_content = 0
+        self._read_finished = 0
+        self._stop_reader_thread = False
+
+        # buf_exists = lfEval("bufexists('{}')".format(self._buffer_name)) == '1'
         lfCmd("call win_gotoid(%d)" % self._window_id)
-        buf_exists = lfEval("bufexists('{}')".format(self._buffer_name)) == '1'
 
         if self._buffer is not None:
-            del self._buffer[:] # ignore autocmd ?
+            del self._buffer[:]
 
         lfCmd("noautocmd edit {}".format(self._buffer_name))
 
@@ -100,13 +106,46 @@ class GitCommandView(object):
             lfCmd("setlocal undolevels=-1")
             lfCmd("setlocal noswapfile")
             lfCmd("setlocal nospell")
-            lfCmd("setlocal nomodifiable")
+            # lfCmd("setlocal nomodifiable")
             lfCmd("setlocal nofoldenable")
 
         self._buffer = vim.current.buffer
 
+        content = self._executor.execute(self._cmd, encoding=lfEval("&encoding"))
+
+        self._stop_reader_thread = False
+        self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
+        self._reader_thread.daemon = True
+        self._reader_thread.start()
+
+        self._timer_id = lfEval("timer_start(100, 'leaderf#Git#TimerCallback', {'repeat': -1})")
+
+    def writeBuffer(self):
+        cur_len = len(self._content)
+        if cur_len > self._offset_in_content:
+            if self._offset_in_content == 0:
+                self._buffer[:] = self._content[:cur_len]
+            else:
+                self._buffer.append(self._content[self._offset_in_content:cur_len])
+
+            self._offset_in_content = cur_len
+
+    def _readContent(self, content):
+        try:
+            for line in content:
+                self._content.append(line)
+                if self._stop_reader_thread:
+                    break
+            else:
+                self._read_finished = 1
+        except Exception as e:
+            self._read_finished = 1
+            lfPrintError(e)
+
+
     def cleanup(self):
         self._executor.killProcess()
+        self._stop_reader_thread = True
 
 #*****************************************************
 # GitExplManager
@@ -136,12 +175,19 @@ class GitExplManager(Manager):
 
         return int(lfEval("win_getid()"))
 
+    def writeBuffer(self):
+        if self._diff_view:
+            self._diff_view.writeBuffer()
 
     def startGitDiff(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--directly" in arguments_dict:
             winid = self._createWindow(arguments_dict.get("--position", ["top"])[0])
-            self._diff_view = GitCommandView(........)
+            cmd = "git diff "
+            if "--cached" in arguments_dict:
+                cmd += "--cached"
+            self._diff_view = GitCommandView(cmd, "diff", "LeaderF://git/diff", winid)
+            self._diff_view.create()
 
     def startGitLog(self, win_pos, *args, **kwargs):
         pass

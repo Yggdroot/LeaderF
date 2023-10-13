@@ -220,7 +220,7 @@ let g:Lf_Arguments = {
             \           {"name": ["--abc"], "nargs": 0, "help": ""},
             \       ],
             \       "diff": [
-            \           {"name": ["--cached"], "nargs": 0, "help": "run 'git diff --cached'"},
+            \           {"name": ["--cached", "--staged"], "nargs": 0, "help": "run 'git diff --cached'"},
             \           {"name": ["--directly"], "nargs": 0, "help": "output the diffs directly"},
             \           {"name": ["--position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>", "help": "specifies the position of the output when --directly is specified"},
             \           {"name": ["--current-file"], "nargs": 0, "help": "show diffs of current file"},
