@@ -204,17 +204,14 @@ class RgExplorer(Explorer):
 
         if "--live" in arguments_dict:
             pattern_list = [kwargs["pattern"]]
-            if os.name == 'nt':
-                no_error_message = " 2>NUL"
-            else:
-                no_error_message = " 2>/dev/null"
+            raise_except = False
             # --live implies -F
             if "-F" not in arguments_dict and "--no-fixed-strings" not in arguments_dict:
                 zero_args_options += "-F "
                 is_literal = True
         else:
             pattern_list = arguments_dict.get("-e", [])
-            no_error_message = ""
+            raise_except = True
 
         pattern = ''
         for i in pattern_list or path_list[:1]:
@@ -233,7 +230,10 @@ class RgExplorer(Explorer):
                     case_pattern = r'\C'
 
             if "--live" in arguments_dict:
-                p = i.replace('\\', r'\\').replace('"', r'\"')
+                if "--no-fixed-strings" in arguments_dict:
+                    p = i.replace('"', r'\"')
+                else:
+                    p = i.replace('\\', r'\\').replace('"', r'\"')
                 pattern += r'-e "%s" ' % p
             else:
                 if len(i) > 1 and (i[0] == i[-1] == '"' or i[0] == i[-1] == "'"):
@@ -336,10 +336,10 @@ class RgExplorer(Explorer):
             heading = "--no-heading"
 
         cmd = '''{} {} --no-config --no-ignore-messages {} --with-filename --color never --line-number '''\
-                '''{} {}{}{}{}{}{}{}'''.format(self._rg, extra_options, heading, case_flag, word_or_line, zero_args_options,
-                                                  one_args_options, repeatable_options, lfDecode(pattern), path, no_error_message)
+                '''{} {}{}{}{}{}{}'''.format(self._rg, extra_options, heading, case_flag, word_or_line, zero_args_options,
+                                                  one_args_options, repeatable_options, lfDecode(pattern), path)
         lfCmd("let g:Lf_Debug_RgCmd = '%s'" % escQuote(cmd))
-        content = executor.execute(cmd, encoding=lfEval("&encoding"), cleanup=partial(removeFiles, tmpfilenames))
+        content = executor.execute(cmd, encoding=lfEval("&encoding"), cleanup=partial(removeFiles, tmpfilenames), raise_except=raise_except)
         return content
 
     def translateRegex(self, regex, is_perl=False):
