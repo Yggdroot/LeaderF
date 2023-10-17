@@ -13,26 +13,6 @@ from .explorer import *
 from .manager import *
 from .mru import *
 
-def workingDirectory(func):
-    @wraps(func)
-    def deco(self, *args, **kwargs):
-        if self._getExplorer()._cmd_work_dir == lfGetCwd():
-            return func(self, *args, **kwargs)
-
-        # https://github.com/neovim/neovim/issues/8336
-        if lfEval("has('nvim')") == '1':
-            chdir = vim.chdir
-        else:
-            chdir = os.chdir
-        orig_cwd = lfGetCwd()
-        chdir(self._getExplorer()._cmd_work_dir)
-        try:
-            return func(self, *args, **kwargs)
-        finally:
-            chdir(orig_cwd)
-
-    return deco
-
 
 #*****************************************************
 # GitExplorer
@@ -73,9 +53,9 @@ class GitExplorer(Explorer):
 
 
 class GitCommandView(object):
-    def __init__(self, cmd, cmd_type, buffer_name, window_id):
+    def __init__(self, cmd, file_type, buffer_name, window_id):
         self._cmd = cmd
-        self._cmd_type = cmd_type
+        self._file_type = file_type
         self._buffer_name = buffer_name
         self._window_id = window_id
         self._executor = AsyncExecutor()
@@ -97,16 +77,16 @@ class GitCommandView(object):
         lfCmd("noautocmd edit {}".format(self._buffer_name))
 
         if self._buffer is None:
-            if self._cmd_type == "diff":
-                lfCmd("setlocal filetype=diff")
+            if self._file_type:
+                lfCmd("setlocal filetype={}".format(self._file_type))
 
             lfCmd("setlocal nobuflisted")
             lfCmd("setlocal buftype=nofile")
-            lfCmd("setlocal bufhidden=hide")
+            lfCmd("setlocal bufhidden=wipe")
             lfCmd("setlocal undolevels=-1")
             lfCmd("setlocal noswapfile")
             lfCmd("setlocal nospell")
-            # lfCmd("setlocal nomodifiable")
+            lfCmd("setlocal nomodifiable")
             lfCmd("setlocal nofoldenable")
 
         self._buffer = vim.current.buffer
@@ -118,17 +98,21 @@ class GitCommandView(object):
         self._reader_thread.daemon = True
         self._reader_thread.start()
 
-        self._timer_id = lfEval("timer_start(100, 'leaderf#Git#TimerCallback', {'repeat': -1})")
+        self._timer_id = lfEval("timer_start(100, function('leaderf#Git#TimerCallback', [%d]), {'repeat': -1})" % id(self))
 
     def writeBuffer(self):
-        cur_len = len(self._content)
-        if cur_len > self._offset_in_content:
-            if self._offset_in_content == 0:
-                self._buffer[:] = self._content[:cur_len]
-            else:
-                self._buffer.append(self._content[self._offset_in_content:cur_len])
+        self._buffer.options['modifiable'] = True
+        try:
+            cur_len = len(self._content)
+            if cur_len > self._offset_in_content:
+                if self._offset_in_content == 0:
+                    self._buffer[:] = self._content[:cur_len]
+                else:
+                    self._buffer.append(self._content[self._offset_in_content:cur_len])
 
-            self._offset_in_content = cur_len
+                self._offset_in_content = cur_len
+        finally:
+            self._buffer.options['modifiable'] = False
 
     def _readContent(self, content):
         try:
@@ -141,7 +125,6 @@ class GitCommandView(object):
         except Exception as e:
             self._read_finished = 1
             lfPrintError(e)
-
 
     def cleanup(self):
         self._executor.killProcess()
@@ -174,10 +157,6 @@ class GitExplManager(Manager):
             pass
 
         return int(lfEval("win_getid()"))
-
-    def writeBuffer(self):
-        if self._diff_view:
-            self._diff_view.writeBuffer()
 
     def startGitDiff(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})

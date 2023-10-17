@@ -87,8 +87,9 @@ function! leaderf#Git#startCmdline(type, is_bang, is_regex, is_whole_word)
                 \ a:is_whole_word ? '-w ' : '', leaderf#Git#getPattern(a:type))
 endfunction
 
-function! leaderf#Git#TimerCallback(id)
-    call leaderf#LfPy("gitExplManager.writeBuffer()")
+function! leaderf#Git#TimerCallback(view_id, id)
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.writeBuffer()", a:view_id)
 endfunction
 
 
