@@ -92,6 +92,10 @@ function! leaderf#Git#TimerCallback(view_id, id)
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.writeBuffer()", a:view_id)
 endfunction
 
+function! leaderf#Git#Cleanup(view_id)
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.cleanup()", a:view_id)
+endfunction
 
 function! leaderf#Git#NormalModeFilter(winid, key) abort
     let key = leaderf#RemapKey(g:Lf_PyEval("id(gitExplManager)"), get(g:Lf_KeyMap, a:key, a:key))

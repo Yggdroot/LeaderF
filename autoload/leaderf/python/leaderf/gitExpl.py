@@ -61,11 +61,12 @@ class GitCommandView(object):
         self._executor = AsyncExecutor()
         self._buffer = None
         self._reader_thread = None
+        self._read_finished = False
 
     def create(self):
         self._content = []
         self._offset_in_content = 0
-        self._read_finished = 0
+        self._read_finished = False
         self._stop_reader_thread = False
 
         # buf_exists = lfEval("bufexists('{}')".format(self._buffer_name)) == '1'
@@ -88,17 +89,18 @@ class GitCommandView(object):
             lfCmd("setlocal nospell")
             lfCmd("setlocal nomodifiable")
             lfCmd("setlocal nofoldenable")
+            lfCmd("autocmd BufHidden,BufDelete,BufWipeout <buffer> call leaderf#Git#Cleanup(%d)" % id(self))
 
         self._buffer = vim.current.buffer
 
         content = self._executor.execute(self._cmd, encoding=lfEval("&encoding"))
 
+        self._timer_id = lfEval("timer_start(100, function('leaderf#Git#TimerCallback', [%d]), {'repeat': -1})" % id(self))
+
         self._stop_reader_thread = False
         self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
         self._reader_thread.daemon = True
         self._reader_thread.start()
-
-        self._timer_id = lfEval("timer_start(100, function('leaderf#Git#TimerCallback', [%d]), {'repeat': -1})" % id(self))
 
     def writeBuffer(self):
         self._buffer.options['modifiable'] = True
@@ -114,6 +116,9 @@ class GitCommandView(object):
         finally:
             self._buffer.options['modifiable'] = False
 
+        if self._read_finished and self._offset_in_content == len(self._content):
+            self.stopTimer()
+
     def _readContent(self, content):
         try:
             for line in content:
@@ -121,14 +126,20 @@ class GitCommandView(object):
                 if self._stop_reader_thread:
                     break
             else:
-                self._read_finished = 1
+                self._read_finished = True
         except Exception as e:
-            self._read_finished = 1
+            self._read_finished = True
             lfPrintError(e)
+
+    def stopTimer(self):
+        if self._timer_id is not None:
+            lfCmd("call timer_stop(%s)" % self._timer_id)
+            self._timer_id = None
 
     def cleanup(self):
         self._executor.killProcess()
         self._stop_reader_thread = True
+        self.stopTimer()
 
 #*****************************************************
 # GitExplManager
