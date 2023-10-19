@@ -92,9 +92,9 @@ function! leaderf#Git#TimerCallback(view_id, id)
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.writeBuffer()", a:view_id)
 endfunction
 
-function! leaderf#Git#Cleanup(view_id)
+function! leaderf#Git#Suicide(view_id)
     exec g:Lf_py "import ctypes"
-    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.cleanup()", a:view_id)
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.suicide()", a:view_id)
 endfunction
 
 function! leaderf#Git#NormalModeFilter(winid, key) abort

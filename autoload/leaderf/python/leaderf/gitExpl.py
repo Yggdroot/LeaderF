@@ -53,34 +53,44 @@ class GitExplorer(Explorer):
 
 
 class GitCommandView(object):
-    def __init__(self, cmd, file_type, buffer_name, window_id):
+    def __init__(self, owner, cmd, file_type, buffer_name, window_id):
+        self._owner = owner
         self._cmd = cmd
         self._file_type = file_type
         self._buffer_name = buffer_name
         self._window_id = window_id
         self._executor = AsyncExecutor()
         self._buffer = None
-        self._reader_thread = None
-        self._read_finished = False
+        self.init()
+        owner.register(self)
 
-    def create(self):
+    def init(self):
         self._content = []
+        self._reader_thread = None
         self._offset_in_content = 0
         self._read_finished = False
         self._stop_reader_thread = False
 
-        # buf_exists = lfEval("bufexists('{}')".format(self._buffer_name)) == '1'
-        lfCmd("call win_gotoid(%d)" % self._window_id)
+    def getBufferName(self):
+        return self._buffer_name
 
+    def create(self):
         if self._buffer is not None:
+            self._buffer.options['modifiable'] = True
             del self._buffer[:]
+            self._buffer.options['modifiable'] = False
+            self.cleanup()
+
+        self.init()
+
+        lfCmd("call win_gotoid(%d)" % self._window_id)
 
         lfCmd("noautocmd edit {}".format(self._buffer_name))
 
-        if self._buffer is None:
-            if self._file_type:
-                lfCmd("setlocal filetype={}".format(self._file_type))
+        if self._file_type:
+            lfCmd("setlocal filetype={}".format(self._file_type))
 
+        if self._buffer is None:
             lfCmd("setlocal nobuflisted")
             lfCmd("setlocal buftype=nofile")
             lfCmd("setlocal bufhidden=wipe")
@@ -89,7 +99,7 @@ class GitCommandView(object):
             lfCmd("setlocal nospell")
             lfCmd("setlocal nomodifiable")
             lfCmd("setlocal nofoldenable")
-            lfCmd("autocmd BufHidden,BufDelete,BufWipeout <buffer> call leaderf#Git#Cleanup(%d)" % id(self))
+            lfCmd("autocmd BufWipeout <buffer> call leaderf#Git#Suicide(%d)" % id(self))
 
         self._buffer = vim.current.buffer
 
@@ -97,7 +107,6 @@ class GitCommandView(object):
 
         self._timer_id = lfEval("timer_start(100, function('leaderf#Git#TimerCallback', [%d]), {'repeat': -1})" % id(self))
 
-        self._stop_reader_thread = False
         self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
         self._reader_thread.daemon = True
         self._reader_thread.start()
@@ -131,6 +140,11 @@ class GitCommandView(object):
             self._read_finished = True
             lfPrintError(e)
 
+    def stopThread(self):
+        if self._reader_thread and self._reader_thread.is_alive():
+            self._stop_reader_thread = True
+            self._reader_thread.join()
+
     def stopTimer(self):
         if self._timer_id is not None:
             lfCmd("call timer_stop(%s)" % self._timer_id)
@@ -138,8 +152,12 @@ class GitCommandView(object):
 
     def cleanup(self):
         self._executor.killProcess()
-        self._stop_reader_thread = True
         self.stopTimer()
+        self.stopThread()
+
+    def suicide(self):
+        self._owner.deregister(self)
+        self.cleanup()
 
 #*****************************************************
 # GitExplManager
@@ -147,7 +165,15 @@ class GitCommandView(object):
 class GitExplManager(Manager):
     def __init__(self):
         super(GitExplManager, self).__init__()
-        self._diff_view = None
+        self._views = {}
+
+    def register(self, view):
+        self._views[view.getBufferName()] = view
+
+    def deregister(self, view):
+        name = view.getBufferName()
+        if name in self._views:
+            del self._views[name]
 
     def _getExplClass(self):
         return GitExplorer
@@ -172,12 +198,16 @@ class GitExplManager(Manager):
     def startGitDiff(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--directly" in arguments_dict:
-            winid = self._createWindow(arguments_dict.get("--position", ["top"])[0])
             cmd = "git diff "
             if "--cached" in arguments_dict:
                 cmd += "--cached"
-            self._diff_view = GitCommandView(cmd, "diff", "LeaderF://git/diff", winid)
-            self._diff_view.create()
+            buffer_name = "LeaderF://" + cmd
+            if buffer_name in self._views:
+                self._views[buffer_name].create()
+            else:
+                winid = self._createWindow(arguments_dict.get("--position", ["top"])[0])
+                diff_view = GitCommandView(self, cmd, "diff", buffer_name, winid)
+                diff_view.create()
 
     def startGitLog(self, win_pos, *args, **kwargs):
         pass

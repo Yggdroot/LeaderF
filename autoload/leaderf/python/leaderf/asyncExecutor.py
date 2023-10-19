@@ -54,6 +54,7 @@ class AsyncExecutor(object):
                                              env=env,
                                              universal_newlines=False)
 
+        self._errQueue = Queue.Queue()
         self._finished = False
 
         stderr_thread = threading.Thread(target=self._readerThread,
