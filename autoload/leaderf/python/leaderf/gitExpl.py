@@ -198,9 +198,18 @@ class GitExplManager(Manager):
     def startGitDiff(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--directly" in arguments_dict:
-            cmd = "git diff "
+            cmd = "git diff"
             if "--cached" in arguments_dict:
-                cmd += "--cached"
+                cmd += " --cached"
+
+            if ("--current-file" in arguments_dict
+                and vim.current.buffer.name
+                and not vim.current.buffer.options['bt']):
+                cmd += " -- {}".format(vim.current.buffer.name)
+
+            if "extra" in arguments_dict:
+                cmd += " " + " ".join(arguments_dict["extra"])
+
             buffer_name = "LeaderF://" + cmd
             if buffer_name in self._views:
                 self._views[buffer_name].create()
