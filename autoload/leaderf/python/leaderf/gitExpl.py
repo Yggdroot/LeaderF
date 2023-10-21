@@ -11,8 +11,13 @@ from functools import wraps
 from .utils import *
 from .explorer import *
 from .manager import *
-from .mru import *
-
+from .devicons import (
+    webDevIconsGetFileTypeSymbol,
+    removeDevIcons,
+    matchaddDevIconsDefault,
+    matchaddDevIconsExact,
+    matchaddDevIconsExtension,
+)
 
 #*****************************************************
 # GitExplorer
@@ -24,9 +29,36 @@ class GitExplorer(Explorer):
         self._context_separator = "..."
         self._display_multi = False
         self._cmd_work_dir = ""
+        self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
 
     def getContent(self, *args, **kwargs):
-        pass
+        arguments_dict = kwargs.get("arguments", {})
+        arg_list = arguments_dict.get("arg_line", 'git').split(maxsplit=2)
+        if len(arg_list) == 1:
+            return
+
+        executor = AsyncExecutor()
+        self._executor.append(executor)
+
+        subcommand = arg_list[1]
+        if subcommand == "diff":
+            cmd = "git diff --name-status"
+            if "--cached" in arguments_dict:
+                cmd += " --cached"
+            content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=self.formatLine)
+            return content
+
+    def formatLine(self, line):
+        """
+        R098    README.txt      README.txt.hello
+        A       abc.txt
+        M       src/fold.c
+        """
+        name_status = line.split('\t')
+        file_name = name_status[1]
+        icon = webDevIconsGetFileTypeSymbol(file_name) if self._show_icon else ""
+        return "{:<4} {}{}{}".format(name_status[0], icon, name_status[1],
+                                     " -> " + name_status[2] if len(name_status) == 3 else "")
 
     def getStlCategory(self):
         return 'Git'
@@ -195,6 +227,19 @@ class GitExplManager(Manager):
 
         return int(lfEval("win_getid()"))
 
+    def _afterEnter(self):
+        super(GitExplManager, self)._afterEnter()
+
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
+            icon_pattern = r'^\S*\s*\zs__icon__'
+            self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
+
+    def _beforeExit(self):
+        super(GitExplManager, self)._beforeExit()
+
     def startGitDiff(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--directly" in arguments_dict:
@@ -217,6 +262,11 @@ class GitExplManager(Manager):
                 winid = self._createWindow(arguments_dict.get("--position", ["top"])[0])
                 diff_view = GitCommandView(self, cmd, "diff", buffer_name, winid)
                 diff_view.create()
+        elif "--tree" in arguments_dict:
+            pass
+        else:
+            super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
+
 
     def startGitLog(self, win_pos, *args, **kwargs):
         pass
