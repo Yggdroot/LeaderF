@@ -13,7 +13,7 @@ endif
 
 exec g:Lf_py "from leaderf.gitExpl import *"
 
-function! leaderf#Git#Maps(heading)
+function! leaderf#Git#Maps()
     nmapclear <buffer>
     nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "gitExplManager.accept()"<CR>
     nnoremap <buffer> <silent> o             :exec g:Lf_py "gitExplManager.accept()"<CR>
@@ -29,19 +29,9 @@ function! leaderf#Git#Maps(heading)
     nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "gitExplManager.moveAndPreview('PageUp')"<CR>
     nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "gitExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "gitExplManager.quit()"<CR>
-    " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "gitExplManager.quit()"<CR>
-    if a:heading == 0
-        nnoremap <buffer> <silent> i             :exec g:Lf_py "gitExplManager.input()"<CR>
-        nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "gitExplManager.input()"<CR>
-    endif
+    nnoremap <buffer> <silent> i             :exec g:Lf_py "gitExplManager.input()"<CR>
+    nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "gitExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "gitExplManager.toggleHelp()"<CR>
-    nnoremap <buffer> <silent> d             :exec g:Lf_py "gitExplManager.deleteCurrentLine()"<CR>
-    nnoremap <buffer> <silent> Q             :exec g:Lf_py "gitExplManager.outputToQflist()"<CR>
-    nnoremap <buffer> <silent> L             :exec g:Lf_py "gitExplManager.outputToLoclist()"<CR>
-    nnoremap <buffer> <silent> r             :exec g:Lf_py "gitExplManager.replace()"<CR>
-    nnoremap <buffer> <silent> w             :call leaderf#Git#ApplyChangesAndSave(0)<CR>
-    nnoremap <buffer> <silent> W             :call leaderf#Git#ApplyChangesAndSave(1)<CR>
-    nnoremap <buffer> <silent> U             :call leaderf#Git#UndoLastChange()<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "gitExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "gitExplManager._toDownInPopup()"<CR>
     nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "gitExplManager.closePreviewPopupOrQuit()"<CR>
@@ -87,7 +77,11 @@ function! leaderf#Git#startCmdline(type, is_bang, is_regex, is_whole_word)
                 \ a:is_whole_word ? '-w ' : '', leaderf#Git#getPattern(a:type))
 endfunction
 
-function! leaderf#Git#TimerCallback(view_id, id)
+function! leaderf#Git#TimerCallback(id)
+    call leaderf#LfPy("gitExplManager._callback(bang=True)")
+endfunction
+
+function! leaderf#Git#WriteBuffer(view_id, id)
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.writeBuffer()", a:view_id)
 endfunction
@@ -97,28 +91,28 @@ function! leaderf#Git#Suicide(view_id)
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.suicide()", a:view_id)
 endfunction
 
-function! leaderf#Git#NormalModeFilter(winid, key) abort
-    let key = leaderf#RemapKey(g:Lf_PyEval("id(gitExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
+"function! leaderf#Git#NormalModeFilter(winid, key) abort
+"    let key = leaderf#RemapKey(g:Lf_PyEval("id(gitExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
 
-    if key ==# "i" || key ==? "<Tab>"
-        if g:Lf_py == "py "
-            let has_heading = pyeval("'--heading' in gitExplManager._agituments")
-        else
-            let has_heading = py3eval("'--heading' in gitExplManager._agituments")
-        endif
-        if !has_heading
-            call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
-            exec g:Lf_py "gitExplManager.input()"
-        endif
-    elseif key ==# "d"
-        exec g:Lf_py "gitExplManager.deleteCurrentLine()"
-    elseif key ==# "Q"
-        exec g:Lf_py "gitExplManager.outputToQflist()"
-    elseif key ==# "L"
-        exec g:Lf_py "gitExplManager.outputToLoclist()"
-    else
-        return leaderf#NormalModeFilter(g:Lf_PyEval("id(gitExplManager)"), a:winid, a:key)
-    endif
+"    if key ==# "i" || key ==? "<Tab>"
+"        if g:Lf_py == "py "
+"            let has_heading = pyeval("'--heading' in gitExplManager._agituments")
+"        else
+"            let has_heading = py3eval("'--heading' in gitExplManager._agituments")
+"        endif
+"        if !has_heading
+"            call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
+"            exec g:Lf_py "gitExplManager.input()"
+"        endif
+"    elseif key ==# "d"
+"        exec g:Lf_py "gitExplManager.deleteCurrentLine()"
+"    elseif key ==# "Q"
+"        exec g:Lf_py "gitExplManager.outputToQflist()"
+"    elseif key ==# "L"
+"        exec g:Lf_py "gitExplManager.outputToLoclist()"
+"    else
+"        return leaderf#NormalModeFilter(g:Lf_PyEval("id(gitExplManager)"), a:winid, a:key)
+"    endif
 
-    return 1
-endfunction
+"    return 1
+"endfunction
