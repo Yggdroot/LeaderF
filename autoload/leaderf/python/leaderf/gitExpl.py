@@ -100,7 +100,7 @@ class GitCommandView(object):
         self._content = []
         self._reader_thread = None
         self._offset_in_content = 0
-        self._read_finished = False
+        self._read_finished = 0
         self._stop_reader_thread = False
 
     def getBufferName(self):
@@ -115,9 +115,7 @@ class GitCommandView(object):
 
         self.init()
 
-        # lfCmd("call win_execute({}, 'noautocmd edit {}')".format(self._window_id, self._buffer_name))
         lfCmd("call win_execute({}, 'let cur_buf_number = bufnr()')".format(self._window_id))
-        self._buffer = vim.buffers[int(lfEval("cur_buf_number"))]
 
         if self._file_type:
             lfCmd("call win_execute({}, 'setlocal filetype={}')".format(self._window_id, self._file_type))
@@ -133,6 +131,7 @@ class GitCommandView(object):
             lfCmd("call win_execute({}, 'setlocal nofoldenable')".format(self._window_id))
             lfCmd("call win_execute({}, 'autocmd BufWipeout <buffer> call leaderf#Git#Suicide({})')".format(self._window_id, id(self)))
 
+        self._buffer = vim.buffers[int(lfEval("cur_buf_number"))]
 
         content = self._executor.execute(self._cmd, encoding=lfEval("&encoding"))
 
@@ -143,6 +142,13 @@ class GitCommandView(object):
         self._reader_thread.start()
 
     def writeBuffer(self):
+        if self._read_finished == 2:
+            return
+
+        if not self._buffer.valid:
+            self.stopTimer()
+            return
+
         self._buffer.options['modifiable'] = True
         try:
             cur_len = len(self._content)
@@ -156,7 +162,8 @@ class GitCommandView(object):
         finally:
             self._buffer.options['modifiable'] = False
 
-        if self._read_finished and self._offset_in_content == len(self._content):
+        if self._read_finished == 1 and self._offset_in_content == len(self._content):
+            self._read_finished = 2
             self.stopTimer()
 
     def _readContent(self, content):
@@ -166,9 +173,9 @@ class GitCommandView(object):
                 if self._stop_reader_thread:
                     break
             else:
-                self._read_finished = True
+                self._read_finished = 1
         except Exception as e:
-            self._read_finished = True
+            self._read_finished = 1
             lfPrintError(e)
 
     def stopThread(self):
@@ -212,19 +219,25 @@ class GitExplManager(Manager):
     def _defineMaps(self):
         lfCmd("call leaderf#Git#Maps()")
 
-    def _createWindow(self, win_pos):
+    def _createWindow(self, win_pos, buffer_name):
         if win_pos == 'top':
-            lfCmd("silent! noa keepa keepj abo sp")
+            lfCmd("silent! noa keepa keepj abo sp {}".format(buffer_name))
         elif win_pos == 'bottom':
-            lfCmd("silent! noa keepa keepj bel sp")
+            lfCmd("silent! noa keepa keepj bel sp {}".format(buffer_name))
         elif win_pos == 'left':
-            lfCmd("silent! noa keepa keepj abo vsp")
+            lfCmd("silent! noa keepa keepj abo vsp {}".format(buffer_name))
         elif win_pos == 'right':
-            lfCmd("silent! noa keepa keepj bel vsp")
+            lfCmd("silent! noa keepa keepj bel vsp {}".format(buffer_name))
         else:
             pass
 
         return int(lfEval("win_getid()"))
+
+    def _workInIdle(self, content=None, bang=False):
+        for v in self._views.values():
+            v.writeBuffer()
+
+        super(GitExplManager, self)._workInIdle(content, bang)
 
     def _afterEnter(self):
         super(GitExplManager, self)._afterEnter()
@@ -258,7 +271,7 @@ class GitExplManager(Manager):
             if buffer_name in self._views:
                 self._views[buffer_name].create()
             else:
-                winid = self._createWindow(arguments_dict.get("--position", ["top"])[0])
+                winid = self._createWindow(arguments_dict.get("--position", ["top"])[0], buffer_name)
                 diff_view = GitCommandView(self, cmd, "diff", buffer_name, winid)
                 diff_view.create()
         elif "--tree" in arguments_dict:
@@ -312,54 +325,27 @@ class GitExplManager(Manager):
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
         self._preview_config = config
+        filename = source
 
         if lfEval("has('nvim')") == '1':
-            if isinstance(source, int):
-                buffer_len = len(vim.buffers[source])
-                self._preview_winid = int(lfEval("nvim_open_win(%d, 0, %s)" % (source, str(config))))
-            else:
-                try:
-                    if self._isBinaryFile(source):
-                        lfCmd("""let content = map(range(128), '"^@"')""")
-                    else:
-                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
-                except vim.error as e:
-                    lfPrintError(e)
-                    return
-                buffer_len = int(lfEval("len(content)"))
-                lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
-                lfCmd("noautocmd call setbufline(g:Lf_preview_scratch_buffer, 1, content)")
-                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'bufhidden', 'wipe')")
-                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
-                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'modeline', v:true)")
+            lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
+            self._preview_winid = int(lfEval("nvim_open_win(g:Lf_preview_scratch_buffer, 0, %s)" % str(config)))
+            diff_view = GitCommandView(self, "git diff", "diff", 'aa', self._preview_winid)
+            diff_view.create()
 
-                self._preview_winid = int(lfEval("nvim_open_win(g:Lf_preview_scratch_buffer, 0, %s)" % str(config)))
-
-            cur_winid = lfEval("win_getid()")
-            lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
-            if not isinstance(source, int):
-                lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % source)
-            lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+            # cur_winid = lfEval("win_getid()")
+            # lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            # if not isinstance(source, int):
+            #     lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % source)
+            # lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
 
             self._setWinOptions(self._preview_winid)
             self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
-
-            lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
-            if jump_cmd:
-                lfCmd(jump_cmd)
-            if buffer_len >= line_num > 0:
-                lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_num))
-            lfCmd("norm! zz")
-            lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
         else:
-            filename = source
-
             lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
             self._preview_winid = int(lfEval("winid"))
             diff_view = GitCommandView(self, "git diff", "diff", 'aa', self._preview_winid)
             diff_view.create()
-
-            lfCmd("call win_execute(winid, 'setlocal modeline')")
 
             # lfCmd("call win_execute(winid, 'silent! doautocmd filetypedetect BufNewFile %s')" % escQuote(filename))
 
