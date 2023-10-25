@@ -898,6 +898,7 @@ class GtagsExplManager(Manager):
     def __init__(self):
         super(GtagsExplManager, self).__init__()
         self._match_path = False
+        self._preview_match_ids = []
 
     def _getExplClass(self):
         return GtagsExplorer
@@ -1118,6 +1119,7 @@ class GtagsExplManager(Manager):
             if k.valid:
                 k.options["cursorline"] = v
         self._cursorline_dict.clear()
+        self._clearPreviewHighlights()
 
     def _bangEnter(self):
         super(GtagsExplManager, self)._bangEnter()
@@ -1196,6 +1198,32 @@ class GtagsExplManager(Manager):
 
         super(GtagsExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
+    def _clearPreviewHighlights(self):
+        for i in self._preview_match_ids:
+            lfCmd("silent! call matchdelete(%d, %d)" % (i, self._preview_winid))
+
+    def _highlightInPreview(self):
+        if lfEval("has('nvim')") != '1':
+            try:
+                for i in self._getExplorer().getPatternRegex():
+                    lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_gtagsHighlight', '%s', 9)")"""
+                            % (self._preview_winid, re.sub(r'\\(?!")', r'\\\\', escQuote(i))))
+                    id = int(lfEval("matchid"))
+                    self._preview_match_ids.append(id)
+            except vim.error:
+                pass
+        else:
+            cur_winid = lfEval("win_getid()")
+            lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
+            if lfEval("win_getid()") != cur_winid:
+                try:
+                    for i in self._getExplorer().getPatternRegex():
+                        id = int(lfEval("matchadd('Lf_hl_gtagsHighlight', '%s', 9)" % escQuote(i)))
+                        self._preview_match_ids.append(id)
+                except vim.error:
+                    pass
+                lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0 or args[0] == '':
             return
@@ -1219,6 +1247,7 @@ class GtagsExplManager(Manager):
         else:
             source = file
         self._createPopupPreview("", source, line_num)
+        self._highlightInPreview()
 
 
 #*****************************************************
