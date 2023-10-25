@@ -56,7 +56,7 @@ class MruExplorer(Explorer):
         with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore', encoding='utf8') as f:
             data_list = []
             for line in f.readlines():
-                data = line.split(maxsplit=2)
+                data = line.split(None, 2)
                 if os.path.exists(lfDecode(data[2].rstrip())):
                     data[0] = int(data[0])
                     data_list.append(data)

@@ -53,7 +53,7 @@ class Mru(object):
         return name
 
     def filename(self, line):
-        return line.rstrip().split(maxsplit=2)[2]
+        return line.rstrip().split(None, 2)[2]
 
     def saveToCache(self, data_list):
         frecency_list = []
@@ -79,8 +79,8 @@ class Mru(object):
                 for i, line in enumerate(lines):
                     text = self.filename(line)
                     if (compare == text) or (nocase and compare == text.lower()):
-                        time1, rank1, filename = item.split(maxsplit=2)
-                        time2, rank2, _ = lines[i].split(maxsplit=2)
+                        time1, rank1, filename = item.split(None, 2)
+                        time2, rank2, _ = lines[i].split(None, 2)
                         lines[i] = "{} {} {}\n".format(time1, int(rank1) + int(rank2), filename)
                         break
                 else:
