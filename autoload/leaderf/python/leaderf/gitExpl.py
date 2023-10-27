@@ -45,6 +45,8 @@ class GitExplorer(Explorer):
             cmd = "git diff --name-status"
             if "--cached" in arguments_dict:
                 cmd += " --cached"
+            if "extra" in arguments_dict:
+                cmd += " " + " ".join(arguments_dict["extra"])
             content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=self.formatLine)
             return content
 
@@ -274,11 +276,10 @@ class GitExplManager(Manager):
                 winid = self._createWindow(arguments_dict.get("--position", ["top"])[0], buffer_name)
                 diff_view = GitCommandView(self, cmd, "diff", buffer_name, winid)
                 diff_view.create()
-        elif "--tree" in arguments_dict:
+        elif "--explorer" in arguments_dict:
             pass
         else:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
-
 
     def startGitLog(self, win_pos, *args, **kwargs):
         pass

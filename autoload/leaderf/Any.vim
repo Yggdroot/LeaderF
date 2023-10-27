@@ -221,10 +221,13 @@ let g:Lf_Arguments = {
             \       ],
             \       "diff": [
             \           {"name": ["--cached", "--staged"], "nargs": 0, "help": "run 'git diff --cached'"},
-            \           {"name": ["--directly"], "nargs": 0, "help": "output the diffs directly"},
-            \           {"name": ["--position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>", "help": "specifies the position of the output when --directly is specified"},
+            \           [
+            \               {"name": ["--directly"], "nargs": 0, "help": "output the diffs directly"},
+            \               {"name": ["--explorer"], "nargs": 0, "help": "view changed files in a tree explorer"},
+            \           ],
+            \           {"name": ["--position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>",
+            \               "help": "specifies the position of the diffs window"},
             \           {"name": ["-s", "--side-by-side"], "nargs": 0, "help": "show diffs in a side-by-side view"},
-            \           {"name": ["--tree"], "nargs": 0, "help": "view changed files in a tree explorer"},
             \           [
             \               {"name": ["--current-file"], "nargs": 0, "help": "show diffs of current file"},
             \               {"name": ["extra"], "nargs": "*", "help": "extra arguments of git diff"},
