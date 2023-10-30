@@ -87,12 +87,27 @@ class GitExplorer(Explorer):
 
 
 class GitCommand(object):
-    def __init__(self, arguments_dict):
+    def __init__(self, arguments_dict, source=None):
         self._arguments = arguments_dict
+        self._source = source
+        self._file_type = ""
 
-    def buildCommand(self, source):
+    def buildCommand(self):
         raise NotImplementedError("Can't instantiate abstract class GitCommand"
                                   "with abstract methods buildCommand")
+    def getFileType(self):
+        return self._file_type
+
+    def getBufferName(self):
+        return ""
+
+
+class GitDiffCommand(GitCommand):
+    def __init__(self, arguments_dict, source=None):
+        super(GitDiffCommand, self).__init__(arguments_dict, source)
+
+    def buildCommand(self):
+        pass
 
 class GitCommandView(object):
     def __init__(self, owner, cmd, file_type, buffer_name, window_id):
