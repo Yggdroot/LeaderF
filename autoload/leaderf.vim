@@ -610,6 +610,11 @@ function! leaderf#PopupClosed(id_list, manager_id, winid, result) abort
     endif
 endfunction
 
+function! leaderf#Quit(manager_id) abort
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:manager_id)
+endfunction
+
 function! leaderf#ResetPopupOptions(winid, option, value) abort
     let opts = popup_getoptions(a:winid)
     " https://github.com/vim/vim/issues/5081
