@@ -86,6 +86,14 @@ class GitExplorer(Explorer):
         return self._display_multi
 
 
+class GitCommand(object):
+    def __init__(self, arguments_dict):
+        self._arguments = arguments_dict
+
+    def buildCommand(self, source):
+        raise NotImplementedError("Can't instantiate abstract class GitCommand"
+                                  "with abstract methods buildCommand")
+
 class GitCommandView(object):
     def __init__(self, owner, cmd, file_type, buffer_name, window_id):
         self._owner = owner
@@ -206,6 +214,7 @@ class GitExplManager(Manager):
     def __init__(self):
         super(GitExplManager, self).__init__()
         self._views = {}
+        self._subcommand = ""
 
     def register(self, view):
         self._views[view.getBufferName()] = view
@@ -261,13 +270,13 @@ class GitExplManager(Manager):
             if "--cached" in arguments_dict:
                 cmd += " --cached"
 
+            if "extra" in arguments_dict:
+                cmd += " " + " ".join(arguments_dict["extra"])
+
             if ("--current-file" in arguments_dict
                 and vim.current.buffer.name
                 and not vim.current.buffer.options['bt']):
                 cmd += " -- {}".format(vim.current.buffer.name)
-
-            if "extra" in arguments_dict:
-                cmd += " " + " ".join(arguments_dict["extra"])
 
             buffer_name = "LeaderF://" + cmd
             if buffer_name in self._views:
@@ -293,12 +302,12 @@ class GitExplManager(Manager):
         if len(arg_list) == 1:
             return
 
-        subcommand = arg_list[1]
-        if subcommand == "diff":
+        self._subcommand = arg_list[1]
+        if self._subcommand == "diff":
             self.startGitDiff(win_pos, *args, **kwargs)
-        elif subcommand == "log":
+        elif self._subcommand == "log":
             self.startGitLog(win_pos, *args, **kwargs)
-        elif subcommand == "blame":
+        elif self._subcommand == "blame":
             self.startGitBlame(win_pos, *args, **kwargs)
 
     def _bangEnter(self):
@@ -345,6 +354,12 @@ class GitExplManager(Manager):
         else:
             lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
             self._preview_winid = int(lfEval("winid"))
+
+            cmd = ""
+            filetype = "git"
+            if self._subcommand == "diff":
+                cmd
+
             diff_view = GitCommandView(self, "git diff", "diff", 'aa', self._preview_winid)
             diff_view.create()
 

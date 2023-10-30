@@ -228,10 +228,8 @@ let g:Lf_Arguments = {
             \           {"name": ["--position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>",
             \               "help": "specifies the position of the diffs window"},
             \           {"name": ["-s", "--side-by-side"], "nargs": 0, "help": "show diffs in a side-by-side view"},
-            \           [
-            \               {"name": ["--current-file"], "nargs": 0, "help": "show diffs of current file"},
-            \               {"name": ["extra"], "nargs": "*", "help": "extra arguments of git diff"},
-            \           ],
+            \           {"name": ["--current-file"], "nargs": 0, "help": "show diffs of current file"},
+            \           {"name": ["extra"], "nargs": "*", "help": "extra arguments of git diff"},
             \       ],
             \       "blame": [
             \           {"name": ["--abc"], "nargs": 0, "help": ""},
