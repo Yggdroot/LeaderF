@@ -90,13 +90,13 @@ class GitCommand(object):
     def __init__(self, arguments_dict, source=None):
         self._arguments = arguments_dict
         self._source = source
-        self._file_type = ""
+        self._file_type_cmd = None
 
     def buildCommand(self):
         raise NotImplementedError("Can't instantiate abstract class GitCommand"
                                   "with abstract methods buildCommand")
-    def getFileType(self):
-        return self._file_type
+    def getFileTypeCommand(self):
+        return self._file_type_cmd
 
     def getBufferName(self):
         return ""
@@ -107,7 +107,19 @@ class GitDiffCommand(GitCommand):
         super(GitDiffCommand, self).__init__(arguments_dict, source)
 
     def buildCommand(self):
-        pass
+        cmd = "git diff"
+        if "--cached" in arguments_dict:
+            cmd += " --cached"
+
+        if "extra" in arguments_dict:
+            cmd += " " + " ".join(arguments_dict["extra"])
+
+        if ("--current-file" in arguments_dict
+            and vim.current.buffer.name
+            and not vim.current.buffer.options['bt']):
+            cmd += " -- {}".format(vim.current.buffer.name)
+
+        buffer_name = "LeaderF://" + cmd
 
 class GitCommandView(object):
     def __init__(self, owner, cmd, file_type, buffer_name, window_id):
