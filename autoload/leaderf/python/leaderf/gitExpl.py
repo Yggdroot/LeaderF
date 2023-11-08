@@ -107,6 +107,9 @@ class GitCommand(object):
     def getBufferNames(self):
         return self._buffer_names
 
+    def getArguments(self):
+        return self._arguments
+
 
 class GitDiffCommand(GitCommand):
     def __init__(self, arguments_dict, source=None):
@@ -128,6 +131,26 @@ class GitDiffCommand(GitCommand):
 
             self._buffer_names.append("LeaderF://" + self._cmd)
             self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
+
+
+class GitLogCommand(GitCommand):
+    def __init__(self, arguments_dict, source=None):
+        super(GitLogCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferNames(self):
+        if "--directly" in self._arguments:
+            self._cmd = "git log"
+
+            if "extra" in self._arguments:
+                self._cmd += " " + " ".join(self._arguments["extra"])
+
+            if ("--current-file" in self._arguments
+                and vim.current.buffer.name
+                and not vim.current.buffer.options['bt']):
+                self._cmd += " -- {}".format(vim.current.buffer.name)
+
+            self._buffer_names.append("LeaderF://" + self._cmd)
+            self._file_type_cmd = "setlocal filetype=git"
 
 
 class GitCommandView(object):
@@ -244,7 +267,7 @@ class GitCommandView(object):
 
 
 class Panel(object):
-    def __init__(self, arguments_dict):
+    def __init__(self):
         pass
 
     def register(self, view):
@@ -258,6 +281,7 @@ class Panel(object):
 
     def writeBuffer(self):
         pass
+
 
 class DirectlyPanel(Panel):
     def __init__(self):
@@ -285,19 +309,23 @@ class DirectlyPanel(Panel):
 
         return int(lfEval("win_getid()"))
 
-    def create(self, arguments_dict):
-        cmd = GitDiffCommand(arguments_dict)
+    def create(self, cmd):
         buffer_name = cmd.getBufferNames()[0]
         if buffer_name in self._views:
             self._views[buffer_name].create()
         else:
-            winid = self._createWindow(arguments_dict.get("--position", ["top"])[0], buffer_name)
+            winid = self._createWindow(cmd.getArguments().get("--position", ["top"])[0], buffer_name)
             diff_view = GitCommandView(self, cmd, buffer_name, winid)
             diff_view.create()
 
     def writeBuffer(self):
         for v in self._views.values():
             v.writeBuffer()
+
+
+class PreviewPanel(Panel):
+    def __init__(self):
+        pass
 
 #*****************************************************
 # GitExplManager
@@ -335,14 +363,16 @@ class GitExplManager(Manager):
     def startGitDiff(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--directly" in arguments_dict:
-            self._directlyPanel.create(arguments_dict)
+            self._directlyPanel.create(GitDiffCommand(arguments_dict))
         elif "--explorer" in arguments_dict:
             pass
         else:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
     def startGitLog(self, win_pos, *args, **kwargs):
-        pass
+        arguments_dict = kwargs.get("arguments", {})
+        if "--directly" in arguments_dict:
+            self._directlyPanel.create(GitLogCommand(arguments_dict))
 
     def startGitBlame(self, win_pos, *args, **kwargs):
         pass

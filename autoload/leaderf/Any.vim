@@ -217,7 +217,11 @@ let g:Lf_Arguments = {
             \ "jumps": [],
             \ "git":{
             \       "log": [
-            \           {"name": ["--abc"], "nargs": 0, "help": ""},
+            \           {"name": ["extra"], "nargs": "*", "help": "extra arguments of git log"},
+            \           [
+            \               {"name": ["--directly"], "nargs": 0, "help": "output the logs directly"},
+            \               {"name": ["--explorer"], "nargs": 0, "help": "view changed files of one commit in a tree explorer"},
+            \           ],
             \       ],
             \       "diff": [
             \           {"name": ["--cached", "--staged"], "nargs": 0, "help": "run 'git diff --cached'"},
