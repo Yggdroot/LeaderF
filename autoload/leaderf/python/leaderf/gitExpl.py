@@ -315,8 +315,7 @@ class DirectlyPanel(Panel):
             self._views[buffer_name].create()
         else:
             winid = self._createWindow(cmd.getArguments().get("--position", ["top"])[0], buffer_name)
-            diff_view = GitCommandView(self, cmd, buffer_name, winid)
-            diff_view.create()
+            GitCommandView(self, cmd, buffer_name, winid).create()
 
     def writeBuffer(self):
         for v in self._views.values():
