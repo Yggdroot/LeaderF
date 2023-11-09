@@ -110,27 +110,31 @@ class GitCommand(object):
     def getArguments(self):
         return self._arguments
 
+    def getSource(self):
+        return self._source
+
 
 class GitDiffCommand(GitCommand):
     def __init__(self, arguments_dict, source=None):
         super(GitDiffCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferNames(self):
-        if "--directly" in self._arguments:
-            self._cmd = "git diff"
-            if "--cached" in self._arguments:
-                self._cmd += " --cached"
+        self._cmd = "git diff"
+        if "--cached" in self._arguments:
+            self._cmd += " --cached"
 
-            if "extra" in self._arguments:
-                self._cmd += " " + " ".join(self._arguments["extra"])
+        if "extra" in self._arguments:
+            self._cmd += " " + " ".join(self._arguments["extra"])
 
-            if ("--current-file" in self._arguments
-                and vim.current.buffer.name
-                and not vim.current.buffer.options['bt']):
-                self._cmd += " -- {}".format(vim.current.buffer.name)
+        if self._source is not None:
+            self._cmd += " -- {}".format(self._source)
+        elif ("--current-file" in self._arguments
+            and vim.current.buffer.name
+            and not vim.current.buffer.options['bt']):
+            self._cmd += " -- {}".format(vim.current.buffer.name)
 
-            self._buffer_names.append("LeaderF://" + self._cmd)
-            self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
+        self._buffer_names.append("LeaderF://" + self._cmd)
+        self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
 
 
 class GitLogCommand(GitCommand):
@@ -173,6 +177,9 @@ class GitCommandView(object):
 
     def getBufferName(self):
         return self._buffer_name
+
+    def getSource(self):
+        return self._cmd.getSource()
 
     def create(self, bufhidden='wipe'):
         if self._buffer is not None:
@@ -265,6 +272,9 @@ class GitCommandView(object):
         self.cleanup()
         self._owner.deregister(self)
 
+    def __del__(self):
+        self.cleanup()
+
 
 class Panel(object):
     def __init__(self):
@@ -322,9 +332,37 @@ class DirectlyPanel(Panel):
             v.writeBuffer()
 
 
-class PreviewPanel(Panel):
+class PopupPreviewPanel(Panel):
     def __init__(self):
+        self._views = {}
+        self._popup_winid = 0
+
+    def register(self, view):
+        self._views[view.getSource()] = view
+
+    def deregister(self, view):
         pass
+
+    def create(self, cmd, config):
+        # if cmd.getSource() in self._views:
+        #     self._views[cmd.getSource()].create()
+        #     return
+
+        lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
+        self._popup_winid = int(lfEval("winid"))
+        buffer_name = cmd.getBufferNames()[0]
+        GitCommandView(self, cmd, buffer_name, self._popup_winid).create(bufhidden='hide')
+
+    def writeBuffer(self):
+        for v in self._views.values():
+            v.writeBuffer()
+
+    def getPopupWinId(self):
+        return self._popup_winid
+
+    def cleanup(self):
+        self._views = {}
+
 
 #*****************************************************
 # GitExplManager
@@ -333,7 +371,8 @@ class GitExplManager(Manager):
     def __init__(self):
         super(GitExplManager, self).__init__()
         self._subcommand = ""
-        self._directlyPanel = DirectlyPanel()
+        self._directly_panel = DirectlyPanel()
+        self._popup_preview_panel = PopupPreviewPanel()
 
     def _getExplClass(self):
         return GitExplorer
@@ -342,7 +381,8 @@ class GitExplManager(Manager):
         lfCmd("call leaderf#Git#Maps()")
 
     def _workInIdle(self, content=None, bang=False):
-        self._directlyPanel.writeBuffer()
+        self._directly_panel.writeBuffer()
+        self._popup_preview_panel.writeBuffer()
 
         super(GitExplManager, self)._workInIdle(content, bang)
 
@@ -358,26 +398,26 @@ class GitExplManager(Manager):
 
     def _beforeExit(self):
         super(GitExplManager, self)._beforeExit()
+        self._popup_preview_panel.cleanup()
 
     def startGitDiff(self, win_pos, *args, **kwargs):
-        arguments_dict = kwargs.get("arguments", {})
-        if "--directly" in arguments_dict:
-            self._directlyPanel.create(GitDiffCommand(arguments_dict))
-        elif "--explorer" in arguments_dict:
+        if "--directly" in self._arguments:
+            self._directly_panel.create(GitDiffCommand(self._arguments))
+        elif "--explorer" in self._arguments:
             pass
         else:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
     def startGitLog(self, win_pos, *args, **kwargs):
-        arguments_dict = kwargs.get("arguments", {})
-        if "--directly" in arguments_dict:
-            self._directlyPanel.create(GitLogCommand(arguments_dict))
+        if "--directly" in self._arguments:
+            self._directly_panel.create(GitLogCommand(self._arguments))
 
     def startGitBlame(self, win_pos, *args, **kwargs):
         pass
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
+        self.setArguments(arguments_dict)
         arg_list = arguments_dict.get("arg_line", 'git').split(maxsplit=2)
         if len(arg_list) == 1:
             return
@@ -402,7 +442,7 @@ class GitExplManager(Manager):
             self._timer_id = lfEval("timer_start(10, 'leaderf#Git#TimerCallback', {'repeat': -1})")
 
     def _getFineName(self, line):
-        return line.split()[2]
+        return line.split()[-1]
 
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0 or args[0] == '':
@@ -432,21 +472,12 @@ class GitExplManager(Manager):
             self._setWinOptions(self._preview_winid)
             self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
         else:
-            lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
-            self._preview_winid = int(lfEval("winid"))
-
-            cmd = ""
-            filetype = "git"
             if self._subcommand == "diff":
-                cmd
-
-            diff_view = GitCommandView(self, "git diff", "diff", 'aa', self._preview_winid)
-            diff_view.create()
-
-            # lfCmd("call win_execute(winid, 'silent! doautocmd filetypedetect BufNewFile %s')" % escQuote(filename))
+                self._popup_preview_panel.create(GitDiffCommand(self._arguments, source), config)
+                self._preview_winid = self._popup_preview_panel.getPopupWinId()
 
             self._setWinOptions(self._preview_winid)
-            self._preview_filetype = lfEval("getbufvar(winbufnr(winid), '&ft')")
+            # self._preview_filetype = lfEval("getbufvar(winbufnr(winid), '&ft')")
 
 
 #*****************************************************
