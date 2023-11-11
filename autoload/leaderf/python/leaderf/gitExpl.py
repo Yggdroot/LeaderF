@@ -178,6 +178,12 @@ class GitCommandView(object):
     def getBufferName(self):
         return self._buffer_name
 
+    def getWindowId(self):
+        return self._window_id
+
+    def getContent(self):
+        return self._content
+
     def getSource(self):
         return self._cmd.getSource()
 
@@ -249,6 +255,7 @@ class GitCommandView(object):
                     break
             else:
                 self._read_finished = 1
+                self._owner.callback(self)
         except Exception as e:
             self._read_finished = 1
             lfPrintError(e)
@@ -269,7 +276,6 @@ class GitCommandView(object):
         self.stopThread()
 
     def suicide(self):
-        self.cleanup()
         self._owner.deregister(self)
 
     def __del__(self):
@@ -292,6 +298,8 @@ class Panel(object):
     def writeBuffer(self):
         pass
 
+    def callback(self, view):
+        pass
 
 class DirectlyPanel(Panel):
     def __init__(self):
@@ -334,34 +342,41 @@ class DirectlyPanel(Panel):
 
 class PopupPreviewPanel(Panel):
     def __init__(self):
-        self._views = {}
+        self._view = None
+        self._buffer_contents = {}
         self._popup_winid = 0
 
     def register(self, view):
-        self._views[view.getSource()] = view
+        self._view = view
 
     def deregister(self, view):
         pass
 
     def create(self, cmd, config):
-        # if cmd.getSource() in self._views:
-        #     self._views[cmd.getSource()].create()
-        #     return
+        if cmd.getSource() in self._buffer_contents:
+            return
 
         lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
         self._popup_winid = int(lfEval("winid"))
-        buffer_name = cmd.getBufferNames()[0]
-        GitCommandView(self, cmd, buffer_name, self._popup_winid).create(bufhidden='hide')
+        GitCommandView(self, cmd, None, self._popup_winid).create(bufhidden='hide')
 
     def writeBuffer(self):
-        for v in self._views.values():
-            v.writeBuffer()
+        if self._view is not None:
+            self._view.writeBuffer()
 
     def getPopupWinId(self):
         return self._popup_winid
 
     def cleanup(self):
-        self._views = {}
+        self._view = None
+        self._buffer_contents = {}
+
+    def callback(self, view):
+        self._buffer_contents[view.getSource()] = view.getContent()
+
+    def getBufferContents(self):
+        return self._buffer_contents
+
 
 
 #*****************************************************
@@ -478,6 +493,66 @@ class GitExplManager(Manager):
 
             self._setWinOptions(self._preview_winid)
             # self._preview_filetype = lfEval("getbufvar(winbufnr(winid), '&ft')")
+
+    def _useExistingWindow(self, title, source, line_num, jump_cmd):
+        self.setOptionsForCursor()
+
+        if lfEval("has('nvim')") == '1':
+            if isinstance(source, int):
+                lfCmd("noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
+                self._setWinOptions(self._preview_winid)
+                self._preview_filetype = ''
+            else:
+                try:
+                    if self._isBinaryFile(source):
+                        lfCmd("""let content = map(range(128), '"^@"')""")
+                    else:
+                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
+                except vim.error as e:
+                    lfPrintError(e)
+                    return
+                if lfEval("!exists('g:Lf_preview_scratch_buffer') || !bufexists(g:Lf_preview_scratch_buffer)") == '1':
+                    lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
+                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
+                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'modeline', v:true)")
+                lfCmd("noautocmd call nvim_buf_set_lines(g:Lf_preview_scratch_buffer, 0, -1, v:false, content)")
+                lfCmd("noautocmd call nvim_win_set_buf(%d, g:Lf_preview_scratch_buffer)" % self._preview_winid)
+
+                cur_filetype = getExtension(source)
+                if cur_filetype != self._preview_filetype:
+                    lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(source)))
+                    self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
+        else:
+            content = self._popup_preview_panel.getBufferContents().get(source, None)
+            if content is not None:
+                lfCmd("noautocmd call popup_settext({}, {})".format(self._preview_winid, content))
+            else:
+                filename = source
+                try:
+                    if self._isBinaryFile(filename):
+                        lfCmd("""let content = map(range(128), '"^@"')""")
+                    else:
+                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
+                except vim.error as e:
+                    lfPrintError(e)
+                    return
+                lfCmd("noautocmd call popup_settext(%d, content)" % self._preview_winid )
+
+            cur_filetype = getExtension(filename)
+            if cur_filetype != self._preview_filetype:
+                lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(filename)))
+                self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
+
+        # self._setWinOptions(self._preview_winid)
+
+        # if jump_cmd:
+        #     lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
+        #     lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
+        # elif line_num > 0:
+        #     lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_num))
+        #     lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
+        # else:
+        #     lfCmd("call win_execute(%d, 'norm! gg')" % self._preview_winid)
 
 
 #*****************************************************

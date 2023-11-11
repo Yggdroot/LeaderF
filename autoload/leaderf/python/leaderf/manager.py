@@ -846,7 +846,7 @@ class Manager(object):
             lfPrintError(e)
             return True
 
-    def _useExistingWindow(self, title, source, line_num, jump_cmd):
+    def setOptionsForCursor(self):
         preview_pos = self._arguments.get("--preview-position", [""])[0]
         if preview_pos == "":
             preview_pos = lfEval("get(g:, 'Lf_PreviewPosition', 'top')")
@@ -860,6 +860,9 @@ class Manager(object):
                 lfCmd("call nvim_win_set_config(%d, %s)" % (self._preview_winid, str(self._preview_config)))
             else:
                 lfCmd("call popup_setoptions(%d, %s)" % (self._preview_winid, str(self._preview_config)))
+
+    def _useExistingWindow(self, title, source, line_num, jump_cmd):
+        self.setOptionsForCursor()
 
         if lfEval("has('nvim')") == '1':
             if isinstance(source, int):
