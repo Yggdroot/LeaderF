@@ -385,8 +385,8 @@ class PreviewPanel(Panel):
     def callback(self, view):
         self._buffer_contents[view.getSource()] = view.getContent()
 
-    def getBufferContents(self):
-        return self._buffer_contents
+    def getContent(self, source):
+        return self._buffer_contents.get(source)
 
     def setContent(self, content):
         if self._view:
@@ -470,17 +470,18 @@ class GitExplManager(Manager):
         if self._read_finished < 2:
             self._timer_id = lfEval("timer_start(10, 'leaderf#Git#TimerCallback', {'repeat': -1})")
 
-    def _getFineName(self, line):
-        return line.split()[-1]
+    def getSource(self, line):
+        if self._subcommand == "diff":
+            return line.split()[-1]
 
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]
-        filename = self._getFineName(line)
+        source = self.getSource(line)
 
-        self._createPopupPreview("", filename, 0)
+        self._createPopupPreview("", source, 0)
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
         self._preview_panel.create(self.createGitCommand(self._arguments, source), config)
@@ -496,7 +497,7 @@ class GitExplManager(Manager):
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
         self.setOptionsForCursor()
 
-        content = self._preview_panel.getBufferContents().get(source, None)
+        content = self._preview_panel.getContent(source)
         if content is None:
             self._preview_panel.createView(self.createGitCommand(self._arguments, source))
         else:
