@@ -66,7 +66,7 @@ class GitExplorer(Explorer):
         return 'Git'
 
     def getStlCurDir(self):
-        return escQuote(lfEncode(self._cmd_work_dir))
+        return escQuote(lfEncode(lfGetCwd()))
 
     def supportsNameOnly(self):
         return False
@@ -92,10 +92,10 @@ class GitCommand(object):
         self._source = source
         self._cmd = ""
         self._file_type_cmd = ""
-        self._buffer_names = []
-        self.buildCommandAndBufferNames()
+        self._buffer_name = ""
+        self.buildCommandAndBufferName()
 
-    def buildCommandAndBufferNames(self):
+    def buildCommandAndBufferName(self):
         pass
 
     def getCommand(self):
@@ -104,8 +104,8 @@ class GitCommand(object):
     def getFileTypeCommand(self):
         return self._file_type_cmd
 
-    def getBufferNames(self):
-        return self._buffer_names
+    def getBufferName(self):
+        return self._buffer_name
 
     def getArguments(self):
         return self._arguments
@@ -118,7 +118,7 @@ class GitDiffCommand(GitCommand):
     def __init__(self, arguments_dict, source=None):
         super(GitDiffCommand, self).__init__(arguments_dict, source)
 
-    def buildCommandAndBufferNames(self):
+    def buildCommandAndBufferName(self):
         self._cmd = "git diff"
         if "--cached" in self._arguments:
             self._cmd += " --cached"
@@ -133,7 +133,7 @@ class GitDiffCommand(GitCommand):
             and not vim.current.buffer.options['bt']):
             self._cmd += " -- {}".format(vim.current.buffer.name)
 
-        self._buffer_names.append("LeaderF://" + self._cmd)
+        self._buffer_name = "LeaderF://" + self._cmd
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
 
 
@@ -141,7 +141,7 @@ class GitLogCommand(GitCommand):
     def __init__(self, arguments_dict, source=None):
         super(GitLogCommand, self).__init__(arguments_dict, source)
 
-    def buildCommandAndBufferNames(self):
+    def buildCommandAndBufferName(self):
         if "--directly" in self._arguments:
             self._cmd = "git log"
 
@@ -153,15 +153,14 @@ class GitLogCommand(GitCommand):
                 and not vim.current.buffer.options['bt']):
                 self._cmd += " -- {}".format(vim.current.buffer.name)
 
-            self._buffer_names.append("LeaderF://" + self._cmd)
+            self._buffer_name = "LeaderF://" + self._cmd
             self._file_type_cmd = "setlocal filetype=git"
 
 
 class GitCommandView(object):
-    def __init__(self, owner, cmd, buffer_name, window_id):
+    def __init__(self, owner, cmd, window_id):
         self._owner = owner
         self._cmd = cmd
-        self._buffer_name = buffer_name
         self._window_id = window_id
         self._executor = AsyncExecutor()
         self._buffer = None
@@ -176,13 +175,20 @@ class GitCommandView(object):
         self._stop_reader_thread = False
 
     def getBufferName(self):
-        return self._buffer_name
+        return self._cmd.getBufferName()
 
     def getWindowId(self):
         return self._window_id
 
     def getContent(self):
         return self._content
+
+    def setContent(self, content):
+        try:
+            self._buffer.options['modifiable'] = True
+            self._buffer[:] = content
+        finally:
+            self._buffer.options['modifiable'] = False
 
     def getSource(self):
         return self._cmd.getSource()
@@ -195,8 +201,6 @@ class GitCommandView(object):
             self.cleanup()
 
         self.init()
-
-        lfCmd("call win_execute({}, 'let cur_buf_number = bufnr()')".format(self._window_id))
 
         lfCmd("call win_execute({}, '{}')".format(self._window_id, self._cmd.getFileTypeCommand()))
 
@@ -212,7 +216,7 @@ class GitCommandView(object):
             if bufhidden == 'wipe':
                 lfCmd("call win_execute({}, 'autocmd BufWipeout <buffer> call leaderf#Git#Suicide({})')".format(self._window_id, id(self)))
 
-        self._buffer = vim.buffers[int(lfEval("cur_buf_number"))]
+        self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(self._window_id)))]
 
         content = self._executor.execute(self._cmd.getCommand(), encoding=lfEval("&encoding"))
 
@@ -328,12 +332,12 @@ class DirectlyPanel(Panel):
         return int(lfEval("win_getid()"))
 
     def create(self, cmd):
-        buffer_name = cmd.getBufferNames()[0]
+        buffer_name = cmd.getBufferName()
         if buffer_name in self._views:
             self._views[buffer_name].create()
         else:
             winid = self._createWindow(cmd.getArguments().get("--position", ["top"])[0], buffer_name)
-            GitCommandView(self, cmd, buffer_name, winid).create()
+            GitCommandView(self, cmd, winid).create()
 
     def writeBuffer(self):
         for v in self._views.values():
@@ -353,12 +357,13 @@ class PopupPreviewPanel(Panel):
         pass
 
     def create(self, cmd, config):
-        if cmd.getSource() in self._buffer_contents:
-            return
-
         lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
         self._popup_winid = int(lfEval("winid"))
-        GitCommandView(self, cmd, None, self._popup_winid).create(bufhidden='hide')
+        GitCommandView(self, cmd, self._popup_winid).create(bufhidden='hide')
+
+    def createView(self, cmd):
+        if self._popup_winid > 0:
+            GitCommandView(self, cmd, self._popup_winid).create(bufhidden='hide')
 
     def writeBuffer(self):
         if self._view is not None:
@@ -377,6 +382,9 @@ class PopupPreviewPanel(Panel):
     def getBufferContents(self):
         return self._buffer_contents
 
+    def setContent(self, content):
+        if self._view:
+            self._view.setContent(content)
 
 
 #*****************************************************
@@ -485,14 +493,12 @@ class GitExplManager(Manager):
             # lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
 
             self._setWinOptions(self._preview_winid)
-            self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
         else:
             if self._subcommand == "diff":
                 self._popup_preview_panel.create(GitDiffCommand(self._arguments, source), config)
                 self._preview_winid = self._popup_preview_panel.getPopupWinId()
 
             self._setWinOptions(self._preview_winid)
-            # self._preview_filetype = lfEval("getbufvar(winbufnr(winid), '&ft')")
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
         self.setOptionsForCursor()
@@ -524,35 +530,10 @@ class GitExplManager(Manager):
                     self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
         else:
             content = self._popup_preview_panel.getBufferContents().get(source, None)
-            if content is not None:
-                lfCmd("noautocmd call popup_settext({}, {})".format(self._preview_winid, content))
+            if content is None:
+                self._popup_preview_panel.createView(GitDiffCommand(self._arguments, source))
             else:
-                filename = source
-                try:
-                    if self._isBinaryFile(filename):
-                        lfCmd("""let content = map(range(128), '"^@"')""")
-                    else:
-                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
-                except vim.error as e:
-                    lfPrintError(e)
-                    return
-                lfCmd("noautocmd call popup_settext(%d, content)" % self._preview_winid )
-
-            cur_filetype = getExtension(filename)
-            if cur_filetype != self._preview_filetype:
-                lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(filename)))
-                self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
-
-        # self._setWinOptions(self._preview_winid)
-
-        # if jump_cmd:
-        #     lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
-        #     lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
-        # elif line_num > 0:
-        #     lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_num))
-        #     lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
-        # else:
-        #     lfCmd("call win_execute(%d, 'norm! gg')" % self._preview_winid)
+                self._popup_preview_panel.setContent(content)
 
 
 #*****************************************************
