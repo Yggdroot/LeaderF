@@ -344,11 +344,11 @@ class DirectlyPanel(Panel):
             v.writeBuffer()
 
 
-class PopupPreviewPanel(Panel):
+class PreviewPanel(Panel):
     def __init__(self):
         self._view = None
         self._buffer_contents = {}
-        self._popup_winid = 0
+        self._preview_winid = 0
 
     def register(self, view):
         self._view = view
@@ -357,24 +357,30 @@ class PopupPreviewPanel(Panel):
         pass
 
     def create(self, cmd, config):
-        lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
-        self._popup_winid = int(lfEval("winid"))
-        GitCommandView(self, cmd, self._popup_winid).create(bufhidden='hide')
+        if lfEval("has('nvim')") == '1':
+            lfCmd("noautocmd let scratch_buffer = nvim_create_buf(0, 1)")
+            self._preview_winid = int(lfEval("nvim_open_win(scratch_buffer, 0, %s)" % json.dumps(config)))
+        else:
+            lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
+            self._preview_winid = int(lfEval("winid"))
+        GitCommandView(self, cmd, self._preview_winid).create(bufhidden='hide')
 
     def createView(self, cmd):
-        if self._popup_winid > 0:
-            GitCommandView(self, cmd, self._popup_winid).create(bufhidden='hide')
+        if self._preview_winid > 0:
+            GitCommandView(self, cmd, self._preview_winid).create(bufhidden='hide')
 
     def writeBuffer(self):
         if self._view is not None:
             self._view.writeBuffer()
+        lfCmd("redraw")
 
-    def getPopupWinId(self):
-        return self._popup_winid
+    def getPreviewWinId(self):
+        return self._preview_winid
 
     def cleanup(self):
         self._view = None
         self._buffer_contents = {}
+        self._preview_winid = 0
 
     def callback(self, view):
         self._buffer_contents[view.getSource()] = view.getContent()
@@ -395,7 +401,7 @@ class GitExplManager(Manager):
         super(GitExplManager, self).__init__()
         self._subcommand = ""
         self._directly_panel = DirectlyPanel()
-        self._popup_preview_panel = PopupPreviewPanel()
+        self._preview_panel = PreviewPanel()
 
     def _getExplClass(self):
         return GitExplorer
@@ -405,7 +411,7 @@ class GitExplManager(Manager):
 
     def _workInIdle(self, content=None, bang=False):
         self._directly_panel.writeBuffer()
-        self._popup_preview_panel.writeBuffer()
+        self._preview_panel.writeBuffer()
 
         super(GitExplManager, self)._workInIdle(content, bang)
 
@@ -421,7 +427,7 @@ class GitExplManager(Manager):
 
     def _beforeExit(self):
         super(GitExplManager, self)._beforeExit()
-        self._popup_preview_panel.cleanup()
+        self._preview_panel.cleanup()
 
     def startGitDiff(self, win_pos, *args, **kwargs):
         if "--directly" in self._arguments:
@@ -477,66 +483,24 @@ class GitExplManager(Manager):
         self._createPopupPreview("", filename, 0)
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
-        self._preview_config = config
-        filename = source
-
-        if lfEval("has('nvim')") == '1':
-            lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
-            self._preview_winid = int(lfEval("nvim_open_win(g:Lf_preview_scratch_buffer, 0, %s)" % str(config)))
-            diff_view = GitCommandView(self, "git diff", "diff", 'aa', self._preview_winid)
-            diff_view.create()
-
-            # cur_winid = lfEval("win_getid()")
-            # lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
-            # if not isinstance(source, int):
-            #     lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % source)
-            # lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
-
-            self._setWinOptions(self._preview_winid)
-        else:
-            self._popup_preview_panel.create(self.createGitCommand(self._arguments, source), config)
-            self._preview_winid = self._popup_preview_panel.getPopupWinId()
-
-            self._setWinOptions(self._preview_winid)
+        self._preview_panel.create(self.createGitCommand(self._arguments, source), config)
+        self._preview_winid = self._preview_panel.getPreviewWinId()
+        self._setWinOptions(self._preview_winid)
 
     def createGitCommand(self, arguments_dict, source=None):
         if self._subcommand == "diff":
             return GitDiffCommand(arguments_dict, source)
+        elif self._subcommand == "log":
+            return GitLogCommand(arguments_dict, source)
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
         self.setOptionsForCursor()
 
-        if lfEval("has('nvim')") == '1':
-            if isinstance(source, int):
-                lfCmd("noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
-                self._setWinOptions(self._preview_winid)
-                self._preview_filetype = ''
-            else:
-                try:
-                    if self._isBinaryFile(source):
-                        lfCmd("""let content = map(range(128), '"^@"')""")
-                    else:
-                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
-                except vim.error as e:
-                    lfPrintError(e)
-                    return
-                if lfEval("!exists('g:Lf_preview_scratch_buffer') || !bufexists(g:Lf_preview_scratch_buffer)") == '1':
-                    lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
-                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
-                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'modeline', v:true)")
-                lfCmd("noautocmd call nvim_buf_set_lines(g:Lf_preview_scratch_buffer, 0, -1, v:false, content)")
-                lfCmd("noautocmd call nvim_win_set_buf(%d, g:Lf_preview_scratch_buffer)" % self._preview_winid)
-
-                cur_filetype = getExtension(source)
-                if cur_filetype != self._preview_filetype:
-                    lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(source)))
-                    self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
+        content = self._preview_panel.getBufferContents().get(source, None)
+        if content is None:
+            self._preview_panel.createView(self.createGitCommand(self._arguments, source))
         else:
-            content = self._popup_preview_panel.getBufferContents().get(source, None)
-            if content is None:
-                self._popup_preview_panel.createView(self.createGitCommand(self._arguments, source))
-            else:
-                self._popup_preview_panel.setContent(content)
+            self._preview_panel.setContent(content)
 
 
 #*****************************************************
