@@ -494,11 +494,14 @@ class GitExplManager(Manager):
 
             self._setWinOptions(self._preview_winid)
         else:
-            if self._subcommand == "diff":
-                self._popup_preview_panel.create(GitDiffCommand(self._arguments, source), config)
-                self._preview_winid = self._popup_preview_panel.getPopupWinId()
+            self._popup_preview_panel.create(self.createGitCommand(self._arguments, source), config)
+            self._preview_winid = self._popup_preview_panel.getPopupWinId()
 
             self._setWinOptions(self._preview_winid)
+
+    def createGitCommand(self, arguments_dict, source=None):
+        if self._subcommand == "diff":
+            return GitDiffCommand(arguments_dict, source)
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
         self.setOptionsForCursor()
@@ -531,7 +534,7 @@ class GitExplManager(Manager):
         else:
             content = self._popup_preview_panel.getBufferContents().get(source, None)
             if content is None:
-                self._popup_preview_panel.createView(GitDiffCommand(self._arguments, source))
+                self._popup_preview_panel.createView(self.createGitCommand(self._arguments, source))
             else:
                 self._popup_preview_panel.setContent(content)
 
