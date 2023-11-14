@@ -203,8 +203,6 @@ class GitCommandView(object):
 
         self.init()
 
-        lfCmd("call win_execute({}, '{}')".format(self._window_id, self._cmd.getFileTypeCommand()))
-
         if self._buffer is None:
             lfCmd("call win_execute({}, 'setlocal nobuflisted')".format(self._window_id))
             lfCmd("call win_execute({}, 'setlocal buftype=nofile')".format(self._window_id))
@@ -214,6 +212,7 @@ class GitCommandView(object):
             lfCmd("call win_execute({}, 'setlocal nospell')".format(self._window_id))
             lfCmd("call win_execute({}, 'setlocal nomodifiable')".format(self._window_id))
             lfCmd("call win_execute({}, 'setlocal nofoldenable')".format(self._window_id))
+            lfCmd("call win_execute({}, '{}')".format(self._window_id, self._cmd.getFileTypeCommand()))
             if bufhidden == 'wipe':
                 lfCmd("call win_execute({}, 'autocmd BufWipeout <buffer> call leaderf#Git#Suicide({})')".format(self._window_id, id(self)))
 
