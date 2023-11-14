@@ -307,7 +307,7 @@ class Panel(object):
     def callback(self, view):
         pass
 
-class DirectlyPanel(Panel):
+class ResultPanel(Panel):
     def __init__(self):
         self._views = {}
 
@@ -402,7 +402,7 @@ class GitExplManager(Manager):
     def __init__(self):
         super(GitExplManager, self).__init__()
         self._subcommand = ""
-        self._directly_panel = DirectlyPanel()
+        self._result_panel = ResultPanel()
         self._preview_panel = PreviewPanel()
 
     def _getExplClass(self):
@@ -412,7 +412,7 @@ class GitExplManager(Manager):
         lfCmd("call leaderf#Git#Maps()")
 
     def _workInIdle(self, content=None, bang=False):
-        self._directly_panel.writeBuffer()
+        self._result_panel.writeBuffer()
         self._preview_panel.writeBuffer()
 
         super(GitExplManager, self)._workInIdle(content, bang)
@@ -433,7 +433,7 @@ class GitExplManager(Manager):
 
     def startGitDiff(self, win_pos, *args, **kwargs):
         if "--directly" in self._arguments:
-            self._directly_panel.create(GitDiffCommand(self._arguments))
+            self._result_panel.create(GitDiffCommand(self._arguments))
         elif "--explorer" in self._arguments:
             pass
         else:
@@ -441,7 +441,7 @@ class GitExplManager(Manager):
 
     def startGitLog(self, win_pos, *args, **kwargs):
         if "--directly" in self._arguments:
-            self._directly_panel.create(GitLogCommand(self._arguments))
+            self._result_panel.create(GitLogCommand(self._arguments))
 
     def startGitBlame(self, win_pos, *args, **kwargs):
         pass
@@ -473,7 +473,7 @@ class GitExplManager(Manager):
         source = self.getSource(line)
         content = self._preview_panel.getContent(source)
         if content is None:
-            self._directly_panel.create(self.createGitCommand(self._arguments, source))
+            self._result_panel.create(self.createGitCommand(self._arguments, source))
 
     def _bangEnter(self):
         super(GitExplManager, self)._bangEnter()
