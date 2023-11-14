@@ -30,6 +30,7 @@ class GitExplorer(Explorer):
         self._display_multi = False
         self._cmd_work_dir = ""
         self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
+        self._subcommand = ""
 
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -40,8 +41,8 @@ class GitExplorer(Explorer):
         executor = AsyncExecutor()
         self._executor.append(executor)
 
-        subcommand = arg_list[1]
-        if subcommand == "diff":
+        self._subcommand = arg_list[1]
+        if self._subcommand == "diff":
             cmd = "git diff --name-status"
             if "--cached" in arguments_dict:
                 cmd += " --cached"
@@ -244,6 +245,7 @@ class GitCommandView(object):
                     self._buffer.append(self._content[self._offset_in_content:cur_len])
 
                 self._offset_in_content = cur_len
+                lfCmd("redraw")
         finally:
             self._buffer.options['modifiable'] = False
 
@@ -327,7 +329,7 @@ class DirectlyPanel(Panel):
         elif win_pos == 'right':
             lfCmd("silent! noa keepa keepj bel vsp {}".format(buffer_name))
         else:
-            pass
+            lfCmd("silent! keepa keepj hide edit {}".format(buffer_name))
 
         return int(lfEval("win_getid()"))
 
@@ -336,7 +338,7 @@ class DirectlyPanel(Panel):
         if buffer_name in self._views:
             self._views[buffer_name].create()
         else:
-            winid = self._createWindow(cmd.getArguments().get("--position", ["top"])[0], buffer_name)
+            winid = self._createWindow(cmd.getArguments().get("--position", [""])[0], buffer_name)
             GitCommandView(self, cmd, winid).create()
 
     def writeBuffer(self):
@@ -372,7 +374,6 @@ class PreviewPanel(Panel):
     def writeBuffer(self):
         if self._view is not None:
             self._view.writeBuffer()
-        lfCmd("redraw")
 
     def getPreviewWinId(self):
         return self._preview_winid
@@ -391,6 +392,7 @@ class PreviewPanel(Panel):
     def setContent(self, content):
         if self._view:
             self._view.setContent(content)
+
 
 
 #*****************************************************
@@ -458,6 +460,20 @@ class GitExplManager(Manager):
             self.startGitLog(win_pos, *args, **kwargs)
         elif self._subcommand == "blame":
             self.startGitBlame(win_pos, *args, **kwargs)
+
+    def _acceptSelection(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+
+        if kwargs.get("mode", '') == 't':
+            lfCmd("tabnew")
+
+        source = self.getSource(line)
+        content = self._preview_panel.getContent(source)
+        if content is None:
+            self._directly_panel.create(self.createGitCommand(self._arguments, source))
 
     def _bangEnter(self):
         super(GitExplManager, self)._bangEnter()
