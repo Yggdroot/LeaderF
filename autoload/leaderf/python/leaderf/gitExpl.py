@@ -230,7 +230,7 @@ class GitCommandView(object):
     def getSource(self):
         return self._cmd.getSource()
 
-    def create(self, bufhidden='wipe'):
+    def create(self, bufhidden='wipe', buf_content=None):
         if self._buffer is not None:
             self._buffer.options['modifiable'] = True
             del self._buffer[:]
@@ -255,6 +255,14 @@ class GitCommandView(object):
 
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(self._window_id)))]
 
+        if buf_content is not None:
+            self._buffer.options['modifiable'] = True
+            self._buffer[:] = buf_content
+            self._buffer.options['modifiable'] = False
+            self._read_finished = 2
+            return
+
+        # start a process, timer and thread
         content = self._executor.execute(self._cmd.getCommand(), encoding=lfEval("&encoding"))
 
         self._timer_id = lfEval("timer_start(100, function('leaderf#Git#WriteBuffer', [%d]), {'repeat': -1})" % id(self))
@@ -378,13 +386,13 @@ class ResultPanel(Panel):
 
         return int(lfEval("win_getid()"))
 
-    def create(self, cmd):
+    def create(self, cmd, content=None):
         buffer_name = cmd.getBufferName()
         if buffer_name in self._views and self._views[buffer_name].valid():
-            self._views[buffer_name].create()
+            self._views[buffer_name].create(buf_content=content)
         else:
             winid = self._createWindow(cmd.getArguments().get("--position", [""])[0], buffer_name)
-            GitCommandView(self, cmd, winid).create()
+            GitCommandView(self, cmd, winid).create(buf_content=content)
 
     def writeBuffer(self):
         for v in self._views.values():
@@ -449,6 +457,7 @@ class GitExplManager(Manager):
         self._preview_panel = PreviewPanel()
         self._git_diff_manager = None
         self._git_log_manager = None
+        self._selected_content = None
 
     def _getExplClass(self):
         return GitExplorer
@@ -486,6 +495,12 @@ class GitExplManager(Manager):
         subcommand = arg_list[1]
         self.getExplManager(subcommand).startExplorer(win_pos, *args, **kwargs)
 
+    def accept(self, mode=''):
+        source = self.getSource(self._getInstance().currentLine)
+        self._selected_content = self._preview_panel.getContent(source)
+
+        return super(GitExplManager, self).accept(mode)
+
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
@@ -496,9 +511,7 @@ class GitExplManager(Manager):
         if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
             lfCmd("tabnew")
 
-        content = self._preview_panel.getContent(source)
-        if content is None:
-            self._result_panel.create(self.createGitCommand(self._arguments, source))
+        self._result_panel.create(self.createGitCommand(self._arguments, source), self._selected_content)
 
     def _bangEnter(self):
         super(GitExplManager, self)._bangEnter()
