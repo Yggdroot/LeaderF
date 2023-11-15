@@ -175,6 +175,9 @@ class GitCommandView(object):
         self._read_finished = 0
         self._stop_reader_thread = False
 
+    def getCommand(self):
+        return self._cmd
+
     def getBufferName(self):
         return self._cmd.getBufferName()
 
@@ -200,6 +203,7 @@ class GitCommandView(object):
             del self._buffer[:]
             self._buffer.options['modifiable'] = False
             self.cleanup()
+            lfCmd("call win_gotoid({})".format(self._window_id))
 
         self.init()
 
@@ -283,6 +287,9 @@ class GitCommandView(object):
     def suicide(self):
         self._owner.deregister(self)
 
+    def valid(self):
+        return self._buffer is not None and self._buffer.valid
+
     def __del__(self):
         self.cleanup()
 
@@ -309,14 +316,20 @@ class Panel(object):
 class ResultPanel(Panel):
     def __init__(self):
         self._views = {}
+        self._sources = set()
 
     def register(self, view):
         self._views[view.getBufferName()] = view
+        self._sources.add(view.getCommand().getSource())
 
     def deregister(self, view):
         name = view.getBufferName()
         if name in self._views:
+            self._sources.discard(self._views[name].getCommand().getSource())
             del self._views[name]
+
+    def getSources(self):
+        return self._sources
 
     def _createWindow(self, win_pos, buffer_name):
         if win_pos == 'top':
@@ -334,7 +347,7 @@ class ResultPanel(Panel):
 
     def create(self, cmd):
         buffer_name = cmd.getBufferName()
-        if buffer_name in self._views:
+        if buffer_name in self._views and self._views[buffer_name].valid():
             self._views[buffer_name].create()
         else:
             winid = self._createWindow(cmd.getArguments().get("--position", [""])[0], buffer_name)
@@ -466,10 +479,10 @@ class GitExplManager(Manager):
 
         line = args[0]
 
-        if kwargs.get("mode", '') == 't':
+        source = self.getSource(line)
+        if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
             lfCmd("tabnew")
 
-        source = self.getSource(line)
         content = self._preview_panel.getContent(source)
         if content is None:
             self._result_panel.create(self.createGitCommand(self._arguments, source))
