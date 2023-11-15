@@ -462,16 +462,6 @@ class GitExplManager(Manager):
 
         super(GitExplManager, self)._workInIdle(content, bang)
 
-    def _afterEnter(self):
-        super(GitExplManager, self)._afterEnter()
-
-        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
-            winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
-            icon_pattern = r'^\S*\s*\zs__icon__'
-            self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
-            self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
-            self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
-
     def _beforeExit(self):
         super(GitExplManager, self)._beforeExit()
         self._preview_panel.cleanup()
@@ -573,6 +563,16 @@ class GitDiffExplManager(GitExplManager):
             pass
         else:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
+
+    def _afterEnter(self):
+        super(GitExplManager, self)._afterEnter()
+
+        if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
+            winid = self._getInstance().getPopupWinId() if self._getInstance().getWinPos() == 'popup' else None
+            icon_pattern = r'^\S*\s*\zs__icon__'
+            self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
+            self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
 
 
 class GitLogExplManager(GitExplManager):
