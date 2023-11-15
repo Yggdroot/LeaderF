@@ -13,33 +13,30 @@ endif
 
 exec g:Lf_py "from leaderf.gitExpl import *"
 
-function! leaderf#Git#Maps()
+function! leaderf#Git#Maps(id)
     nmapclear <buffer>
-    nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "gitExplManager.accept()"<CR>
-    nnoremap <buffer> <silent> o             :exec g:Lf_py "gitExplManager.accept()"<CR>
-    nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "gitExplManager.accept()"<CR>
-    nnoremap <buffer> <silent> x             :exec g:Lf_py "gitExplManager.accept('h')"<CR>
-    nnoremap <buffer> <silent> v             :exec g:Lf_py "gitExplManager.accept('v')"<CR>
-    nnoremap <buffer> <silent> t             :exec g:Lf_py "gitExplManager.accept('t')"<CR>
-    nnoremap <buffer> <silent> p             :exec g:Lf_py "gitExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             :exec g:Lf_py "gitExplManager.moveAndPreview('j')"<CR>
-    nnoremap <buffer> <silent> k             :exec g:Lf_py "gitExplManager.moveAndPreview('k')"<CR>
-    nnoremap <buffer> <silent> <Up>          :exec g:Lf_py "gitExplManager.moveAndPreview('Up')"<CR>
-    nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "gitExplManager.moveAndPreview('Down')"<CR>
-    nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "gitExplManager.moveAndPreview('PageUp')"<CR>
-    nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "gitExplManager.moveAndPreview('PageDown')"<CR>
-    nnoremap <buffer> <silent> q             :exec g:Lf_py "gitExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> i             :exec g:Lf_py "gitExplManager.input()"<CR>
-    nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "gitExplManager.input()"<CR>
-    nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "gitExplManager.toggleHelp()"<CR>
-    nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "gitExplManager._toUpInPopup()"<CR>
-    nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "gitExplManager._toDownInPopup()"<CR>
-    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "gitExplManager.closePreviewPopupOrQuit()"<CR>
-    if has_key(g:Lf_NormalMap, "Git")
-        for i in g:Lf_NormalMap["Git"]
-            exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]
-        endfor
-    endif
+    exec g:Lf_py "import ctypes"
+    let manager = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
+    exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.accept()"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> o             :exec g:Lf_py "%s.accept()"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "%s.accept()"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> x             :exec g:Lf_py "%s.accept(''h'')"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> v             :exec g:Lf_py "%s.accept(''v'')"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> t             :exec g:Lf_py "%s.accept(''t'')"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> p             :exec g:Lf_py "%s._previewResult(True)"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> j             :exec g:Lf_py "%s.moveAndPreview(''j'')"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> k             :exec g:Lf_py "%s.moveAndPreview(''k'')"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <Up>          :exec g:Lf_py "%s.moveAndPreview(''Up'')"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "%s.moveAndPreview(''Down'')"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "%s.moveAndPreview(''PageUp'')"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "%s.moveAndPreview(''PageDown'')"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> q             :exec g:Lf_py "%s.quit()"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> i             :exec g:Lf_py "%s.input()"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "%s.input()"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "%s.toggleHelp()"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "%s._toUpInPopup()"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "%s._toDownInPopup()"<CR>', manager)
+    exec printf('nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "%s.closePreviewPopupOrQuit()"<CR>', manager)
 endfunction
 
 " return the visually selected text and quote it with double quote

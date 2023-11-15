@@ -25,43 +25,14 @@ from .devicons import (
 class GitExplorer(Explorer):
     def __init__(self):
         self._executor = []
-        self._pattern_regex = []
-        self._context_separator = "..."
         self._display_multi = False
-        self._cmd_work_dir = ""
         self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
-        self._subcommand = ""
 
     def getContent(self, *args, **kwargs):
-        arguments_dict = kwargs.get("arguments", {})
-        arg_list = arguments_dict.get("arg_line", 'git').split(maxsplit=2)
-        if len(arg_list) == 1:
-            return
-
-        executor = AsyncExecutor()
-        self._executor.append(executor)
-
-        self._subcommand = arg_list[1]
-        if self._subcommand == "diff":
-            cmd = "git diff --name-status"
-            if "--cached" in arguments_dict:
-                cmd += " --cached"
-            if "extra" in arguments_dict:
-                cmd += " " + " ".join(arguments_dict["extra"])
-            content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=self.formatLine)
-            return content
+        return []
 
     def formatLine(self, line):
-        """
-        R098    README.txt      README.txt.hello
-        A       abc.txt
-        M       src/fold.c
-        """
-        name_status = line.split('\t')
-        file_name = name_status[1]
-        icon = webDevIconsGetFileTypeSymbol(file_name) if self._show_icon else ""
-        return "{:<4} {}{}{}".format(name_status[0], icon, name_status[1],
-                                     " -> " + name_status[2] if len(name_status) == 3 else "")
+        pass
 
     def getStlCategory(self):
         return 'Git'
@@ -85,6 +56,68 @@ class GitExplorer(Explorer):
 
     def displayMulti(self):
         return self._display_multi
+
+
+class GitDiffExplorer(GitExplorer):
+    def getContent(self, *args, **kwargs):
+        arguments_dict = kwargs.get("arguments", {})
+
+        executor = AsyncExecutor()
+        self._executor.append(executor)
+
+        cmd = "git diff --name-status"
+        if "--cached" in arguments_dict:
+            cmd += " --cached"
+        if "extra" in arguments_dict:
+            cmd += " " + " ".join(arguments_dict["extra"])
+        content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=self.formatLine)
+        return content
+
+    def formatLine(self, line):
+        """
+        R098    README.txt      README.txt.hello
+        A       abc.txt
+        M       src/fold.c
+        """
+        name_status = line.split('\t')
+        file_name = name_status[1]
+        icon = webDevIconsGetFileTypeSymbol(file_name) if self._show_icon else ""
+        return "{:<4} {}{}{}".format(name_status[0], icon, name_status[1],
+                                     " -> " + name_status[2] if len(name_status) == 3 else "")
+
+    def getStlCategory(self):
+        return 'Git_diff'
+
+
+class GitLogExplorer(GitExplorer):
+    def getContent(self, *args, **kwargs):
+        arguments_dict = kwargs.get("arguments", {})
+
+        executor = AsyncExecutor()
+        self._executor.append(executor)
+
+        cmd = "git diff --name-status"
+        if "--cached" in arguments_dict:
+            cmd += " --cached"
+        if "extra" in arguments_dict:
+            cmd += " " + " ".join(arguments_dict["extra"])
+        content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=self.formatLine)
+        return content
+
+    def formatLine(self, line):
+        """
+        R098    README.txt      README.txt.hello
+        A       abc.txt
+        M       src/fold.c
+        """
+        name_status = line.split('\t')
+        file_name = name_status[1]
+        icon = webDevIconsGetFileTypeSymbol(file_name) if self._show_icon else ""
+        return "{:<4} {}{}{}".format(name_status[0], icon, name_status[1],
+                                     " -> " + name_status[2] if len(name_status) == 3 else "")
+
+    def getStlCategory(self):
+        return 'Git_log'
 
 
 class GitCommand(object):
@@ -406,22 +439,22 @@ class PreviewPanel(Panel):
             self._view.setContent(content)
 
 
-
 #*****************************************************
 # GitExplManager
 #*****************************************************
 class GitExplManager(Manager):
     def __init__(self):
         super(GitExplManager, self).__init__()
-        self._subcommand = ""
         self._result_panel = ResultPanel()
         self._preview_panel = PreviewPanel()
+        self._git_diff_manager = None
+        self._git_log_manager = None
 
     def _getExplClass(self):
         return GitExplorer
 
     def _defineMaps(self):
-        lfCmd("call leaderf#Git#Maps()")
+        lfCmd("call leaderf#Git#Maps({})".format(id(self)))
 
     def _workInIdle(self, content=None, bang=False):
         self._result_panel.writeBuffer()
@@ -443,20 +476,15 @@ class GitExplManager(Manager):
         super(GitExplManager, self)._beforeExit()
         self._preview_panel.cleanup()
 
-    def startGitDiff(self, win_pos, *args, **kwargs):
-        if "--directly" in self._arguments:
-            self._result_panel.create(GitDiffCommand(self._arguments))
-        elif "--explorer" in self._arguments:
-            pass
-        else:
-            super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
-
-    def startGitLog(self, win_pos, *args, **kwargs):
-        if "--directly" in self._arguments:
-            self._result_panel.create(GitLogCommand(self._arguments))
-
-    def startGitBlame(self, win_pos, *args, **kwargs):
-        pass
+    def getExplManager(self, subcommand):
+        if subcommand == "diff":
+            if self._git_diff_manager is None:
+                self._git_diff_manager = GitDiffExplManager()
+            return self._git_diff_manager
+        elif subcommand == "log":
+            if self._git_log_manager is None:
+                self._git_log_manager = GitLogExplManager()
+            return self._git_log_manager
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -465,13 +493,8 @@ class GitExplManager(Manager):
         if len(arg_list) == 1:
             return
 
-        self._subcommand = arg_list[1]
-        if self._subcommand == "diff":
-            self.startGitDiff(win_pos, *args, **kwargs)
-        elif self._subcommand == "log":
-            self.startGitLog(win_pos, *args, **kwargs)
-        elif self._subcommand == "blame":
-            self.startGitBlame(win_pos, *args, **kwargs)
+        subcommand = arg_list[1]
+        self.getExplManager(subcommand).startExplorer(win_pos, *args, **kwargs)
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -499,8 +522,7 @@ class GitExplManager(Manager):
             self._timer_id = lfEval("timer_start(10, 'leaderf#Git#TimerCallback', {'repeat': -1})")
 
     def getSource(self, line):
-        if self._subcommand == "diff":
-            return line.split()[-1]
+        return line
 
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0 or args[0] == '':
@@ -517,10 +539,7 @@ class GitExplManager(Manager):
         self._setWinOptions(self._preview_winid)
 
     def createGitCommand(self, arguments_dict, source=None):
-        if self._subcommand == "diff":
-            return GitDiffCommand(arguments_dict, source)
-        elif self._subcommand == "log":
-            return GitLogCommand(arguments_dict, source)
+        pass
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
         self.setOptionsForCursor()
@@ -530,6 +549,54 @@ class GitExplManager(Manager):
             self._preview_panel.createView(self.createGitCommand(self._arguments, source))
         else:
             self._preview_panel.setContent(content)
+
+
+class GitDiffExplManager(GitExplManager):
+    def _getExplorer(self):
+        if self._explorer is None:
+            self._explorer = GitDiffExplorer()
+        return self._explorer
+
+    def getSource(self, line):
+        return line.split()[-1]
+
+    def createGitCommand(self, arguments_dict, source=None):
+        return GitDiffCommand(arguments_dict, source)
+
+    def startExplorer(self, win_pos, *args, **kwargs):
+        arguments_dict = kwargs.get("arguments", {})
+        self.setArguments(arguments_dict)
+
+        if "--directly" in self._arguments:
+            self._result_panel.create(GitDiffCommand(self._arguments))
+        elif "--explorer" in self._arguments:
+            pass
+        else:
+            super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
+
+
+class GitLogExplManager(GitExplManager):
+    def _getExplorer(self):
+        if self._explorer is None:
+            self._explorer = GitLogExplorer()
+        return self._explorer
+
+    def getSource(self, line):
+        return line.split()[-1]
+
+    def createGitCommand(self, arguments_dict, source=None):
+        return GitLogCommand(arguments_dict, source)
+
+    def startExplorer(self, win_pos, *args, **kwargs):
+        arguments_dict = kwargs.get("arguments", {})
+        self.setArguments(arguments_dict)
+
+        if "--directly" in self._arguments:
+            self._result_panel.create(GitLogCommand(self._arguments))
+        elif "--explorer" in self._arguments:
+            pass
+        else:
+            super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
 
 #*****************************************************
