@@ -203,6 +203,7 @@ class GitCommandView(object):
 
     def init(self):
         self._content = []
+        self._timer_id = None
         self._reader_thread = None
         self._offset_in_content = 0
         self._read_finished = 0
