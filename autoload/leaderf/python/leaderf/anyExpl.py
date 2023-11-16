@@ -781,6 +781,8 @@ class AnyHub(object):
 
                 if isinstance(arg_def, dict):
                     subsubparsers = parser.add_subparsers(title="subcommands", description="", help="")
+                    group = parser.add_argument_group("common arguments")
+                    self._add_argument(group, lfEval("g:Lf_CommonArguments"), positional_args)
                     for command, args in arg_def.items():
                         help = lfEval("g:Lf_Helps").get(category + "-" + command, "")
                         subparser = subsubparsers.add_parser(command, help=help, formatter_class=LfHelpFormatter)

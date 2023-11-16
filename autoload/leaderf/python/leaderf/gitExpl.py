@@ -447,6 +447,8 @@ class PreviewPanel(Panel):
         if self._view:
             self._view.setContent(content)
 
+class DiffViewPanel(Panel):
+    pass
 
 #*****************************************************
 # GitExplManager
@@ -485,12 +487,21 @@ class GitExplManager(Manager):
             if self._git_log_manager is None:
                 self._git_log_manager = GitLogExplManager()
             return self._git_log_manager
+        else:
+            return None
+            # return super(GitExplManager, self)
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
-        self.setArguments(arguments_dict)
-        arg_list = arguments_dict.get("arg_line", 'git').split(maxsplit=2)
+        if "--recall" in arguments_dict:
+            self._arguments.update(arguments_dict)
+        else:
+            self.setArguments(arguments_dict)
+
+        arg_list = self._arguments.get("arg_line", 'git').split()
+        arg_list = [item for item in arg_list if not item.startswith('-')]
         if len(arg_list) == 1:
+            # do something
             return
 
         subcommand = arg_list[1]
@@ -569,9 +580,12 @@ class GitDiffExplManager(GitExplManager):
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
-        self.setArguments(arguments_dict)
+        if "--recall" not in arguments_dict:
+            self.setArguments(arguments_dict)
 
-        if "--directly" in self._arguments:
+        if "--recall" in arguments_dict:
+            super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
+        elif "--directly" in self._arguments:
             self._result_panel.create(GitDiffCommand(self._arguments))
         elif "--explorer" in self._arguments:
             pass
@@ -603,9 +617,12 @@ class GitLogExplManager(GitExplManager):
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
-        self.setArguments(arguments_dict)
+        if "--recall" not in arguments_dict:
+            self.setArguments(arguments_dict)
 
-        if "--directly" in self._arguments:
+        if "--recall" in arguments_dict:
+            super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
+        elif "--directly" in self._arguments:
             self._result_panel.create(GitLogCommand(self._arguments))
         elif "--explorer" in self._arguments:
             pass
