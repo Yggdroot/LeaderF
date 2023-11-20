@@ -65,7 +65,7 @@ class GitDiffExplorer(GitExplorer):
         executor = AsyncExecutor()
         self._executor.append(executor)
 
-        cmd = "git diff --name-status"
+        cmd = "git diff --no-color --name-status"
         if "--cached" in arguments_dict:
             cmd += " --cached"
         if "extra" in arguments_dict:
@@ -153,21 +153,23 @@ class GitDiffCommand(GitCommand):
         super(GitDiffCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
-        self._cmd = "git diff"
+        self._cmd = "git diff --no-color"
+        extra_options = ""
         if "--cached" in self._arguments:
-            self._cmd += " --cached"
+            extra_options += " --cached"
 
         if "extra" in self._arguments:
-            self._cmd += " " + " ".join(self._arguments["extra"])
+            extra_options += " " + " ".join(self._arguments["extra"])
 
         if self._source is not None:
-            self._cmd += " -- {}".format(self._source)
+            extra_options += " -- {}".format(self._source)
         elif ("--current-file" in self._arguments
             and vim.current.buffer.name
             and not vim.current.buffer.options['bt']):
-            self._cmd += " -- {}".format(vim.current.buffer.name)
+            extra_options += " -- {}".format(vim.current.buffer.name)
 
-        self._buffer_name = "LeaderF://" + self._cmd
+        self._cmd += extra_options
+        self._buffer_name = "LeaderF://git diff" + extra_options
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
 
 
