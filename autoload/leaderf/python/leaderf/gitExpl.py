@@ -449,8 +449,13 @@ class PreviewPanel(Panel):
         if self._view:
             self._view.setContent(content)
 
+class SplitDiffPanel(Panel):
+    def __init__(self):
+        pass
+
 class DiffViewPanel(Panel):
-    pass
+    def __init__(self):
+        pass
 
 #*****************************************************
 # GitExplManager
@@ -603,6 +608,25 @@ class GitDiffExplManager(GitExplManager):
             self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
             self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
             self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
+
+    def _accept(self, file, mode, *args, **kwargs):
+        if "-s" not in self._arguments:
+            super(GitExplManager, self)._accept(file, mode, *args, **kwargs)
+
+    def _acceptSelection(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+
+        if "-s" in self._arguments:
+            pass
+        else:
+            source = self.getSource(line)
+            if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
+                lfCmd("tabnew")
+
+            self._result_panel.create(self.createGitCommand(self._arguments, source), self._selected_content)
 
 
 class GitLogExplManager(GitExplManager):
