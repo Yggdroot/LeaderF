@@ -353,10 +353,13 @@ devicons_palette = {
 devicons_palette["dark"].update(lfEval("get(get(g:, 'Lf_DevIconsPalette', {}), 'dark', {})"))
 devicons_palette["light"].update(lfEval("get(get(g:, 'Lf_DevIconsPalette', {}), 'light', {})"))
 
-if  os.name == 'nt' or lfEval('&ambiwidth') == "double":
-    _spaces = ' '
+if  os.name == "nt" or lfEval('&ambiwidth') == "double":
+    _spaces = lfEval("get(g:, 'Lf_SpacesAfterIcon', ' ')")
 else:
-    _spaces = '  '
+    _spaces = lfEval("get(g:, 'Lf_SpacesAfterIcon', ' ')")
+
+if _spaces == "":
+    _spaces = ' '
 
 _default_palette = {
     "gui": "NONE",
@@ -420,10 +423,13 @@ def _getExt(file):
 
 def setAmbiwidth(val):
     global _spaces
-    if os.name == 'nt' or val == "double":
-        _spaces = ' '
+    if os.name == "nt" or val == "double":
+        _spaces = lfEval("get(g:, 'Lf_SpacesAfterIcon', ' ')")
     else:
-        _spaces = '  '
+        _spaces = lfEval("get(g:, 'Lf_SpacesAfterIcon', ' ')")
+
+    if _spaces == "":
+        _spaces = ' '
 
 # To use asynchronously
 def webDevIconsGetFileTypeSymbol(file, isdir=False):
