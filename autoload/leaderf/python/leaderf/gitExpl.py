@@ -59,13 +59,19 @@ class GitExplorer(Explorer):
 
 
 class GitDiffExplorer(GitExplorer):
+    def __init__(self):
+        super(GitDiffExplorer, self).__init__()
+        self._source_info = {}
+
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
 
         executor = AsyncExecutor()
         self._executor.append(executor)
 
-        cmd = "git diff --no-color --name-status"
+        self._source_info = {}
+
+        cmd = "git diff --no-color --raw"
         if "--cached" in arguments_dict:
             cmd += " --cached"
         if "extra" in arguments_dict:
@@ -75,18 +81,27 @@ class GitDiffExplorer(GitExplorer):
 
     def formatLine(self, line):
         """
-        R098    README.txt      README.txt.hello
-        A       abc.txt
-        M       src/fold.c
+        :000000 100644 000000000 5b01d33aa A    runtime/syntax/json5.vim
+        :100644 100644 671b269c0 ef52cddf4 M    runtime/syntax/nix.vim
+        :100644 100644 69671c59c 084f8cdb4 M    runtime/syntax/zsh.vim
+        :100644 100644 b90f76fc1 bad07e644 R099 src/version.c   src/version2.c
+        :100644 000000 b5825eb19 000000000 D    src/testdir/dumps
+
+        ':100644 100644 72943a1 dbee026 R050\thello world.txt\thello world2.txt'
         """
-        name_status = line.split('\t')
-        file_name = name_status[1]
-        icon = webDevIconsGetFileTypeSymbol(file_name) if self._show_icon else ""
-        return "{:<4} {}{}{}".format(name_status[0], icon, name_status[1],
-                                     " -> " + name_status[2] if len(name_status) == 3 else "")
+        tmp = line.split(sep='\t')
+        file_names = (tmp[1], tmp[2] if len(tmp) == 3 else "")
+        blob_status = tmp[0].split()
+        self._source_info[file_names] = (blob_status[2], blob_status[3], blob_status[4], file_names[0], file_names[1])
+        icon = webDevIconsGetFileTypeSymbol(file_names[0]) if self._show_icon else ""
+        return "{:<4} {}{}{}".format(blob_status[4], icon, file_names[0],
+                                     "" if file_names[1] == "" else "\t->\t" + file_names[1] )
 
     def getStlCategory(self):
         return 'Git_diff'
+
+    def getSourceInfo(self):
+        return self._source_info
 
 
 class GitLogExplorer(GitExplorer):
@@ -162,11 +177,17 @@ class GitDiffCommand(GitCommand):
             extra_options += " " + " ".join(self._arguments["extra"])
 
         if self._source is not None:
-            extra_options += " -- {}".format(self._source)
+            file_name = self._source[3] if self._source[4] == "" else self._source[4]
+            if " " in file_name:
+                file_name = file_name.replace(' ', r'\ ')
+            extra_options += " -- {}".format(file_name)
         elif ("--current-file" in self._arguments
             and vim.current.buffer.name
             and not vim.current.buffer.options['bt']):
-            extra_options += " -- {}".format(vim.current.buffer.name)
+            file_name = vim.current.buffer.name
+            if " " in file_name:
+                file_name = file_name.replace(' ', r'\ ')
+            extra_options += " -- {}".format(file_name)
 
         self._cmd += extra_options
         self._buffer_name = "LeaderF://git diff" + extra_options
@@ -463,6 +484,7 @@ class DiffViewPanel(Panel):
 class GitExplManager(Manager):
     def __init__(self):
         super(GitExplManager, self).__init__()
+        self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
         self._result_panel = ResultPanel()
         self._preview_panel = PreviewPanel()
         self._git_diff_manager = None
@@ -580,7 +602,18 @@ class GitDiffExplManager(GitExplManager):
         return self._explorer
 
     def getSource(self, line):
-        return line.split()[-1]
+        file_name2 = ""
+        if "\t->\t" in line:
+            # 'R050 hello world.txt\t->\thello world2.txt'
+            # 'R050   hello world.txt\t->\thello world2.txt'
+            tmp = line.split("\t->\t")
+            file_name1 = tmp[0].split(None, 2 if self._show_icon else 1)[-1]
+            file_name2 = tmp[1]
+        else:
+            # 'M      runtime/syntax/nix.vim'
+            file_name1 = line.split()[-1]
+
+        return self._getExplorer().getSourceInfo()[(file_name1, file_name2)]
 
     def createGitCommand(self, arguments_dict, source=None):
         return GitDiffCommand(arguments_dict, source)
