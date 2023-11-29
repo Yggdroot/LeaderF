@@ -281,7 +281,8 @@ class GitCommandView(object):
             lfCmd("call win_execute({}, 'setlocal nofoldenable')".format(self._window_id))
             lfCmd("call win_execute({}, '{}')".format(self._window_id, self._cmd.getFileTypeCommand()))
             if bufhidden == 'wipe':
-                lfCmd("call win_execute({}, 'autocmd BufWipeout <buffer> call leaderf#Git#Suicide({})')".format(self._window_id, id(self)))
+                lfCmd("augroup Lf_Git | augroup END")
+                lfCmd("call win_execute({}, 'autocmd Lf_Git BufWipeout <buffer> call leaderf#Git#Suicide({})')".format(self._window_id, id(self)))
 
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(self._window_id)))]
 
@@ -355,6 +356,7 @@ class GitCommandView(object):
         self.stopThread()
         # must do this at last
         self._executor.killProcess()
+        lfCmd("call win_execute({}, 'autocmd! Lf_Git BufWipeout <buffer>')".format(self._window_id))
 
     def suicide(self):
         self._owner.deregister(self)
@@ -440,7 +442,9 @@ class PreviewPanel(Panel):
         self._view = view
 
     def deregister(self, view):
-        pass
+        if self._view is view:
+            self._view.cleanup()
+            self._view = None
 
     def create(self, cmd, config):
         if lfEval("has('nvim')") == '1':
@@ -465,6 +469,7 @@ class PreviewPanel(Panel):
 
     def cleanup(self):
         if self._view is not None:
+            # may never run here
             self._view.cleanup()
         self._view = None
         self._buffer_contents = {}
