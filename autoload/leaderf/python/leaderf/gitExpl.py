@@ -439,11 +439,12 @@ class PreviewPanel(Panel):
         else:
             lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
             self._preview_winid = int(lfEval("winid"))
-        GitCommandView(self, cmd, self._preview_winid).create(bufhidden='hide')
+
+        GitCommandView(self, cmd, self._preview_winid).create()
 
     def createView(self, cmd):
         if self._preview_winid > 0:
-            GitCommandView(self, cmd, self._preview_winid).create(bufhidden='hide')
+            GitCommandView(self, cmd, self._preview_winid).create()
 
     def writeBuffer(self):
         if self._view is not None:
