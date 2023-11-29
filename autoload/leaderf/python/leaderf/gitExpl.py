@@ -194,6 +194,15 @@ class GitDiffCommand(GitCommand):
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
 
 
+class GitCatFileCommand(GitCommand):
+    def __init__(self, arguments_dict, source):
+        super(GitDiffCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferName(self):
+        self._cmd = "git cat-file -p {}".format(source[0])
+        self._buffer_name = "LeaderF://{}:{}".format(source[0], source[1])
+        self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(source[1])
+
 class GitLogCommand(GitCommand):
     def __init__(self, arguments_dict, source=None):
         super(GitLogCommand, self).__init__(arguments_dict, source)
@@ -472,6 +481,13 @@ class SplitDiffPanel(Panel):
     def __init__(self):
         pass
 
+    def create(self, arguments_dict, source):
+        """
+        source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        """
+        source1 = (source[0], source[3], source[2])
+        source2 = (source[1], source[4], source[2])
+
 class DiffViewPanel(Panel):
     def __init__(self):
         pass
@@ -600,6 +616,9 @@ class GitDiffExplManager(GitExplManager):
         return self._explorer
 
     def getSource(self, line):
+        """
+        return a tuple something like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        """
         file_name2 = ""
         if "\t->\t" in line:
             # 'R050 hello world.txt\t->\thello world2.txt'
