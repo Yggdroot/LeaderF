@@ -232,9 +232,6 @@ class GitCommandView(object):
         self._read_finished = 0
         self._stop_reader_thread = False
 
-    def getCommand(self):
-        return self._cmd
-
     def getBufferName(self):
         return self._cmd.getBufferName()
 
@@ -385,12 +382,12 @@ class ResultPanel(Panel):
 
     def register(self, view):
         self._views[view.getBufferName()] = view
-        self._sources.add(view.getCommand().getSource())
+        self._sources.add(view.getSource())
 
     def deregister(self, view):
         name = view.getBufferName()
         if name in self._views:
-            self._sources.discard(self._views[name].getCommand().getSource())
+            self._sources.discard(self._views[name].getSource())
             del self._views[name]
 
     def getSources(self):
