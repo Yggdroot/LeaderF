@@ -329,7 +329,7 @@ class GitCommandView(object):
                 self._owner.callback(self)
         except Exception as e:
             self._read_finished = 1
-            lfPrintError(e)
+            print(e)
 
     def stopThread(self):
         if self._reader_thread and self._reader_thread.is_alive():
