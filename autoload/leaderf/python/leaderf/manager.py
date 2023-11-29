@@ -130,6 +130,7 @@ class Manager(object):
         self._getExplClass()
         self._preview_filetype = None
         self._preview_config = {}
+        self._circular_scroll = lfEval("get(g:, 'Lf_EnableCircularScroll', 0)") == '1'
         if lfEval("has('patch-8.1.1615') || has('nvim-0.5.0')") == '0':
             lfCmd("let g:Lf_PreviewInPopup = 0")
 
@@ -1335,9 +1336,10 @@ class Manager(object):
         """
         direction is in {'j', 'k'}
         """
-        if direction == 'j' and self._getInstance().window.cursor[0] == len(self._getInstance().buffer):
+        if (direction == 'j' and self._getInstance().window.cursor[0] == len(self._getInstance().buffer)
+            and self._circular_scroll):
             lfCmd("noautocmd call win_execute(%d, 'norm! gg')" % (self._getInstance().getPopupWinId()))
-        elif direction == 'k' and self._getInstance().window.cursor[0] == 1:
+        elif direction == 'k' and self._getInstance().window.cursor[0] == 1 and self._circular_scroll:
             lfCmd("noautocmd call win_execute(%d, 'norm! G')" % (self._getInstance().getPopupWinId()))
         else:
             lfCmd("noautocmd call win_execute(%d, 'norm! %s')" % (self._getInstance().getPopupWinId(), direction))
@@ -1346,9 +1348,10 @@ class Manager(object):
         """
         direction is in {'j', 'k', 'Down', 'Up', 'PageDown', 'PageUp'}
         """
-        if direction in ("j", "Down") and self._getInstance().window.cursor[0] == len(self._getInstance().buffer):
+        if (direction in ("j", "Down") and self._getInstance().window.cursor[0] == len(self._getInstance().buffer)
+            and self._circular_scroll):
             lfCmd('noautocmd exec "norm! gg"')
-        elif direction in ("k", "Up") and self._getInstance().window.cursor[0] == 1:
+        elif direction in ("k", "Up") and self._getInstance().window.cursor[0] == 1 and self._circular_scroll:
             lfCmd('noautocmd exec "norm! G"')
         else:
             if len(direction) > 1:
@@ -1363,7 +1366,7 @@ class Manager(object):
 
     def _toUp(self):
         if self._getInstance().getWinPos() == 'popup':
-            if self._getInstance().window.cursor[0] == 1:
+            if self._getInstance().window.cursor[0] == 1 and self._circular_scroll:
                 lfCmd("noautocmd call win_execute(%d, 'norm! G')" % (self._getInstance().getPopupWinId()))
             else:
                 lfCmd("noautocmd call win_execute(%d, 'norm! k')" % (self._getInstance().getPopupWinId()))
@@ -1379,7 +1382,7 @@ class Manager(object):
                     and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
                 self._highlight_method()
 
-        if self._getInstance().window.cursor[0] == 1:
+        if self._getInstance().window.cursor[0] == 1 and self._circular_scroll:
             lfCmd("noautocmd norm! G")
         else:
             lfCmd("noautocmd norm! k")
@@ -1393,7 +1396,7 @@ class Manager(object):
 
     def _toDown(self):
         if self._getInstance().getWinPos() == 'popup':
-            if self._getInstance().window.cursor[0] == len(self._getInstance().buffer):
+            if self._getInstance().window.cursor[0] == len(self._getInstance().buffer) and self._circular_scroll:
                 lfCmd("noautocmd call win_execute(%d, 'norm! gg')" % (self._getInstance().getPopupWinId()))
             else:
                 lfCmd("noautocmd call win_execute(%d, 'norm! j')" % (self._getInstance().getPopupWinId()))
@@ -1404,7 +1407,7 @@ class Manager(object):
                 and self._getInstance().getCurrentPos()[0] == self._initial_count:
             self._setResultContent()
 
-        if self._getInstance().window.cursor[0] == len(self._getInstance().buffer):
+        if self._getInstance().window.cursor[0] == len(self._getInstance().buffer) and self._circular_scroll:
             lfCmd("noautocmd norm! gg")
         else:
             lfCmd("noautocmd norm! j")

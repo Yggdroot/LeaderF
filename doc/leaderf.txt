@@ -1121,6 +1121,11 @@ g:Lf_SpacesAfterIcon                          *g:Lf_SpacesAfterIcon*
 
     Default value is ' '.
 
+g:Lf_EnableCircularScroll                     *g:Lf_EnableCircularScroll*
+    Enable circular scroll in the result window.
+
+    Default value is 0.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
