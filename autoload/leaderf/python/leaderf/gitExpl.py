@@ -351,18 +351,16 @@ class GitCommandView(object):
             self._timer_id = None
 
     def cleanup(self):
-        self._executor.killProcess()
         self.stopTimer()
         self.stopThread()
+        # must do this at last
+        self._executor.killProcess()
 
     def suicide(self):
         self._owner.deregister(self)
 
     def valid(self):
         return self._buffer is not None and self._buffer.valid
-
-    def __del__(self):
-        self.cleanup()
 
 
 class Panel(object):
@@ -397,6 +395,7 @@ class ResultPanel(Panel):
         name = view.getBufferName()
         if name in self._views:
             self._sources.discard(self._views[name].getSource())
+            self._views[name].cleanup()
             del self._views[name]
 
     def getSources(self):
@@ -436,6 +435,8 @@ class PreviewPanel(Panel):
         self._preview_winid = 0
 
     def register(self, view):
+        if self._view is not None:
+            self._view.cleanup()
         self._view = view
 
     def deregister(self, view):
@@ -463,6 +464,8 @@ class PreviewPanel(Panel):
         return self._preview_winid
 
     def cleanup(self):
+        if self._view is not None:
+            self._view.cleanup()
         self._view = None
         self._buffer_contents = {}
         self._preview_winid = 0
