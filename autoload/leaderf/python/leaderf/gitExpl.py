@@ -617,7 +617,7 @@ class GitDiffExplManager(GitExplManager):
 
     def getSource(self, line):
         """
-        return a tuple something like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        return a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         """
         file_name2 = ""
         if "\t->\t" in line:
