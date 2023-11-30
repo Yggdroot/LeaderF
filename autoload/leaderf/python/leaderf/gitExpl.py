@@ -5,7 +5,6 @@ import vim
 import re
 import os
 import os.path
-import tempfile
 import json
 from functools import wraps
 from .utils import *
@@ -196,12 +195,24 @@ class GitDiffCommand(GitCommand):
 
 class GitCatFileCommand(GitCommand):
     def __init__(self, arguments_dict, source):
-        super(GitDiffCommand, self).__init__(arguments_dict, source)
+        """
+        source is a tuple like (b90f76fc1, R099, src/version.c)
+        """
+        super(GitCatFileCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
-        self._cmd = "git cat-file -p {}".format(source[0])
-        self._buffer_name = "LeaderF://{}:{}".format(source[0], source[1])
-        self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(source[1])
+        self._cmd = "git cat-file -p {}".format(self._source[0])
+        if self._source[0].startswith("000000000"):
+            if self._source[1] == "M":
+                if os.name == 'nt':
+                    self._cmd = "type {}".format(self._source[2])
+                else:
+                    self._cmd = "cat {}".format(self._source[2])
+            else:
+                self._cmd = ""
+
+        self._buffer_name = "{}:{}".format(self._source[0][:7], self._source[2])
+        self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(self._source[2])
 
 class GitLogCommand(GitCommand):
     def __init__(self, arguments_dict, source=None):
@@ -291,6 +302,12 @@ class GitCommandView(object):
             self._buffer[:] = buf_content
             self._buffer.options['modifiable'] = False
             self._read_finished = 2
+            self._owner.writeFinished(self._window_id)
+            return
+
+        if self._cmd.getCommand() == "":
+            self._read_finished = 2
+            self._owner.writeFinished(self._window_id)
             return
 
         # start a process, timer and thread
@@ -326,6 +343,7 @@ class GitCommandView(object):
 
         if self._read_finished == 1 and self._offset_in_content == len(self._content):
             self._read_finished = 2
+            self._owner.writeFinished(self._window_id)
             self.stopTimer()
 
     def _readContent(self, content):
@@ -382,6 +400,9 @@ class Panel(object):
         pass
 
     def callback(self, view):
+        pass
+
+    def writeFinished(self, winid):
         pass
 
 class ResultPanel(Panel):
@@ -487,14 +508,32 @@ class PreviewPanel(Panel):
 
 class SplitDiffPanel(Panel):
     def __init__(self):
-        pass
+        self._views = {}
+
+    def register(self, view):
+        self._views[view.getBufferName()] = view
+
+    def deregister(self, view):
+        name = view.getBufferName()
+        if name in self._views:
+            self._views[name].cleanup()
+            del self._views[name]
+
+    def writeFinished(self, winid):
+        lfCmd("call win_execute({}, 'diffthis')".format(winid))
 
     def create(self, arguments_dict, source):
         """
         source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         """
-        source1 = (source[0], source[3], source[2])
-        source2 = (source[1], source[4], source[2])
+        lfCmd("noautocmd tabnew | vsp")
+        win_ids = [int(lfEval("win_getid({})".format(w.number))) for w in vim.current.tabpage.windows]
+        file_name = source[4] if source[4] != "" else source[3]
+        sources = ((source[0], source[2], source[3]), (source[1], source[2], file_name))
+        for s, winid in zip(sources, win_ids):
+            cmd = GitCatFileCommand(arguments_dict, s)
+            lfCmd("call win_execute({}, 'edit {}')".format(winid, cmd.getBufferName()))
+            GitCommandView(self, cmd, winid).create()
 
 class DiffViewPanel(Panel):
     def __init__(self):
@@ -618,6 +657,10 @@ class GitExplManager(Manager):
 
 
 class GitDiffExplManager(GitExplManager):
+    def __init__(self):
+        super(GitDiffExplManager, self).__init__()
+        self._split_diff_panel = SplitDiffPanel()
+
     def _getExplorer(self):
         if self._explorer is None:
             self._explorer = GitDiffExplorer()
@@ -668,7 +711,9 @@ class GitDiffExplManager(GitExplManager):
             self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
 
     def _accept(self, file, mode, *args, **kwargs):
-        if "-s" not in self._arguments:
+        if "-s" in self._arguments:
+            self._acceptSelection(file, *args, **kwargs)
+        else:
             super(GitExplManager, self)._accept(file, mode, *args, **kwargs)
 
     def _acceptSelection(self, *args, **kwargs):
@@ -676,11 +721,11 @@ class GitDiffExplManager(GitExplManager):
             return
 
         line = args[0]
+        source = self.getSource(line)
 
         if "-s" in self._arguments:
-            pass
+            self._split_diff_panel.create(self._arguments, source)
         else:
-            source = self.getSource(line)
             if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
                 lfCmd("tabnew")
 
