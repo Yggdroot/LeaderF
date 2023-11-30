@@ -211,8 +211,9 @@ class GitCatFileCommand(GitCommand):
             else:
                 self._cmd = ""
 
-        self._buffer_name = "{}:{}".format(self._source[0][:9], self._source[2])
+        self._buffer_name = "{}:{}".format(self._source[0][:7], self._source[2])
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(self._source[2])
+
 
 class GitLogCommand(GitCommand):
     def __init__(self, arguments_dict, source=None):
@@ -293,7 +294,8 @@ class GitCommandView(object):
             lfCmd("call win_execute({}, '{}')".format(self._window_id, self._cmd.getFileTypeCommand()))
             if bufhidden == 'wipe':
                 lfCmd("augroup Lf_Git | augroup END")
-                lfCmd("call win_execute({}, 'autocmd Lf_Git BufWipeout <buffer> call leaderf#Git#Suicide({})')".format(self._window_id, id(self)))
+                lfCmd("call win_execute({}, 'autocmd Lf_Git BufWipeout <buffer> call leaderf#Git#Suicide({})')"
+                      .format(self._window_id, id(self)))
 
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(self._window_id)))]
 
@@ -627,7 +629,7 @@ class GitExplManager(Manager):
 
         self._callback(bang=True)
         if self._read_finished < 2:
-            self._timer_id = lfEval("timer_start(10, 'leaderf#Git#TimerCallback', {'repeat': -1})")
+            self._timer_id = lfEval("timer_start(10, function('leaderf#Git#TimerCallback', [%d]), {'repeat': -1})" % id(self))
 
     def getSource(self, line):
         return line

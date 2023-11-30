@@ -39,43 +39,10 @@ function! leaderf#Git#Maps(id)
     exec printf('nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "%s.closePreviewPopupOrQuit()"<CR>', manager)
 endfunction
 
-" return the visually selected text and quote it with double quote
-function! leaderf#Git#visual()
-    try
-        let x_save = getreg("x", 1)
-        let type = getregtype("x")
-        norm! gv"xy
-        return '"' . escape(@x, '\"') . '"'
-    finally
-        call setreg("x", x_save, type)
-    endtry
-endfunction
 
-" type: 0, word under cursor
-"       1, WORD under cursor
-"       2, text visually selected
-function! leaderf#Git#getPattern(type)
-    if a:type == 0
-        return expand('<cword>')
-    elseif a:type == 1
-        return '"' . escape(expand('<cWORD>'), '"') . '"'
-    elseif a:type == 2
-        return leaderf#Git#visual()
-    else
-        return ''
-    endif
-endfunction
-
-" type: 0, word under cursor
-"       1, WORD under cursor
-"       2, text visually selected
-function! leaderf#Git#startCmdline(type, is_bang, is_regex, is_whole_word)
-    return printf("Leaderf%s git %s%s-e %s ", a:is_bang ? '!' : '', a:is_regex ? '' : '-F ',
-                \ a:is_whole_word ? '-w ' : '', leaderf#Git#getPattern(a:type))
-endfunction
-
-function! leaderf#Git#TimerCallback(id)
-    call leaderf#LfPy("gitExplManager._callback(bang=True)")
+function! leaderf#Git#TimerCallback(manager_id, id)
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._callback(bang=True)", a:manager_id)
 endfunction
 
 function! leaderf#Git#WriteBuffer(view_id, id)
@@ -88,28 +55,7 @@ function! leaderf#Git#Suicide(view_id)
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.suicide()", a:view_id)
 endfunction
 
-"function! leaderf#Git#NormalModeFilter(winid, key) abort
-"    let key = leaderf#RemapKey(g:Lf_PyEval("id(gitExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
-
-"    if key ==# "i" || key ==? "<Tab>"
-"        if g:Lf_py == "py "
-"            let has_heading = pyeval("'--heading' in gitExplManager._agituments")
-"        else
-"            let has_heading = py3eval("'--heading' in gitExplManager._agituments")
-"        endif
-"        if !has_heading
-"            call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
-"            exec g:Lf_py "gitExplManager.input()"
-"        endif
-"    elseif key ==# "d"
-"        exec g:Lf_py "gitExplManager.deleteCurrentLine()"
-"    elseif key ==# "Q"
-"        exec g:Lf_py "gitExplManager.outputToQflist()"
-"    elseif key ==# "L"
-"        exec g:Lf_py "gitExplManager.outputToLoclist()"
-"    else
-"        return leaderf#NormalModeFilter(g:Lf_PyEval("id(gitExplManager)"), a:winid, a:key)
-"    endif
-
-"    return 1
+"function! leaderf#Git#SplitDiff(view_id)
+"    exec g:Lf_py "import ctypes"
+"    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.splitDiff()", a:view_id)
 "endfunction
