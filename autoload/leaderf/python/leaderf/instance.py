@@ -275,6 +275,7 @@ class LfInstance(object):
         self._auto_resize = lfEval("get(g:, 'Lf_AutoResize', 0)") == '1'
         self._window_id = 0
         self._float_win_view = None
+        self._popup_cursor_line = 1
         self._auto_adjust_height = lfEval("get(g:, 'Lf_PopupAutoAdjustHeight', 1)") == '1'
         self._preview_position = None
 
@@ -675,6 +676,7 @@ class LfInstance(object):
                 lfCmd("call win_execute(%d, 'setlocal foldcolumn=1')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'setlocal wincolor=Lf_hl_popup_window')" % self._popup_winid)
             lfCmd("call win_execute(%d, 'silent! setlocal filetype=leaderf')" % self._popup_winid)
+            lfCmd("call win_execute(%d, 'norm! %dG')" % (self._popup_winid, self._popup_cursor_line))
 
             self._tabpage_object = vim.current.tabpage
             self._buffer_object = vim.buffers[buf_number]
@@ -1149,6 +1151,7 @@ class LfInstance(object):
             lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
             lfCmd("set t_ve&")
             lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
+            self._popup_cursor_line = self._window_object.cursor[0]
             self._popup_instance.hide()
             self._after_exit()
             return
