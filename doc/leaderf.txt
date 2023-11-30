@@ -76,12 +76,12 @@ g:Lf_WindowHeight                               *g:Lf_WindowHeight*
     Default value is 0.5.
 
 g:Lf_TabpagePosition                            *g:Lf_TabpagePosition*
-    Specify where to put the newly opened tab page.
+    Specify where to put the newly opened tabpage.
     The value can be 0, 1, 2, ...
-    0 - make the newly opened tab page the first one.
-    1 - put the newly opened tab page before the current one.
-    2 - put the newly opened tab page after the current one.
-    3 - make the newly opened tab page the last one.
+    0 - make the newly opened tabpage the first one.
+    1 - put the newly opened tabpage before the current one.
+    2 - put the newly opened tabpage after the current one.
+    3 - make the newly opened tabpage the last one.
     Default value is 2.
 
 g:Lf_ShowRelativePath                           *g:Lf_ShowRelativePath*

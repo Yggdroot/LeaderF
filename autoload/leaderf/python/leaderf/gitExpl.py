@@ -211,7 +211,7 @@ class GitCatFileCommand(GitCommand):
             else:
                 self._cmd = ""
 
-        self._buffer_name = "{}:{}".format(self._source[0][:7], self._source[2])
+        self._buffer_name = "{}:{}".format(self._source[0][:9], self._source[2])
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(self._source[2])
 
 class GitLogCommand(GitCommand):
@@ -506,6 +506,7 @@ class PreviewPanel(Panel):
         if self._view:
             self._view.setContent(content)
 
+
 class SplitDiffPanel(Panel):
     def __init__(self):
         self._views = {}
@@ -535,9 +536,11 @@ class SplitDiffPanel(Panel):
             lfCmd("call win_execute({}, 'edit {}')".format(winid, cmd.getBufferName()))
             GitCommandView(self, cmd, winid).create()
 
+
 class DiffViewPanel(Panel):
     def __init__(self):
         pass
+
 
 #*****************************************************
 # GitExplManager
@@ -729,7 +732,18 @@ class GitDiffExplManager(GitExplManager):
             if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
                 lfCmd("tabnew")
 
+            tabpage_count = len(vim.tabpages)
+
             self._result_panel.create(self.createGitCommand(self._arguments, source), self._selected_content)
+
+            if kwargs.get("mode", '') == 't' and len(vim.tabpages) > tabpage_count:
+                tab_pos = int(lfEval("g:Lf_TabpagePosition"))
+                if tab_pos == 0:
+                    lfCmd("tabm 0")
+                elif tab_pos == 1:
+                    lfCmd("tabm -1")
+                elif tab_pos == 3:
+                    lfCmd("tabm")
 
 
 class GitLogExplManager(GitExplManager):
