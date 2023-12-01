@@ -425,7 +425,7 @@ class LfCli(object):
     def _join(self, cmdline):
         if not cmdline:
             return ''
-        cmd = ['%s\[^%s]\{-}' % (c, c) for c in cmdline[0:-1]]
+        cmd = [r'%s\[^%s]\{-}' % (c, c) for c in cmdline[0:-1]]
         cmd.append(cmdline[-1])
         regex = ''.join(cmd)
         return regex
@@ -447,31 +447,31 @@ class LfCli(object):
             cmdline = [r'\/' if c == '/' else r'\\' if c == '\\' else c
                        for c in self._cmdline] # \/ for syn match
             if self._is_full_path:
-                regex = '\c\V' + self._join(cmdline)
+                regex = r'\c\V' + self._join(cmdline)
                 lfCmd("syn match Lf_hl_match display /%s/ containedin="
                       "Lf_hl_nonHelp, Lf_hl_dirname, Lf_hl_filename contained" % regex)
             else:
                 if self._refine:
                     idx = self._cmdline.index(self._delimiter)
-                    regex = ('\c\V' + self._join(cmdline[:idx]),
-                             '\c\V' + self._join(cmdline[idx+1:]))
-                    if regex[0] == '\c\V' and regex[1] == '\c\V':
+                    regex = (r'\c\V' + self._join(cmdline[:idx]),
+                             r'\c\V' + self._join(cmdline[idx+1:]))
+                    if regex[0] == r'\c\V' and regex[1] == r'\c\V':
                         pass
-                    elif regex[0] == '\c\V':
+                    elif regex[0] == r'\c\V':
                         lfCmd("syn match Lf_hl_match display /%s/ "
                               "containedin=Lf_hl_dirname, Lf_hl_filename "
                               "contained" % regex[1])
-                    elif regex[1] == '\c\V':
+                    elif regex[1] == r'\c\V':
                         lfCmd("syn match Lf_hl_match display /%s/ "
                               "containedin=Lf_hl_filename contained" % regex[0])
                     else:
                         lfCmd("syn match Lf_hl_match display /%s/ "
                               "containedin=Lf_hl_filename contained" % regex[0])
                         lfCmd("syn match Lf_hl_match_refine display "
-                              "/%s\(\.\*\[\/]\)\@=/ containedin="
+                              r"/%s\(\.\*\[\/]\)\@=/ containedin="
                               "Lf_hl_dirname contained" % regex[1])
                 else:
-                    regex = '\c\V' + self._join(cmdline)
+                    regex = r'\c\V' + self._join(cmdline)
                     lfCmd("syn match Lf_hl_match display /%s/ "
                           "containedin=Lf_hl_filename contained" % regex)
         else:
@@ -762,7 +762,7 @@ class LfCli(object):
                 else:
                     cmd = ''
                     for (key, value) in self._key_dict.items():
-                        if lfEval('ch ==# "\%s"' % key) == '1':
+                        if lfEval(r'ch ==# "\%s"' % key) == '1':
                             cmd = value
                             break
                     if equal(cmd, '<CR>'):

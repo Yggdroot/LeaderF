@@ -345,7 +345,7 @@ class RgExplorer(Explorer):
     def translateRegex(self, regex, is_perl=False):
 
         def replace(text, pattern, repl):
-            """
+            r"""
             only replace pattern with even number of \ preceding it
             """
             result = ''
@@ -705,47 +705,47 @@ class RgExplManager(Manager):
         if self._getInstance().getWinPos() == 'popup':
             if "--heading" in self._arguments:
                 if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-                    lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgFileName'', ''\(^\d\+[:-].*\)\@<!'', 10)')"""
+                    lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgFileName'', ''\(^\d\+[:-].*\)\@<!'', 10)')"""
                             % self._getInstance().getPopupWinId())
                 else:
-                    lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgFileName'', ''\(^\d\+:.*\)\@<!'', 10)')"""
+                    lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgFileName'', ''\(^\d\+:.*\)\@<!'', 10)')"""
                             % self._getInstance().getPopupWinId())
                 id = int(lfEval("matchid"))
                 self._match_ids.append(id)
-                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgLineNumber'', ''^\d\+:'', 11)')"""
+                lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgLineNumber'', ''^\d\+:'', 11)')"""
                         % self._getInstance().getPopupWinId())
                 id = int(lfEval("matchid"))
                 self._match_ids.append(id)
                 if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-                    lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgLineNumber2'', ''^\d\+-'', 11)')"""
+                    lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgLineNumber2'', ''^\d\+-'', 11)')"""
                             % self._getInstance().getPopupWinId())
                     id = int(lfEval("matchid"))
                     self._match_ids.append(id)
                 if self._has_column:
-                    lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgColumnNumber'', ''^\d\+:\zs\d\+:'', 11)')"""
+                    lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgColumnNumber'', ''^\d\+:\zs\d\+:'', 11)')"""
                             % self._getInstance().getPopupWinId())
                     id = int(lfEval("matchid"))
                     self._match_ids.append(id)
             else:
                 if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-                    lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgFileName'', ''^.\{-}\ze\(:\d\+:\|-\d\+-\)'', 10)')"""
+                    lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgFileName'', ''^.\{-}\ze\(:\d\+:\|-\d\+-\)'', 10)')"""
                             % self._getInstance().getPopupWinId())
                 else:
-                    lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgFileName'', ''^.\{-}\ze\:\d\+:'', 10)')"""
+                    lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgFileName'', ''^.\{-}\ze\:\d\+:'', 10)')"""
                             % self._getInstance().getPopupWinId())
                 id = int(lfEval("matchid"))
                 self._match_ids.append(id)
-                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgLineNumber'', ''^.\{-}\zs:\d\+:'', 10)')"""
+                lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgLineNumber'', ''^.\{-}\zs:\d\+:'', 10)')"""
                         % self._getInstance().getPopupWinId())
                 id = int(lfEval("matchid"))
                 self._match_ids.append(id)
                 if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-                    lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgLineNumber2'', ''^.\{-}\zs-\d\+-'', 10)')"""
+                    lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgLineNumber2'', ''^.\{-}\zs-\d\+-'', 10)')"""
                             % self._getInstance().getPopupWinId())
                     id = int(lfEval("matchid"))
                     self._match_ids.append(id)
                 if self._has_column:
-                    lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgColumnNumber'', ''^.\{-}:\d\+:\zs\d\+:'', 10)')"""
+                    lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_rgColumnNumber'', ''^.\{-}:\d\+:\zs\d\+:'', 10)')"""
                             % self._getInstance().getPopupWinId())
                     id = int(lfEval("matchid"))
                     self._match_ids.append(id)
@@ -774,31 +774,31 @@ class RgExplManager(Manager):
         else:
             if "--heading" in self._arguments:
                 if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-                    id = int(lfEval("matchadd('Lf_hl_rgFileName', '\(^\d\+[:-].*\)\@<!', 10)"))
+                    id = int(lfEval(r"matchadd('Lf_hl_rgFileName', '\(^\d\+[:-].*\)\@<!', 10)"))
                 else:
-                    id = int(lfEval("matchadd('Lf_hl_rgFileName', '\(^\d\+:.*\)\@<!', 10)"))
+                    id = int(lfEval(r"matchadd('Lf_hl_rgFileName', '\(^\d\+:.*\)\@<!', 10)"))
                 self._match_ids.append(id)
-                id = int(lfEval("matchadd('Lf_hl_rgLineNumber', '^\d\+:', 11)"))
+                id = int(lfEval(r"matchadd('Lf_hl_rgLineNumber', '^\d\+:', 11)"))
                 self._match_ids.append(id)
                 if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-                    id = int(lfEval("matchadd('Lf_hl_rgLineNumber2', '^\d\+-', 11)"))
+                    id = int(lfEval(r"matchadd('Lf_hl_rgLineNumber2', '^\d\+-', 11)"))
                     self._match_ids.append(id)
                 if self._has_column:
-                    id = int(lfEval("matchadd('Lf_hl_rgColumnNumber', '^\d\+:\zs\d\+:', 11)"))
+                    id = int(lfEval(r"matchadd('Lf_hl_rgColumnNumber', '^\d\+:\zs\d\+:', 11)"))
                     self._match_ids.append(id)
             else:
                 if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-                    id = int(lfEval("matchadd('Lf_hl_rgFileName', '^.\{-}\ze\(:\d\+:\|-\d\+-\)', 10)"))
+                    id = int(lfEval(r"matchadd('Lf_hl_rgFileName', '^.\{-}\ze\(:\d\+:\|-\d\+-\)', 10)"))
                 else:
-                    id = int(lfEval("matchadd('Lf_hl_rgFileName', '^.\{-}\ze\:\d\+:', 10)"))
+                    id = int(lfEval(r"matchadd('Lf_hl_rgFileName', '^.\{-}\ze\:\d\+:', 10)"))
                 self._match_ids.append(id)
-                id = int(lfEval("matchadd('Lf_hl_rgLineNumber', '^.\{-}\zs:\d\+:', 10)"))
+                id = int(lfEval(r"matchadd('Lf_hl_rgLineNumber', '^.\{-}\zs:\d\+:', 10)"))
                 self._match_ids.append(id)
                 if "-A" in self._arguments or "-B" in self._arguments or "-C" in self._arguments:
-                    id = int(lfEval("matchadd('Lf_hl_rgLineNumber2', '^.\{-}\zs-\d\+-', 10)"))
+                    id = int(lfEval(r"matchadd('Lf_hl_rgLineNumber2', '^.\{-}\zs-\d\+-', 10)"))
                     self._match_ids.append(id)
                 if self._has_column:
-                    id = int(lfEval("matchadd('Lf_hl_rgColumnNumber', '^.\{-}:\d\+:\zs\d\+:', 10)"))
+                    id = int(lfEval(r"matchadd('Lf_hl_rgColumnNumber', '^.\{-}:\d\+:\zs\d\+:', 10)"))
                     self._match_ids.append(id)
 
             try:
@@ -1255,13 +1255,13 @@ class RgExplManager(Manager):
             string = lfEval("input('Replace with: ')")
             flags = lfEval("input('flags: ', 'gc')")
             if "--heading" in self._arguments:
-                lfCmd("""%d;$s/\%%(^\d\+[:-].\{-}\)\@<=%s/%s/%s"""
-                        % (self._getInstance().helpLength + 1, pattern.replace('/', '\/'),
-                           string.replace('/', '\/'), flags))
+                lfCmd(r"""%d;$s/\%%(^\d\+[:-].\{-}\)\@<=%s/%s/%s"""
+                        % (self._getInstance().helpLength + 1, pattern.replace('/', r'\/'),
+                           string.replace('/', r'\/'), flags))
             else:
-                lfCmd("""%d;$s/\%%(^.\+\%%(:\d\+:\|-\d\+-\).\{-}\)\@<=%s/%s/%s"""
-                        % (self._getInstance().helpLength + 1, pattern.replace('/', '\/'),
-                           string.replace('/', '\/'), flags))
+                lfCmd(r"""%d;$s/\%%(^.\+\%%(:\d\+:\|-\d\+-\).\{-}\)\@<=%s/%s/%s"""
+                        % (self._getInstance().helpLength + 1, pattern.replace('/', r'\/'),
+                           string.replace('/', r'\/'), flags))
             lfCmd("call histdel('search', -1)")
             lfCmd("let @/ = histget('search', -1)")
             lfCmd("nohlsearch")

@@ -323,12 +323,12 @@ class MruExplManager(Manager):
 
         if "--no-split-path" not in self._arguments:
             if self._getInstance().getWinPos() == 'popup':
-                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
+                lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
                         % self._getInstance().getPopupWinId())
                 id = int(lfEval("matchid"))
                 self._match_ids.append(id)
             else:
-                id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
+                id = int(lfEval(r'''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
                 self._match_ids.append(id)
 
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':

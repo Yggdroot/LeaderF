@@ -288,42 +288,42 @@ class FunctionExplManager(Manager):
         lfCmd("autocmd VimLeavePre * call leaderf#Function#cleanup()")
         lfCmd("augroup END")
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcKind'', ''^\w'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcKind'', ''^\w'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcReturnType'', ''^\w\t\zs.\{-}\ze\s*[~]\=\(\w\|[#:]\)\+\W\{-}[(\[]'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcReturnType'', ''^\w\t\zs.\{-}\ze\s*[~]\=\(\w\|[#:]\)\+\W\{-}[(\[]'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcScope'', ''\w*\(<[^>]*>\)\=::'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcScope'', ''\w*\(<[^>]*>\)\=::'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcName'', ''^\w\t.\{-}\s*\zs[~]\=\(\w\|[#:]\)\+\W\{-}\ze[(\[]'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcName'', ''^\w\t.\{-}\s*\zs[~]\=\(\w\|[#:]\)\+\W\{-}\ze[(\[]'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcDirname'', ''\t\zs\[.*:\d\+ \d\+]$'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcDirname'', ''\t\zs\[.*:\d\+ \d\+]$'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcLineNum'', '':\zs\d\+\ze \d\+]$'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_funcLineNum'', '':\zs\d\+\ze \d\+]$'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
         else:
-            id = int(lfEval('''matchadd('Lf_hl_funcKind', '^\w')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_funcKind', '^\w')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_funcReturnType', '^\w\t\zs.\{-}\ze\s*[~]\=\(\w\|[#:]\)\+\W\{-}[(\[]')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_funcReturnType', '^\w\t\zs.\{-}\ze\s*[~]\=\(\w\|[#:]\)\+\W\{-}[(\[]')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_funcScope', '\w*\(<[^>]*>\)\=::')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_funcScope', '\w*\(<[^>]*>\)\=::')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_funcName', '^\w\t.\{-}\s*\zs[~]\=\(\w\|[#:]\)\+\W\{-}\ze[(\[]')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_funcName', '^\w\t.\{-}\s*\zs[~]\=\(\w\|[#:]\)\+\W\{-}\ze[(\[]')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_funcDirname', '\t\zs\[.*:\d\+ \d\+]$')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_funcDirname', '\t\zs\[.*:\d\+ \d\+]$')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_funcLineNum', ':\zs\d\+\ze \d\+]$')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_funcLineNum', ':\zs\d\+\ze \d\+]$')'''))
             self._match_ids.append(id)
 
     def _beforeExit(self):

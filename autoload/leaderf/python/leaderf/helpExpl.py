@@ -125,12 +125,12 @@ class HelpExplManager(Manager):
     def _afterEnter(self):
         super(HelpExplManager, self)._afterEnter()
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_helpTagfile'', '' \zs.*$'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_helpTagfile'', '' \zs.*$'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
         else:
-            id = int(lfEval('''matchadd('Lf_hl_helpTagfile', ' \zs.*$')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_helpTagfile', ' \zs.*$')'''))
             self._match_ids.append(id)
 
     def _beforeExit(self):
@@ -146,7 +146,7 @@ class HelpExplManager(Manager):
         line = args[0]
         tagname, tagfile, file_id = line.split(None, 2)
         tagfile = os.path.join(self._getExplorer()._file_ids[int(file_id)], tagfile)
-        jump_cmd = "call search('\m\*%s\*', 'w')" % escQuote(tagname)
+        jump_cmd = r"call search('\m\*%s\*', 'w')" % escQuote(tagname)
         self._createPopupPreview("", tagfile, 0, jump_cmd)
 
 

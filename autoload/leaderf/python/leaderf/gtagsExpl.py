@@ -294,7 +294,7 @@ class GtagsExplorer(Explorer):
         """
 
         def replace(text, pattern, repl):
-            """
+            r"""
             only replace pattern with even number of \ preceding it
             """
             result = ''
@@ -1084,24 +1084,24 @@ class GtagsExplManager(Manager):
                 pass
         else:
             if self._getExplorer().getResultFormat() is None:
-                id = int(lfEval("""matchadd('Lf_hl_gtagsFileName', '^.\{-}\ze\t')"""))
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsFileName', '^.\{-}\ze\t')"""))
                 self._match_ids.append(id)
-                id = int(lfEval("""matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+\ze\t')"""))
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+\ze\t')"""))
                 self._match_ids.append(id)
             elif self._getExplorer().getResultFormat() == "ctags":
-                id = int(lfEval("""matchadd('Lf_hl_gtagsFileName', '\t\zs.\{-}\ze\t')"""))
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsFileName', '\t\zs.\{-}\ze\t')"""))
                 self._match_ids.append(id)
-                id = int(lfEval("""matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+$')"""))
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+$')"""))
                 self._match_ids.append(id)
             elif self._getExplorer().getResultFormat() == "ctags-x":
-                id = int(lfEval("""matchadd('Lf_hl_gtagsFileName', '^\S\+\s\+\d\+\s\+\zs\S\+')"""))
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsFileName', '^\S\+\s\+\d\+\s\+\zs\S\+')"""))
                 self._match_ids.append(id)
-                id = int(lfEval("""matchadd('Lf_hl_gtagsLineNumber', '^\S\+\s\+\zs\d\+')"""))
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsLineNumber', '^\S\+\s\+\zs\d\+')"""))
                 self._match_ids.append(id)
             else: # ctags-mod
-                id = int(lfEval("""matchadd('Lf_hl_gtagsFileName', '^.\{-}\ze\t')"""))
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsFileName', '^.\{-}\ze\t')"""))
                 self._match_ids.append(id)
-                id = int(lfEval("""matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+\ze\t')"""))
+                id = int(lfEval(r"""matchadd('Lf_hl_gtagsLineNumber', '\t\zs\d\+\ze\t')"""))
                 self._match_ids.append(id)
             try:
                 for i in self._getExplorer().getPatternRegex():
