@@ -200,6 +200,13 @@ class GitCatFileCommand(GitCommand):
         """
         super(GitCatFileCommand, self).__init__(arguments_dict, source)
 
+    @staticmethod
+    def buildBufferName(source):
+        """
+        source is a tuple like (b90f76fc1, R099, src/version.c)
+        """
+        return "{}:{}".format(source[0][:7], source[2])
+
     def buildCommandAndBufferName(self):
         self._cmd = "git cat-file -p {}".format(self._source[0])
         if self._source[0].startswith("000000000"):
@@ -211,7 +218,7 @@ class GitCatFileCommand(GitCommand):
             else:
                 self._cmd = ""
 
-        self._buffer_name = "{}:{}".format(self._source[0][:7], self._source[2])
+        self._buffer_name = GitCatFileCommand.buildBufferName(self._source)
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(self._source[2])
 
 
@@ -294,7 +301,7 @@ class GitCommandView(object):
             lfCmd("call win_execute({}, '{}')".format(self._window_id, self._cmd.getFileTypeCommand()))
             if bufhidden == 'wipe':
                 lfCmd("augroup Lf_Git | augroup END")
-                lfCmd("call win_execute({}, 'autocmd Lf_Git BufWipeout <buffer> call leaderf#Git#Suicide({})')"
+                lfCmd("call win_execute({}, 'autocmd! Lf_Git BufWipeout <buffer> call leaderf#Git#Suicide({})')"
                       .format(self._window_id, id(self)))
 
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(self._window_id)))]
@@ -376,7 +383,6 @@ class GitCommandView(object):
         self.stopThread()
         # must do this at last
         self._executor.killProcess()
-        lfCmd("call win_execute({}, 'autocmd! Lf_Git BufWipeout <buffer>')".format(self._window_id))
 
     def suicide(self):
         self._owner.deregister(self)
@@ -529,14 +535,34 @@ class SplitDiffPanel(Panel):
         """
         source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         """
-        lfCmd("noautocmd tabnew | vsp")
-        win_ids = [int(lfEval("win_getid({})".format(w.number))) for w in vim.current.tabpage.windows]
         file_name = source[4] if source[4] != "" else source[3]
-        sources = ((source[0], source[2], source[3]), (source[1], source[2], file_name))
-        for s, winid in zip(sources, win_ids):
-            cmd = GitCatFileCommand(arguments_dict, s)
-            lfCmd("call win_execute({}, 'edit {}')".format(winid, cmd.getBufferName()))
-            GitCommandView(self, cmd, winid).create()
+        sources = ((source[0], source[2], source[3]),
+                   (source[1], source[2], file_name))
+        buffer_names = (GitCatFileCommand.buildBufferName(sources[0]),
+                        GitCatFileCommand.buildBufferName(sources[1]))
+        if buffer_names[0] in self._views and buffer_names[1] in self._views:
+            win_ids = (self._views[buffer_names[0]].getWindowId(),
+                       self._views[buffer_names[1]].getWindowId())
+            lfCmd("call win_gotoid({})".format(win_ids[0]))
+        elif buffer_names[0] in self._views:
+            lfCmd("call win_gotoid({})".format(self._views[buffer_names[0]].getWindowId()))
+            cmd = GitCatFileCommand(arguments_dict, sources[1])
+            lfCmd("rightbelow vsp {}".format(cmd.getBufferName()))
+            GitCommandView(self, cmd, int(lfEval("win_getid()"))).create()
+            lfCmd("call win_gotoid({})".format(self._views[buffer_names[0]].getWindowId()))
+        elif buffer_names[1] in self._views:
+            lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
+            cmd = GitCatFileCommand(arguments_dict, sources[0])
+            lfCmd("leftabove vsp {}".format(cmd.getBufferName()))
+            GitCommandView(self, cmd, int(lfEval("win_getid()"))).create()
+        else:
+            lfCmd("noautocmd tabnew | vsp")
+            win_ids = [int(lfEval("win_getid({})".format(w.number))) for w in vim.current.tabpage.windows]
+
+            for s, winid in zip(sources, win_ids):
+                cmd = GitCatFileCommand(arguments_dict, s)
+                lfCmd("call win_execute({}, 'edit {}')".format(winid, cmd.getBufferName()))
+                GitCommandView(self, cmd, winid).create()
 
 
 class DiffViewPanel(Panel):
