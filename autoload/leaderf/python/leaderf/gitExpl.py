@@ -531,7 +531,7 @@ class SplitDiffPanel(Panel):
     def writeFinished(self, winid):
         lfCmd("call win_execute({}, 'diffthis')".format(winid))
 
-    def create(self, arguments_dict, source):
+    def create(self, arguments_dict, source, **kwargs):
         """
         source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         """
@@ -556,8 +556,23 @@ class SplitDiffPanel(Panel):
             lfCmd("leftabove vsp {}".format(cmd.getBufferName()))
             GitCommandView(self, cmd, int(lfEval("win_getid()"))).create()
         else:
-            lfCmd("noautocmd tabnew | vsp")
-            win_ids = [int(lfEval("win_getid({})".format(w.number))) for w in vim.current.tabpage.windows]
+            if kwargs.get("mode", '') == 't':
+                lfCmd("noautocmd tabnew | vsp")
+                tabmove()
+                win_ids = [int(lfEval("win_getid({})".format(w.number)))
+                           for w in vim.current.tabpage.windows]
+            else:
+                wins = vim.current.tabpage.windows
+                if (len(wins) == 2
+                    and lfEval("bufname({}+0)".format(wins[0].buffer.number)) in self._views
+                    and lfEval("bufname({}+0)".format(wins[1].buffer.number)) in self._views):
+                    win_ids = [int(lfEval("win_getid({})".format(w.number)))
+                               for w in vim.current.tabpage.windows]
+                else:
+                    lfCmd("noautocmd tabnew | vsp")
+                    tabmove()
+                    win_ids = [int(lfEval("win_getid({})".format(w.number)))
+                               for w in vim.current.tabpage.windows]
 
             for s, winid in zip(sources, win_ids):
                 cmd = GitCatFileCommand(arguments_dict, s)
@@ -639,12 +654,6 @@ class GitExplManager(Manager):
             return
 
         line = args[0]
-
-        source = self.getSource(line)
-        if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
-            lfCmd("tabnew")
-
-        self._result_panel.create(self.createGitCommand(self._arguments, source), self._selected_content)
 
     def _bangEnter(self):
         super(GitExplManager, self)._bangEnter()
@@ -743,6 +752,7 @@ class GitDiffExplManager(GitExplManager):
 
     def _accept(self, file, mode, *args, **kwargs):
         if "-s" in self._arguments:
+            kwargs["mode"] = mode
             self._acceptSelection(file, *args, **kwargs)
         else:
             super(GitExplManager, self)._accept(file, mode, *args, **kwargs)
@@ -755,7 +765,7 @@ class GitDiffExplManager(GitExplManager):
         source = self.getSource(line)
 
         if "-s" in self._arguments:
-            self._split_diff_panel.create(self._arguments, source)
+            self._split_diff_panel.create(self._arguments, source, **kwargs)
         else:
             if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
                 lfCmd("tabnew")
@@ -765,13 +775,7 @@ class GitDiffExplManager(GitExplManager):
             self._result_panel.create(self.createGitCommand(self._arguments, source), self._selected_content)
 
             if kwargs.get("mode", '') == 't' and len(vim.tabpages) > tabpage_count:
-                tab_pos = int(lfEval("g:Lf_TabpagePosition"))
-                if tab_pos == 0:
-                    lfCmd("tabm 0")
-                elif tab_pos == 1:
-                    lfCmd("tabm -1")
-                elif tab_pos == 3:
-                    lfCmd("tabm")
+                tabmove()
 
 
 class GitLogExplManager(GitExplManager):

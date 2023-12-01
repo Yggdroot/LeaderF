@@ -2266,13 +2266,7 @@ class Manager(object):
             self._cursorline_dict.clear()
             self._issue_422_set_option()
             if mode == 't' and len(vim.tabpages) > tabpage_count:
-                tab_pos = int(lfEval("g:Lf_TabpagePosition"))
-                if tab_pos == 0:
-                    lfCmd("tabm 0")
-                elif tab_pos == 1:
-                    lfCmd("tabm -1")
-                elif tab_pos == 3:
-                    lfCmd("tabm")
+                tabmove()
 
     def accept(self, mode=''):
         if self._getInstance().isReverseOrder():
