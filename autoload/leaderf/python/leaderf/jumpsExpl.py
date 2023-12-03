@@ -86,9 +86,9 @@ class JumpsExplManager(Manager):
         else:
             number = line.split(None, 1)[0]
             if line.endswith('\t'):
-                lfCmd(':exec "norm! %s\<C-O>"' % number)
+                lfCmd(r':exec "norm! %s\<C-O>"' % number)
             else:
-                lfCmd(':exec "norm! %s\<C-I>"' % number)
+                lfCmd(r':exec "norm! %s\<C-I>"' % number)
 
         if "preview" not in kwargs:
             lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
@@ -132,28 +132,28 @@ class JumpsExplManager(Manager):
     def _afterEnter(self):
         super(JumpsExplManager, self)._afterEnter()
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_jumpsTitle'', ''^ \D\+'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_jumpsTitle'', ''^ \D\+'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_jumpsNumber'', ''^>\?\s*\zs\d\+'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_jumpsNumber'', ''^>\?\s*\zs\d\+'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_jumpsLineCol'', ''^>\?\s*\d\+\s*\zs\d\+\s*\d\+'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_jumpsLineCol'', ''^>\?\s*\d\+\s*\zs\d\+\s*\d\+'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_jumpsIndicator'', ''^>'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_jumpsIndicator'', ''^>'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
         else:
-            id = int(lfEval('''matchadd('Lf_hl_jumpsTitle', '^ \D\+')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_jumpsTitle', '^ \D\+')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_jumpsNumber', '^>\?\s*\zs\d\+')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_jumpsNumber', '^>\?\s*\zs\d\+')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_jumpsLineCol', '^>\?\s*\d\+\s*\zs\d\+\s*\d\+')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_jumpsLineCol', '^>\?\s*\d\+\s*\zs\d\+\s*\d\+')'''))
             self._match_ids.append(id)
             id = int(lfEval('''matchadd('Lf_hl_jumpsIndicator', '^>')'''))
             self._match_ids.append(id)

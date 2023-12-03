@@ -16,7 +16,7 @@ from .manager import *
 from .asyncExecutor import AsyncExecutor
 
 
-"""
+r"""
 let g:Lf_Extensions = {
     \ "apple": {
     \       "source": [], "grep -r '%s' *", funcref (arguments), {"command": "ls" or funcref(arguments)}

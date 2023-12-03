@@ -316,10 +316,10 @@ class Manager(object):
             self._defineCommonMaps()
             self._defineNormalCommandMaps()
 
-            id = int(lfEval("matchadd('Lf_hl_cursorline', '.*\%#.*', -100)"))
+            id = int(lfEval(r"matchadd('Lf_hl_cursorline', '.*\%#.*', -100)"))
             self._match_ids.append(id)
         else:
-            lfCmd("""call win_execute({}, 'let matchid = matchadd(''Lf_hl_cursorline'', ''.*\%#.*'', -100)')"""
+            lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_cursorline'', ''.*\%#.*'', -100)')"""
                     .format(self._getInstance().getPopupWinId()))
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
@@ -1355,7 +1355,7 @@ class Manager(object):
             lfCmd('noautocmd exec "norm! G"')
         else:
             if len(direction) > 1:
-                lfCmd('noautocmd exec "norm! \<{}>"'.format(direction))
+                lfCmd(r'noautocmd exec "norm! \<{}>"'.format(direction))
             else:
                 lfCmd('noautocmd exec "norm! {}"'.format(direction))
 
@@ -1417,7 +1417,7 @@ class Manager(object):
 
     def _pageUp(self):
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'exec "norm! \<PageUp>"')""" % (self._getInstance().getPopupWinId()))
+            lfCmd(r"""call win_execute(%d, 'exec "norm! \<PageUp>"')""" % (self._getInstance().getPopupWinId()))
             self._getInstance().refreshPopupStatusline()
             return
 
@@ -1428,20 +1428,20 @@ class Manager(object):
                     and len(self._highlight_pos) < int(lfEval("g:Lf_NumberOfHighlight")):
                 self._highlight_method()
 
-        lfCmd('noautocmd exec "norm! \<PageUp>"')
+        lfCmd(r'noautocmd exec "norm! \<PageUp>"')
 
         self._getInstance().setLineNumber()
 
     def _pageDown(self):
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'exec "norm! \<PageDown>"')""" % (self._getInstance().getPopupWinId()))
+            lfCmd(r"""call win_execute(%d, 'exec "norm! \<PageDown>"')""" % (self._getInstance().getPopupWinId()))
             self._getInstance().refreshPopupStatusline()
             return
 
         if not self._getInstance().isReverseOrder():
             self._setResultContent()
 
-        lfCmd('noautocmd exec "norm! \<PageDown>"')
+        lfCmd(r'noautocmd exec "norm! \<PageDown>"')
 
         self._getInstance().setLineNumber()
 
@@ -1472,13 +1472,13 @@ class Manager(object):
 
     def _scrollUp(self):
         if lfEval('exists("*getmousepos")') == '1':
-            lfCmd("""call win_execute(getmousepos().winid, "norm! 3\<C-Y>")""")
+            lfCmd(r"""call win_execute(getmousepos().winid, "norm! 3\<C-Y>")""")
         else:
             self._toUp()
 
     def _scrollDown(self):
         if lfEval('exists("*getmousepos")') == '1':
-            lfCmd("""call win_execute(getmousepos().winid, "norm! 3\<C-E>")""")
+            lfCmd(r"""call win_execute(getmousepos().winid, "norm! 3\<C-E>")""")
         else:
             self._toDown()
 
@@ -2569,7 +2569,7 @@ class Manager(object):
                         % (self._getInstance().getPopupWinId(), line_num))
                 id = int(lfEval("matchid"))
             else:
-                id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % line_num))
+                id = int(lfEval(r"matchadd('Lf_hl_selection', '\%%%dl.')" % line_num))
             self._selections[line_num] = id
 
     def selectMulti(self):
@@ -2583,7 +2583,7 @@ class Manager(object):
         self.clearSelections()
         for i in range(min(orig_line, cur_line), max(orig_line, cur_line)+1):
             if i > self._help_length and i not in self._selections:
-                id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % (i)))
+                id = int(lfEval(r"matchadd('Lf_hl_selection', '\%%%dl.')" % (i)))
                 self._selections[i] = id
 
     def selectAll(self):
@@ -2599,7 +2599,7 @@ class Manager(object):
                             % (self._getInstance().getPopupWinId(), i+1))
                     id = int(lfEval("matchid"))
                 else:
-                    id = int(lfEval("matchadd('Lf_hl_selection', '\%%%dl.')" % (i+1)))
+                    id = int(lfEval(r"matchadd('Lf_hl_selection', '\%%%dl.')" % (i+1)))
                 self._selections[i+1] = id
 
     def _gotoFirstLine(self):
@@ -3086,7 +3086,7 @@ class Manager(object):
             elif equal(cmd, '<C-T>'):
                 if self.accept('t') is None:
                     break
-            elif equal(cmd, '<C-\>'):
+            elif equal(cmd, r'<C-\>'):
                 actions = ['', 'h', 'v', 't', 'dr']
                 action_count = len(actions)
                 selection = int( vim.eval(

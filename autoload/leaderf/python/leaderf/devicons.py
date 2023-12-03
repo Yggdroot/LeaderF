@@ -454,7 +454,7 @@ def _normalize_name(val):
     return RE_CANNOT_USE_FOR_HIGHLIGHT.sub('__', val)
 
 def _matchadd(icons, pattern, priority, winid):
-    """
+    r"""
     Enable ignore case (\c flag)
     """
     ids = []
@@ -478,7 +478,7 @@ def _matchadd(icons, pattern, priority, winid):
     return ids
 
 def matchaddDevIconsDefault(pattern, winid=None):
-    """
+    r"""
     pattern:
         It will be converted to the following
           __icon__ => icon
@@ -492,7 +492,7 @@ def matchaddDevIconsDefault(pattern, winid=None):
     return _matchadd({'default': fileNodesDefaultSymbol}, pattern, 9, winid)
 
 def matchaddDevIconsExact(pattern, winid=None):
-    """
+    r"""
     pattern:
         It will be converted to the following
           __icon__  => icon
@@ -504,7 +504,7 @@ def matchaddDevIconsExact(pattern, winid=None):
     return _matchadd(fileNodesExactSymbols, pattern, 8, winid)
 
 def matchaddDevIconsExtension(pattern, winid=None):
-    """
+    r"""
     pattern:
         It will be converted to the following
           __icon__  => icon

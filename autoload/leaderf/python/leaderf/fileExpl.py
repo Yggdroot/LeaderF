@@ -107,7 +107,7 @@ class FileExplorer(Explorer):
                     target = i
 
             if target != -1:
-                lines[target] = re.sub('^\S*',
+                lines[target] = re.sub(r'^\S*',
                                        '%.3f' % time.time(),
                                        lines[target])
                 f.seek(0)
@@ -185,7 +185,7 @@ class FileExplorer(Explorer):
                     target = i
 
             if target != -1:
-                lines[target] = re.sub('^\S*', '%.3f' % time.time(), lines[target])
+                lines[target] = re.sub(r'^\S*', '%.3f' % time.time(), lines[target])
                 f.seek(0)
                 f.truncate(0)
                 f.writelines(lines)
@@ -433,7 +433,7 @@ class FileExplorer(Explorer):
                 followlinks = ""
 
             if lfEval("g:Lf_ShowRelativePath") == '1':
-                strip = "| sed 's#^\./##'"
+                strip = r"| sed 's#^\./##'"
             else:
                 strip = ""
 
@@ -490,7 +490,7 @@ class FileExplorer(Explorer):
                     return
 
                 # update the time
-                lines[target] = re.sub('^\S*',
+                lines[target] = re.sub(r'^\S*',
                                        '%.3f' % time.time(),
                                        lines[target])
                 f.seek(0)
@@ -545,7 +545,7 @@ class FileExplorer(Explorer):
 
             if target != -1:    # already cached
                 # update the time
-                lines[target] = re.sub('^\S*',
+                lines[target] = re.sub(r'^\S*',
                                        '%.3f' % time.time(),
                                        lines[target])
                 f.seek(0)
