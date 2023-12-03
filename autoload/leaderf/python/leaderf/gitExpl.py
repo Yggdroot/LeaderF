@@ -110,25 +110,14 @@ class GitLogExplorer(GitExplorer):
         executor = AsyncExecutor()
         self._executor.append(executor)
 
-        cmd = "git diff --name-status"
-        if "--cached" in arguments_dict:
-            cmd += " --cached"
+        cmd = "git log --oneline"
         if "extra" in arguments_dict:
             cmd += " " + " ".join(arguments_dict["extra"])
         content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=self.formatLine)
         return content
 
     def formatLine(self, line):
-        """
-        R098    README.txt      README.txt.hello
-        A       abc.txt
-        M       src/fold.c
-        """
-        name_status = line.split('\t')
-        file_name = name_status[1]
-        icon = webDevIconsGetFileTypeSymbol(file_name) if self._show_icon else ""
-        return "{:<4} {}{}{}".format(name_status[0], icon, name_status[1],
-                                     " -> " + name_status[2] if len(name_status) == 3 else "")
+        return line
 
     def getStlCategory(self):
         return 'Git_log'
@@ -579,6 +568,10 @@ class SplitDiffPanel(Panel):
                 lfCmd("call win_execute({}, 'edit {}')".format(winid, cmd.getBufferName()))
                 GitCommandView(self, cmd, winid).create()
 
+
+class NavigationPanel(Panel):
+    def __init__(self):
+        pass
 
 class DiffViewPanel(Panel):
     def __init__(self):

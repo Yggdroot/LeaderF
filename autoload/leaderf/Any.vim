@@ -217,6 +217,7 @@ let g:Lf_Arguments = {
             \ "jumps": [],
             \ "git":{
             \       "log": [
+            \           {"name": ["--current-file"], "nargs": 0, "help": "show logs of current file"},
             \           {"name": ["extra"], "nargs": "*", "help": "extra arguments of git log"},
             \           [
             \               {"name": ["--directly"], "nargs": 0, "help": "output the logs directly"},

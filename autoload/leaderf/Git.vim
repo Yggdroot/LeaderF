@@ -55,7 +55,13 @@ function! leaderf#Git#Suicide(view_id)
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.suicide()", a:view_id)
 endfunction
 
-"function! leaderf#Git#SplitDiff(view_id)
-"    exec g:Lf_py "import ctypes"
-"    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.splitDiff()", a:view_id)
-"endfunction
+function! leaderf#Git#Commands()
+    if !exists(g:Lf_GitCommands)
+        let g:Lf_GitCommands = {
+                    \ "Leaderf git diff --directly":  "output the diffs directly",
+                    \ "Leaderf git diff --cached --directly": "output `git diff --cached` directly",
+                    \ "Leaderf git diff HEAD --directly":     "output `git diff HEAD` directly",
+                    \ }
+    else
+    endif
+endfunction
