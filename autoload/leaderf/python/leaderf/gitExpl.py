@@ -28,7 +28,8 @@ class GitExplorer(Explorer):
         self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
 
     def getContent(self, *args, **kwargs):
-        return []
+        commands = lfEval("leaderf#Git#Commands()")
+        return [list(item)[0] for item in commands]
 
     def formatLine(self, line):
         pass
@@ -617,8 +618,8 @@ class GitExplManager(Manager):
                 self._git_log_manager = GitLogExplManager()
             return self._git_log_manager
         else:
-            return None
-            # return super(GitExplManager, self)
+            # return None
+            return super(GitExplManager, self)
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -630,10 +631,9 @@ class GitExplManager(Manager):
         arg_list = self._arguments.get("arg_line", 'git').split()
         arg_list = [item for item in arg_list if not item.startswith('-')]
         if len(arg_list) == 1:
-            # do something
-            return
-
-        subcommand = arg_list[1]
+            subcommand = ""
+        else:
+            subcommand = arg_list[1]
         self.getExplManager(subcommand).startExplorer(win_pos, *args, **kwargs)
 
     def accept(self, mode=''):
@@ -647,6 +647,11 @@ class GitExplManager(Manager):
             return
 
         line = args[0]
+        cmd = line
+        try:
+            lfCmd(cmd)
+        except vim.error:
+            lfPrintTraceback()
 
     def _bangEnter(self):
         super(GitExplManager, self)._bangEnter()
@@ -660,7 +665,12 @@ class GitExplManager(Manager):
             self._timer_id = lfEval("timer_start(10, function('leaderf#Git#TimerCallback', [%d]), {'repeat': -1})" % id(self))
 
     def getSource(self, line):
-        return line
+        commands = lfEval("leaderf#Git#Commands()")
+        for cmd in commands:
+            if line in cmd:
+                return cmd[line]
+
+        return None
 
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0 or args[0] == '':
@@ -672,8 +682,17 @@ class GitExplManager(Manager):
         self._createPopupPreview("", source, 0)
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
-        self._preview_panel.create(self.createGitCommand(self._arguments, source), config)
-        self._preview_winid = self._preview_panel.getPreviewWinId()
+        if lfEval("has('nvim')") == '1':
+            lfCmd("noautocmd let scratch_buffer = nvim_create_buf(0, 1)")
+            lfCmd("noautocmd call setbufline(scratch_buffer, 1, '{}')".format(escQuote(source)))
+            lfCmd("noautocmd call nvim_buf_set_option(scratch_buffer, 'bufhidden', 'wipe')")
+            lfCmd("noautocmd call nvim_buf_set_option(scratch_buffer, 'undolevels', -1)")
+
+            self._preview_winid = int(lfEval("nvim_open_win(scratch_buffer, 0, {})".format(json.dumps(config))))
+        else:
+            lfCmd("noautocmd let winid = popup_create('{}', {})".format(escQuote(source), json.dumps(config)))
+            self._preview_winid = int(lfEval("winid"))
+
         self._setWinOptions(self._preview_winid)
 
     def createGitCommand(self, arguments_dict, source=None):
@@ -682,11 +701,11 @@ class GitExplManager(Manager):
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
         self.setOptionsForCursor()
 
-        content = self._preview_panel.getContent(source)
-        if content is None:
-            self._preview_panel.createView(self.createGitCommand(self._arguments, source))
+        if lfEval("has('nvim')") == '1':
+            lfCmd("""call win_execute({}, "call nvim_buf_set_lines(0, 0, -1, v:false, ['{}'])")"""
+                  .format(self._preview_winid, escQuote(source)))
         else:
-            self._preview_panel.setContent(content)
+            lfCmd("noautocmd call popup_settext({}, '{}')".format(self._preview_winid, escQuote(source)))
 
 
 class GitDiffExplManager(GitExplManager):
@@ -716,8 +735,22 @@ class GitDiffExplManager(GitExplManager):
 
         return self._getExplorer().getSourceInfo()[(file_name1, file_name2)]
 
+    def _createPreviewWindow(self, config, source, line_num, jump_cmd):
+        self._preview_panel.create(self.createGitCommand(self._arguments, source), config)
+        self._preview_winid = self._preview_panel.getPreviewWinId()
+        self._setWinOptions(self._preview_winid)
+
     def createGitCommand(self, arguments_dict, source=None):
         return GitDiffCommand(arguments_dict, source)
+
+    def _useExistingWindow(self, title, source, line_num, jump_cmd):
+        self.setOptionsForCursor()
+
+        content = self._preview_panel.getContent(source)
+        if content is None:
+            self._preview_panel.createView(self.createGitCommand(self._arguments, source))
+        else:
+            self._preview_panel.setContent(content)
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -780,8 +813,22 @@ class GitLogExplManager(GitExplManager):
     def getSource(self, line):
         return line.split()[-1]
 
+    def _createPreviewWindow(self, config, source, line_num, jump_cmd):
+        self._preview_panel.create(self.createGitCommand(self._arguments, source), config)
+        self._preview_winid = self._preview_panel.getPreviewWinId()
+        self._setWinOptions(self._preview_winid)
+
     def createGitCommand(self, arguments_dict, source=None):
         return GitLogCommand(arguments_dict, source)
+
+    def _useExistingWindow(self, title, source, line_num, jump_cmd):
+        self.setOptionsForCursor()
+
+        content = self._preview_panel.getContent(source)
+        if content is None:
+            self._preview_panel.createView(self.createGitCommand(self._arguments, source))
+        else:
+            self._preview_panel.setContent(content)
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
