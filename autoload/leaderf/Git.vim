@@ -39,6 +39,11 @@ function! leaderf#Git#Maps(id)
     exec printf('nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "%s.closePreviewPopupOrQuit()"<CR>', manager)
 endfunction
 
+function! leaderf#Git#SpecificMaps(id)
+    exec g:Lf_py "import ctypes"
+    let manager = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
+    exec printf('nnoremap <buffer> <silent> e             :exec g:Lf_py "%s.editCommand()"<CR>', manager)
+endfunction
 
 function! leaderf#Git#TimerCallback(manager_id, id)
     exec g:Lf_py "import ctypes"
@@ -74,4 +79,16 @@ function! leaderf#Git#Commands()
     endif
 
     return g:Lf_GitCommands
+endfunction
+
+function! leaderf#Git#NormalModeFilter(winid, key) abort
+    let key = leaderf#RemapKey(g:Lf_PyEval("id(gitExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
+
+    if key ==# "e"
+        exec g:Lf_py "gitExplManager.editCommand()"
+    else
+        return leaderf#NormalModeFilter(g:Lf_PyEval("id(gitExplManager)"), a:winid, a:key)
+    endif
+
+    return 1
 endfunction

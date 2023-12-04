@@ -597,6 +597,21 @@ class GitExplManager(Manager):
 
     def _defineMaps(self):
         lfCmd("call leaderf#Git#Maps({})".format(id(self)))
+        if type(self) is GitExplManager:
+            lfCmd("call leaderf#Git#SpecificMaps({})".format(id(self)))
+
+    def _createHelp(self):
+        help = []
+        help.append('" <CR>/<double-click>/o : execute command under cursor')
+        help.append('" i/<Tab> : switch to input mode')
+        if type(self) is GitExplManager:
+            help.append('" e : edit command under cursor')
+        help.append('" p : preview the help information')
+        help.append('" q : quit')
+        help.append('" <F1> : toggle this help')
+        help.append('" <ESC> : close the preview window or quit')
+        help.append('" ---------------------------------------------------------')
+        return help
 
     def _workInIdle(self, content=None, bang=False):
         self._result_panel.writeBuffer()
@@ -618,7 +633,6 @@ class GitExplManager(Manager):
                 self._git_log_manager = GitLogExplManager()
             return self._git_log_manager
         else:
-            # return None
             return super(GitExplManager, self)
 
     def startExplorer(self, win_pos, *args, **kwargs):
@@ -641,6 +655,9 @@ class GitExplManager(Manager):
         self._selected_content = self._preview_panel.getContent(source)
 
         return super(GitExplManager, self).accept(mode)
+
+    def _accept(self, file, mode, *args, **kwargs):
+        self._acceptSelection(file, *args, **kwargs)
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -706,6 +723,18 @@ class GitExplManager(Manager):
                   .format(self._preview_winid, escQuote(source)))
         else:
             lfCmd("noautocmd call popup_settext({}, '{}')".format(self._preview_winid, escQuote(source)))
+
+    def _cmdExtension(self, cmd):
+        if type(self) is GitExplManager:
+            if equal(cmd, '<C-o>'):
+                self.editCommand()
+            return True
+
+    def editCommand(self):
+        instance = self._getInstance()
+        line = instance.currentLine
+        instance.exitBuffer()
+        lfCmd("call feedkeys(':%s', 'n')" % escQuote(line))
 
 
 class GitDiffExplManager(GitExplManager):
