@@ -226,7 +226,7 @@ class GitLogCommand(GitCommand):
             if ("--current-file" in self._arguments
                 and vim.current.buffer.name
                 and not vim.current.buffer.options['bt']):
-                self._cmd += " -- {}".format(vim.current.buffer.name)
+                self._cmd += " -- {}".format(lfRelpath(vim.current.buffer.name))
 
             self._buffer_name = "LeaderF://" + self._cmd
             self._file_type_cmd = "setlocal filetype=git"
