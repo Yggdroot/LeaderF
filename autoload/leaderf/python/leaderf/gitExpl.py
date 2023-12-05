@@ -231,7 +231,10 @@ class GitLogCommand(GitCommand):
             self._buffer_name = "LeaderF://" + self._cmd
             self._file_type_cmd = "setlocal filetype=git"
         else:
-            self._cmd = 'git show {} --pretty=format:"tree   %T%nparent %P%nauthor %an <%ae> %ad%ncommitter %cn <%ce> %cd%n%n%s%n%n%b" --stat -p --no-color'.format(self._source)
+            self._cmd = ('git show {} --pretty=format:"tree   %T%nparent %P%n'
+                         'author %an <%ae> %ad%ncommitter %cn <%ce> %cd%n%n%s%n%n%b"'
+                         ' --stat -p --no-color'
+                         ).format(self._source)
             self._buffer_name = "LeaderF://" + self._source
             self._file_type_cmd = "setlocal filetype=git"
 
@@ -808,6 +811,31 @@ class GitDiffExplManager(GitExplManager):
             self._match_ids.extend(matchaddDevIconsExtension(icon_pattern, winid))
             self._match_ids.extend(matchaddDevIconsExact(icon_pattern, winid))
             self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
+
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagFile'', ''^.\{-}\t\zs.\{-}\ze\t'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagType'', '';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+            keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
+            for i in keyword:
+                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagKeyword'', ''\(;"\t.\{-}\)\@<=%s:'')')"""
+                    % (self._getInstance().getPopupWinId(), i))
+                id = int(lfEval("matchid"))
+                self._match_ids.append(id)
+        else:
+            id = int(lfEval('''matchadd('Lf_hl_tagFile', '^.\{-}\t\zs.\{-}\ze\t')'''))
+            self._match_ids.append(id)
+            id = int(lfEval('''matchadd('Lf_hl_tagType', ';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)')'''))
+            self._match_ids.append(id)
+            keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
+            for i in keyword:
+                id = int(lfEval('''matchadd('Lf_hl_tagKeyword', '\(;"\t.\{-}\)\@<=%s:')''' % i))
+                self._match_ids.append(id)
 
     def _accept(self, file, mode, *args, **kwargs):
         if "-s" in self._arguments:
