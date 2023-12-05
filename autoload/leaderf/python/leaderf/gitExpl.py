@@ -111,7 +111,7 @@ class GitLogExplorer(GitExplorer):
         executor = AsyncExecutor()
         self._executor.append(executor)
 
-        cmd = "git log --oneline"
+        cmd = 'git log --pretty=format:"%h%d %s"'
         if "extra" in arguments_dict:
             cmd += " " + " ".join(arguments_dict["extra"])
         content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=self.formatLine)
@@ -125,7 +125,7 @@ class GitLogExplorer(GitExplorer):
 
 
 class GitCommand(object):
-    def __init__(self, arguments_dict, source=None):
+    def __init__(self, arguments_dict, source):
         self._arguments = arguments_dict
         self._source = source
         self._cmd = ""
@@ -153,7 +153,7 @@ class GitCommand(object):
 
 
 class GitDiffCommand(GitCommand):
-    def __init__(self, arguments_dict, source=None):
+    def __init__(self, arguments_dict, source):
         super(GitDiffCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
@@ -213,7 +213,7 @@ class GitCatFileCommand(GitCommand):
 
 
 class GitLogCommand(GitCommand):
-    def __init__(self, arguments_dict, source=None):
+    def __init__(self, arguments_dict, source):
         super(GitLogCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
@@ -229,6 +229,10 @@ class GitLogCommand(GitCommand):
                 self._cmd += " -- {}".format(lfRelpath(vim.current.buffer.name))
 
             self._buffer_name = "LeaderF://" + self._cmd
+            self._file_type_cmd = "setlocal filetype=git"
+        else:
+            self._cmd = 'git show {} --pretty=format:"tree   %T%nparent %P%nauthor %an <%ae> %ad%ncommitter %cn <%ce> %cd%n%n%s%n%n%b"'.format(self._source)
+            self._buffer_name = "LeaderF://" + self._source
             self._file_type_cmd = "setlocal filetype=git"
 
 
@@ -712,7 +716,7 @@ class GitExplManager(Manager):
 
         self._setWinOptions(self._preview_winid)
 
-    def createGitCommand(self, arguments_dict, source=None):
+    def createGitCommand(self, arguments_dict, source):
         pass
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
@@ -769,7 +773,7 @@ class GitDiffExplManager(GitExplManager):
         self._preview_winid = self._preview_panel.getPreviewWinId()
         self._setWinOptions(self._preview_winid)
 
-    def createGitCommand(self, arguments_dict, source=None):
+    def createGitCommand(self, arguments_dict, source):
         return GitDiffCommand(arguments_dict, source)
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
@@ -789,7 +793,7 @@ class GitDiffExplManager(GitExplManager):
         if "--recall" in arguments_dict:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
         elif "--directly" in self._arguments:
-            self._result_panel.create(GitDiffCommand(self._arguments))
+            self._result_panel.create(self.createGitCommand(self._arguments, None))
         elif "--explorer" in self._arguments:
             pass
         else:
@@ -840,14 +844,14 @@ class GitLogExplManager(GitExplManager):
         return self._explorer
 
     def getSource(self, line):
-        return line.split()[-1]
+        return line.split(None, 1)[0]
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
         self._preview_panel.create(self.createGitCommand(self._arguments, source), config)
         self._preview_winid = self._preview_panel.getPreviewWinId()
         self._setWinOptions(self._preview_winid)
 
-    def createGitCommand(self, arguments_dict, source=None):
+    def createGitCommand(self, arguments_dict, source):
         return GitLogCommand(arguments_dict, source)
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
@@ -867,11 +871,40 @@ class GitLogExplManager(GitExplManager):
         if "--recall" in arguments_dict:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
         elif "--directly" in self._arguments:
-            self._result_panel.create(GitLogCommand(self._arguments))
+            self._result_panel.create(self.createGitCommand(self._arguments, None))
         elif "--explorer" in self._arguments:
             pass
         else:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
+
+    def _afterEnter(self):
+        super(GitExplManager, self)._afterEnter()
+
+    def _accept(self, file, mode, *args, **kwargs):
+        if "--explorer" in self._arguments:
+            pass
+        else:
+            super(GitExplManager, self)._accept(file, mode, *args, **kwargs)
+
+    def _acceptSelection(self, *args, **kwargs):
+        if len(args) == 0:
+            return
+
+        line = args[0]
+        source = self.getSource(line)
+
+        if "--explorer" in self._arguments:
+            pass
+        else:
+            if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
+                lfCmd("tabnew")
+
+            tabpage_count = len(vim.tabpages)
+
+            self._result_panel.create(self.createGitCommand(self._arguments, source), self._selected_content)
+
+            if kwargs.get("mode", '') == 't' and len(vim.tabpages) > tabpage_count:
+                tabmove()
 
 
 #*****************************************************
