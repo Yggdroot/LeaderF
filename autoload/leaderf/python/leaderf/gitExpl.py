@@ -231,7 +231,7 @@ class GitLogCommand(GitCommand):
             self._buffer_name = "LeaderF://" + self._cmd
             self._file_type_cmd = "setlocal filetype=git"
         else:
-            self._cmd = 'git show {} --pretty=format:"tree   %T%nparent %P%nauthor %an <%ae> %ad%ncommitter %cn <%ce> %cd%n%n%s%n%n%b"'.format(self._source)
+            self._cmd = 'git show {} --pretty=format:"tree   %T%nparent %P%nauthor %an <%ae> %ad%ncommitter %cn <%ce> %cd%n%n%s%n%n%b" --stat -p --no-color'.format(self._source)
             self._buffer_name = "LeaderF://" + self._source
             self._file_type_cmd = "setlocal filetype=git"
 
