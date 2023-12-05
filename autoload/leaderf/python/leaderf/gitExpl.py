@@ -813,29 +813,22 @@ class GitDiffExplManager(GitExplManager):
             self._match_ids.extend(matchaddDevIconsDefault(icon_pattern, winid))
 
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagFile'', ''^.\{-}\t\zs.\{-}\ze\t'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitDiffModification'', ''^[MRT]\S*'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
-            self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagType'', '';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''^[AC]\S*'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
-            self._match_ids.append(id)
-            keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
-            for i in keyword:
-                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagKeyword'', ''\(;"\t.\{-}\)\@<=%s:'')')"""
-                    % (self._getInstance().getPopupWinId(), i))
-                id = int(lfEval("matchid"))
-                self._match_ids.append(id)
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''^[DU]'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
         else:
-            id = int(lfEval('''matchadd('Lf_hl_tagFile', '^.\{-}\t\zs.\{-}\ze\t')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitDiffModification', '^[MRT]\S*')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_tagType', ';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitDiffAddition', '^[AC]\S*')'''))
             self._match_ids.append(id)
-            keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
-            for i in keyword:
-                id = int(lfEval('''matchadd('Lf_hl_tagKeyword', '\(;"\t.\{-}\)\@<=%s:')''' % i))
-                self._match_ids.append(id)
+            id = int(lfEval(r'''matchadd('Lf_hl_gitDiffDeletion', '^[DU]')'''))
+            self._match_ids.append(id)
 
     def _accept(self, file, mode, *args, **kwargs):
         if "-s" in self._arguments:
@@ -907,6 +900,19 @@ class GitLogExplManager(GitExplManager):
 
     def _afterEnter(self):
         super(GitExplManager, self)._afterEnter()
+
+        if self._getInstance().getWinPos() == 'popup':
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitHash'', ''^[0-9A-Fa-f]\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitRefNames'', ''^[0-9A-Fa-f]\+\s*\zs(.\{-})'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+        else:
+            id = int(lfEval(r'''matchadd('Lf_hl_gitHash', '^[0-9A-Fa-f]\+')'''))
+            self._match_ids.append(id)
+            id = int(lfEval(r'''matchadd('Lf_hl_gitRefNames', '^[0-9A-Fa-f]\+\s*\zs(.\{-})')'''))
+            self._match_ids.append(id)
 
     def _accept(self, file, mode, *args, **kwargs):
         if "--explorer" in self._arguments:

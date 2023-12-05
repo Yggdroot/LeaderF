@@ -137,6 +137,12 @@ if &background ==? 'dark'
     highlight def link Lf_hl_jumpsNumber        Number
     highlight def link Lf_hl_jumpsLineCol       String
     highlight def link Lf_hl_jumpsIndicator     Type
+
+    highlight def Lf_hl_gitDiffModification guifg=#ffa500 guibg=NONE gui=NONE ctermfg=214 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffAddition guifg=#a8e332 guibg=NONE gui=NONE ctermfg=148 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffDeletion guifg=#ff477e guibg=NONE gui=NONE ctermfg=204 ctermbg=NONE cterm=NONE
+    highlight def link Lf_hl_gitHash Identifier
+    highlight def link Lf_hl_gitRefNames Special
 else
     " Lf_hl_popup_inputText is the wincolor of input window
     highlight def Lf_hl_popup_inputText guifg=#525252 guibg=#f4f3d7 gui=NONE ctermfg=239 ctermbg=230 cterm=NONE
@@ -261,4 +267,10 @@ else
     highlight def link Lf_hl_jumpsNumber        Number
     highlight def link Lf_hl_jumpsLineCol       String
     highlight def link Lf_hl_jumpsIndicator     Type
+
+    highlight def Lf_hl_gitDiffModification guifg=#df5f00 guibg=NONE gui=NONE ctermfg=166 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffAddition guifg=#008700 guibg=NONE gui=NONE ctermfg=28 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffDeletion guifg=#df0000 guibg=NONE gui=NONE ctermfg=160 ctermbg=NONE cterm=NONE
+    highlight def link Lf_hl_gitHash Identifier
+    highlight def link Lf_hl_gitRefNames Special
 endif
