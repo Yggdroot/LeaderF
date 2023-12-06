@@ -656,11 +656,23 @@ class GitExplManager(Manager):
         else:
             return super(GitExplManager, self)
 
-    def startExplorer(self, win_pos, *args, **kwargs):
-        if not nearestAncestor([".git"], lfGetCwd()):
+    def checkWorkingDirectory(self):
+        self._orig_cwd = lfGetCwd()
+        working_dir = nearestAncestor([".git"], self._orig_cwd)
+        if working_dir: # there exists a root marker in nearest ancestor path
+            # https://github.com/neovim/neovim/issues/8336
+            if lfEval("has('nvim')") == '1':
+                chdir = vim.chdir
+            else:
+                chdir = os.chdir
+            chdir(working_dir)
+        else:
             lfPrintError("Not a git repository (or any of the parent directories): .git")
-            return
+            return False
 
+        return True
+
+    def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" in arguments_dict:
             self._arguments.update(arguments_dict)
@@ -807,6 +819,9 @@ class GitDiffExplManager(GitExplManager):
             self._preview_panel.setContent(content)
 
     def startExplorer(self, win_pos, *args, **kwargs):
+        if self.checkWorkingDirectory() == False:
+            return
+
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" not in arguments_dict:
             self.setArguments(arguments_dict)
@@ -903,6 +918,9 @@ class GitLogExplManager(GitExplManager):
             self._preview_panel.setContent(content)
 
     def startExplorer(self, win_pos, *args, **kwargs):
+        if self.checkWorkingDirectory() == False:
+            return
+
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" not in arguments_dict:
             self.setArguments(arguments_dict)
