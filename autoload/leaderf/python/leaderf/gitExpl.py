@@ -830,6 +830,7 @@ class GitDiffExplManager(GitExplManager):
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
         elif "--directly" in self._arguments:
             self._result_panel.create(self.createGitCommand(self._arguments, None))
+            self._restoreOrigCwd()
         elif "--explorer" in self._arguments:
             pass
         else:
@@ -929,6 +930,7 @@ class GitLogExplManager(GitExplManager):
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
         elif "--directly" in self._arguments:
             self._result_panel.create(self.createGitCommand(self._arguments, None))
+            self._restoreOrigCwd()
         elif "--explorer" in self._arguments:
             pass
         else:
