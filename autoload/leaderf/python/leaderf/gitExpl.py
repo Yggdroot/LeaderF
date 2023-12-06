@@ -112,6 +112,15 @@ class GitLogExplorer(GitExplorer):
         self._executor.append(executor)
 
         cmd = 'git log --pretty=format:"%h%d %s"'
+        if ("--current-file" in arguments_dict
+            and vim.current.buffer.name
+            and not vim.current.buffer.options['bt']
+           ):
+            file_name = vim.current.buffer.name
+            if " " in file_name:
+                file_name = file_name.replace(' ', r'\ ')
+            cmd += " -- {}".format(file_name)
+
         if "extra" in arguments_dict:
             cmd += " " + " ".join(arguments_dict["extra"])
         content = executor.execute(cmd, encoding=lfEval("&encoding"), format_line=self.formatLine)
@@ -171,12 +180,13 @@ class GitDiffCommand(GitCommand):
                 file_name = file_name.replace(' ', r'\ ')
             extra_options += " -- {}".format(file_name)
         elif ("--current-file" in self._arguments
-            and vim.current.buffer.name
-            and not vim.current.buffer.options['bt']):
+              and vim.current.buffer.name
+              and not vim.current.buffer.options['bt']
+             ):
             file_name = vim.current.buffer.name
             if " " in file_name:
                 file_name = file_name.replace(' ', r'\ ')
-            extra_options += " -- {}".format(file_name)
+            extra_options += " -- {}".format(lfRelpath(file_name))
 
         self._cmd += extra_options
         self._buffer_name = "LeaderF://git diff" + extra_options
@@ -225,8 +235,12 @@ class GitLogCommand(GitCommand):
 
             if ("--current-file" in self._arguments
                 and vim.current.buffer.name
-                and not vim.current.buffer.options['bt']):
-                self._cmd += " -- {}".format(lfRelpath(vim.current.buffer.name))
+                and not vim.current.buffer.options['bt']
+               ):
+                file_name = vim.current.buffer.name
+                if " " in file_name:
+                    file_name = file_name.replace(' ', r'\ ')
+                self._cmd += " -- {}".format(lfRelpath(file_name))
 
             self._buffer_name = "LeaderF://" + self._cmd
             self._file_type_cmd = "setlocal filetype=git"
