@@ -657,6 +657,10 @@ class GitExplManager(Manager):
             return super(GitExplManager, self)
 
     def startExplorer(self, win_pos, *args, **kwargs):
+        if not nearestAncestor([".git"], lfGetCwd()):
+            lfPrintError("Not a git repository (or any of the parent directories): .git")
+            return
+
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" in arguments_dict:
             self._arguments.update(arguments_dict)

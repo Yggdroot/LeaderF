@@ -66,9 +66,9 @@ let g:Lf_Helps = {
             \ "loclist":        "navigate location list",
             \ "jumps":          "navigate jumps list",
             \ "git":            "use git",
-            \ "git-log":        "Shows the commit logs",
-            \ "git-diff":       "Show changes between commits, commit and working tree, etc",
-            \ "git-blame":      "Show what revision and author last modified each line of a file",
+            \ "git-log":        "show the commit logs",
+            \ "git-diff":       "show changes between commits, commit and working tree, etc",
+            \ "git-blame":      "show what revision and author last modified each line of a file",
             \ }
 
 let g:Lf_Arguments = {
@@ -223,6 +223,8 @@ let g:Lf_Arguments = {
             \               {"name": ["--directly"], "nargs": 0, "help": "output the logs directly"},
             \               {"name": ["--explorer"], "nargs": 0, "help": "view changed files of one commit in a tree explorer"},
             \           ],
+            \           {"name": ["--position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>",
+            \               "help": "specifies the position of the logs window"},
             \       ],
             \       "diff": [
             \           {"name": ["--cached", "--staged"], "nargs": 0, "help": "run 'git diff --cached'"},
