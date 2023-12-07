@@ -402,6 +402,9 @@ class GitCommandView(object):
     def valid(self):
         return self._buffer is not None and self._buffer.valid
 
+class TreeView(GitCommandView):
+    def __init__(self, owner, cmd, window_id):
+        super(TreeView, self).__init__(owner, cmd, window_id)
 
 class Panel(object):
     def __init__(self):
