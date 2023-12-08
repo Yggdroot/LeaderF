@@ -537,6 +537,7 @@ class PreviewPanel(Panel):
 class SplitDiffPanel(Panel):
     def __init__(self):
         self._views = {}
+        self._buffer_contents = {}
 
     def register(self, view):
         self._views[view.getBufferName()] = view
@@ -546,6 +547,16 @@ class SplitDiffPanel(Panel):
         if name in self._views:
             self._views[name].cleanup()
             del self._views[name]
+
+    def cleanup(self):
+        # TODO: when
+        pass
+
+    def callback(self, view):
+        self._buffer_contents[view.getSource()] = view.getContent()
+
+    def getContent(self, source):
+        return self._buffer_contents.get(source)
 
     def writeFinished(self, winid):
         lfCmd("call win_execute({}, 'diffthis')".format(winid))
@@ -567,13 +578,13 @@ class SplitDiffPanel(Panel):
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[0]].getWindowId()))
             cmd = GitCatFileCommand(arguments_dict, sources[1])
             lfCmd("rightbelow vsp {}".format(cmd.getBufferName()))
-            GitCommandView(self, cmd, int(lfEval("win_getid()"))).create()
+            GitCommandView(self, cmd, int(lfEval("win_getid()"))).create(buf_content=self.getContent(sources[1]))
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[0]].getWindowId()))
         elif buffer_names[1] in self._views:
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
             cmd = GitCatFileCommand(arguments_dict, sources[0])
             lfCmd("leftabove vsp {}".format(cmd.getBufferName()))
-            GitCommandView(self, cmd, int(lfEval("win_getid()"))).create()
+            GitCommandView(self, cmd, int(lfEval("win_getid()"))).create(buf_content=self.getContent(sources[0]))
         else:
             if kwargs.get("mode", '') == 't':
                 lfCmd("noautocmd tabnew | vsp")
@@ -596,7 +607,7 @@ class SplitDiffPanel(Panel):
             for s, winid in zip(sources, win_ids):
                 cmd = GitCatFileCommand(arguments_dict, s)
                 lfCmd("call win_execute({}, 'edit {}')".format(winid, cmd.getBufferName()))
-                GitCommandView(self, cmd, winid).create()
+                GitCommandView(self, cmd, winid).create(buf_content=self.getContent(s))
 
 
 class NavigationPanel(Panel):
