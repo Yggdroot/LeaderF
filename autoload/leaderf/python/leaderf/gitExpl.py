@@ -291,6 +291,16 @@ class GitCommandView(object):
     def getSource(self):
         return self._cmd.getSource()
 
+    def start(self):
+        # start a process, timer and thread
+        content = self._executor.execute(self._cmd.getCommand(), encoding=lfEval("&encoding"))
+
+        self._timer_id = lfEval("timer_start(100, function('leaderf#Git#WriteBuffer', [%d]), {'repeat': -1})" % id(self))
+
+        self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
+        self._reader_thread.daemon = True
+        self._reader_thread.start()
+
     def create(self, bufhidden='wipe', buf_content=None):
         if self._buffer is not None:
             self._buffer.options['modifiable'] = True
@@ -331,14 +341,8 @@ class GitCommandView(object):
             self._owner.writeFinished(self._window_id)
             return
 
-        # start a process, timer and thread
-        content = self._executor.execute(self._cmd.getCommand(), encoding=lfEval("&encoding"))
+        self.start()
 
-        self._timer_id = lfEval("timer_start(100, function('leaderf#Git#WriteBuffer', [%d]), {'repeat': -1})" % id(self))
-
-        self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
-        self._reader_thread.daemon = True
-        self._reader_thread.start()
 
     def writeBuffer(self):
         if self._read_finished == 2:
@@ -599,10 +603,16 @@ class NavigationPanel(Panel):
     def __init__(self):
         pass
 
+
 class DiffViewPanel(Panel):
     def __init__(self):
         pass
 
+
+class ExplorerPage(object):
+    def __init__(self):
+        self._navigation_panel = None
+        self._diff_view_panel = None
 
 #*****************************************************
 # GitExplManager
@@ -616,6 +626,7 @@ class GitExplManager(Manager):
         self._git_diff_manager = None
         self._git_log_manager = None
         self._selected_content = None
+        self._project_root = ""
 
     def _getExplClass(self):
         return GitExplorer
@@ -662,14 +673,14 @@ class GitExplManager(Manager):
 
     def checkWorkingDirectory(self):
         self._orig_cwd = lfGetCwd()
-        working_dir = nearestAncestor([".git"], self._orig_cwd)
-        if working_dir: # there exists a root marker in nearest ancestor path
+        self._project_root = nearestAncestor([".git"], self._orig_cwd)
+        if self._project_root: # there exists a root marker in nearest ancestor path
             # https://github.com/neovim/neovim/issues/8336
             if lfEval("has('nvim')") == '1':
                 chdir = vim.chdir
             else:
                 chdir = os.chdir
-            chdir(working_dir)
+            chdir(self._project_root)
         else:
             lfPrintError("Not a git repository (or any of the parent directories): .git")
             return False
