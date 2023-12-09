@@ -221,6 +221,41 @@ class GitCatFileCommand(GitCommand):
         self._buffer_name = GitCatFileCommand.buildBufferName(self._source)
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(self._source[2])
 
+class ParallelExecutor(object):
+    @staticmethod
+    def run(cmd1, cmd2):
+        outputs = [[], []]
+        stop_thread = False
+
+        def readContent(content, output):
+            try:
+                for line in content:
+                    output.append(line)
+                    if stop_thread:
+                        break
+            except Exception as e:
+                print(e)
+
+
+        executors = (AsyncExecutor(), AsyncExecutor())
+        workers = []
+        for i, (exe, cmd) in enumerate(zip(executors, (cmd1, cmd2))):
+            content = exe.execute(cmd.getCommand(), encoding=lfEval("&encoding"))
+            worker = threading.Thread(target=readContent, args=(content, outputs[i]))
+            worker.daemon = True
+            worker.start()
+            workers.append(worker)
+
+        for w in workers:
+            w.join(5) # I think 5s is enough for git cat-file
+
+        stop_thread = True
+
+        for e in executors:
+            e.killProcess()
+
+        return outputs
+
 
 class GitLogCommand(GitCommand):
     def __init__(self, arguments_dict, source):
@@ -329,10 +364,16 @@ class GitCommandView(object):
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(self._window_id)))]
 
         if buf_content is not None:
+            # cache the content if buf_content is the result of ParallelExecutor.run()
+            self._content = buf_content
+            self._owner.readFinished(self)
+
+            self._read_finished = 2
+
             self._buffer.options['modifiable'] = True
             self._buffer[:] = buf_content
             self._buffer.options['modifiable'] = False
-            self._read_finished = 2
+
             self._owner.writeFinished(self._window_id)
             return
 
@@ -603,10 +644,14 @@ class SplitDiffPanel(Panel):
                     win_ids = [int(lfEval("win_getid({})".format(w.number)))
                                for w in vim.current.tabpage.windows]
 
-            for s, winid in zip(sources, win_ids):
-                cmd = GitCatFileCommand(arguments_dict, s)
+            cat_file_cmds = [GitCatFileCommand(arguments_dict, s) for s in sources]
+            outputs = [self.getContent(s) for s in sources]
+            if None in outputs:
+                outputs = ParallelExecutor.run(*cat_file_cmds)
+
+            for i, (cmd, winid) in enumerate(zip(cat_file_cmds, win_ids)):
                 lfCmd("call win_execute({}, 'edit {}')".format(winid, cmd.getBufferName()))
-                GitCommandView(self, cmd, winid).create(buf_content=self.getContent(s))
+                GitCommandView(self, cmd, winid).create(buf_content=outputs[i])
 
 
 class NavigationPanel(Panel):
