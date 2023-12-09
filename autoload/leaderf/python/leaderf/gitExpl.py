@@ -71,7 +71,7 @@ class GitDiffExplorer(GitExplorer):
 
         self._source_info = {}
 
-        cmd = "git diff --no-color --raw"
+        cmd = "git diff --no-color --raw --abbrev=9"
         if "--cached" in arguments_dict:
             cmd += " --cached"
         if "extra" in arguments_dict:
@@ -209,7 +209,7 @@ class GitCatFileCommand(GitCommand):
 
     def buildCommandAndBufferName(self):
         self._cmd = "git cat-file -p {}".format(self._source[0])
-        if self._source[0].startswith("000000000"):
+        if self._source[0].startswith("0000000"):
             if self._source[1] == "M":
                 if os.name == 'nt':
                     self._cmd = "type {}".format(self._source[2])
@@ -379,7 +379,7 @@ class GitCommandView(object):
                     break
             else:
                 self._read_finished = 1
-                self._owner.callback(self)
+                self._owner.readFinished(self)
         except Exception as e:
             self._read_finished = 1
             print(e)
@@ -426,7 +426,7 @@ class Panel(object):
     def writeBuffer(self):
         pass
 
-    def callback(self, view):
+    def readFinished(self, view):
         pass
 
     def writeFinished(self, winid):
@@ -523,7 +523,7 @@ class PreviewPanel(Panel):
         self._buffer_contents = {}
         self._preview_winid = 0
 
-    def callback(self, view):
+    def readFinished(self, view):
         self._buffer_contents[view.getSource()] = view.getContent()
 
     def getContent(self, source):
@@ -549,10 +549,9 @@ class SplitDiffPanel(Panel):
             del self._views[name]
 
     def cleanup(self):
-        # TODO: when
-        pass
+        self._buffer_contents = {}
 
-    def callback(self, view):
+    def readFinished(self, view):
         self._buffer_contents[view.getSource()] = view.getContent()
 
     def getContent(self, source):
@@ -860,6 +859,8 @@ class GitDiffExplManager(GitExplManager):
         elif "--explorer" in self._arguments:
             pass
         else:
+            # cleanup the cache when starting
+            self._split_diff_panel.cleanup()
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
     def _afterEnter(self):
