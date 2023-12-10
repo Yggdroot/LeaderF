@@ -71,7 +71,7 @@ class GitDiffExplorer(GitExplorer):
 
         self._source_info = {}
 
-        cmd = "git diff --no-color --raw --abbrev=9"
+        cmd = "git diff --no-color --raw --no-abbrev"
         if "--cached" in arguments_dict:
             cmd += " --cached"
         if "extra" in arguments_dict:
@@ -92,7 +92,8 @@ class GitDiffExplorer(GitExplorer):
         tmp = line.split(sep='\t')
         file_names = (tmp[1], tmp[2] if len(tmp) == 3 else "")
         blob_status = tmp[0].split()
-        self._source_info[file_names] = (blob_status[2], blob_status[3], blob_status[4], file_names[0], file_names[1])
+        self._source_info[file_names] = (blob_status[2], blob_status[3], blob_status[4],
+                                         file_names[0], file_names[1])
         icon = webDevIconsGetFileTypeSymbol(file_names[0]) if self._show_icon else ""
         return "{:<4} {}{}{}".format(blob_status[4], icon, file_names[0],
                                      "" if file_names[1] == "" else "\t->\t" + file_names[1] )
@@ -205,7 +206,7 @@ class GitCatFileCommand(GitCommand):
         """
         source is a tuple like (b90f76fc1, R099, src/version.c)
         """
-        return "{}:{}".format(source[0][:7], source[2])
+        return "{}:{}".format(source[0][:9], source[2])
 
     def buildCommandAndBufferName(self):
         self._cmd = "git cat-file -p {}".format(self._source[0])
@@ -220,6 +221,49 @@ class GitCatFileCommand(GitCommand):
 
         self._buffer_name = GitCatFileCommand.buildBufferName(self._source)
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(self._source[2])
+
+
+class GitLogCommand(GitCommand):
+    def __init__(self, arguments_dict, source):
+        super(GitLogCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferName(self):
+        if "--directly" in self._arguments:
+            self._cmd = "git log"
+
+            if "extra" in self._arguments:
+                self._cmd += " " + " ".join(self._arguments["extra"])
+
+            if ("--current-file" in self._arguments
+                and vim.current.buffer.name
+                and not vim.current.buffer.options['bt']
+               ):
+                file_name = vim.current.buffer.name
+                if " " in file_name:
+                    file_name = file_name.replace(' ', r'\ ')
+                self._cmd += " -- {}".format(lfRelpath(file_name))
+
+            self._buffer_name = "LeaderF://" + self._cmd
+            self._file_type_cmd = "setlocal filetype=git"
+        else:
+            sep = ' ' if os.name == 'nt' else ''
+            self._cmd = ('git show {} --pretty=format:"tree   %T%nparent %P%n'
+                         'author %an <%ae> %ad%ncommitter %cn <%ce> %cd{}%n%n%s%n%n%b%n"'
+                         ' --stat=70 --stat-graph-width=10 -p --no-color'
+                         ).format(self._source, sep)
+            self._buffer_name = "LeaderF://" + self._source
+            self._file_type_cmd = "setlocal filetype=git"
+
+
+class GitLogExplCommand(GitCommand):
+    def __init__(self, arguments_dict, source):
+        super(GitLogExplCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferName(self):
+        self._cmd = 'git show -m --raw --numstat --pretty=format:"# %P" --no-abbrev {}'.format(self._source)
+        self._buffer_name = "LeaderF://navigation/" + self._source
+        self._file_type_cmd = ""
+
 
 class ParallelExecutor(object):
     @staticmethod
@@ -255,38 +299,6 @@ class ParallelExecutor(object):
             e.killProcess()
 
         return outputs
-
-
-class GitLogCommand(GitCommand):
-    def __init__(self, arguments_dict, source):
-        super(GitLogCommand, self).__init__(arguments_dict, source)
-
-    def buildCommandAndBufferName(self):
-        if "--directly" in self._arguments:
-            self._cmd = "git log"
-
-            if "extra" in self._arguments:
-                self._cmd += " " + " ".join(self._arguments["extra"])
-
-            if ("--current-file" in self._arguments
-                and vim.current.buffer.name
-                and not vim.current.buffer.options['bt']
-               ):
-                file_name = vim.current.buffer.name
-                if " " in file_name:
-                    file_name = file_name.replace(' ', r'\ ')
-                self._cmd += " -- {}".format(lfRelpath(file_name))
-
-            self._buffer_name = "LeaderF://" + self._cmd
-            self._file_type_cmd = "setlocal filetype=git"
-        else:
-            sep = ' ' if os.name == 'nt' else ''
-            self._cmd = ('git show {} --pretty=format:"tree   %T%nparent %P%n'
-                         'author %an <%ae> %ad%ncommitter %cn <%ce> %cd{}%n%n%s%n%n%b%n"'
-                         ' --stat=70 --stat-graph-width=10 -p --no-color'
-                         ).format(self._source, sep)
-            self._buffer_name = "LeaderF://" + self._source
-            self._file_type_cmd = "setlocal filetype=git"
 
 
 class GitCommandView(object):
@@ -447,9 +459,51 @@ class GitCommandView(object):
     def valid(self):
         return self._buffer is not None and self._buffer.valid
 
+
 class TreeView(GitCommandView):
     def __init__(self, owner, cmd, window_id):
         super(TreeView, self).__init__(owner, cmd, window_id)
+
+    def writeBuffer(self):
+        if self._read_finished == 2:
+            return
+
+        if not self._buffer.valid:
+            self.stopTimer()
+            return
+
+        self._buffer.options['modifiable'] = True
+        try:
+            cur_len = len(self._content)
+            if cur_len > self._offset_in_content:
+                if self._offset_in_content == 0:
+                    self._buffer[:] = self._content[:cur_len]
+                else:
+                    self._buffer.append(self._content[self._offset_in_content:cur_len])
+
+                self._offset_in_content = cur_len
+                lfCmd("redraw")
+        finally:
+            self._buffer.options['modifiable'] = False
+
+        if self._read_finished == 1 and self._offset_in_content == len(self._content):
+            self._read_finished = 2
+            self._owner.writeFinished(self._window_id)
+            self.stopTimer()
+
+    def _readContent(self, content):
+        try:
+            for line in content:
+                self._content.append(line)
+                if self._stop_reader_thread:
+                    break
+            else:
+                self._read_finished = 1
+                self._owner.readFinished(self)
+        except Exception as e:
+            self._read_finished = 1
+            print(e)
+
 
 class Panel(object):
     def __init__(self):
@@ -472,6 +526,7 @@ class Panel(object):
 
     def writeFinished(self, winid):
         pass
+
 
 class ResultPanel(Panel):
     def __init__(self):
@@ -668,6 +723,7 @@ class ExplorerPage(object):
     def __init__(self):
         self._navigation_panel = None
         self._diff_view_panel = None
+
 
 #*****************************************************
 # GitExplManager
@@ -971,6 +1027,9 @@ class GitLogExplManager(GitExplManager):
         return self._explorer
 
     def getSource(self, line):
+        """
+        return the hash
+        """
         return line.split(None, 1)[0]
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
@@ -1003,8 +1062,6 @@ class GitLogExplManager(GitExplManager):
         elif "--directly" in self._arguments:
             self._result_panel.create(self.createGitCommand(self._arguments, None))
             self._restoreOrigCwd()
-        elif "--explorer" in self._arguments:
-            pass
         else:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
