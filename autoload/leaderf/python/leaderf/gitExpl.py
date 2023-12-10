@@ -223,8 +223,8 @@ class GitCatFileCommand(GitCommand):
 
 class ParallelExecutor(object):
     @staticmethod
-    def run(cmd1, cmd2):
-        outputs = [[], []]
+    def run(*cmds):
+        outputs = [[] for _ in range(len(cmds))]
         stop_thread = False
 
         def readContent(content, output):
@@ -237,9 +237,9 @@ class ParallelExecutor(object):
                 print(e)
 
 
-        executors = (AsyncExecutor(), AsyncExecutor())
+        executors = [AsyncExecutor() for _ in range(len(cmds))]
         workers = []
-        for i, (exe, cmd) in enumerate(zip(executors, (cmd1, cmd2))):
+        for i, (exe, cmd) in enumerate(zip(executors, cmds)):
             content = exe.execute(cmd.getCommand(), encoding=lfEval("&encoding"))
             worker = threading.Thread(target=readContent, args=(content, outputs[i]))
             worker.daemon = True
