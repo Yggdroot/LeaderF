@@ -7,6 +7,7 @@ import os
 import os.path
 import json
 from functools import wraps
+from collections import OrderedDict
 from .utils import *
 from .explorer import *
 from .manager import *
@@ -260,7 +261,7 @@ class GitLogExplCommand(GitCommand):
         super(GitLogExplCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
-        self._cmd = 'git show -m --raw --numstat --pretty=format:"# %P" --no-abbrev {}'.format(self._source)
+        self._cmd = 'git show -m --raw --numstat --shortstat --pretty=format:"# %P" --no-abbrev {}'.format(self._source)
         self._buffer_name = "LeaderF://navigation/" + self._source
         self._file_type_cmd = ""
 
@@ -459,10 +460,60 @@ class GitCommandView(object):
     def valid(self):
         return self._buffer is not None and self._buffer.valid
 
+class TreeNode(object):
+    def __init__(self):
+        # key is the directory name, value is a TreeNode
+        self.dirs = OrderedDict()
+        # key is the file name,
+        # value is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        self.files = OrderedDict()
+
 
 class TreeView(GitCommandView):
     def __init__(self, owner, cmd, window_id):
         super(TreeView, self).__init__(owner, cmd, window_id)
+        # key is the parent hash, value is a TreeNode
+        self._trees = {}
+
+    def getSource(self, line):
+        """
+        :000000 100644 000000000 5b01d33aa A    runtime/syntax/json5.vim
+        :100644 100644 671b269c0 ef52cddf4 M    runtime/syntax/nix.vim
+        :100644 100644 69671c59c 084f8cdb4 M    runtime/syntax/zsh.vim
+        :100644 100644 b90f76fc1 bad07e644 R099 src/version.c   src/version2.c
+        :100644 000000 b5825eb19 000000000 D    src/testdir/dumps
+
+        ':100644 100644 72943a1 dbee026 R050\thello world.txt\thello world2.txt'
+
+        return a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        """
+        tmp = line.split(sep='\t')
+        file_names = (tmp[1], tmp[2] if len(tmp) == 3 else "")
+        blob_status = tmp[0].split()
+        return (blob_status[2], blob_status[3], blob_status[4],
+                file_names[0], file_names[1])
+
+    def buildTree(self, cmd_outputs):
+        """
+        cmd_outputs is something as follows:
+
+        # 9d0ccb54c743424109751a82a742984699e365fe 63aa0c07bcd16ddac52d5275b9513712b780bc25
+        :100644 100644 0cbabf4 d641678 M        src/a.txt
+        2       0       src/a.txt
+         1 file changed, 2 insertions(+)
+
+        # 9d0ccb54c743424109751a82a742984699e365fe 63aa0c07bcd16ddac52d5275b9513712b780bc25
+        :100644 100644 acc5824 d641678 M        src/a.txt
+        3       0       src/a.txt
+         1 file changed, 3 insertions(+)
+        """
+        for line in cmd_outputs:
+            if line.startswith("#"):
+                size = len(self._trees)
+                self._trees[line.split()[size + 1]] = TreeNode()
+            elif line.startswith(":"):
+                source = self.getSource(line)
+
 
     def writeBuffer(self):
         if self._read_finished == 2:
