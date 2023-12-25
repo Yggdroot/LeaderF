@@ -31,12 +31,12 @@ function! leaderf#Mru#Maps()
     nnoremap <buffer> <silent> a             :exec g:Lf_py "mruExplManager.selectAll()"<CR>
     nnoremap <buffer> <silent> c             :exec g:Lf_py "mruExplManager.clearSelections()"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "mruExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             :exec g:Lf_py "mruExplManager.moveAndPreview('j')"<CR>
-    nnoremap <buffer> <silent> k             :exec g:Lf_py "mruExplManager.moveAndPreview('k')"<CR>
-    nnoremap <buffer> <silent> <Up>          :exec g:Lf_py "mruExplManager.moveAndPreview('Up')"<CR>
-    nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "mruExplManager.moveAndPreview('Down')"<CR>
-    nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "mruExplManager.moveAndPreview('PageUp')"<CR>
-    nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "mruExplManager.moveAndPreview('PageDown')"<CR>
+    nnoremap <buffer> <silent> j             :<C-U>exec g:Lf_py "mruExplManager.moveAndPreview('j')"<CR>
+    nnoremap <buffer> <silent> k             :<C-U>exec g:Lf_py "mruExplManager.moveAndPreview('k')"<CR>
+    nnoremap <buffer> <silent> <Up>          :<C-U>exec g:Lf_py "mruExplManager.moveAndPreview('Up')"<CR>
+    nnoremap <buffer> <silent> <Down>        :<C-U>exec g:Lf_py "mruExplManager.moveAndPreview('Down')"<CR>
+    nnoremap <buffer> <silent> <PageUp>      :<C-U>exec g:Lf_py "mruExplManager.moveAndPreview('PageUp')"<CR>
+    nnoremap <buffer> <silent> <PageDown>    :<C-U>exec g:Lf_py "mruExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "mruExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "mruExplManager._toDownInPopup()"<CR>
     nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "mruExplManager.closePreviewPopupOrQuit()"<CR>

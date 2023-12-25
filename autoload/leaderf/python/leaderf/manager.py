@@ -1348,6 +1348,8 @@ class Manager(object):
         """
         direction is in {'j', 'k', 'Down', 'Up', 'PageDown', 'PageUp'}
         """
+        count = int(lfEval("v:count"))
+
         if (direction in ("j", "Down") and self._getInstance().window.cursor[0] == len(self._getInstance().buffer)
             and self._circular_scroll):
             lfCmd('noautocmd exec "norm! gg"')
@@ -1355,9 +1357,9 @@ class Manager(object):
             lfCmd('noautocmd exec "norm! G"')
         else:
             if len(direction) > 1:
-                lfCmd(r'noautocmd exec "norm! \<{}>"'.format(direction))
+                lfCmd(r'noautocmd exec "norm! {}\<{}>"'.format(count, direction))
             else:
-                lfCmd('noautocmd exec "norm! {}"'.format(direction))
+                lfCmd('noautocmd exec "norm! {}{}"'.format(count, direction))
 
         if self._getInstance().getWinPos() == 'floatwin':
             self._cli._buildPopupPrompt()

@@ -29,12 +29,12 @@ function! leaderf#Buffer#Maps()
     nnoremap <buffer> <silent> d             :exec g:Lf_py "bufExplManager.deleteBuffer(1)"<CR>
     nnoremap <buffer> <silent> D             :exec g:Lf_py "bufExplManager.deleteBuffer()"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "bufExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             :exec g:Lf_py "bufExplManager.moveAndPreview('j')"<CR>
-    nnoremap <buffer> <silent> k             :exec g:Lf_py "bufExplManager.moveAndPreview('k')"<CR>
-    nnoremap <buffer> <silent> <Up>          :exec g:Lf_py "bufExplManager.moveAndPreview('Up')"<CR>
-    nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "bufExplManager.moveAndPreview('Down')"<CR>
-    nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "bufExplManager.moveAndPreview('PageUp')"<CR>
-    nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "bufExplManager.moveAndPreview('PageDown')"<CR>
+    nnoremap <buffer> <silent> j             :<C-U>exec g:Lf_py "bufExplManager.moveAndPreview('j')"<CR>
+    nnoremap <buffer> <silent> k             :<C-U>exec g:Lf_py "bufExplManager.moveAndPreview('k')"<CR>
+    nnoremap <buffer> <silent> <Up>          :<C-U>exec g:Lf_py "bufExplManager.moveAndPreview('Up')"<CR>
+    nnoremap <buffer> <silent> <Down>        :<C-U>exec g:Lf_py "bufExplManager.moveAndPreview('Down')"<CR>
+    nnoremap <buffer> <silent> <PageUp>      :<C-U>exec g:Lf_py "bufExplManager.moveAndPreview('PageUp')"<CR>
+    nnoremap <buffer> <silent> <PageDown>    :<C-U>exec g:Lf_py "bufExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "bufExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "bufExplManager._toDownInPopup()"<CR>
     nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufExplManager.closePreviewPopupOrQuit()"<CR>

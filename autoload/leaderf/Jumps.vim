@@ -28,12 +28,12 @@ function! leaderf#Jumps#Maps()
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "jumpsExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> <F5>          :exec g:Lf_py "jumpsExplManager.refresh()"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "jumpsExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             :exec g:Lf_py "jumpsExplManager.moveAndPreview('j')"<CR>
-    nnoremap <buffer> <silent> k             :exec g:Lf_py "jumpsExplManager.moveAndPreview('k')"<CR>
-    nnoremap <buffer> <silent> <Up>          :exec g:Lf_py "jumpsExplManager.moveAndPreview('Up')"<CR>
-    nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "jumpsExplManager.moveAndPreview('Down')"<CR>
-    nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "jumpsExplManager.moveAndPreview('PageUp')"<CR>
-    nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "jumpsExplManager.moveAndPreview('PageDown')"<CR>
+    nnoremap <buffer> <silent> j             :<C-U>exec g:Lf_py "jumpsExplManager.moveAndPreview('j')"<CR>
+    nnoremap <buffer> <silent> k             :<C-U>exec g:Lf_py "jumpsExplManager.moveAndPreview('k')"<CR>
+    nnoremap <buffer> <silent> <Up>          :<C-U>exec g:Lf_py "jumpsExplManager.moveAndPreview('Up')"<CR>
+    nnoremap <buffer> <silent> <Down>        :<C-U>exec g:Lf_py "jumpsExplManager.moveAndPreview('Down')"<CR>
+    nnoremap <buffer> <silent> <PageUp>      :<C-U>exec g:Lf_py "jumpsExplManager.moveAndPreview('PageUp')"<CR>
+    nnoremap <buffer> <silent> <PageDown>    :<C-U>exec g:Lf_py "jumpsExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "jumpsExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "jumpsExplManager._toDownInPopup()"<CR>
     nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "jumpsExplManager.closePreviewPopupOrQuit()"<CR>

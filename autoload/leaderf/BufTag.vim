@@ -27,12 +27,12 @@ function! leaderf#BufTag#Maps()
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "bufTagExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "bufTagExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "bufTagExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             :exec g:Lf_py "bufTagExplManager.moveAndPreview('j')"<CR>
-    nnoremap <buffer> <silent> k             :exec g:Lf_py "bufTagExplManager.moveAndPreview('k')"<CR>
-    nnoremap <buffer> <silent> <Up>          :exec g:Lf_py "bufTagExplManager.moveAndPreview('Up')"<CR>
-    nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "bufTagExplManager.moveAndPreview('Down')"<CR>
-    nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "bufTagExplManager.moveAndPreview('PageUp')"<CR>
-    nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "bufTagExplManager.moveAndPreview('PageDown')"<CR>
+    nnoremap <buffer> <silent> j             :<C-U>exec g:Lf_py "bufTagExplManager.moveAndPreview('j')"<CR>
+    nnoremap <buffer> <silent> k             :<C-U>exec g:Lf_py "bufTagExplManager.moveAndPreview('k')"<CR>
+    nnoremap <buffer> <silent> <Up>          :<C-U>exec g:Lf_py "bufTagExplManager.moveAndPreview('Up')"<CR>
+    nnoremap <buffer> <silent> <Down>        :<C-U>exec g:Lf_py "bufTagExplManager.moveAndPreview('Down')"<CR>
+    nnoremap <buffer> <silent> <PageUp>      :<C-U>exec g:Lf_py "bufTagExplManager.moveAndPreview('PageUp')"<CR>
+    nnoremap <buffer> <silent> <PageDown>    :<C-U>exec g:Lf_py "bufTagExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "bufTagExplManager._toUpInPopup()"<CR>
     nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "bufTagExplManager._toDownInPopup()"<CR>
     nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "bufTagExplManager.closePreviewPopupOrQuit()"<CR>

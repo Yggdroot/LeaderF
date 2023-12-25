@@ -23,12 +23,12 @@ function! leaderf#Gtags#Maps()
     nnoremap <buffer> <silent> v             :exec g:Lf_py "gtagsExplManager.accept('v')"<CR>
     nnoremap <buffer> <silent> t             :exec g:Lf_py "gtagsExplManager.accept('t')"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "gtagsExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             :exec g:Lf_py "gtagsExplManager.moveAndPreview('j')"<CR>
-    nnoremap <buffer> <silent> k             :exec g:Lf_py "gtagsExplManager.moveAndPreview('k')"<CR>
-    nnoremap <buffer> <silent> <Up>          :exec g:Lf_py "gtagsExplManager.moveAndPreview('Up')"<CR>
-    nnoremap <buffer> <silent> <Down>        :exec g:Lf_py "gtagsExplManager.moveAndPreview('Down')"<CR>
-    nnoremap <buffer> <silent> <PageUp>      :exec g:Lf_py "gtagsExplManager.moveAndPreview('PageUp')"<CR>
-    nnoremap <buffer> <silent> <PageDown>    :exec g:Lf_py "gtagsExplManager.moveAndPreview('PageDown')"<CR>
+    nnoremap <buffer> <silent> j             :<C-U>exec g:Lf_py "gtagsExplManager.moveAndPreview('j')"<CR>
+    nnoremap <buffer> <silent> k             :<C-U>exec g:Lf_py "gtagsExplManager.moveAndPreview('k')"<CR>
+    nnoremap <buffer> <silent> <Up>          :<C-U>exec g:Lf_py "gtagsExplManager.moveAndPreview('Up')"<CR>
+    nnoremap <buffer> <silent> <Down>        :<C-U>exec g:Lf_py "gtagsExplManager.moveAndPreview('Down')"<CR>
+    nnoremap <buffer> <silent> <PageUp>      :<C-U>exec g:Lf_py "gtagsExplManager.moveAndPreview('PageUp')"<CR>
+    nnoremap <buffer> <silent> <PageDown>    :<C-U>exec g:Lf_py "gtagsExplManager.moveAndPreview('PageDown')"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "gtagsExplManager.quit()"<CR>
     " nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "gtagsExplManager.quit()"<CR>
     nnoremap <buffer> <silent> i             :exec g:Lf_py "gtagsExplManager.input()"<CR>
