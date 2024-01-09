@@ -594,6 +594,7 @@ class RgExplManager(Manager):
             else:
                 lfCmd("hide buffer +%s %s" % (line_num, buf_number))
             lfCmd("norm! ^zv")
+            lfCmd("call search('%s', 'zW', line('.'))" % escQuote(self._getExplorer().getPatternRegex()[0]))
             lfCmd("norm! zz")
 
             if "preview" not in kwargs:
