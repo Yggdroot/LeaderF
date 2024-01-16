@@ -274,6 +274,22 @@ class RgExplorer(Explorer):
                 except:
                     pass
 
+        buffer_names = { b.number: lfRelpath(b.name) for b in vim.buffers }
+
+        def formatLine(line):
+            try:
+                if "@LeaderF@" not in line:
+                    return line
+
+                _, line = line.split("@LeaderF@", 1)
+                buf_number = line.split(":", 1)[0]
+                buf_name = buffer_names[int(buf_number)]
+                return line.replace(buf_number, buf_name, 1)
+            except:
+                return line
+
+        format_line = None
+
         if sys.version_info >= (3, 0):
             tmp_file = partial(tempfile.NamedTemporaryFile, encoding=lfEval("&encoding"))
         else:
@@ -282,44 +298,65 @@ class RgExplorer(Explorer):
         if "--current-buffer" in arguments_dict:
             path = ''   # omit the <PATH> option
             if vim.current.buffer.name:
-                try:
-                    path = '"%s"' % os.path.relpath(lfDecode(vim.current.buffer.name))
-                except ValueError:
-                    path = '"%s"' % lfDecode(vim.current.buffer.name)
+                if vim.current.buffer.options["modified"] == False:
+                    try:
+                        path = '"%s"' % os.path.relpath(lfDecode(vim.current.buffer.name))
+                    except ValueError:
+                        path = '"%s"' % lfDecode(vim.current.buffer.name)
+                else:
+                    with tmp_file(mode='w', suffix='@LeaderF@'+str(vim.current.buffer.number),
+                                  delete=False) as f:
+                        file_name = lfDecode(f.name)
+                        for line in vim.current.buffer:
+                            f.write(line + '\n')
+
+                    path = '"' + file_name + '"'
+                    tmpfilenames.append(file_name)
+                    format_line = formatLine
             else:
                 file_name = "%d_'No_Name_%d'" % (os.getpid(), vim.current.buffer.number)
                 try:
                     with lfOpen(file_name, 'w', errors='ignore') as f:
-                        for line in vim.current.buffer[:]:
+                        for line in vim.current.buffer:
                             f.write(line + '\n')
                 except IOError:
                     with tmp_file(mode='w', suffix='_'+file_name, delete=False) as f:
                         file_name = lfDecode(f.name)
-                        for line in vim.current.buffer[:]:
+                        for line in vim.current.buffer:
                             f.write(line + '\n')
 
                 path = '"' + file_name + '"'
                 tmpfilenames.append(file_name)
-
-        if "--all-buffers" in arguments_dict:
+        elif "--all-buffers" in arguments_dict:
             path = ''   # omit the <PATH> option
             for b in vim.buffers:
                 if lfEval("buflisted(%d)" % b.number) == '1':
                     if b.name:
-                        try:
-                            path += '"' + os.path.relpath(lfDecode(b.name)) + '" '
-                        except ValueError:
-                            path += '"' + lfDecode(b.name) + '" '
+                        if b.options["modified"] == False:
+                            try:
+                                path += '"' + os.path.relpath(lfDecode(b.name)) + '" '
+                            except ValueError:
+                                path += '"' + lfDecode(b.name) + '" '
+                        else:
+                            with tmp_file(mode='w', suffix='@LeaderF@'+str(b.number),
+                                          delete=False) as f:
+                                file_name = lfDecode(f.name)
+                                for line in b:
+                                    f.write(line + '\n')
+
+                            path += '"' + file_name + '" '
+                            tmpfilenames.append(file_name)
+                            format_line = formatLine
                     else:
                         file_name = "%d_'No_Name_%d'" % (os.getpid(), b.number)
                         try:
                             with lfOpen(file_name, 'w', errors='ignore') as f:
-                                for line in b[:]:
+                                for line in b:
                                     f.write(line + '\n')
                         except IOError:
                             with tmp_file(mode='w', suffix='_'+file_name, delete=False) as f:
                                 file_name = lfDecode(f.name)
-                                for line in b[:]:
+                                for line in b:
                                     f.write(line + '\n')
 
                         path += '"' + file_name + '" '
@@ -336,10 +373,14 @@ class RgExplorer(Explorer):
             heading = "--no-heading"
 
         cmd = '''{} {} --no-config --no-ignore-messages {} --with-filename --color never --line-number '''\
-                '''{} {}{}{}{}{}{}'''.format(self._rg, extra_options, heading, case_flag, word_or_line, zero_args_options,
-                                                  one_args_options, repeatable_options, lfDecode(pattern), path)
+                '''{} {}{}{}{}{}{}'''.format(self._rg, extra_options, heading, case_flag,
+                                             word_or_line, zero_args_options, one_args_options,
+                                             repeatable_options, lfDecode(pattern), path)
         lfCmd("let g:Lf_Debug_RgCmd = '%s'" % escQuote(cmd))
-        content = executor.execute(cmd, encoding=lfEval("&encoding"), cleanup=partial(removeFiles, tmpfilenames), raise_except=raise_except)
+        content = executor.execute(cmd, encoding=lfEval("&encoding"),
+                                   cleanup=partial(removeFiles, tmpfilenames),
+                                   raise_except=raise_except,
+                                   format_line=format_line)
         return content
 
     def translateRegex(self, regex, is_perl=False):
