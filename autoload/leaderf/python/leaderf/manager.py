@@ -129,6 +129,7 @@ class Manager(object):
         self._arguments = {}
         self._getExplClass()
         self._preview_filetype = None
+        self._orig_source = None
         self._preview_config = {}
         self._circular_scroll = lfEval("get(g:, 'Lf_EnableCircularScroll', 0)") == '1'
         if lfEval("has('patch-8.1.1615') || has('nvim-0.5.0')") == '0':
@@ -862,53 +863,56 @@ class Manager(object):
             else:
                 lfCmd("call popup_setoptions(%d, %s)" % (self._preview_winid, str(self._preview_config)))
 
-        if lfEval("has('nvim')") == '1':
-            if isinstance(source, int):
-                lfCmd("noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
-                self._setWinOptions(self._preview_winid)
-                self._preview_filetype = ''
-            else:
-                try:
-                    if self._isBinaryFile(source):
-                        lfCmd("""let content = map(range(128), '"^@"')""")
-                    else:
-                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
-                except vim.error as e:
-                    lfPrintError(e)
-                    return
-                if lfEval("!exists('g:Lf_preview_scratch_buffer') || !bufexists(g:Lf_preview_scratch_buffer)") == '1':
-                    lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
-                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
-                lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'modeline', v:true)")
-                lfCmd("noautocmd call nvim_buf_set_lines(g:Lf_preview_scratch_buffer, 0, -1, v:false, content)")
-                lfCmd("noautocmd call nvim_win_set_buf(%d, g:Lf_preview_scratch_buffer)" % self._preview_winid)
+        if self._orig_source != source:
+            self._orig_source = source
 
-                cur_filetype = getExtension(source)
-                if cur_filetype != self._preview_filetype:
-                    lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(source)))
-                    self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
-        else:
-            if isinstance(source, int):
-                lfCmd("noautocmd call popup_settext(%d, getbufline(%d, 1, '$'))" % (self._preview_winid, source) )
-                filename = vim.buffers[source].name
+            if lfEval("has('nvim')") == '1':
+                if isinstance(source, int):
+                    lfCmd("noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
+                    self._setWinOptions(self._preview_winid)
+                    self._preview_filetype = ''
+                else:
+                    try:
+                        if self._isBinaryFile(source):
+                            lfCmd("""let content = map(range(128), '"^@"')""")
+                        else:
+                            lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
+                    except vim.error as e:
+                        lfPrintError(e)
+                        return
+                    if lfEval("!exists('g:Lf_preview_scratch_buffer') || !bufexists(g:Lf_preview_scratch_buffer)") == '1':
+                        lfCmd("noautocmd let g:Lf_preview_scratch_buffer = nvim_create_buf(0, 1)")
+                    lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
+                    lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'modeline', v:true)")
+                    lfCmd("noautocmd call nvim_buf_set_lines(g:Lf_preview_scratch_buffer, 0, -1, v:false, content)")
+                    lfCmd("noautocmd call nvim_win_set_buf(%d, g:Lf_preview_scratch_buffer)" % self._preview_winid)
+
+                    cur_filetype = getExtension(source)
+                    if cur_filetype != self._preview_filetype:
+                        lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(source)))
+                        self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
             else:
-                filename = source
-                try:
-                    if self._isBinaryFile(filename):
-                        lfCmd("""let content = map(range(128), '"^@"')""")
-                    else:
-                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
-                except vim.error as e:
-                    lfPrintError(e)
-                    return
-                lfCmd("noautocmd call popup_settext(%d, content)" % self._preview_winid )
+                if isinstance(source, int):
+                    lfCmd("noautocmd call popup_settext(%d, getbufline(%d, 1, '$'))" % (self._preview_winid, source))
+                    filename = vim.buffers[source].name
+                else:
+                    filename = source
+                    try:
+                        if self._isBinaryFile(filename):
+                            lfCmd("""let content = map(range(128), '"^@"')""")
+                        else:
+                            lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
+                    except vim.error as e:
+                        lfPrintError(e)
+                        return
+                    lfCmd("noautocmd call popup_settext(%d, content)" % self._preview_winid)
 
             cur_filetype = getExtension(filename)
             if cur_filetype != self._preview_filetype:
                 lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(filename)))
                 self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
 
-        self._setWinOptions(self._preview_winid)
+            self._setWinOptions(self._preview_winid)
 
         if jump_cmd:
             lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
@@ -1115,6 +1119,8 @@ class Manager(object):
 
             self._updateOptions(preview_pos, show_borders, options)
             self._createPreviewWindow(options, source, line_num, jump_cmd)
+
+        self._orig_source = source
 
         return True
 
