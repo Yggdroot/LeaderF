@@ -907,10 +907,10 @@ class Manager(object):
                         return
                     lfCmd("noautocmd call popup_settext(%d, content)" % self._preview_winid)
 
-            cur_filetype = getExtension(filename)
-            if cur_filetype != self._preview_filetype:
-                lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(filename)))
-                self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
+                cur_filetype = getExtension(filename)
+                if cur_filetype != self._preview_filetype:
+                    lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(filename)))
+                    self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
 
             self._setWinOptions(self._preview_winid)
 
