@@ -232,9 +232,16 @@ class RgExplorer(Explorer):
             if "--live" in arguments_dict:
                 if "--no-fixed-strings" in arguments_dict:
                     p = i.replace('"', r'\"')
+                    if os.name != 'nt':
+                        pattern += r'-e "%s" ' % p.replace(r'\$', r'\\$').replace('$', r'\$')
+                    else:
+                        pattern += r'-e "%s" ' % p
                 else:
                     p = i.replace('\\', r'\\').replace('"', r'\"')
-                pattern += r'-e "%s" ' % p
+                    if os.name != 'nt':
+                        pattern += r'-e "%s" ' % p.replace('$', r'\$')
+                    else:
+                        pattern += r'-e "%s" ' % p
             else:
                 if len(i) > 1 and (i[0] == i[-1] == '"' or i[0] == i[-1] == "'"):
                     p = i[1:-1]
@@ -245,7 +252,13 @@ class RgExplorer(Explorer):
                 if p == '':
                     continue
 
-                pattern += r'-e "%s" ' % p
+                if os.name != 'nt':
+                    if "-F" in arguments_dict:
+                        pattern += r'-e "%s" ' % p.replace('$', r'\$')
+                    else:
+                        pattern += r'-e "%s" ' % p.replace(r'\$', r'\\$').replace('$', r'\$')
+                else:
+                    pattern += r'-e "%s" ' % p
 
             if is_literal:
                 if word_or_line == '-w ':
