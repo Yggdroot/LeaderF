@@ -32,10 +32,22 @@ endfunction
 call s:InitVar('g:Lf_ShortcutF', '<Leader>f')
 call s:InitVar('g:Lf_ShortcutB', '<Leader>b')
 call s:InitVar('g:Lf_WindowPosition', 'bottom')
-call s:InitVar('g:Lf_CacheDirectory', $HOME)
 call s:InitVar('g:Lf_MruBufnrs', [])
 call s:InitVar('g:Lf_PythonExtensions', {})
 call s:InitVar('g:Lf_PreviewWindowID', {})
+
+if has('win32') || has('win64')
+    let s:cache_dir = $APPDATA
+    if s:cache_dir == ''
+        let s:cache_dir = $HOME
+    endif
+else
+    let s:cache_dir = $XDG_CACHE_HOME
+    if s:cache_dir == ''
+        let s:cache_dir = $HOME . '/.cache'
+    endif
+endif
+call s:InitVar('g:Lf_CacheDirectory', s:cache_dir)
 
 function! g:LfNoErrMsgMatch(expr, pat)
     try
@@ -107,10 +119,12 @@ function! s:Normalize(filename)
     endif
 endfunction
 
-augroup LeaderF_Mru
-    autocmd BufAdd,BufEnter,BufWritePost * call lfMru#record(s:Normalize(expand('<afile>:p'))) |
-                \ call lfMru#recordBuffer(expand('<abuf>'))
-augroup END
+if get(g:, 'Lf_MruEnable', 1) == 1
+    augroup LeaderF_Mru
+        autocmd BufEnter,BufWritePost * call lfMru#record(s:Normalize(expand('<afile>:p'))) |
+                    \ call lfMru#recordBuffer(expand('<abuf>'))
+    augroup END
+endif
 
 augroup LeaderF_Gtags
     autocmd!

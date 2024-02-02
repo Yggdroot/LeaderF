@@ -689,7 +689,7 @@ static PyObject* createWeights(void* weights)
  * fuzzyMatch(engine, source, pattern, is_name_only=False, sort_results=True)
  *
  * `is_name_only` is optional, it defaults to `False`, which indicates using the full path matching algorithm.
- * `sort_results` is optional, it defineds to `True`, which indicates whether to sort the results.
+ * `sort_results` is optional, it defaults to `True`, which indicates whether to sort the results.
  *
  * return a tuple, (a list of corresponding weight, a sorted list of items from `source` that match `pattern`).
  */
@@ -2134,7 +2134,7 @@ static void line_getDigest(char** str, uint32_t* length, Parameter* param)
  * fuzzyMatchPart(engine, source, pattern, category, param, is_name_only=False, sort_results=True)
  *
  * `is_name_only` is optional, it defaults to `False`, which indicates using the full path matching algorithm.
- * `sort_results` is optional, it defineds to `True`, which indicates whether to sort the results.
+ * `sort_results` is optional, it defaults to `True`, which indicates whether to sort the results.
  *
  * return a tuple, (a list of corresponding weight, a sorted list of items from `source` that match `pattern`).
  */

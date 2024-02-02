@@ -18,12 +18,17 @@ if &background ==? 'dark'
     highlight def Lf_hl_popup_inputText guifg=#dfebb2 guibg=#413d39 gui=NONE ctermfg=187 ctermbg=237 cterm=NONE
 
     " Lf_hl_popup_window is the wincolor of content window
-    highlight def Lf_hl_popup_window guifg=#ebdbb2 guibg=#323232 gui=NONE ctermfg=187 ctermbg=236 cterm=NONE
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
 
     " Lf_hl_popup_blank is the wincolor of statusline window
-    highlight def Lf_hl_popup_blank guifg=NONE guibg=#413d39 gui=NONE ctermbg=237 cterm=NONE
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
+
     highlight def Lf_hl_popup_prompt guifg=#fabd2f guibg=NONE gui=NONE ctermfg=214 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_popup_spin guifg=#e6e666 guibg=NONE gui=NONE ctermfg=185 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_popup_normalMode guifg=#282828 guibg=#a89984 gui=bold ctermfg=235 ctermbg=137 cterm=bold
@@ -114,7 +119,6 @@ if &background ==? 'dark'
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    highlight def link Lf_hl_popupBorder        VertSplit
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -127,17 +131,27 @@ if &background ==? 'dark'
     highlight def link Lf_hl_loclistFileName    Directory
     highlight def link Lf_hl_loclistLineNumber  Constant
     highlight def link Lf_hl_loclistColumnNumber Constant
+
+    highlight def link Lf_hl_jumpsTitle         Title
+    highlight def link Lf_hl_jumpsNumber        Number
+    highlight def link Lf_hl_jumpsLineCol       String
+    highlight def link Lf_hl_jumpsIndicator     Type
 else
     " Lf_hl_popup_inputText is the wincolor of input window
     highlight def Lf_hl_popup_inputText guifg=#504945 guibg=#faefb2 gui=NONE ctermfg=239 ctermbg=253 cterm=NONE
 
     " Lf_hl_popup_window is the wincolor of content window
-    highlight def Lf_hl_popup_window guifg=#665c54 guibg=#fcf4cf gui=NONE ctermfg=59 ctermbg=230 cterm=NONE
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
 
     " Lf_hl_popup_blank is the wincolor of statusline window
-    highlight def Lf_hl_popup_blank guifg=NONE guibg=#faefb2 gui=NONE ctermbg=253 cterm=NONE
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
+
     highlight def Lf_hl_popup_prompt guifg=#c77400 guibg=NONE gui=NONE ctermfg=172 cterm=NONE
     highlight def Lf_hl_popup_spin guifg=#f12d2d guibg=NONE gui=NONE ctermfg=196 cterm=NONE
     highlight def Lf_hl_popup_normalMode guifg=#fbf1c7 guibg=#a89984 gui=bold ctermfg=230 ctermbg=137 cterm=bold
@@ -229,7 +243,6 @@ else
     highlight def Lf_hl_gtagsHighlight guifg=#4d4d4d guibg=#cccc66 gui=NONE ctermfg=239 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    highlight def link Lf_hl_popupBorder        VertSplit
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -242,4 +255,9 @@ else
     highlight def link Lf_hl_loclistFileName    Directory
     highlight def link Lf_hl_loclistLineNumber  Constant
     highlight def link Lf_hl_loclistColumnNumber Constant
+
+    highlight def link Lf_hl_jumpsTitle         Title
+    highlight def link Lf_hl_jumpsNumber        Number
+    highlight def link Lf_hl_jumpsLineCol       String
+    highlight def link Lf_hl_jumpsIndicator     Type
 endif

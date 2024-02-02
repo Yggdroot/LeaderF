@@ -18,12 +18,17 @@ if &background ==? 'dark'
     highlight def Lf_hl_popup_inputText guifg=#87ceeb guibg=#4d4d4d gui=NONE ctermfg=117 ctermbg=239 cterm=NONE
 
     " Lf_hl_popup_window is the wincolor of content window
-    highlight def Lf_hl_popup_window guifg=#eeeeee guibg=#404040 gui=NONE ctermfg=255 ctermbg=237 cterm=NONE
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
 
     " Lf_hl_popup_blank is the wincolor of statusline window
-    highlight def Lf_hl_popup_blank guifg=NONE guibg=#4b4e50 gui=NONE ctermbg=239 cterm=NONE
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
+
     highlight def Lf_hl_popup_prompt guifg=#ffcd4a guibg=NONE gui=NONE ctermfg=221 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_popup_spin guifg=#e6e666 guibg=NONE gui=NONE ctermfg=185 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_popup_normalMode guifg=#333300 guibg=#c1ce96 gui=bold ctermfg=58 ctermbg=187 cterm=bold
@@ -42,10 +47,10 @@ if &background ==? 'dark'
     highlight def Lf_hl_cursorline guifg=Yellow guibg=NONE gui=NONE ctermfg=226 ctermbg=NONE cterm=NONE
 
     " the color of matching character
-    highlight def Lf_hl_match  guifg=SpringGreen guibg=NONE gui=bold ctermfg=85 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match  guifg=#afff5f guibg=NONE gui=bold ctermfg=155 ctermbg=NONE cterm=bold
 
     " the color of matching character in `And mode`
-    highlight def Lf_hl_match0 guifg=SpringGreen guibg=NONE gui=bold ctermfg=85 ctermbg=NONE cterm=bold
+    highlight def Lf_hl_match0 guifg=#afff5f guibg=NONE gui=bold ctermfg=155 ctermbg=NONE cterm=bold
     highlight def Lf_hl_match1 guifg=#fe8019 guibg=NONE gui=bold ctermfg=208 ctermbg=NONE cterm=bold
     highlight def Lf_hl_match2 guifg=#3ff5d1 guibg=NONE gui=bold ctermfg=50 ctermbg=NONE cterm=bold
     highlight def Lf_hl_match3 guifg=#ff7272 guibg=NONE gui=bold ctermfg=203 ctermbg=NONE cterm=bold
@@ -115,7 +120,6 @@ if &background ==? 'dark'
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    highlight def link Lf_hl_popupBorder        VertSplit
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -128,17 +132,27 @@ if &background ==? 'dark'
     highlight def link Lf_hl_loclistFileName    Directory
     highlight def link Lf_hl_loclistLineNumber  Constant
     highlight def link Lf_hl_loclistColumnNumber Constant
+
+    highlight def link Lf_hl_jumpsTitle         Title
+    highlight def link Lf_hl_jumpsNumber        Number
+    highlight def link Lf_hl_jumpsLineCol       String
+    highlight def link Lf_hl_jumpsIndicator     Type
 else
     " Lf_hl_popup_inputText is the wincolor of input window
     highlight def Lf_hl_popup_inputText guifg=#525252 guibg=#f4f3d7 gui=NONE ctermfg=239 ctermbg=230 cterm=NONE
 
     " Lf_hl_popup_window is the wincolor of content window
-    highlight def Lf_hl_popup_window guifg=#4d4d4d guibg=#fafbff gui=NONE ctermfg=239 ctermbg=231 cterm=NONE
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
 
     " Lf_hl_popup_blank is the wincolor of statusline window
-    highlight def Lf_hl_popup_blank guifg=NONE guibg=#eeecc1 gui=NONE ctermbg=230 cterm=NONE
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_blank", "StatusLineNC")
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
+
     highlight def Lf_hl_popup_prompt guifg=#c77400 guibg=NONE gui=NONE ctermfg=172 cterm=NONE
     highlight def Lf_hl_popup_spin guifg=#f12d2d guibg=NONE gui=NONE ctermfg=196 cterm=NONE
     highlight def Lf_hl_popup_normalMode guifg=#808000 guibg=#ccc88e gui=bold ctermfg=100 ctermbg=186 cterm=bold
@@ -230,7 +244,6 @@ else
     highlight def Lf_hl_gtagsHighlight guifg=#4d4d4d guibg=#cccc66 gui=NONE ctermfg=239 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    highlight def link Lf_hl_popupBorder        VertSplit
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -243,4 +256,9 @@ else
     highlight def link Lf_hl_loclistFileName    Directory
     highlight def link Lf_hl_loclistLineNumber  Constant
     highlight def link Lf_hl_loclistColumnNumber Constant
+
+    highlight def link Lf_hl_jumpsTitle         Title
+    highlight def link Lf_hl_jumpsNumber        Number
+    highlight def link Lf_hl_jumpsLineCol       String
+    highlight def link Lf_hl_jumpsIndicator     Type
 endif

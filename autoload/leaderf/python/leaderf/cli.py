@@ -18,11 +18,17 @@ def cursorController(func):
         if lfEval("exists('g:lf_gcr_stack')") == '0':
             lfCmd("let g:lf_gcr_stack = []")
         lfCmd("call add(g:lf_gcr_stack, &gcr)")
-        lfCmd("set gcr=a:invisible")
-        if lfEval("exists('g:lf_t_ve_stack')") == '0':
-            lfCmd("let g:lf_t_ve_stack = []")
-        lfCmd("call add(g:lf_t_ve_stack, &t_ve)")
-        lfCmd("set t_ve=")
+        if lfEval("has('nvim')") == '1':
+            lfCmd("hi Cursor blend=100")
+            lfCmd("set gcr+=a:ver1-Cursor/lCursor")
+        else:
+            lfCmd("set gcr=a:invisible")
+
+            if lfEval("exists('g:lf_t_ve_stack')") == '0':
+                lfCmd("let g:lf_t_ve_stack = []")
+            lfCmd("call add(g:lf_t_ve_stack, &t_ve)")
+            lfCmd("set t_ve=")
+
         lfCmd("let g:Lf_ttimeoutlen_orig = &ttimeoutlen")
         lfCmd("set ttimeoutlen=0")
         try:
@@ -32,8 +38,11 @@ def cursorController(func):
             lfCmd("let &ttimeoutlen = g:Lf_ttimeoutlen_orig")
             lfCmd("set gcr&")
             lfCmd("let &gcr = remove(g:lf_gcr_stack, -1)")
-            lfCmd("set t_ve&")
-            lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
+            if lfEval("has('nvim')") == '1':
+                lfCmd("hi Cursor blend=0")
+            else:
+                lfCmd("set t_ve&")
+                lfCmd("let &t_ve = remove(g:lf_t_ve_stack, -1)")
     return deco
 
 
@@ -59,7 +68,10 @@ class LfCli(object):
         self._running_status = 0
         self._input_buf_namespace = None
         self._setDefaultMode()
+        self._is_live = False
         self._additional_prompt_string = ''
+        self._quick_select = False
+        self.last_char = ''
         self._spin_symbols = lfEval("get(g:, 'Lf_SpinSymbols', [])")
         if not self._spin_symbols:
             if platform.system() == "Linux":
@@ -72,6 +84,17 @@ class LfCli(object):
 
     def setArguments(self, arguments):
         self._arguments = arguments
+        quick_select = self._arguments.get("--quick-select", [0])
+        if len(quick_select) == 0:
+            quick_select_value = 1
+        else:
+            quick_select_value = int(quick_select[0])
+
+        if "--quick-select" in self._arguments:
+            self._quick_select = not self._instance.isReverseOrder() and bool(quick_select_value)
+        else:
+            self._quick_select = (not self._instance.isReverseOrder()
+                                  and bool(int(lfEval("get(g:, 'Lf_QuickSelect', 0)"))))
 
     def _setDefaultMode(self):
         mode = lfEval("g:Lf_DefaultMode")
@@ -89,6 +112,7 @@ class LfCli(object):
             self._is_full_path = True
 
     def setCurrentMode(self, mode):
+        self._is_live = False
         if mode == 'NameOnly':       # nameOnly mode
             self._is_fuzzy = True
             self._is_full_path = False
@@ -98,6 +122,9 @@ class LfCli(object):
         elif mode == 'Fuzzy':     # fuzzy mode
             self._is_fuzzy = True
             self._is_full_path = False
+        elif mode == 'Live':     # live mode
+            self._is_fuzzy = False
+            self._is_live = True
         else:               # regex mode
             self._is_fuzzy = False
 
@@ -168,28 +195,6 @@ class LfCli(object):
         self._cursor_pos = len(self._cmdline)
         self._buildPattern()
 
-    # https://github.com/neovim/neovim/issues/6538
-    def _buildNvimPrompt(self):
-        lfCmd("redraw")
-        if self._is_fuzzy:
-            if self._is_full_path:
-                lfCmd("echohl Constant | echon '>F> {}' | echohl NONE".format(self._additional_prompt_string))
-            else:
-                lfCmd("echohl Constant | echon '>>> {}' | echohl NONE".format(self._additional_prompt_string))
-        else:
-            lfCmd("echohl Constant | echon 'R>> {}' | echohl NONE".format(self._additional_prompt_string))
-
-        lfCmd("echohl Normal | echon '%s' | echohl NONE" %
-              escQuote(''.join(self._cmdline[:self._cursor_pos])))
-        if self._cursor_pos < len(self._cmdline):
-            lfCmd("hi! default link Lf_hl_cursor Cursor")
-            lfCmd("echohl Lf_hl_cursor | echon '%s' | echohl NONE" %
-                  escQuote(''.join(self._cmdline[self._cursor_pos])))
-            lfCmd("echohl Normal | echon '%s' | echohl NONE" %
-                  escQuote(''.join(self._cmdline[self._cursor_pos+1:])))
-        else:
-            lfCmd("hi! default link Lf_hl_cursor NONE")
-
     def _buildPopupPrompt(self):
         self._instance.mimicCursor()
 
@@ -198,6 +203,8 @@ class LfCli(object):
                 prompt = ' >F> {}'.format(self._additional_prompt_string)
             else:
                 prompt = ' >>> {}'.format(self._additional_prompt_string)
+        elif self._is_live:
+            prompt = ' >>> {}'.format(self._additional_prompt_string)
         else:
             prompt = ' R>> {}'.format(self._additional_prompt_string)
 
@@ -205,7 +212,7 @@ class LfCli(object):
         input_window = self._instance.getPopupInstance().input_win
         content_winid = self._instance.getPopupInstance().content_win.id
         input_win_width = input_window.width
-        if lfEval("get(g:, 'Lf_PopupShowBorder', 0)") == '1' and lfEval("has('nvim')") == '0':
+        if lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1' and lfEval("has('nvim')") == '0':
             input_win_width -= 2
         if self._instance.getWinPos() == 'popup':
             lfCmd("""call win_execute(%d, 'let line_num = line(".")')""" % content_winid)
@@ -328,19 +335,12 @@ class LfCli(object):
         lfCmd("silent! redraw")
 
     def _buildPrompt(self):
-        if lfEval("has('nvim')") == '1' and self._instance.getWinPos() != 'floatwin':
-            self._buildNvimPrompt()
-            return
-
         if self._idle and datetime.now() - self._start_time < timedelta(milliseconds=500): # 500ms
             return
         else:
             self._start_time = datetime.now()
             if self._blinkon:
-                if self._instance.getWinPos() in ('popup', 'floatwin'):
-                    lfCmd("hi! default link Lf_hl_cursor Lf_hl_popup_cursor")
-                else:
-                    lfCmd("hi! default link Lf_hl_cursor Cursor")
+                lfCmd("hi! default link Lf_hl_cursor Lf_hl_popup_cursor")
             else:
                 lfCmd("hi! default link Lf_hl_cursor NONE")
 
@@ -359,6 +359,8 @@ class LfCli(object):
                 lfCmd("echohl Constant | echon '>F> {}' | echohl NONE".format(self._additional_prompt_string))
             else:
                 lfCmd("echohl Constant | echon '>>> {}' | echohl NONE".format(self._additional_prompt_string))
+        elif self._is_live:
+            lfCmd("echohl Constant | echon '>>> {}' | echohl NONE".format(self._additional_prompt_string))
         else:
             lfCmd("echohl Constant | echon 'R>> {}' | echohl NONE".format(self._additional_prompt_string))
 
@@ -423,7 +425,7 @@ class LfCli(object):
     def _join(self, cmdline):
         if not cmdline:
             return ''
-        cmd = ['%s\[^%s]\{-}' % (c, c) for c in cmdline[0:-1]]
+        cmd = [r'%s\[^%s]\{-}' % (c, c) for c in cmdline[0:-1]]
         cmd.append(cmdline[-1])
         regex = ''.join(cmd)
         return regex
@@ -445,31 +447,31 @@ class LfCli(object):
             cmdline = [r'\/' if c == '/' else r'\\' if c == '\\' else c
                        for c in self._cmdline] # \/ for syn match
             if self._is_full_path:
-                regex = '\c\V' + self._join(cmdline)
+                regex = r'\c\V' + self._join(cmdline)
                 lfCmd("syn match Lf_hl_match display /%s/ containedin="
                       "Lf_hl_nonHelp, Lf_hl_dirname, Lf_hl_filename contained" % regex)
             else:
                 if self._refine:
                     idx = self._cmdline.index(self._delimiter)
-                    regex = ('\c\V' + self._join(cmdline[:idx]),
-                             '\c\V' + self._join(cmdline[idx+1:]))
-                    if regex[0] == '\c\V' and regex[1] == '\c\V':
+                    regex = (r'\c\V' + self._join(cmdline[:idx]),
+                             r'\c\V' + self._join(cmdline[idx+1:]))
+                    if regex[0] == r'\c\V' and regex[1] == r'\c\V':
                         pass
-                    elif regex[0] == '\c\V':
+                    elif regex[0] == r'\c\V':
                         lfCmd("syn match Lf_hl_match display /%s/ "
                               "containedin=Lf_hl_dirname, Lf_hl_filename "
                               "contained" % regex[1])
-                    elif regex[1] == '\c\V':
+                    elif regex[1] == r'\c\V':
                         lfCmd("syn match Lf_hl_match display /%s/ "
                               "containedin=Lf_hl_filename contained" % regex[0])
                     else:
                         lfCmd("syn match Lf_hl_match display /%s/ "
                               "containedin=Lf_hl_filename contained" % regex[0])
                         lfCmd("syn match Lf_hl_match_refine display "
-                              "/%s\(\.\*\[\/]\)\@=/ containedin="
+                              r"/%s\(\.\*\[\/]\)\@=/ containedin="
                               "Lf_hl_dirname contained" % regex[1])
                 else:
-                    regex = '\c\V' + self._join(cmdline)
+                    regex = r'\c\V' + self._join(cmdline)
                     lfCmd("syn match Lf_hl_match display /%s/ "
                           "containedin=Lf_hl_filename contained" % regex)
         else:
@@ -541,7 +543,7 @@ class LfCli(object):
         else:
             pattern = self._pattern
 
-        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
+        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), 'LeaderF', 'history', category)
         if self._is_fuzzy:
             history_file = os.path.join(history_dir, 'fuzzy.txt')
         else:
@@ -571,7 +573,7 @@ class LfCli(object):
             f.writelines(lines)
 
     def previousHistory(self, category):
-        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
+        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), 'LeaderF', 'history', category)
         if self._is_fuzzy:
             history_file = os.path.join(history_dir, 'fuzzy.txt')
         else:
@@ -594,7 +596,7 @@ class LfCli(object):
         return True
 
     def nextHistory(self, category):
-        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), '.LfCache', 'history', category)
+        history_dir = os.path.join(lfEval("g:Lf_CacheDirectory"), 'LeaderF', 'history', category)
         if self._is_fuzzy:
             history_file = os.path.join(history_dir, 'fuzzy.txt')
         else:
@@ -736,11 +738,17 @@ class LfCli(object):
                     self._blinkon = True
 
                 if lfEval("!type(nr) && nr >= 0x20") == '1':
+                    char = lfEval("ch")
+                    if self._quick_select and char in "0123456789":
+                        self.last_char = char
+                        yield '<QuickSelect>'
+                        continue
+
                     if update == False:
                         update = True
                         prefix = ''.join(self._cmdline)
 
-                    self._insert(lfEval("ch"))
+                    self._insert(char)
                     self._buildPattern()
                     if self._pattern is None or (self._refine and self._pattern[1] == ''): # e.g. abc;
                         continue
@@ -754,7 +762,7 @@ class LfCli(object):
                 else:
                     cmd = ''
                     for (key, value) in self._key_dict.items():
-                        if lfEval('ch ==# "\%s"' % key) == '1':
+                        if lfEval(r'ch ==# "\%s"' % key) == '1':
                             cmd = value
                             break
                     if equal(cmd, '<CR>'):
@@ -770,9 +778,10 @@ class LfCli(object):
                             self._buildPattern()
                             yield '<Mode>'
                     elif equal(cmd, '<C-R>'):
-                        self._is_fuzzy = not self._is_fuzzy
-                        self._buildPattern()
-                        yield '<Mode>'
+                        if not self._is_live:
+                            self._is_fuzzy = not self._is_fuzzy
+                            self._buildPattern()
+                            yield '<Mode>'
                     elif equal(cmd, '<BS>') or equal(cmd, '<C-H>'):
                         if not self._pattern and self._refine == False:
                             continue
@@ -821,13 +830,9 @@ class LfCli(object):
                     elif equal(cmd, '<Right>'):
                         self._toRight()
                     elif equal(cmd, '<ScrollWheelUp>'):
-                        yield '<C-K>'
-                        yield '<C-K>'
-                        yield '<C-K>'
+                        yield '<ScrollWheelUp>'
                     elif equal(cmd, '<ScrollWheelDown>'):
-                        yield '<C-J>'
-                        yield '<C-J>'
-                        yield '<C-J>'
+                        yield '<ScrollWheelDown>'
                     elif equal(cmd, '<C-C>'):
                         yield '<Quit>'
                     else:

@@ -12,7 +12,7 @@ from .manager import *
 RE_USER_DEFINED_COMMAND = re.compile(r"^.{4}(\w+)")
 
 # index.txt line
-# "|:silent|	:sil[ent]	..."
+# "|:silent|    :sil[ent]       ..."
 #    ^^^^^^
 RE_BUILT_IN_COMMAND = re.compile(r"^\|:([^|]+)\|")
 
@@ -33,7 +33,7 @@ class CommandExplorer(Explorer):
         result_list = []
 
         # user-defined Ex commands
-        result = lfEval("execute('command')")
+        result = lfEval("leaderf#execute('command')")
 
         for line in result.splitlines()[2:]:
             match = RE_USER_DEFINED_COMMAND.match(line)

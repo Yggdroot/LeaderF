@@ -6,7 +6,7 @@ An efficient fuzzy finder that helps to locate files, buffers, mrus, gtags, etc.
  - Written in Python.
  - Support fuzzy and regex searching.
  - Full-featured.
- - [Well-designed fuzzy matching algorithm](https://github.com/Yggdroot/testFuzzyMatch).
+ - Well-designed fuzzy matching algorithm.
  - [Extensible](https://github.com/Yggdroot/LeaderF/wiki/Extensions).
 
 Changelog
@@ -36,7 +36,7 @@ Requirements
 
  - vim7.3 or higher. Only support 7.4.1126+ after [v1.01](https://github.com/Yggdroot/LeaderF/releases/tag/v1.01).
  - Python2.7+ or Python3.1+.
- - To use the popup mode, neovim 0.42+ or vim 8.1.1615+ are required.
+ - To use the popup mode, neovim 0.5.0+ or vim 8.1.1615+ are required.
 
 Installation
 ------------
@@ -75,7 +75,8 @@ Usage
 usage: Leaderf[!] [-h] [--reverse] [--stayOpen] [--input <INPUT> | --cword]
                   [--top | --bottom | --left | --right | --belowright | --aboveleft | --fullScreen | --popup]
                   [--nameOnly | --fullPath | --fuzzy | --regexMode] [--nowrap] [--next | --previous]
-                  [--recall] [--popup-height <POPUP_HEIGHT>] [--popup-width <POPUP_WIDTH>]
+                  [--recall] [--popup-height <POPUP_HEIGHT>] [--popup-width <POPUP_WIDTH>] [--no-sort]
+                  [--case-insensitive] [--auto-preview | --no-auto-preview]
                   
                   {file,tag,function,mru,searchHistory,cmdHistory,help,line,colorscheme,gtags,
                       self,bufTag,buffer,rg,filetype,command,window,quickfix,loclist,jumps}
@@ -110,6 +111,7 @@ optional arguments:
   --no-sort             do not sort the result.
   --case-insensitive    fuzzy search case insensitively.
   --auto-preview        open preview window automatically.
+  --no-auto-preview     don't open preview window automatically.
 
 subcommands:
 
@@ -233,12 +235,6 @@ or add `--popup` after each subcommand, e.g.,
 Leaderf file --popup
 ```
 
-It's better to set
-```vim
-let g:Lf_PreviewInPopup = 1
-```
-, so that you can also preview the result in a popup window.
-
 Customization
 -------------
 
@@ -295,7 +291,7 @@ Customization
     " Show icons, icons are shown by default
     let g:Lf_ShowDevIcons = 1
     " For GUI vim, the icon font can be specify like this, for example
-    let g:Lf_DevIconsFont = "DroidSansMono Nerd Font Mono"
+    let g:Lf_DevIconsFont = "DroidSansM Nerd Font Mono"
     " If needs
     set ambiwidth=double
     ```
@@ -312,7 +308,6 @@ let g:Lf_UseVersionControlTool = 0
 let g:Lf_IgnoreCurrentBufferName = 1
 " popup mode
 let g:Lf_WindowPosition = 'popup'
-let g:Lf_PreviewInPopup = 1
 let g:Lf_StlSeparator = { 'left': "\ue0b0", 'right': "\ue0b2", 'font': "DejaVu Sans Mono for Powerline" }
 let g:Lf_PreviewResult = {'Function': 0, 'BufTag': 0 }
 

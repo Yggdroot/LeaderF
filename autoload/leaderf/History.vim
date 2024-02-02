@@ -29,84 +29,18 @@ function! leaderf#History#Maps()
 endfunction
 
 function! leaderf#History#NormalModeFilter(winid, key) abort
-    let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
+    let key = leaderf#RemapKey(g:Lf_PyEval("id(historyExplManager)"), get(g:Lf_KeyMap, a:key, a:key))
 
-    if key !=# "g"
-        call win_execute(a:winid, "let g:Lf_History_is_g_pressed = 0")
-    endif
-
-    if key ==# "j" || key ==? "<Down>"
-        call win_execute(a:winid, "norm! j")
-        exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-        "redraw
-        exec g:Lf_py "historyExplManager._getInstance().refreshPopupStatusline()"
-    elseif key ==# "k" || key ==? "<Up>"
-        call win_execute(a:winid, "norm! k")
-        exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-        "redraw
-        exec g:Lf_py "historyExplManager._getInstance().refreshPopupStatusline()"
-    elseif key ==? "<PageUp>" || key ==? "<C-B>"
-        call win_execute(a:winid, "norm! \<PageUp>")
-        exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-        exec g:Lf_py "historyExplManager._getInstance().refreshPopupStatusline()"
-    elseif key ==? "<PageDown>" || key ==? "<C-F>"
-        call win_execute(a:winid, "norm! \<PageDown>")
-        exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-        exec g:Lf_py "historyExplManager._getInstance().refreshPopupStatusline()"
-    elseif key ==# "g"
-        if get(g:, "Lf_History_is_g_pressed", 0) == 0
-            let g:Lf_History_is_g_pressed = 1
-        else
-            let g:Lf_History_is_g_pressed = 0
-            call win_execute(a:winid, "norm! gg")
-            exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-            redraw
-        endif
-    elseif key ==# "G"
-        call win_execute(a:winid, "norm! G")
-        exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-        redraw
-    elseif key ==? "<C-U>"
-        call win_execute(a:winid, "norm! \<C-U>")
-        exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-        redraw
-    elseif key ==? "<C-D>"
-        call win_execute(a:winid, "norm! \<C-D>")
-        exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-        redraw
-    elseif key ==? "<LeftMouse>"
-        if exists("*getmousepos")
-            let pos = getmousepos()
-            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
-            exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-            redraw
-        elseif has('patch-8.1.2266')
-            call win_execute(a:winid, "exec v:mouse_lnum")
-            call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
-            exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-            redraw
-        endif
-    elseif key ==? "<ScrollWheelUp>"
-        call win_execute(a:winid, "norm! 3k")
-        exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-        redraw
-        exec g:Lf_py "historyExplManager._getInstance().refreshPopupStatusline()"
-    elseif key ==? "<ScrollWheelDown>"
-        call win_execute(a:winid, "norm! 3j")
-        exec g:Lf_py "historyExplManager._cli._buildPopupPrompt()"
-        redraw
-        exec g:Lf_py "historyExplManager._getInstance().refreshPopupStatusline()"
-    elseif key ==# "q" || key ==? "<ESC>"
-        exec g:Lf_py "historyExplManager.quit()"
-    elseif key ==# "i" || key ==? "<Tab>"
-        call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
-        exec g:Lf_py "historyExplManager.input()"
-    elseif key ==# "o" || key ==? "<CR>" || key ==? "<2-LeftMouse>"
-        exec g:Lf_py "historyExplManager.accept()"
-    elseif key ==? "<F1>"
-        exec g:Lf_py "historyExplManager.toggleHelp()"
-    elseif key ==? "e"
+    if key ==# "x"
+    elseif key ==# "v"
+    elseif key ==# "t"
+    elseif key ==# "p"
+    elseif key ==? "<C-Up>"
+    elseif key ==? "<C-Down>"
+    elseif key ==# "e"
         exec g:Lf_py "historyExplManager.editHistory()"
+    else
+        return leaderf#NormalModeFilter(g:Lf_PyEval("id(historyExplManager)"), a:winid, a:key)
     endif
 
     return 1

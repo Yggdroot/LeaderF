@@ -87,8 +87,9 @@ class TagExplManager(Manager):
                     lfDrop('', tagfile)
                 else:
                     lfCmd("hide edit %s" % escSpecial(tagfile))
-        except vim.error: # E37
-            lfPrintTraceback()
+        except vim.error as e: # E37
+            if 'E325' not in str(e).split(':'):
+                lfPrintTraceback()
 
         if tagaddress[0] not in '/?':
             lfCmd(tagaddress)
@@ -97,23 +98,23 @@ class TagExplManager(Manager):
 
             # In case there are mutiple matches.
             if len(res) > 1:
-                result = re.search('(?<=\t)line:\d+', res[1])
+                result = re.search(r'(?<=\t)line:\d+', res[1])
                 if result:
-                    line_nr = result.group(0).split(':')[1]
-                    lfCmd(line_nr)
+                    line_num = result.group(0).split(':')[1]
+                    lfCmd(line_num)
                 else: # for c, c++
                     keyword = "(class|enum|struct|union)"
-                    result = re.search('(?<=\t)%s:\S+' % keyword, res[1])
+                    result = re.search(r'(?<=\t)%s:\S+' % keyword, res[1])
                     if result:
                         tagfield = result.group(0).split(":")
                         name = tagfield[0]
                         value = tagfield[-1]
-                        lfCmd("call search('\m%s\_s\+%s\_[^;{]*{', 'w')" % (name, value))
+                        lfCmd(r"call search('\m%s\_s\+%s\_[^;{]*{', 'w')" % (name, value))
 
-            pattern = "\M" + tagaddress[1:-1]
+            pattern = r"\M" + tagaddress[1:-1]
             lfCmd("call search('%s', 'w')" % escQuote(pattern))
 
-        if lfEval("search('\V%s', 'wc')" % escQuote(tagname)) == '0':
+        if lfEval(r"search('\V%s', 'wc')" % escQuote(tagname)) == '0':
             lfCmd("norm! ^")
         lfCmd("norm! zv")
         lfCmd("norm! zz")
@@ -162,28 +163,28 @@ class TagExplManager(Manager):
     def _afterEnter(self):
         super(TagExplManager, self)._afterEnter()
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagFile'', ''^.\{-}\t\zs.\{-}\ze\t'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagFile'', ''^.\{-}\t\zs.\{-}\ze\t'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagType'', '';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagType'', '';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
             keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
             for i in keyword:
-                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagKeyword'', ''\(;"\t.\{-}\)\@<=%s:'')')"""
+                lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_tagKeyword'', ''\(;"\t.\{-}\)\@<=%s:'')')"""
                     % (self._getInstance().getPopupWinId(), i))
                 id = int(lfEval("matchid"))
                 self._match_ids.append(id)
         else:
-            id = int(lfEval('''matchadd('Lf_hl_tagFile', '^.\{-}\t\zs.\{-}\ze\t')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_tagFile', '^.\{-}\t\zs.\{-}\ze\t')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_tagType', ';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_tagType', ';"\t\zs[cdefFgmpstuv]\ze\(\t\|$\)')'''))
             self._match_ids.append(id)
             keyword = ["namespace", "class", "enum", "file", "function", "kind", "struct", "union"]
             for i in keyword:
-                id = int(lfEval('''matchadd('Lf_hl_tagKeyword', '\(;"\t.\{-}\)\@<=%s:')''' % i))
+                id = int(lfEval(r'''matchadd('Lf_hl_tagKeyword', '\(;"\t.\{-}\)\@<=%s:')''' % i))
                 self._match_ids.append(id)
 
     def _beforeExit(self):
@@ -210,8 +211,9 @@ class TagExplManager(Manager):
             instance.window.options["cursorline"] = True
 
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
+
         line = args[0]
         # {tagname}<Tab>{tagfile}<Tab>{tagaddress}[;"<Tab>{tagfield}..]
         tagname, tagfile, right = line.split('\t', 2)
@@ -222,21 +224,21 @@ class TagExplManager(Manager):
         else:
             # In case there are mutiple matches.
             if len(res) > 1:
-                result = re.search('(?<=\t)line:\d+', res[1])
+                result = re.search(r'(?<=\t)line:\d+', res[1])
                 if result:
-                    line_nr = result.group(0).split(':')[1]
-                    self._createPopupPreview("", tagfile, line_nr)
+                    line_num = result.group(0).split(':')[1]
+                    self._createPopupPreview("", tagfile, line_num)
                 else: # for c, c++
                     keyword = "(class|enum|struct|union)"
-                    result = re.search('(?<=\t)%s:\S+' % keyword, res[1])
+                    result = re.search(r'(?<=\t)%s:\S+' % keyword, res[1])
                     jump_cmd = 'exec "norm! gg"'
                     if result:
                         tagfield = result.group(0).split(":")
                         name = tagfield[0]
                         value = tagfield[-1]
-                        jump_cmd += " | call search('\m%s\_s\+%s\_[^;{]*{', 'w')" % (name, value)
+                        jump_cmd += r" | call search('\m%s\_s\+%s\_[^;{]*{', 'w')" % (name, value)
 
-                    pattern = "\M" + tagaddress[1:-1]
+                    pattern = r"\M" + tagaddress[1:-1]
                     jump_cmd += " | call search('%s', 'w')" % escQuote(pattern)
                     self._createPopupPreview("", tagfile, 0, jump_cmd)
 

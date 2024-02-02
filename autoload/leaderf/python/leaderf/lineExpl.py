@@ -65,8 +65,8 @@ class LineExplManager(Manager):
             return
         line = args[0]
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
-        line_nr, buf_number = line.rsplit(":", 1)[1].split()
-        lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
+        line_num, buf_number = line.rsplit(":", 1)[1].split()
+        lfCmd("hide buffer +%s %s" % (line_num, buf_number))
         lfCmd("norm! ^zv")
         lfCmd("norm! zz")
 
@@ -115,12 +115,12 @@ class LineExplManager(Manager):
     def _afterEnter(self):
         super(LineExplManager, self)._afterEnter()
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_lineLocation'', ''\t\zs\[.*:\d\+ \d\+]$'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_lineLocation'', ''\t\zs\[.*:\d\+ \d\+]$'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
         else:
-            id = int(lfEval('''matchadd('Lf_hl_lineLocation', '\t\zs\[.*:\d\+ \d\+]$')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_lineLocation', '\t\zs\[.*:\d\+ \d\+]$')'''))
             self._match_ids.append(id)
 
     def _beforeExit(self):
@@ -131,14 +131,14 @@ class LineExplManager(Manager):
         self._cursorline_dict.clear()
 
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]
         line = line.rsplit("\t", 1)[1][1:-1]    # file:line buf_number
-        line_nr, buf_number = line.rsplit(":", 1)[1].split()
+        line_num, buf_number = line.rsplit(":", 1)[1].split()
         buf_number = int(buf_number)
-        self._createPopupPreview(vim.buffers[int(buf_number)].name, buf_number, line_nr)
+        self._createPopupPreview(vim.buffers[int(buf_number)].name, buf_number, line_num)
 
     def outputToQflist(self, *args, **kwargs):
         items = self._getFormatedContents()
@@ -156,10 +156,10 @@ class LineExplManager(Manager):
         for line in self._instance._buffer_object[self._help_length:]:
             text, info = line.rsplit("\t", 1)
             info = info[1:-1]    # file:line buf_number
-            line_nr, buf_number = info.rsplit(":", 1)[1].split()
+            line_num, buf_number = info.rsplit(":", 1)[1].split()
             items.append({
                 "filename": lfEval("getbufinfo(%d)[0]['name']" % int(buf_number)),
-                "lnum": line_nr,
+                "lnum": line_num,
                 "col": 1,
                 "text": text,
             })

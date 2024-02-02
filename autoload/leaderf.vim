@@ -11,9 +11,11 @@ if !exists("g:Lf_PythonVersion")
     if has("python3")
         let g:Lf_PythonVersion = 3
         let g:Lf_py = "py3 "
+        let g:Lf_PyEval = function("py3eval")
     elseif has("python")
         let g:Lf_PythonVersion = 2
         let g:Lf_py = "py "
+        let g:Lf_PyEval = function("pyeval")
     else
         echoe "Error: LeaderF requires vim compiled with +python or +python3"
         finish
@@ -22,6 +24,7 @@ else
     if g:Lf_PythonVersion == 2
         if has("python")
             let g:Lf_py = "py "
+            let g:Lf_PyEval = function("pyeval")
         else
             echoe 'LeaderF Error: has("python") == 0'
             finish
@@ -29,6 +32,7 @@ else
     else
         if has("python3")
             let g:Lf_py = "py3 "
+            let g:Lf_PyEval = function("py3eval")
         else
             echoe 'LeaderF Error: has("python3") == 0'
             finish
@@ -117,14 +121,15 @@ call s:InitVar('g:Lf_WorkingDirectoryMode', 'c')
 call s:InitVar('g:Lf_WorkingDirectory', '')
 call s:InitVar('g:Lf_ShowHidden', 0)
 call s:InitDict('g:Lf_PreviewResult', {
-            \ 'File': 0,
-            \ 'Buffer': 0,
-            \ 'Mru': 0,
-            \ 'Tag': 0,
+            \ 'File': 1,
+            \ 'Buffer': 1,
+            \ 'Mru': 1,
+            \ 'Tag': 1,
             \ 'BufTag': 1,
             \ 'Function': 1,
-            \ 'Line': 0,
+            \ 'Line': 1,
             \ 'Colorscheme': 0,
+            \ 'Rg': 1,
             \ 'Jumps': 1
             \})
 call s:InitDict('g:Lf_NormalMap', {})
@@ -137,7 +142,7 @@ call s:InitDict('g:Lf_GtagsfilesCmd', {
             \ 'default': 'rg --no-messages --files'
             \})
 call s:InitVar('g:Lf_HistoryEditPromptIfEmpty', 1)
-call s:InitVar('g:Lf_PopupBorders', ['-','|','-','|','+','+','+','+'])
+call s:InitVar('g:Lf_PopupBorders', ["─","│","─","│","╭","╮","╯","╰"])
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
@@ -327,6 +332,17 @@ endfunction
 
 call s:InitCommandMap('g:Lf_CommandMap', s:Lf_CommandMap)
 
+function! leaderf#execute(cmd)
+    if exists('*execute')
+        return execute(a:cmd)
+    else
+        redir => l:output
+        silent! execute a:cmd
+        redir END
+        return l:output
+    endif
+endfunction
+
 function! leaderf#versionCheck()
     if g:Lf_PythonVersion == 2 && pyeval("sys.version_info < (2, 7)")
         echohl Error
@@ -364,21 +380,13 @@ function! leaderf#visual() abort
 endfunction
 
 function! leaderf#popupModePreviewFilter(winid, key) abort
-    let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
-    if key ==? "<ESC>"
-        noautocmd call popup_close(a:winid)
-        redraw
-        return 0
-    elseif key ==? "<CR>"
-        noautocmd call popup_close(a:winid)
-        " https://github.com/vim/vim/issues/5216
-        "redraw
-        return 0
-    elseif key ==? "<LeftMouse>"
+    let key = get(g:Lf_KeyMap, a:key, a:key)
+    if key ==? "<LeftMouse>"
         if exists("*getmousepos")
             let pos = getmousepos()
             if pos.winid == a:winid
                 call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
+                redraw
                 return 1
             endif
         elseif has('patch-8.1.2266')
@@ -404,58 +412,20 @@ function! leaderf#popupModePreviewFilter(winid, key) abort
                 return 1
             endif
         endif
-    elseif key ==? "<ScrollWheelUp>"
-        call win_execute(a:winid, "norm! 3k")
-        redraw
-        return 1
-    elseif key ==? "<ScrollWheelDown>"
-        call win_execute(a:winid, "norm! 3j")
-        redraw
-        return 1
-    endif
-    return 0
-endfunction
-
-function! leaderf#normalModePreviewFilter(id, winid, key) abort
-    let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
-    if key ==? "<ESC>"
-        noautocmd call popup_close(a:winid)
-        redraw
-        return 1
-    elseif key ==? "<CR>"
-        noautocmd call popup_close(a:winid)
-        " https://github.com/vim/vim/issues/5216
-        "redraw
-        return 0
-    elseif key ==? "<LeftMouse>" && has('patch-8.1.2266')
+    elseif key ==? "<ScrollWheelUp>" && exists("*getmousepos")
         let pos = getmousepos()
         if pos.winid == a:winid
-            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
-            return 1
-        else
-            noautocmd call popup_close(a:winid)
+            call win_execute(a:winid, "norm! 3\<C-Y>")
             redraw
-            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
-            exec g:Lf_py "import ctypes"
-            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
             return 1
         endif
-    elseif key ==? "<ScrollWheelUp>"
-        call win_execute(a:winid, "norm! 3k")
-        redraw
-        return 1
-    elseif key ==? "<ScrollWheelDown>"
-        call win_execute(a:winid, "norm! 3j")
-        redraw
-        return 1
-    elseif key ==? "<C-Up>"
-        call win_execute(a:winid, "norm! k")
-        redraw
-        return 1
-    elseif key ==? "<C-Down>"
-        call win_execute(a:winid, "norm! j")
-        redraw
-        return 1
+    elseif key ==? "<ScrollWheelDown>" && exists("*getmousepos")
+        let pos = getmousepos()
+        if pos.winid == a:winid
+            call win_execute(a:winid, "norm! 3\<C-E>")
+            redraw
+            return 1
+        endif
     endif
     return 0
 endfunction
@@ -464,23 +434,63 @@ function! leaderf#PopupFilter(winid, key) abort
     return 0
 endfunction
 
+function! leaderf#RemapKey(id, key) abort
+    exec g:Lf_py "import ctypes"
+
+    let normal_map = get(g:, 'Lf_NormalCommandMap', {})
+    let key_map = get(normal_map, '*', {})
+    let category = g:Lf_PyEval(printf("ctypes.cast(%d, ctypes.py_object).value._getExplorer().getStlCategory()", a:id))
+    for [old, new] in items(get(normal_map, category, {}))
+        let has_key = 0
+        for [k, v] in items(key_map)
+            if old =~ '\m<.\{-}>' && old ==? k
+                let key_map[k] = new
+                let has_key = 1
+                break
+            endif
+        endfor
+        if has_key == 0
+            let key_map[old] = new
+        endif
+    endfor
+
+    let key = a:key
+    let is_old = 0
+    let is_new = 0
+    for [old, new] in items(key_map)
+        if key =~ '\m<.\{-}>' && key ==? new || key ==# new
+            let key = old
+            let is_new = 1
+        endif
+        if key =~ '\m<.\{-}>' && key ==? old || key ==# old
+            let is_old = 1
+        endif
+    endfor
+
+    if is_old && is_new == 0
+        let key = ''
+    endif
+
+    return key
+endfunction
+
 function! leaderf#NormalModeFilter(id, winid, key) abort
     exec g:Lf_py "import ctypes"
 
-    let key = get(g:Lf_KeyDict, get(g:Lf_KeyMap, a:key, a:key), a:key)
+    let key = leaderf#RemapKey(a:id, get(g:Lf_KeyMap, a:key, a:key))
 
     if key !=# "g"
         call win_execute(a:winid, printf("let g:Lf_%d_is_g_pressed = 0", a:id))
     endif
 
     if key ==# "j" || key ==? "<Down>"
-        call win_execute(a:winid, "norm! j")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.move('j')", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         "redraw
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
     elseif key ==# "k" || key ==? "<Up>"
-        call win_execute(a:winid, "norm! k")
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.move('k')", a:id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
         "redraw
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
@@ -519,10 +529,15 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
     elseif key ==? "<LeftMouse>"
         if exists("*getmousepos")
             let pos = getmousepos()
-            call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
-            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
-            redraw
-            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+            if pos.winid == a:winid
+                call win_execute(pos.winid, "call cursor([pos.line, pos.column])")
+                exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+                exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+                redraw
+                return 1
+            else
+                return 0
+            endif
         elseif has('patch-8.1.2266')
             call win_execute(a:winid, "exec v:mouse_lnum")
             call win_execute(a:winid, "exec 'norm!'.v:mouse_col.'|'")
@@ -530,17 +545,31 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
             redraw
             exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
         endif
-    elseif key ==? "<ScrollWheelUp>"
-        call win_execute(a:winid, "norm! 3k")
-        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
-        redraw
-        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
-    elseif key ==? "<ScrollWheelDown>"
-        call win_execute(a:winid, "norm! 3j")
-        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
-        redraw
-        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
-    elseif key ==# "q" || key ==? "<ESC>"
+    elseif key ==? "<ScrollWheelUp>" && exists("*getmousepos")
+        let pos = getmousepos()
+        if pos.winid == a:winid
+            call win_execute(a:winid, "norm! 3\<C-Y>")
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+            redraw
+            return 1
+        else
+            return 0
+        endif
+    elseif key ==? "<ScrollWheelDown>" && exists("*getmousepos")
+        let pos = getmousepos()
+        if pos.winid == a:winid
+            call win_execute(a:winid, "norm! 3\<C-E>")
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._cli._buildPopupPrompt()", a:id)
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._getInstance().refreshPopupStatusline()", a:id)
+            exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(False)", a:id)
+            redraw
+            return 1
+        else
+            return 0
+        endif
+    elseif key ==# "q"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:id)
     elseif key ==# "i" || key ==? "<Tab>"
         call leaderf#ResetPopupOptions(a:winid, 'filter', 'leaderf#PopupFilter')
@@ -553,12 +582,6 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept('v')", a:id)
     elseif key ==# "t"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.accept('t')", a:id)
-    elseif key ==# "s"
-        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.addSelections()", a:id)
-    elseif key ==# "a"
-        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.selectAll()", a:id)
-    elseif key ==# "c"
-        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.clearSelections()", a:id)
     elseif key ==# "p"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._previewResult(True)", a:id)
     elseif key ==? "<F1>"
@@ -567,6 +590,8 @@ function! leaderf#NormalModeFilter(id, winid, key) abort
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._toUpInPopup()", a:id)
     elseif key ==? "<C-Down>"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._toDownInPopup()", a:id)
+    elseif key ==? "<ESC>"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.closePreviewPopupOrQuit()", a:id)
     endif
 
     return 1
@@ -583,6 +608,11 @@ function! leaderf#PopupClosed(id_list, manager_id, winid, result) abort
             endif
         endfor
     endif
+endfunction
+
+function! leaderf#Quit(manager_id) abort
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:manager_id)
 endfunction
 
 function! leaderf#ResetPopupOptions(winid, option, value) abort

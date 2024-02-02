@@ -82,8 +82,9 @@ class QfLocListExplManager(Manager):
             lfCmd("call cursor(%s, %s)" % (line_num, col))
             lfCmd("norm! zv")
             lfCmd("norm! zz")
-        except vim.error: # E37
-            lfPrintTraceback()
+        except vim.error as e: # E37
+            if 'E325' not in str(e).split(':'):
+                lfPrintTraceback()
 
     def _getDigest(self, line, mode):
         """
@@ -187,7 +188,7 @@ class QfLocListExplManager(Manager):
         return help
 
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]

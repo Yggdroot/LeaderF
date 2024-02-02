@@ -27,17 +27,15 @@ function! leaderf#Function#Maps()
     nnoremap <buffer> <silent> <Tab>         :exec g:Lf_py "functionExplManager.input()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "functionExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "functionExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             j:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> k             k:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "functionExplManager._previewResult(False)"<CR>
-    if has("nvim")
-        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "functionExplManager._toUpInPopup()"<CR>
-        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "functionExplManager._toDownInPopup()"<CR>
-        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "functionExplManager._closePreviewPopup()"<CR>
-    endif
+    nnoremap <buffer> <silent> j             :<C-U>exec g:Lf_py "functionExplManager.moveAndPreview('j')"<CR>
+    nnoremap <buffer> <silent> k             :<C-U>exec g:Lf_py "functionExplManager.moveAndPreview('k')"<CR>
+    nnoremap <buffer> <silent> <Up>          :<C-U>exec g:Lf_py "functionExplManager.moveAndPreview('Up')"<CR>
+    nnoremap <buffer> <silent> <Down>        :<C-U>exec g:Lf_py "functionExplManager.moveAndPreview('Down')"<CR>
+    nnoremap <buffer> <silent> <PageUp>      :<C-U>exec g:Lf_py "functionExplManager.moveAndPreview('PageUp')"<CR>
+    nnoremap <buffer> <silent> <PageDown>    :<C-U>exec g:Lf_py "functionExplManager.moveAndPreview('PageDown')"<CR>
+    nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "functionExplManager._toUpInPopup()"<CR>
+    nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "functionExplManager._toDownInPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "functionExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "Function")
         for i in g:Lf_NormalMap["Function"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

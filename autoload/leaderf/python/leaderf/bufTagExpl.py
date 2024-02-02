@@ -211,7 +211,6 @@ class BufTagExplManager(Manager):
     def __init__(self):
         super(BufTagExplManager, self).__init__()
         self._supports_preview = int(lfEval("g:Lf_PreviewCode"))
-        self._orig_line = ''
 
     def _getExplClass(self):
         return BufTagExplorer
@@ -225,24 +224,24 @@ class BufTagExplManager(Manager):
         line = args[0]
         if line[0].isspace(): # if g:Lf_PreviewCode == 1
             buffer = args[1]
-            line_nr = args[2]
+            line_num = args[2]
             if self._getInstance().isReverseOrder():
-                line = buffer[line_nr]
+                line = buffer[line_num]
             else:
-                line = buffer[line_nr - 2]
+                line = buffer[line_num - 2]
         # {tag} {kind} {scope} {file}:{line} {buf_number}
         items = re.split(" *\t *", line)
         tagname = items[0]
-        line_nr = items[3].rsplit(":", 1)[1]
+        line_num = items[3].rsplit(":", 1)[1]
         buf_number = items[4]
         if kwargs.get("mode", '') == 't':
             buf_name = lfEval("bufname(%s)" % buf_number)
-            lfDrop('tab', buf_name, line_nr)
+            lfDrop('tab', buf_name, line_num)
         else:
-            lfCmd("hide buffer +%s %s" % (line_nr, buf_number))
+            lfCmd("hide buffer +%s %s" % (line_num, buf_number))
         if "preview" not in kwargs:
             lfCmd("norm! ^")
-            lfCmd("call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
+            lfCmd(r"call search('\V%s', 'Wc', line('.'))" % escQuote(tagname))
         lfCmd("norm! zv")
         lfCmd("norm! zz")
 
@@ -305,42 +304,42 @@ class BufTagExplManager(Manager):
         lfCmd("autocmd VimLeavePre * call leaderf#BufTag#cleanup()")
         lfCmd("augroup END")
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagKind'', ''^[^\t]*\t\zs\S\+'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagKind'', ''^[^\t]*\t\zs\S\+'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagScopeType'', ''[^\t]*\t\S\+\s*\zs\w\+:'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagScopeType'', ''[^\t]*\t\S\+\s*\zs\w\+:'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagScope'', ''^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagScope'', ''^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagDirname'', ''[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagDirname'', ''[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagLineNum'', ''\d\+\t\ze\d\+$'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagLineNum'', ''\d\+\t\ze\d\+$'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagCode'', ''^\s\+.*'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_buftagCode'', ''^\s\+.*'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
         else:
-            id = int(lfEval('''matchadd('Lf_hl_buftagKind', '^[^\t]*\t\zs\S\+')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_buftagKind', '^[^\t]*\t\zs\S\+')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_buftagScopeType', '[^\t]*\t\S\+\s*\zs\w\+:')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_buftagScopeType', '[^\t]*\t\S\+\s*\zs\w\+:')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_buftagScope', '^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_buftagScope', '^[^\t]*\t\S\+\s*\(\w\+:\)\=\zs\S\+')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_buftagDirname', '[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_buftagDirname', '[^\t]*\t\S\+\s*\S\+\s*\zs[^\t]\+')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_buftagLineNum', '\d\+\t\ze\d\+$')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_buftagLineNum', '\d\+\t\ze\d\+$')'''))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_buftagCode', '^\s\+.*')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_buftagCode', '^\s\+.*')'''))
             self._match_ids.append(id)
 
     def _beforeExit(self):
@@ -470,39 +469,6 @@ class BufTagExplManager(Manager):
     def removeCache(self, buf_number):
         self._getExplorer().removeCache(buf_number)
 
-    def _previewResult(self, preview):
-        if self._getInstance().getWinPos() == 'floatwin':
-            self._cli.buildPopupPrompt()
-
-        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
-            if self._orig_line != self._getInstance().currentLine:
-                self._closePreviewPopup()
-            else:
-                return
-
-        if not self._needPreview(preview):
-            return
-
-        line = self._getInstance().currentLine
-        line_nr = self._getInstance().window.cursor[0]
-
-        if lfEval("get(g:, 'Lf_PreviewInPopup', 0)") == '1':
-            self._previewInPopup(line, self._getInstance().buffer, line_nr)
-            lfCmd("redraw")
-            return
-
-        orig_pos = self._getInstance().getOriginalPos()
-        cur_pos = (vim.current.tabpage, vim.current.window, vim.current.buffer)
-
-        saved_eventignore = vim.options['eventignore']
-        vim.options['eventignore'] = 'BufLeave,WinEnter,BufEnter'
-        try:
-            vim.current.tabpage, vim.current.window, vim.current.buffer = orig_pos
-            self._acceptSelection(line, self._getInstance().buffer, line_nr, preview=True)
-        finally:
-            vim.current.tabpage, vim.current.window, vim.current.buffer = cur_pos
-            vim.options['eventignore'] = saved_eventignore
-
     def _bangEnter(self):
         super(BufTagExplManager, self)._bangEnter()
         if "--all" in self._arguments and not self._is_content_list:
@@ -528,7 +494,7 @@ class BufTagExplManager(Manager):
         inst = self._getInstance()
         if inst.empty():
             return
-        orig_buf_nr = inst.getOriginalPos()[2].number
+        orig_buf_num = inst.getOriginalPos()[2].number
         orig_line = inst.getOriginalCursor()[0]
         tags = []
         for index, line in enumerate(inst.buffer, 1):
@@ -539,10 +505,10 @@ class BufTagExplManager(Manager):
                 elif index & 1 == 0:
                     continue
             items = re.split(" *\t *", line)
-            line_nr = int(items[3].rsplit(":", 1)[1])
+            line_num = int(items[3].rsplit(":", 1)[1])
             buf_number = int(items[4])
-            if orig_buf_nr == buf_number:
-                tags.append((index, buf_number, line_nr))
+            if orig_buf_num == buf_number:
+                tags.append((index, buf_number, line_num))
 
         if self._getInstance().isReverseOrder():
             tags = tags[::-1]
@@ -570,24 +536,24 @@ class BufTagExplManager(Manager):
                 lfCmd("norm! zz")
 
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]
         if line[0].isspace(): # if g:Lf_PreviewCode == 1
             buffer = args[1]
-            line_nr = args[2]
+            line_num = args[2]
             if self._getInstance().isReverseOrder():
-                line = buffer[line_nr]
+                line = buffer[line_num]
             else:
-                line = buffer[line_nr - 2]
+                line = buffer[line_num - 2]
         # {tag} {kind} {scope} {file}:{line} {buf_number}
         items = re.split(" *\t *", line)
         tagname = items[0]
-        line_nr = items[3].rsplit(":", 1)[1]
+        line_num = items[3].rsplit(":", 1)[1]
         buf_number = int(items[4])
 
-        self._createPopupPreview(tagname, buf_number, line_nr)
+        self._createPopupPreview(tagname, buf_number, line_num)
 
 
 #*****************************************************

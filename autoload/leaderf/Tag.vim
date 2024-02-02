@@ -28,17 +28,15 @@ function! leaderf#Tag#Maps()
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "tagExplManager.toggleHelp()"<CR>
     nnoremap <buffer> <silent> <F5>          :exec g:Lf_py "tagExplManager.refresh()"<CR>
     nnoremap <buffer> <silent> p             :exec g:Lf_py "tagExplManager._previewResult(True)"<CR>
-    nnoremap <buffer> <silent> j             j:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> k             k:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <Up>          <Up>:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <Down>        <Down>:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <PageUp>      <PageUp>:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
-    nnoremap <buffer> <silent> <PageDown>    <PageDown>:exec g:Lf_py "tagExplManager._previewResult(False)"<CR>
-    if has("nvim")
-        nnoremap <buffer> <silent> <C-Up>    :exec g:Lf_py "tagExplManager._toUpInPopup()"<CR>
-        nnoremap <buffer> <silent> <C-Down>  :exec g:Lf_py "tagExplManager._toDownInPopup()"<CR>
-        nnoremap <buffer> <silent> <Esc>     :exec g:Lf_py "tagExplManager._closePreviewPopup()"<CR>
-    endif
+    nnoremap <buffer> <silent> j             :<C-U>exec g:Lf_py "tagExplManager.moveAndPreview('j')"<CR>
+    nnoremap <buffer> <silent> k             :<C-U>exec g:Lf_py "tagExplManager.moveAndPreview('k')"<CR>
+    nnoremap <buffer> <silent> <Up>          :<C-U>exec g:Lf_py "tagExplManager.moveAndPreview('Up')"<CR>
+    nnoremap <buffer> <silent> <Down>        :<C-U>exec g:Lf_py "tagExplManager.moveAndPreview('Down')"<CR>
+    nnoremap <buffer> <silent> <PageUp>      :<C-U>exec g:Lf_py "tagExplManager.moveAndPreview('PageUp')"<CR>
+    nnoremap <buffer> <silent> <PageDown>    :<C-U>exec g:Lf_py "tagExplManager.moveAndPreview('PageDown')"<CR>
+    nnoremap <buffer> <silent> <C-Up>        :exec g:Lf_py "tagExplManager._toUpInPopup()"<CR>
+    nnoremap <buffer> <silent> <C-Down>      :exec g:Lf_py "tagExplManager._toDownInPopup()"<CR>
+    nnoremap <buffer> <silent> <Esc>         :exec g:Lf_py "tagExplManager.closePreviewPopupOrQuit()"<CR>
     if has_key(g:Lf_NormalMap, "Tag")
         for i in g:Lf_NormalMap["Tag"]
             exec 'nnoremap <buffer> <silent> '.i[0].' '.i[1]

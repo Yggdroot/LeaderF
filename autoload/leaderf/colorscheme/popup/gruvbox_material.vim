@@ -10,14 +10,16 @@
 if &background ==# 'dark'
     if get(g:, 'gruvbox_material_background', 'medium') ==# 'hard'
         highlight Lf_hl_popup_inputText guifg=#ddc7a1 guibg=#3c3836 gui=NONE ctermfg=223 ctermbg=237 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#3c3836 gui=NONE ctermfg=223 ctermbg=237 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#3c3836 gui=NONE ctermfg=223 ctermbg=237 cterm=NONE
     elseif get(g:, 'gruvbox_material_background', 'medium') ==# 'medium'
         highlight Lf_hl_popup_inputText guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
     elseif get(g:, 'gruvbox_material_background', 'medium') ==# 'soft'
         highlight Lf_hl_popup_inputText guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#ddc7a1 guibg=#504945 gui=NONE ctermfg=223 ctermbg=239 cterm=NONE
     endif
+
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
 
     highlight Lf_hl_popup_prompt guifg=#89b482 ctermfg=108
     highlight Lf_hl_popup_spin guifg=#d8a657 ctermfg=214
@@ -34,7 +36,12 @@ if &background ==# 'dark'
     highlight Lf_hl_popup_lineInfo guifg=#ddc7a1 guibg=#665c54 gui=NONE ctermfg=223 ctermbg=241 cterm=NONE
     highlight Lf_hl_popup_total guifg=#282828 guibg=#a89984 gui=NONE ctermfg=235 ctermbg=246 cterm=NONE
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
+
     " the color of the cursorline
     highlight def Lf_hl_cursorline guifg=#d4be98 guibg=NONE gui=NONE ctermfg=223 ctermbg=NONE cterm=NONE
 
@@ -112,7 +119,6 @@ if &background ==# 'dark'
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    highlight def link Lf_hl_popupBorder        VertSplit
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -125,17 +131,24 @@ if &background ==# 'dark'
     highlight def link Lf_hl_loclistFileName    Directory
     highlight def link Lf_hl_loclistLineNumber  Constant
     highlight def link Lf_hl_loclistColumnNumber Constant
+
+    highlight def link Lf_hl_jumpsTitle         Title
+    highlight def link Lf_hl_jumpsNumber        Number
+    highlight def link Lf_hl_jumpsLineCol       String
+    highlight def link Lf_hl_jumpsIndicator     Type
 else
     if get(g:, 'gruvbox_material_background', 'medium') ==# 'hard'
         highlight Lf_hl_popup_inputText guifg=#4f3829 guibg=#f2e5bc gui=NONE ctermfg=237 ctermbg=228 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#4f3829 guibg=#f2e5bc gui=NONE ctermfg=237 ctermbg=228 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#4f3829 guibg=#f2e5bc gui=NONE ctermfg=237 ctermbg=228 cterm=NONE
     elseif get(g:, 'gruvbox_material_background', 'medium') ==# 'medium'
         highlight Lf_hl_popup_inputText guifg=#4f3829 guibg=#ebdbb2 gui=NONE ctermfg=237 ctermbg=223 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#4f3829 guibg=#ebdbb2 gui=NONE ctermfg=237 ctermbg=223 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#4f3829 guibg=#ebdbb2 gui=NONE ctermfg=237 ctermbg=223 cterm=NONE
     elseif get(g:, 'gruvbox_material_background', 'medium') ==# 'soft'
         highlight Lf_hl_popup_inputText guifg=#4f3829 guibg=#d5c4a1 gui=NONE ctermfg=237 ctermbg=250 cterm=NONE
-        highlight Lf_hl_popup_window guifg=#4f3829 guibg=#d5c4a1 gui=NONE ctermfg=237 ctermbg=250 cterm=NONE
+        "highlight Lf_hl_popup_window guifg=#4f3829 guibg=#d5c4a1 gui=NONE ctermfg=237 ctermbg=250 cterm=NONE
     endif
+
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_popup_window", "Normal")
 
     highlight Lf_hl_popup_prompt guifg=#4c7a5d ctermfg=165
     highlight Lf_hl_popup_spin guifg=#b47109 ctermfg=136
@@ -152,7 +165,12 @@ else
     highlight Lf_hl_popup_lineInfo guifg=#4f3829 guibg=#bdae93 gui=NONE ctermfg=237 ctermbg=248 cterm=NONE
     highlight Lf_hl_popup_total guifg=#ebdbb2 guibg=#7c6f64 gui=NONE ctermfg=235 ctermbg=243 cterm=NONE
 
-    highlight def link Lf_hl_popup_cursor Cursor
+    " nvim has a weird bug, if `hi Cursor cterm=reverse gui=reverse`
+    " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
+    call leaderf#colorscheme#popup#link_cursor("Lf_hl_popup_cursor")
+
+    call leaderf#colorscheme#popup#link_two("Lf_hl_popupBorder", "Normal", "VertSplit", 1)
+
     " the color of the cursorline
     highlight def Lf_hl_cursorline guifg=#654735 guibg=NONE gui=NONE ctermfg=237 ctermbg=NONE cterm=NONE
 
@@ -230,7 +248,6 @@ else
     highlight def Lf_hl_gtagsHighlight guifg=#000000 guibg=#cccc66 gui=NONE ctermfg=16 ctermbg=185 cterm=NONE
 
     highlight def link Lf_hl_previewTitle       Statusline
-    highlight def link Lf_hl_popupBorder        VertSplit
 
     highlight def link Lf_hl_winNumber          Constant
     highlight def link Lf_hl_winIndicators      Statement
@@ -243,5 +260,10 @@ else
     highlight def link Lf_hl_loclistFileName    Directory
     highlight def link Lf_hl_loclistLineNumber  Constant
     highlight def link Lf_hl_loclistColumnNumber Constant
+
+    highlight def link Lf_hl_jumpsTitle         Title
+    highlight def link Lf_hl_jumpsNumber        Number
+    highlight def link Lf_hl_jumpsLineCol       String
+    highlight def link Lf_hl_jumpsIndicator     Type
 endif
 

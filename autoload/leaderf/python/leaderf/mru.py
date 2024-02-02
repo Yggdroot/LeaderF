@@ -15,10 +15,11 @@ from .utils import *
 class Mru(object):
     def __init__(self):
         self._cache_dir = os.path.join(lfEval("g:Lf_CacheDirectory"),
-                                       '.LfCache',
+                                       'LeaderF',
                                        'python' + lfEval("g:Lf_PythonVersion"),
                                        'mru')
-        self._cache_file = os.path.join(self._cache_dir, 'mruCache')
+        self._cache_file = os.path.join(self._cache_dir, 'frecency')
+        self._old_cache_file = os.path.join(self._cache_dir, 'mruCache')
         self._initCache()
         self._mru_bufnrs = { b.number: 0 for b in vim.buffers }
         self._timestamp = 0
@@ -32,6 +33,9 @@ class Mru(object):
 
     def getCacheFileName(self):
         return self._cache_file
+
+    def getOldCacheFileName(self):
+        return self._old_cache_file
 
     def normalize(self, name):
         if '~' in name:
@@ -48,37 +52,40 @@ class Mru(object):
                 name = name[:11].lower() + name[11:]
         return name
 
-    def saveToCache(self, buf_name_list):
-        buf_names = []
-        for name in buf_name_list:
-            name = self.normalize(name)
+    def filename(self, line):
+        return line.rstrip().split(None, 2)[2]
+
+    def saveToCache(self, data_list):
+        frecency_list = []
+        for item in data_list:
+            name = self.normalize(self.filename(item))
             if True in (fnmatch.fnmatch(name, i)
                         for i in lfEval("g:Lf_MruFileExclude")):
                 continue
-            buf_names.append(name)
+            frecency_list.append(item)
 
-        if not buf_names:
+        if not frecency_list:
             return
 
         with lfOpen(self._cache_file, 'r+', errors='ignore', encoding='utf-8') as f:
             lines = f.readlines()
-            for name in buf_names:
+            for item in frecency_list:
                 nocase = False
-                compare = name
+                compare = self.filename(item)
                 if sys.platform[:3] == 'win' or sys.platform in ('cygwin', 'msys'):
                     nocase = True
-                    compare = name.lower()
+                    compare = compare.lower()
 
                 for i, line in enumerate(lines):
-                    text = line.rstrip()
+                    text = self.filename(line)
                     if (compare == text) or (nocase and compare == text.lower()):
-                        del lines[i]
+                        time1, rank1, filename = item.split(None, 2)
+                        time2, rank2, _ = lines[i].split(None, 2)
+                        lines[i] = "{} {} {}\n".format(time1, int(rank1) + int(rank2), filename)
                         break
+                else:
+                    lines.append(item + '\n')
 
-            lines = [name + '\n' for name in buf_names] + lines
-            max_files = int(lfEval("g:Lf_MruMaxFiles"))
-            if len(lines) > max_files:
-                del lines[max_files:]
             f.seek(0)
             f.truncate(0)
             f.writelines(lines)

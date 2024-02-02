@@ -4,7 +4,10 @@
 import vim
 import os
 import os.path
+import time
+import operator
 from fnmatch import fnmatch
+from functools import partial
 from .utils import *
 from .explorer import *
 from .manager import *
@@ -26,22 +29,74 @@ class MruExplorer(Explorer):
     def __init__(self):
         self._prefix_length = 0
         self._max_bufname_len = 0
+        self._root_markers = lfEval("g:Lf_RootMarkers")
+
+    def getFrecency(self, current_time, item):
+        """
+        item is [time, rank, filename]
+        """
+        rank = int(item[1])
+        delta_time = int(current_time) - int(item[0])
+        frecency = 0
+        if delta_time < 3600:
+            frecency = rank * 4
+        elif delta_time < 86400:
+            frecency = rank * 2
+        elif delta_time < 604800:
+            frecency = rank * 0.5
+        else:
+            frecency = rank * 0.25
+
+        return frecency
 
     def getContent(self, *args, **kwargs):
         mru.saveToCache(lfEval("readfile(lfMru#CacheFileName())"))
         lfCmd("call writefile([], lfMru#CacheFileName())")
 
         with lfOpen(mru.getCacheFileName(), 'r+', errors='ignore', encoding='utf8') as f:
-            lines = f.readlines()
-            lines = [name for name in lines if os.path.exists(lfDecode(name.rstrip()))]
+            data_list = []
+            for line in f.readlines():
+                data = line.split(None, 2)
+                if os.path.exists(lfDecode(data[2].rstrip())):
+                    data[0] = int(data[0])
+                    data_list.append(data)
+
+            if len(data_list) == 0:
+                # import old data
+                try:
+                    with lfOpen(mru.getOldCacheFileName(), 'r+', errors='ignore', encoding='utf8') as old_f:
+                        current_time = time.time()
+                        data_list = [[int(current_time), 1, filename] for filename in old_f.readlines()
+                                     if os.path.exists(lfDecode(filename.rstrip()))
+                                     ]
+                except FileNotFoundError:
+                    pass
+
+            arguments_dict = kwargs.get("arguments", {})
+            if "--frecency" in arguments_dict or lfEval("get(g:, 'Lf_MruEnableFrecency', 0)") == '1':
+                data_list.sort(key=partial(self.getFrecency, time.time()), reverse=True)
+            else:
+                data_list.sort(key=operator.itemgetter(0), reverse=True)
+
+            max_files = int(lfEval("g:Lf_MruMaxFiles"))
+            if len(data_list) > max_files:
+                del data_list[max_files:]
+
             f.seek(0)
             f.truncate(0)
-            f.writelines(lines)
+            f.writelines(["{} {} {}".format(data[0], data[1], data[2]) for data in data_list])
 
-        if "--cwd" in kwargs.get("arguments", {}):
+        lines = [data[2].rstrip() for data in data_list]
+
+        if "--cwd" in arguments_dict:
             lines = [name for name in lines if lfDecode(name).startswith(lfGetCwd())]
+        elif "--project" in arguments_dict:
+            project_root = lfGetCwd()
+            ancestor = nearestAncestor(self._root_markers, project_root)
+            if ancestor != "":
+                project_root = ancestor
+            lines = [name for name in lines if lfDecode(name).startswith(os.path.join(project_root, ''))]
 
-        lines = [line.rstrip() for line in lines] # remove the '\n'
         wildignore = lfEval("g:Lf_MruWildIgnore")
         lines = [name for name in lines if True not in (fnmatch(name, j) for j in wildignore.get('file', []))
                     and True not in (fnmatch(name, "*/" + j + "/*") for j in wildignore.get('dir', []))]
@@ -58,8 +113,8 @@ class MruExplorer(Explorer):
             self.show_icon = True
             self._prefix_length = webDevIconsStrLen()
 
-        show_absolute = "--absolute-path" in kwargs.get("arguments", {})
-        if "--no-split-path" in kwargs.get("arguments", {}):
+        show_absolute = "--absolute-path" in arguments_dict
+        if "--no-split-path" in arguments_dict:
             if lfEval("g:Lf_ShowRelativePath") == '1' and show_absolute == False:
                 lines = [lfRelpath(line) for line in lines]
             if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1":
@@ -183,8 +238,9 @@ class MruExplManager(Manager):
                         lfCmd("setlocal bufhidden=wipe")
 
                     lfCmd("hide edit %s" % escSpecial(file))
-        except vim.error: # E37
-            lfPrintTraceback()
+        except vim.error as e: # E37
+            if 'E325' not in str(e).split(':'):
+                lfPrintTraceback()
 
     def _getDigest(self, line, mode):
         """
@@ -267,12 +323,12 @@ class MruExplManager(Manager):
 
         if "--no-split-path" not in self._arguments:
             if self._getInstance().getWinPos() == 'popup':
-                lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
+                lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
                         % self._getInstance().getPopupWinId())
                 id = int(lfEval("matchid"))
                 self._match_ids.append(id)
             else:
-                id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
+                id = int(lfEval(r'''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
                 self._match_ids.append(id)
 
         if lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == '1':
@@ -315,7 +371,7 @@ class MruExplManager(Manager):
             lfCmd("setlocal nomodifiable")
 
     def _previewInPopup(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]

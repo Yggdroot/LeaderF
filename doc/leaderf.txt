@@ -59,11 +59,11 @@ g:Lf_WindowPosition                             *g:Lf_WindowPosition*
     Setting this option can change the position of the LeaderF window.
     The value can be 'fullScreen', 'top', 'bottom', 'left', 'right'.
     'fullScreen' - the LeaderF window take up the full screen
-    'top' - the LeaderF window is at the top of the screen.
+    'top'    - the LeaderF window is at the top of the screen.
     'bottom' - the LeaderF window is at the bottom of the screen.
-    'left' - the LeaderF window is at the left of the screen.
-    'right' - the LeaderF window is at the right of the screen.
-    'popup' - the LeaderF window is a popup window or floating window.
+    'left'   - the LeaderF window is at the left of the screen.
+    'right'  - the LeaderF window is at the right of the screen.
+    'popup'  - the LeaderF window is a popup window or floating window.
     Default value is 'bottom'.
 
 g:Lf_WindowHeight                               *g:Lf_WindowHeight*
@@ -108,7 +108,9 @@ g:Lf_CacheDirectory                              *g:Lf_CacheDirectory*
     e.g. >
     let g:Lf_CacheDirectory = '/root'
 <
-    Default value is $HOME.
+    On Windows, default value is '%APPDATA%'.
+    On Linux, default value is '$XDG_CACHE_HOME' if $XDG_CACHE_HOME is defined,
+    otherwise, default value is '$HOME/.cache'.
 
 g:Lf_NeedCacheTime                              *g:Lf_NeedCacheTime*
     This option set a threshold, if the time of indexing files is greater than
@@ -416,21 +418,25 @@ g:Lf_PreviewResult                              *g:Lf_PreviewResult*
     This is a dictionary, indicates whether to enable the preview of the result.
     Default value is: >
     let g:Lf_PreviewResult = {
-            \ 'File': 0,
-            \ 'Buffer': 0,
-            \ 'Mru': 0,
-            \ 'Tag': 0,
+            \ 'File': 1,
+            \ 'Buffer': 1,
+            \ 'Mru': 1,
+            \ 'Tag': 1,
             \ 'BufTag': 1,
             \ 'Function': 1,
-            \ 'Line': 0,
-            \ 'Colorscheme': 0,
-            \ 'Rg': 0,
-            \ 'Gtags': 0
+            \ 'Line': 1,
+            \ 'Colorscheme': 1,
+            \ 'Rg': 1,
+            \ 'Gtags': 1
             \}
 <
     e.g., if you want to disable the preview of BufTag explorer: >
     let g:Lf_PreviewResult = { 'BufTag': 0 }
 <
+    You can also specify `--auto-preview` or `--no-auto-preview` for the specific
+    command to override this option.
+    e.g., `Leaderf file --no-auto-preview`
+
 g:Lf_RememberLastSearch                         *g:Lf_RememberLastSearch*
     This option specifies whether to remember the last search. If the value is
     1, the search string you typed during last search is still there when
@@ -445,6 +451,8 @@ g:Lf_UseCache                                   *g:Lf_UseCache*
     Default value is 1.
 
 g:Lf_NormalMap                                  *g:Lf_NormalMap*
+    This option is deprecated in favor of |g:Lf_NormalCommandMap|.
+
     Use this option to customize the mappings in normal mode.
     The mapping with the key `"_"` applies to all categories.
     Also, `"_"` is overridden by the mapping of each category.
@@ -498,9 +506,9 @@ g:Lf_WorkingDirectoryMode                       *g:Lf_WorkingDirectoryMode*
 
 g:Lf_WorkingDirectory                           *g:Lf_WorkingDirectory*
     Set LeaderF's working directory. It will ignore the |g:Lf_RootMarkers| and
-	|g:Lf_WorkingDirectoryMode| option set.
-	e.g., >
-	let g:Lf_WorkingDirectory = finddir('.git', '.;')
+    |g:Lf_WorkingDirectoryMode| option set.
+    e.g., >
+    let g:Lf_WorkingDirectory = finddir('.git', '.;')
 <
 g:Lf_CommandMap                                 *g:Lf_CommandMap*
     Use this option to customize the mappings inside LeaderF's
@@ -509,6 +517,41 @@ g:Lf_CommandMap                                 *g:Lf_CommandMap*
     change the default command <ESC> to <C-A> and <C-B>: >
     let g:Lf_CommandMap = {'<C-F>': ['<C-D>'], '<ESC>': ['<C-A>', '<C-B>']}
 <
+    Note: The key of the dictionary is the old command, the value of the
+    dictionary is the new command.
+
+g:Lf_NormalCommandMap                                  *g:Lf_NormalCommandMap*
+    Use this option to customize the mappings in normal mode.
+    The mapping with the key `"*"` applies to all categories.
+    Also, `"*"` is overridden by the mapping of each category.
+
+    Note: The key of the dictionary is the old command, the value of the
+    dictionary is the new command.
+
+    e.g., >
+    let g:Lf_NormalCommandMap = {
+        \ "*":      {
+        \               "<C-Down>": "<C-J>",
+        \               "<C-Up>":   "<C-K>"
+        \           },
+        \ "File":   {
+        \               "q":     "<Esc>",
+        \               "a":     "<C-A>",
+        \               "<Esc>": "<C-W>",
+        \           },
+        \ "Buffer": {},
+        \ "Mru":    {},
+        \ "Tag":    {},
+        \ "BufTag": {},
+        \ "Function": {},
+        \ "Line":   {},
+        \ "History":{},
+        \ "Help":   {},
+        \ "Rg":     {},
+        \ "Gtags":  {},
+        \ "Colorscheme": {}
+        \}
+
 g:Lf_HideHelp                                   *g:Lf_HideHelp*
     To specify whether to show the hint "Press <F1> for help" in normal mode.
     You can set the value to 1 to hide the hint.
@@ -591,7 +634,7 @@ g:Lf_RgConfig                                   *g:Lf_RgConfig*
     Specify a list of ripgrep configurations. For example, >
     let g:Lf_RgConfig = [
         \ "--max-columns=150",
-        \ "--type-add web:*.{html,css,js}*",
+        \ '--type-add "web:*.{html,css,js}*"',
         \ "--glob=!git/*",
         \ "--hidden"
     \ ]
@@ -650,12 +693,12 @@ g:Lf_GtagsAutoGenerate                          *g:Lf_GtagsAutoGenerate*
     generated manually by using `Leaderf gtags --update` .
     Default value is 0.
 
-g:Lf_GtagsGutentags								*g:Lf_GtagsGutentags*
-	if you use https://github.com/ludovicchabant/vim-gutentags to generate
-		gtags; Firstly, you should let g:Lf_GtagsAutoGenerate = 0 and let  g:Lf_GtagsGutentags = 1.
-        Then, you should config gutentags like this: g:Lf_CacheDirectory =
-        expand('~') and g:gutentags_cache_dir = expand(g:Lf_CacheDirectory.'/.LfCache/gtags')
-	Default value is 0
+g:Lf_GtagsGutentags                             *g:Lf_GtagsGutentags*
+    if you use https://github.com/ludovicchabant/vim-gutentags to generate
+    gtags; Firstly, you should let g:Lf_GtagsAutoGenerate = 0 and let g:Lf_GtagsGutentags = 1.
+    Then, you should config gutentags like this: g:Lf_CacheDirectory = expand('~')
+    and g:gutentags_cache_dir = expand(g:Lf_CacheDirectory.'/LeaderF/gtags')
+    Default value is 0
 
 g:Lf_GtagsAutoUpdate                            *g:Lf_GtagsAutoUpdate*
     If the value is 1 and the gtags database already exists, gtags database
@@ -749,9 +792,13 @@ g:Lf_IgnoreCurrentBufferName                    *g:Lf_IgnoreCurrentBufferName*
 g:Lf_PreviewInPopup                             *g:Lf_PreviewInPopup*
     This option specifies whether to preview the result in a popup window.
 
-    Default value is 0.
+    Default value is 1.
 
 g:Lf_PreviewHorizontalPosition                  *g:Lf_PreviewHorizontalPosition*
+    [[This option is deprecated. Use |g:Lf_PreviewPosition| instead.]]
+    [[This option is deprecated. Use |g:Lf_PreviewPosition| instead.]]
+    [[This option is deprecated. Use |g:Lf_PreviewPosition| instead.]]
+
     Specify where to locate the preview window horizontally. The value can be
     one of the following:
     'left': the preview window is on the left side of the screen.
@@ -762,8 +809,9 @@ g:Lf_PreviewHorizontalPosition                  *g:Lf_PreviewHorizontalPosition*
     Default value is 'right'.
 
 g:Lf_PreviewPopupWidth                          *g:Lf_PreviewPopupWidth*
-    Specify the width of preview popup window, the value should be a non-negative
-    integer. If the value is 0, the width is half of the screen's width.
+    Specify the width of preview window, the value should be a non-negative
+    integer. If the value is 0, the width of preview window is the same as the
+    width of the main LeaderF window.
 
     Default value is 0.
 
@@ -826,7 +874,7 @@ g:Lf_PopupShowStatusline                        *g:Lf_PopupShowStatusline*
     Default value is 1.
 
 g:Lf_PopupPreviewPosition                       *g:Lf_PopupPreviewPosition*
-    Specify where to locate the preview window when LeaderF is in popup mode.
+    Specify where to place the preview window when LeaderF is in popup mode.
     `Popup mode` is when |g:Lf_WindowPosition| is 'popup' or '--popup' is in the
     options list of `Leaderf` command.
     The value can be one of the following:
@@ -834,8 +882,20 @@ g:Lf_PopupPreviewPosition                       *g:Lf_PopupPreviewPosition*
     'bottom': the preview window is at the bottom of the main LeaderF window.
     'left': the preview window is on the left of the main LeaderF window.
     'right': the preview window is on the right of the main LeaderF window.
-    'cursor': the preview window is at the cursor position in the main LeaderF
-              window.
+
+    Default value is 'right'.
+
+g:Lf_PreviewPosition                            *g:Lf_PreviewPosition*
+    Specify where to place the preview window when LeaderF is in non-popup mode.
+
+    The value can be one of the following:
+    'top': the preview window is on the top of the main LeaderF window.
+    'topleft': the preview window is on the topleft of the main LeaderF window.
+    'topright': the preview window is on the topright of the main LeaderF window.
+    'right': the preview window is on the right of the main LeaderF window.
+    'bottom': the preview window is at the bottom of the main LeaderF window.
+              (only available when LeaderF window is on the top)
+    'cursor': the preview window is at the cursorline of the main LeaderF window.
 
     Default value is 'top'.
 
@@ -894,15 +954,15 @@ g:Lf_PopupShowFoldcolumn                        *g:Lf_PopupShowFoldcolumn*
 
     Default value is 1.
 
-g:Lf_PopupAutoAjustHeight                       *g:Lf_PopupAutoAjustHeight*
+g:Lf_PopupAutoAdjustHeight                      *g:Lf_PopupAutoAdjustHeight*
     Specifies whether to adjust the height of popup window automatically.
 
     Default value is 1.
 
 g:Lf_PopupShowBorder                            *g:Lf_PopupShowBorder*
-    Specifies whether to show border for popup window.
+    Specifies whether to show borders for popup window.
 
-    Default value is 0.
+    Default value is 1.
 
 g:Lf_PopupBorders                               *g:Lf_PopupBorders*
     Specifies a list of characters, defining the character to use for the
@@ -919,7 +979,7 @@ g:Lf_PopupBorders                               *g:Lf_PopupBorders*
     To have a good display for non-ascii characters, perhaps you need to set
     the value of |ambiwidth| as "single".
 
-    Default value is ["-","|","-","|","+","+","+","+"].
+    Default value is ["─","│","─","│","╭","╮","╯","╰"].
 
 g:Lf_AutoResize                                 *g:Lf_AutoResize*
     Auto resize the LeaderF window height automatically.
@@ -1032,6 +1092,48 @@ g:Lf_FileActions                                *g:Lf_FileActions*
     :!start da\db\c.pdf
 <
     to open "da\db\c.pdf" with pdfreader in Windows OS.
+
+g:Lf_MruEnable                                *g:Lf_MruEnable*
+    Enable `Leaderf mru` or not.
+    Default value is 1.
+
+g:Lf_MruEnableFrecency                        *g:Lf_MruEnableFrecency*
+    This option specifies whether `Leaderf mru` uses frecency algorithm.
+    `--frecency` can override this option.
+    Default value is 0.
+
+g:Lf_QuickSelect                              *g:Lf_QuickSelect*
+    Enable or disable quick-select mode. If enabled, the characters [0-9] are not
+    treated as literal characters, but are used to select the [0-9]th entry. 0
+    means the 10th entry.
+    NOTE: Appending '--quick-select' to the arguments list of the `Leaderf` command
+    will override this option.
+
+    Default value is 0.
+
+g:Lf_QuickSelectAction                        *g:Lf_QuickSelectAction*
+    This option specifies what action to be taken when quick-select mode is enabled
+    and an entry is selected.
+
+    The value can be one of the following:
+    '':  do nothing.
+    'c': open the selected entry in the current window.
+    'h': open the selected entry in a horizontally split window.
+    'v': open the selected entry in a vertically split window.
+    't': open the selected entry in a new tabpage.
+
+    Default value is 'c'.
+
+g:Lf_SpacesAfterIcon                          *g:Lf_SpacesAfterIcon*
+    Specifies the spaces after the icon if |g:Lf_ShowDevIcons| is 1.
+
+    Default value is ' '.
+
+g:Lf_EnableCircularScroll                     *g:Lf_EnableCircularScroll*
+    Enable circular scroll in the result window.
+
+    Default value is 0.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

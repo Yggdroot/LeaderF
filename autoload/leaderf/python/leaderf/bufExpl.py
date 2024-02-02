@@ -220,37 +220,37 @@ class BufExplManager(Manager):
 
         winid = None
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufNumber'', ''^\s*\zs\d\+'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufNumber'', ''^\s*\zs\d\+'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufIndicators'', ''^\s*\d\+\s*\zsu\=\s*[#%%]\=...'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufIndicators'', ''^\s*\d\+\s*\zsu\=\s*[#%%]\=...'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufModified'', ''^\s*\d\+\s*u\=\s*[#%%]\=.+\s*\zs.*$'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufModified'', ''^\s*\d\+\s*u\=\s*[#%%]\=.+\s*\zs.*$'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufNomodifiable'', ''^\s*\d\+\s*u\=\s*[#%%]\=..-\s*\zs.*$'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufNomodifiable'', ''^\s*\d\+\s*u\=\s*[#%%]\=..-\s*\zs.*$'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
-            lfCmd("""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_bufDirname'', '' \zs".*"$'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
             winid = self._getInstance().getPopupWinId()
         else:
-            id = int(lfEval("matchadd('Lf_hl_bufNumber', '^\s*\zs\d\+')"))
+            id = int(lfEval(r"matchadd('Lf_hl_bufNumber', '^\s*\zs\d\+')"))
             self._match_ids.append(id)
-            id = int(lfEval("matchadd('Lf_hl_bufIndicators', '^\s*\d\+\s*\zsu\=\s*[#%]\=...')"))
+            id = int(lfEval(r"matchadd('Lf_hl_bufIndicators', '^\s*\d\+\s*\zsu\=\s*[#%]\=...')"))
             self._match_ids.append(id)
-            id = int(lfEval("matchadd('Lf_hl_bufModified', '^\s*\d\+\s*u\=\s*[#%]\=.+\s*\zs.*$')"))
+            id = int(lfEval(r"matchadd('Lf_hl_bufModified', '^\s*\d\+\s*u\=\s*[#%]\=.+\s*\zs.*$')"))
             self._match_ids.append(id)
-            id = int(lfEval("matchadd('Lf_hl_bufNomodifiable', '^\s*\d\+\s*u\=\s*[#%]\=..-\s*\zs.*$')"))
+            id = int(lfEval(r"matchadd('Lf_hl_bufNomodifiable', '^\s*\d\+\s*u\=\s*[#%]\=..-\s*\zs.*$')"))
             self._match_ids.append(id)
-            id = int(lfEval('''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_bufDirname', ' \zs".*"$')'''))
             self._match_ids.append(id)
 
         # devicons
@@ -289,8 +289,14 @@ class BufExplManager(Manager):
             lfCmd("setlocal nomodifiable")
 
     def _previewInPopup(self, *args, **kwargs):
+        if len(args) == 0 or args[0] == '':
+            return
+
         line = args[0]
         buf_number = int(re.sub(r"^.*?(\d+).*$", r"\1", line))
+        if lfEval("bufloaded(%d)" % buf_number) == '0':
+            lfCmd("silent call bufload(%d)" % buf_number)
+
         self._createPopupPreview(vim.buffers[buf_number].name, buf_number, 0)
 
 

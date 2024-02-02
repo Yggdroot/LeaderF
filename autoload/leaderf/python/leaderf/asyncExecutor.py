@@ -102,7 +102,7 @@ class AsyncExecutor(object):
 
                     err = b"".join(iter(self._errQueue.get, None))
                     if err and raise_except:
-                        raise Exception(lfBytes2Str(err, encoding))
+                        raise Exception(lfBytes2Str(err) + lfBytes2Str(err, encoding))
                 except ValueError:
                     pass
                 finally:
@@ -150,7 +150,7 @@ class AsyncExecutor(object):
 
                     err = b"".join(iter(self._errQueue.get, None))
                     if err and raise_except:
-                        raise Exception(err)
+                        raise Exception(lfEncode(err) + err)
                 except ValueError:
                     pass
                 finally:
@@ -182,6 +182,7 @@ class AsyncExecutor(object):
                 except OSError:
                     pass
 
+            self._process.poll()
             self._process = None
 
     class Result(object):
@@ -201,8 +202,14 @@ class AsyncExecutor(object):
             return self
 
         def __iter__(self):
-            return self._g
+            return self
 
+        def __next__(self):
+            return next(self._g)
+
+        # for python2
+        def next(self):
+            return next(self._g)
 
 if __name__ == "__main__":
     executor = AsyncExecutor()
