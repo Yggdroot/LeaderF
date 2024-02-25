@@ -622,14 +622,6 @@ g:Lf_Rg                                         *g:Lf_Rg*
 <
     Default value is "rg".
 
-g:Lf_Rg_Backend                                 *g:Lf_Rg_Backend*
-    Specify the search backend. When this option is set, use this backend to
-    perform search and will ignore g:Lf_Rg. You can select your own customized
-    searching bin or wrapper by this option. e.g., >
-    let g:Lf_Rg_Backend = '/PATH/MyRgWrapper.sh'
-<
-    Default value is "".
-
 g:Lf_RgConfig                                   *g:Lf_RgConfig*
     Specify a list of ripgrep configurations. For example, >
     let g:Lf_RgConfig = [

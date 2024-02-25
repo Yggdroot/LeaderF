@@ -44,7 +44,6 @@ class RgExplorer(Explorer):
         self._display_multi = False
         self._cmd_work_dir = ""
         self._rg = lfEval("get(g:, 'Lf_Rg', 'rg')")
-        self._rg_backend = lfEval("get(g:, 'Lf_Rg_Backend', '')")
 
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -220,11 +219,6 @@ class RgExplorer(Explorer):
                 # treat the first PATH as pattern
                 path = ' '.join(path_list[1:])
 
-            if lfEval("get(g:, 'Lf_Rg_Backend', '')") == '':
-                pattern += r'-e %s ' % i
-            else:
-                pattern += r'%s ' % i
-
             if case_flag == '-i':
                 case_pattern = r'\c'
             elif case_flag == '-s':
@@ -391,14 +385,10 @@ class RgExplorer(Explorer):
         else:
             heading = "--no-heading"
 
-        if lfEval("get(g:, 'Lf_Rg_Backend', '')") == '':
-            cmd = '''{} {} --no-config --no-ignore-messages {} --with-filename --color never --line-number '''\
-                    '''{} {}{}{}{}{}{}'''.format(self._rg, extra_options, heading, case_flag, word_or_line, zero_args_options,
-                                                 one_args_options, repeatable_options, lfDecode(pattern), path)
-        else:
-            cmd = '''{} {} {}'''.format(self._rg_backend, lfDecode(pattern), path)
-
-        lfCmd("echohl WarningMsg | redraw | echo 'Running: %s'" % escQuote(cmd))
+        cmd = '''{} {} --no-config --no-ignore-messages {} --with-filename --color never --line-number '''\
+                '''{} {}{}{}{}{}{}'''.format(self._rg, extra_options, heading, case_flag,
+                                             word_or_line, zero_args_options, one_args_options,
+                                             repeatable_options, lfDecode(pattern), path)
         lfCmd("let g:Lf_Debug_RgCmd = '%s'" % escQuote(cmd))
         content = executor.execute(cmd, encoding=lfEval("&encoding"),
                                    cleanup=partial(removeFiles, tmpfilenames),
