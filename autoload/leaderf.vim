@@ -71,7 +71,7 @@ function! s:InitDict(var, dict)
 endfunction
 
 call s:InitVar('g:Lf_WindowHeight', '0.5')
-call s:InitVar('g:Lf_TabpagePosition', 2)
+call s:InitVar('g:Lf_TabpagePosition', 3)
 call s:InitVar('g:Lf_ShowRelativePath', 1)
 call s:InitVar('g:Lf_DefaultMode', 'FullPath')
 call s:InitVar('g:Lf_CursorBlink', 1)
@@ -143,6 +143,10 @@ call s:InitDict('g:Lf_GtagsfilesCmd', {
             \})
 call s:InitVar('g:Lf_HistoryEditPromptIfEmpty', 1)
 call s:InitVar('g:Lf_PopupBorders', ["─","│","─","│","╭","╮","╯","╰"])
+call s:InitVar('g:Lf_GitFolderIcons', {
+            \ 'open': '',
+            \ 'closed': '',
+            \})
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],

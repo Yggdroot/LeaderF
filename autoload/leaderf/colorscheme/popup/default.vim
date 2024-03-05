@@ -137,6 +137,31 @@ if &background ==? 'dark'
     highlight def link Lf_hl_jumpsNumber        Number
     highlight def link Lf_hl_jumpsLineCol       String
     highlight def link Lf_hl_jumpsIndicator     Type
+
+    highlight def Lf_hl_gitDiffModification guifg=#ffa500 guibg=NONE gui=NONE ctermfg=214 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffAddition guifg=#a8e332 guibg=NONE gui=NONE ctermfg=148 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffDeletion guifg=#ff477e guibg=NONE gui=NONE ctermfg=204 ctermbg=NONE cterm=NONE
+    highlight def link Lf_hl_gitHash            Identifier
+    highlight def link Lf_hl_gitRefNames        Special
+    highlight def link Lf_hl_gitFolder          Directory
+    highlight def link Lf_hl_gitFolderIcon      Special
+    highlight def link Lf_hl_gitAddIcon         Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitCopyIcon        Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitDelIcon         Lf_hl_gitDiffDeletion
+    highlight def link Lf_hl_gitModificationIcon Lf_hl_gitDiffModification
+    highlight def link Lf_hl_gitRenameIcon      Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitNumStatAdd      Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitNumStatDel      Lf_hl_gitDiffDeletion
+    highlight def link Lf_hl_gitNumStatBinary   Constant
+    highlight def link Lf_hl_gitHelp            Comment
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlChangedNum", "StatusLine", "Number", 1)
+    highlight def link Lf_hl_gitStlFileChanged  StatusLine
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlAdd", "StatusLine", "Lf_hl_gitDiffAddition", 1)
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlDel", "StatusLine", "Lf_hl_gitDiffDeletion", 1)
+    highlight def link Lf_hl_gitStatPath        Directory
+    highlight def link Lf_hl_gitStatNumber      Number
+    highlight def link Lf_hl_gitStatPlus        Lf_hl_gitNumStatAdd
+    highlight def link Lf_hl_gitStatMinus       Lf_hl_gitNumStatDel
 else
     " Lf_hl_popup_inputText is the wincolor of input window
     highlight def Lf_hl_popup_inputText guifg=#525252 guibg=#f4f3d7 gui=NONE ctermfg=239 ctermbg=230 cterm=NONE
@@ -261,4 +286,29 @@ else
     highlight def link Lf_hl_jumpsNumber        Number
     highlight def link Lf_hl_jumpsLineCol       String
     highlight def link Lf_hl_jumpsIndicator     Type
+
+    highlight def Lf_hl_gitDiffModification guifg=#df5f00 guibg=NONE gui=NONE ctermfg=166 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffAddition guifg=#008700 guibg=NONE gui=NONE ctermfg=28 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffDeletion guifg=#df0000 guibg=NONE gui=NONE ctermfg=160 ctermbg=NONE cterm=NONE
+    highlight def link Lf_hl_gitHash            Identifier
+    highlight def link Lf_hl_gitRefNames        Special
+    highlight def link Lf_hl_gitFolder          Directory
+    highlight def link Lf_hl_gitFolderIcon      Special
+    highlight def link Lf_hl_gitAddIcon         Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitCopyIcon        Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitDelIcon         Lf_hl_gitDiffDeletion
+    highlight def link Lf_hl_gitModificationIcon Lf_hl_gitDiffModification
+    highlight def link Lf_hl_gitRenameIcon      Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitNumStatAdd      Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitNumStatDel      Lf_hl_gitDiffDeletion
+    highlight def link Lf_hl_gitNumStatBinary   Constant
+    highlight def link Lf_hl_gitHelp            Comment
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlChangedNum", "StatusLine", "Number", 1)
+    highlight def link Lf_hl_gitStlFileChanged  StatusLine
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlAdd", "StatusLine", "Lf_hl_gitDiffAddition", 1)
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlDel", "StatusLine", "Lf_hl_gitDiffDeletion", 1)
+    highlight def link Lf_hl_gitStatPath        Directory
+    highlight def link Lf_hl_gitStatNumber      Number
+    highlight def link Lf_hl_gitStatPlus        Lf_hl_gitNumStatAdd
+    highlight def link Lf_hl_gitStatMinus       Lf_hl_gitNumStatDel
 endif

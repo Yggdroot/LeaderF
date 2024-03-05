@@ -1432,3 +1432,12 @@ def printTime(func):
             print(func.__name__, time.time() - start)
 
     return deco
+
+def tabmove():
+    tab_pos = int(lfEval("g:Lf_TabpagePosition"))
+    if tab_pos == 0:
+        lfCmd("tabm 0")
+    elif tab_pos == 1:
+        lfCmd("tabm -1")
+    elif tab_pos == 3:
+        lfCmd("tabm")

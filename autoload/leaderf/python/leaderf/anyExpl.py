@@ -719,6 +719,9 @@ class AnyHub(object):
             elif category == "jumps":
                 from .jumpsExpl import jumpsExplManager
                 manager = jumpsExplManager
+            elif category == "git":
+                from .gitExpl import gitExplManager
+                manager = gitExplManager
             else:
                 import ctypes
                 manager_id = lfFunction(lfEval("g:Lf_PythonExtensions['%s'].manager_id" % category))()
@@ -775,11 +778,25 @@ class AnyHub(object):
                     parser = subparsers.add_parser(category, usage=gtags_usage, formatter_class=LfHelpFormatter, help=help, epilog="If [!] is given, enter normal mode directly.")
                 else:
                     parser = subparsers.add_parser(category, help=help, formatter_class=LfHelpFormatter, epilog="If [!] is given, enter normal mode directly.")
-                group = parser.add_argument_group('specific arguments')
-                self._add_argument(group, arg_def, positional_args)
 
-                group = parser.add_argument_group("common arguments")
-                self._add_argument(group, lfEval("g:Lf_CommonArguments"), positional_args)
+                if isinstance(arg_def, dict):
+                    subsubparsers = parser.add_subparsers(title="subcommands", description="", help="")
+                    group = parser.add_argument_group("common arguments")
+                    self._add_argument(group, lfEval("g:Lf_CommonArguments"), positional_args)
+                    for command, args in arg_def.items():
+                        help = lfEval("g:Lf_Helps").get(category + "-" + command, "")
+                        subparser = subsubparsers.add_parser(command, help=help, formatter_class=LfHelpFormatter)
+                        group = subparser.add_argument_group('specific arguments')
+                        self._add_argument(group, args, positional_args)
+
+                        group = subparser.add_argument_group("common arguments")
+                        self._add_argument(group, lfEval("g:Lf_CommonArguments"), positional_args)
+                else:
+                    group = parser.add_argument_group('specific arguments')
+                    self._add_argument(group, arg_def, positional_args)
+
+                    group = parser.add_argument_group("common arguments")
+                    self._add_argument(group, lfEval("g:Lf_CommonArguments"), positional_args)
 
                 parser.set_defaults(start=partial(self._default_action, category, positional_args))
 

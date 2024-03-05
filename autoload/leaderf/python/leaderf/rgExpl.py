@@ -11,7 +11,6 @@ from functools import wraps
 from .utils import *
 from .explorer import *
 from .manager import *
-from .mru import *
 
 def workingDirectory(func):
     @wraps(func)

@@ -65,6 +65,10 @@ let g:Lf_Helps = {
             \ "quickfix":       "navigate quickfix",
             \ "loclist":        "navigate location list",
             \ "jumps":          "navigate jumps list",
+            \ "git":            "use git",
+            \ "git-log":        "show the commit logs",
+            \ "git-diff":       "show changes between commits, commit and working tree, etc",
+            \ "git-blame":      "show what revision and author last modified each line of a file",
             \ }
 
 let g:Lf_Arguments = {
@@ -211,6 +215,35 @@ let g:Lf_Arguments = {
             \ "quickfix": [],
             \ "loclist": [],
             \ "jumps": [],
+            \ "git":{
+            \       "log": [
+            \           {"name": ["--current-file"], "nargs": 0, "help": "show logs of current file"},
+            \           {"name": ["extra"], "nargs": "*", "help": "extra arguments of git log"},
+            \           [
+            \               {"name": ["--directly"], "nargs": 0, "help": "output the logs directly"},
+            \               {"name": ["--explorer"], "nargs": 0, "help": "view changed files of one commit in a tree explorer"},
+            \           ],
+            \           {"name": ["--position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>",
+            \               "help": "specifies the position of the logs window"},
+            \           {"name": ["--navigation-position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>",
+            \               "help": "specifies the position of the navigation panel"},
+            \       ],
+            \       "diff": [
+            \           {"name": ["--cached", "--staged"], "nargs": 0, "help": "run 'git diff --cached'"},
+            \           [
+            \               {"name": ["--directly"], "nargs": 0, "help": "output the diffs directly"},
+            \               {"name": ["--explorer"], "nargs": 0, "help": "view changed files in a tree explorer"},
+            \           ],
+            \           {"name": ["--position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>",
+            \               "help": "specifies the position of the diffs window"},
+            \           {"name": ["-s", "--side-by-side"], "nargs": 0, "help": "show diffs in a side-by-side view"},
+            \           {"name": ["--current-file"], "nargs": 0, "help": "show diffs of current file"},
+            \           {"name": ["extra"], "nargs": "*", "help": "extra arguments of git diff"},
+            \       ],
+            \       "blame": [
+            \           {"name": ["--abc"], "nargs": 0, "help": ""},
+            \       ],
+            \   },
             \}
 
 let g:Lf_CommonArguments = [
@@ -346,6 +379,15 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos) abort
         else
             let arguments = []
         endif
+
+        if type(arguments) == type({})
+            if argNum == 2 || argNum == 3 && a:argLead != ""
+                return filter(keys(arguments), "s:Lf_FuzzyMatch(a:argLead, v:val)")
+            else
+                let arguments = arguments[argList[2]]
+            endif
+        endif
+
         let argDict = s:Lf_GenDict(arguments + g:Lf_CommonArguments)
         for opt in s:Lf_Refine(arguments + g:Lf_CommonArguments)
             if type(opt) == type([])

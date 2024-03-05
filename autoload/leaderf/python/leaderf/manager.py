@@ -408,11 +408,11 @@ class Manager(object):
         if lfEval("has('nvim')") == '1':
             if self._preview_winid:
                 if int(lfEval("nvim_win_is_valid(%d) == v:true" % self._preview_winid)):
-                    lfCmd("noautocmd call nvim_win_close(%d, 1)" % self._preview_winid)
+                    lfCmd("call nvim_win_close(%d, 1)" % self._preview_winid)
                 self._preview_winid = 0
         else:
             if self._preview_winid:
-                lfCmd("noautocmd call popup_close(%d)" % self._preview_winid)
+                lfCmd("call popup_close(%d)" % self._preview_winid)
                 self._preview_winid = 0
 
         self._preview_filetype = None
@@ -848,7 +848,7 @@ class Manager(object):
             lfPrintError(e)
             return True
 
-    def _useExistingWindow(self, title, source, line_num, jump_cmd):
+    def setOptionsForCursor(self):
         preview_pos = self._arguments.get("--preview-position", [""])[0]
         if preview_pos == "":
             preview_pos = lfEval("get(g:, 'Lf_PreviewPosition', 'top')")
@@ -862,6 +862,9 @@ class Manager(object):
                 lfCmd("call nvim_win_set_config(%d, %s)" % (self._preview_winid, str(self._preview_config)))
             else:
                 lfCmd("call popup_setoptions(%d, %s)" % (self._preview_winid, str(self._preview_config)))
+
+    def _useExistingWindow(self, title, source, line_num, jump_cmd):
+        self.setOptionsForCursor()
 
         if self._orig_source != source:
             self._orig_source = source
@@ -2274,13 +2277,7 @@ class Manager(object):
             self._cursorline_dict.clear()
             self._issue_422_set_option()
             if mode == 't' and len(vim.tabpages) > tabpage_count:
-                tab_pos = int(lfEval("g:Lf_TabpagePosition"))
-                if tab_pos == 0:
-                    lfCmd("tabm 0")
-                elif tab_pos == 1:
-                    lfCmd("tabm -1")
-                elif tab_pos == 3:
-                    lfCmd("tabm")
+                tabmove()
 
     def accept(self, mode=''):
         if self._getInstance().isReverseOrder():
