@@ -230,6 +230,10 @@ let g:Lf_Arguments = {
             \           {"name": ["-n", "--max-count"], "nargs": 1, "metavar": "<number>", "help": "Limit the number of commits to output."},
             \           {"name": ["--skip"], "nargs": 1, "metavar": "<number>", "help": "Skip number commits before starting to show the commit output."},
             \           {"name": ["--since", "--after"], "nargs": 1, "metavar": "<date>", "help": "Show commits more recent than a specific date."},
+            \           {"name": ["--until", "--before"], "nargs": 1, "metavar": "<date>", "help": "Show commits older than a specific date."},
+            \           {"name": ["--author"], "nargs": 1, "metavar": "<pattern>", "help": "Limit the commits output to ones with author header lines that match the specified pattern (regular expression)."},
+            \           {"name": ["--committer"], "nargs": 1, "metavar": "<pattern>", "help": "Limit the commits output to ones with committer header lines that match the specified pattern (regular expression)."},
+            \           {"name": ["--no-merges"], "nargs": 0, "help": "Do not print commits with more than one parent."},
             \       ],
             \       "diff": [
             \           {"name": ["--cached", "--staged"], "nargs": 0, "help": "run 'git diff --cached'"},

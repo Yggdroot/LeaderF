@@ -157,6 +157,18 @@ class GitLogExplorer(GitExplorer):
         if "--since" in arguments_dict:
             options += "--since %s " % arguments_dict["--since"][0]
 
+        if "--until" in arguments_dict:
+            options += "--until %s " % arguments_dict["--until"][0]
+
+        if "--author" in arguments_dict:
+            options += "--author %s " % arguments_dict["--author"][0]
+
+        if "--committer" in arguments_dict:
+            options += "--committer %s " % arguments_dict["--committer"][0]
+
+        if "--no-merges" in arguments_dict:
+            options += "--no-merges "
+
         return options
 
 
