@@ -169,6 +169,12 @@ class GitLogExplorer(GitExplorer):
         if "--no-merges" in arguments_dict:
             options += "--no-merges "
 
+        if "--all" in arguments_dict:
+            options += "--all "
+
+        if "--graph" in arguments_dict:
+            options += "--graph "
+
         return options
 
 
@@ -2200,6 +2206,12 @@ class GitLogExplManager(GitExplManager):
             self._explorer = GitLogExplorer()
         return self._explorer
 
+    def _getDigest(self, line, mode):
+        return line.lstrip(r"*\|/ ")
+
+    def _getDigestStartPos(self, line, mode):
+        return len(line) - len(line.lstrip(r"*\|/ "))
+
     def afterBufhidden(self):
         if self._diff_view_panel.isAllHidden():
             lfCmd("call timer_start(1, function('leaderf#Git#Cleanup', [{}]))".format(id(self)))
@@ -2208,12 +2220,16 @@ class GitLogExplManager(GitExplManager):
         """
         return the hash
         """
+        line = line.lstrip(r"*\|/ ")
         if line == '':
             return None
 
         return line.split(None, 1)[0]
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
+        if source is None:
+            return
+
         self._preview_panel.create(self.createGitCommand(self._arguments, source), config)
         self._preview_winid = self._preview_panel.getPreviewWinId()
         self._setWinOptions(self._preview_winid)
@@ -2225,6 +2241,9 @@ class GitLogExplManager(GitExplManager):
         return GitLogCommand(arguments_dict, source)
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
+        if source is None:
+            return
+
         self.setOptionsForCursor()
 
         content = self._preview_panel.getContent(source)
@@ -2261,16 +2280,41 @@ class GitLogExplManager(GitExplManager):
         super(GitExplManager, self)._afterEnter()
 
         if self._getInstance().getWinPos() == 'popup':
-            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitHash'', ''^[0-9A-Fa-f]\+'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph1'', ''^|'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
-            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitRefNames'', ''^[0-9A-Fa-f]\+\s*\zs(.\{-})'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph2'', ''^[*\|/ ]\{2}\zs|'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph3'', ''^[*\|/ ]\{4}\zs|'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph4'', ''\(^[*\|/ ]\{6,}\)\@<=|'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraphSlash'', ''\(^[*\|/ ]\{-}\)\@<=[\/]'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitHash'', ''\(^[*\|/ ]*\)\@<=[0-9A-Fa-f]\+'')')"""
+                    % self._getInstance().getPopupWinId())
+            id = int(lfEval("matchid"))
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitRefNames'', ''^[*\|/ ]*[0-9A-Fa-f]\+\s*\zs(.\{-})'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
         else:
-            id = int(lfEval(r'''matchadd('Lf_hl_gitHash', '^[0-9A-Fa-f]\+')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph1', '^|')'''))
             self._match_ids.append(id)
-            id = int(lfEval(r'''matchadd('Lf_hl_gitRefNames', '^[0-9A-Fa-f]\+\s*\zs(.\{-})')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph2', '^[*\|/ ]\{2}\zs|')'''))
+            self._match_ids.append(id)
+            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph3', '^[*\|/ ]\{4}\zs|')'''))
+            self._match_ids.append(id)
+            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph4', '\(^[*\|/ ]\{6,}\)\@<=|')'''))
+            self._match_ids.append(id)
+            id = int(lfEval(r'''matchadd('Lf_hl_gitGraphSlash', '\(^[*\|/ ]\{-}\)\@<=[\/]')'''))
+            self._match_ids.append(id)
+            id = int(lfEval(r'''matchadd('Lf_hl_gitHash', '\(^[*\|/ ]*\)\@<=[0-9A-Fa-f]\+')'''))
+            self._match_ids.append(id)
+            id = int(lfEval(r'''matchadd('Lf_hl_gitRefNames', '^[*\|/ ]*[0-9A-Fa-f]\+\s*\zs(.\{-})')'''))
             self._match_ids.append(id)
 
     def _accept(self, file, mode, *args, **kwargs):
@@ -2282,6 +2326,8 @@ class GitLogExplManager(GitExplManager):
 
         line = args[0]
         source = self.getSource(line)
+        if source is None:
+            return
 
         if "--current-file" in self._arguments and "current_file" in self._arguments:
             if self._diff_view_panel is None:

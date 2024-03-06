@@ -234,6 +234,8 @@ let g:Lf_Arguments = {
             \           {"name": ["--author"], "nargs": 1, "metavar": "<pattern>", "help": "Limit the commits output to ones with author header lines that match the specified pattern (regular expression)."},
             \           {"name": ["--committer"], "nargs": 1, "metavar": "<pattern>", "help": "Limit the commits output to ones with committer header lines that match the specified pattern (regular expression)."},
             \           {"name": ["--no-merges"], "nargs": 0, "help": "Do not print commits with more than one parent."},
+            \           {"name": ["--all"], "nargs": 0, "help": "Pretend as if all the refs in refs/, along with HEAD, are listed on the command line as <commit>."},
+            \           {"name": ["--graph"], "nargs": 0, "help": "Draw a text-based graphical representation of the commit history on the left hand side of the output."},
             \       ],
             \       "diff": [
             \           {"name": ["--cached", "--staged"], "nargs": 0, "help": "run 'git diff --cached'"},
