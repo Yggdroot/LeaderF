@@ -227,6 +227,9 @@ let g:Lf_Arguments = {
             \               "help": "specifies the position of the logs window"},
             \           {"name": ["--navigation-position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>",
             \               "help": "specifies the position of the navigation panel"},
+            \           {"name": ["-n", "--max-count"], "nargs": 1, "metavar": "<number>", "help": "Limit the number of commits to output."},
+            \           {"name": ["--skip"], "nargs": 1, "metavar": "<number>", "help": "Skip number commits before starting to show the commit output."},
+            \           {"name": ["--since", "--after"], "nargs": 1, "metavar": "<date>", "help": "Show commits more recent than a specific date."},
             \       ],
             \       "diff": [
             \           {"name": ["--cached", "--staged"], "nargs": 0, "help": "run 'git diff --cached'"},

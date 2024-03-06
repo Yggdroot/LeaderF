@@ -129,7 +129,8 @@ class GitLogExplorer(GitExplorer):
         executor = AsyncExecutor()
         self._executor.append(executor)
 
-        cmd = 'git log --pretty=format:"%h%d %s"'
+        options = GitLogExplorer.generateOptions(arguments_dict)
+        cmd = 'git log {} --pretty=format:"%h%d %s"'.format(options)
         if "--current-file" in arguments_dict and "current_file" in arguments_dict:
             cmd += " -- {}".format(arguments_dict["current_file"])
 
@@ -143,6 +144,20 @@ class GitLogExplorer(GitExplorer):
 
     def getStlCategory(self):
         return 'Git_log'
+
+    @staticmethod
+    def generateOptions(arguments_dict):
+        options = ""
+        if "-n" in arguments_dict:
+            options += "-n %s " % arguments_dict["-n"][0]
+
+        if "--skip" in arguments_dict:
+            options += "--skip %s " % arguments_dict["--skip"][0]
+
+        if "--since" in arguments_dict:
+            options += "--since %s " % arguments_dict["--since"][0]
+
+        return options
 
 
 class GitCommand(object):
@@ -260,7 +275,8 @@ class GitLogCommand(GitCommand):
 
     def buildCommandAndBufferName(self):
         if "--directly" in self._arguments:
-            self._cmd = "git log"
+            options = GitLogExplorer.generateOptions(self._arguments)
+            self._cmd = "git log {}".format(options)
 
             if "extra" in self._arguments:
                 self._cmd += " " + " ".join(self._arguments["extra"])
