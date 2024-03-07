@@ -2353,6 +2353,7 @@ class GitLogExplManager(GitExplManager):
                                            GitLogExplCommand(self._arguments, source))
         else:
             if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
+                self._arguments["mode"] = 't'
                 lfCmd("tabnew")
 
             tabpage_count = len(vim.tabpages)
