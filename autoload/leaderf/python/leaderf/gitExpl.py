@@ -679,6 +679,7 @@ class TreeView(GitCommandView):
         self._first_source = {}
         self._left_most_file = set()
         self._source_queue = Queue.Queue()
+        self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
         folder_icons = lfEval("g:Lf_GitFolderIcons")
         self._closed_folder_icon = folder_icons["closed"]
         self._open_folder_icon = folder_icons["open"]
@@ -896,8 +897,9 @@ class TreeView(GitCommandView):
             parent, tree_node = self._trees.last_key_value()
             mode, source = TreeView.generateSource(line)
             file_path = lfGetFilePath(source)
-            self._file_list[parent].append("{:<4} {}{}"
-                                           .format(source[2], source[3],
+            icon = webDevIconsGetFileTypeSymbol(file_path) if self._show_icon else ""
+            self._file_list[parent].append("{:<4} {}{}{}"
+                                           .format(source[2], icon, source[3],
                                                    "" if source[4] == ""
                                                    else "\t=>\t" + source[4])
                                            )
