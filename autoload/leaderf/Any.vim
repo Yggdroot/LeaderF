@@ -235,6 +235,7 @@ let g:Lf_Arguments = {
             \           {"name": ["--no-merges"], "nargs": 0, "help": "Do not print commits with more than one parent."},
             \           {"name": ["--all"], "nargs": 0, "help": "Pretend as if all the refs in refs/, along with HEAD, are listed on the command line as <commit>."},
             \           {"name": ["--graph"], "nargs": 0, "help": "Draw a text-based graphical representation of the commit history on the left hand side of the output."},
+            \           {"name": ["--reverse-order"], "nargs": 0, "help": "Output the commits chosen to be shown in reverse order."},
             \           {"name": ["extra"], "nargs": "*", "help": "extra arguments of git log"},
             \       ],
             \       "diff": [

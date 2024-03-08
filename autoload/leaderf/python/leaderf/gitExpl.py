@@ -175,6 +175,9 @@ class GitLogExplorer(GitExplorer):
         if "--graph" in arguments_dict:
             options += "--graph "
 
+        if "--reverse-order" in arguments_dict:
+            options += "--reverse "
+
         return options
 
 
