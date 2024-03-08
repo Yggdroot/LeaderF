@@ -468,13 +468,15 @@ ValueElements* evaluate(TextContext* pText_ctxt,
 #endif
         special = k == 0 ? 5 : 3;
     else if ( isupper(text[i]) )
-        special = !isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ? 3 : 0;
+        special = (!isupper(text[i-1]) || (i+1 < text_len && islower(text[i+1])) ?
+                   (i < 5 ? 5 : 3) : 0);
     /* else if ( text[i-1] == '_' || text[i-1] == '-' || text[i-1] == ' ' ) */
     /*     special = 3;                                                     */
     /* else if ( text[i-1] == '.' )                                         */
     /*     special = 3;                                                     */
     else if ( !isalnum(text[i-1]) )
-        special = 3;
+        /* if there is an icon at the beginning, `if ( i == 0 )` won't meet */
+        special = i < 5 ? 5 : 3;
     else
         special = 0;
     ++i;
@@ -891,7 +893,7 @@ float getWeight(const char* text, uint16_t text_len,
 
         free(text_mask);
 
-        return score + (float)pattern_len/text_len + (float)(pattern_len << 1)/(text_len - beg);
+        return score + (float)(pattern_len<<1)/text_len + (float)pattern_len/(text_len - beg);
     }
 }
 
