@@ -1517,8 +1517,10 @@ class DiffViewPanel(Panel):
 
     def getValidWinIDs(self, win_ids):
         if win_ids == [-1, -1]:
-            # won't happen
-            pass
+            lfCmd("wincmd w | leftabove new")
+            win_ids[1] = int(lfEval("win_getid()"))
+            lfCmd("noautocmd leftabove vertical new")
+            win_ids[0] = int(lfEval("win_getid()"))
         elif win_ids[0] == -1:
             lfCmd("call win_gotoid({})".format(win_ids[1]))
             lfCmd("noautocmd leftabove vertical new")
