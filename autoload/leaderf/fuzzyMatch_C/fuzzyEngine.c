@@ -1863,6 +1863,7 @@ enum
     Category_File,
     Category_Gtags,
     Category_Line,
+    Category_GitDiff,
 };
 
 typedef struct RgParameter
@@ -2130,6 +2131,18 @@ static void line_getDigest(char** str, uint32_t* length, Parameter* param)
     }
 }
 
+static void gitdiff_getDigest(char** str, uint32_t* length, Parameter* param)
+{
+    if ( param->mode == 0 ) {
+        uint32_t len = 5;
+        *str += len;
+        *length -= len;
+    }
+    else {
+        file_getDigest(str, length, param);
+    }
+}
+
 /**
  * fuzzyMatchPart(engine, source, pattern, category, param, is_name_only=False, sort_results=True)
  *
@@ -2313,6 +2326,9 @@ static PyObject* fuzzyEngine_fuzzyMatchPart(PyObject* self, PyObject* args, PyOb
             }
             case Category_Line:
                 line_getDigest(&s->str, &s->len, (Parameter*)PyCapsule_GetPointer(py_param, NULL));
+                break;
+            case Category_GitDiff:
+                gitdiff_getDigest(&s->str, &s->len, (Parameter*)PyCapsule_GetPointer(py_param, NULL));
                 break;
             }
         }
@@ -2567,6 +2583,12 @@ PyMODINIT_FUNC PyInit_fuzzyEngine(void)
         return NULL;
     }
 
+    if ( PyModule_AddObject(module, "Category_GitDiff", Py_BuildValue("I", Category_GitDiff)) )
+    {
+        Py_DECREF(module);
+        return NULL;
+    }
+
     return module;
 }
 
@@ -2610,6 +2632,11 @@ PyMODINIT_FUNC initfuzzyEngine(void)
         return;
     }
 
+    if ( PyModule_AddObject(module, "Category_GitDiff", Py_BuildValue("I", Category_GitDiff)) )
+    {
+        Py_DECREF(module);
+        return;
+    }
 }
 
 #endif

@@ -77,6 +77,9 @@ class GitDiffExplorer(GitExplorer):
         super(GitDiffExplorer, self).__init__()
         self._source_info = {}
 
+    def supportsNameOnly(self):
+        return True
+
     def getContent(self, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
 
@@ -1983,10 +1986,18 @@ class GitDiffExplManager(GitExplManager):
         return self._explorer
 
     def _getDigest(self, line, mode):
-        return line.split(None, 1)[1]
+        if mode == 0:
+            return line[5:]
+        elif mode == 1:
+            return getBasename(line)
+        else:
+            return getDirname(line[5:])
 
     def _getDigestStartPos(self, line, mode):
-        return 5
+        if mode == 0 or mode == 2:
+            return 5
+        else:
+            return lfBytesLen(getDirname(line))
 
     def afterBufhidden(self):
         if self._diff_view_panel.isAllHidden():

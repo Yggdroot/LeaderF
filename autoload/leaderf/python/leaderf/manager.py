@@ -1869,6 +1869,12 @@ class Manager(object):
                     filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine,
                                             pattern=pattern, category=fuzzyEngine.Category_Line,
                                             param=fuzzyEngine.createParameter(1), is_name_only=True, sort_results=do_sort)
+                elif self._getExplorer().getStlCategory() == "Git_diff":
+                    return_index = False
+                    mode = 0 if self._cli.isFullPath else 1
+                    filter_method = partial(fuzzyEngine.fuzzyMatchPart, engine=self._fuzzy_engine,
+                                            pattern=pattern, category=fuzzyEngine.Category_GitDiff,
+                                            param=fuzzyEngine.createParameter(mode), is_name_only=False, sort_results=do_sort)
                 elif self._getExplorer().getStlCategory() in ["Self", "Buffer", "Mru", "BufTag",
                         "Function", "History", "Cmd_History", "Search_History", "Filetype",
                         "Command", "Window", "QuickFix", "LocList"]:
