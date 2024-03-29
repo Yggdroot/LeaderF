@@ -738,7 +738,7 @@ class TreeView(GitCommandView):
               .format(winid, self._del_icon))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModificationIcon'', ''^\s*\zs{}'', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModifyIcon'', ''^\s*\zs{}'', -100)')"""
               .format(winid, self._modification_icon))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)

@@ -138,7 +138,7 @@ if &background ==? 'dark'
     highlight def link Lf_hl_jumpsLineCol       String
     highlight def link Lf_hl_jumpsIndicator     Type
 
-    highlight def Lf_hl_gitDiffModification guifg=#ffa500 guibg=NONE gui=NONE ctermfg=214 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffModification guifg=#87afff guibg=NONE gui=NONE ctermfg=111 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_gitDiffAddition guifg=#a8e332 guibg=NONE gui=NONE ctermfg=148 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_gitDiffDeletion guifg=#ff477e guibg=NONE gui=NONE ctermfg=204 ctermbg=NONE cterm=NONE
     highlight def link Lf_hl_gitHash            Identifier
@@ -148,7 +148,7 @@ if &background ==? 'dark'
     highlight def link Lf_hl_gitAddIcon         Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitCopyIcon        Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitDelIcon         Lf_hl_gitDiffDeletion
-    highlight def link Lf_hl_gitModificationIcon Lf_hl_gitDiffModification
+    highlight def link Lf_hl_gitModifyIcon      Lf_hl_gitDiffModification
     highlight def link Lf_hl_gitRenameIcon      Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitNumStatAdd      Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitNumStatDel      Lf_hl_gitDiffDeletion
@@ -292,7 +292,7 @@ else
     highlight def link Lf_hl_jumpsLineCol       String
     highlight def link Lf_hl_jumpsIndicator     Type
 
-    highlight def Lf_hl_gitDiffModification guifg=#df5f00 guibg=NONE gui=NONE ctermfg=166 ctermbg=NONE cterm=NONE
+    highlight def Lf_hl_gitDiffModification guifg=#5f87af guibg=NONE gui=NONE ctermfg=67 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_gitDiffAddition guifg=#008700 guibg=NONE gui=NONE ctermfg=28 ctermbg=NONE cterm=NONE
     highlight def Lf_hl_gitDiffDeletion guifg=#df0000 guibg=NONE gui=NONE ctermfg=160 ctermbg=NONE cterm=NONE
     highlight def link Lf_hl_gitHash            Identifier
@@ -302,7 +302,7 @@ else
     highlight def link Lf_hl_gitAddIcon         Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitCopyIcon        Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitDelIcon         Lf_hl_gitDiffDeletion
-    highlight def link Lf_hl_gitModificationIcon Lf_hl_gitDiffModification
+    highlight def link Lf_hl_gitModifyIcon      Lf_hl_gitDiffModification
     highlight def link Lf_hl_gitRenameIcon      Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitNumStatAdd      Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitNumStatDel      Lf_hl_gitDiffDeletion
