@@ -253,7 +253,7 @@ let g:Lf_Arguments = {
             \           {"name": ["extra"], "nargs": "*", "help": "extra arguments of git diff"},
             \       ],
             \       "blame": [
-            \           {"name": ["--abc"], "nargs": 0, "help": ""},
+            \           {"name": ["-w"], "nargs": 0, "help": "Ignore whitespace when comparing the parent’s version and the child’s to find where the lines came from."},
             \       ],
             \   },
             \}

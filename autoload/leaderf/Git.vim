@@ -101,24 +101,26 @@ function! leaderf#Git#OuterBlock(direction)
     call search(printf('^\s\{%d}\zs\S', width), flags)
 endfunction
 
-let s:help = [
-            \ "o:             open the folder or open the diffs of current file",
-            \ "<CR>:          open the folder or open the diffs of current file",
-            \ "<2-LeftMouse>: open the folder or open the diffs of current file",
-            \ "O:             open the folder recursively",
-            \ "t:             open the diffs in a new tabpage",
-            \ "p:             preview the diffs, i.e., like 'o', but leave the cursor in the current panel",
-            \ "x:             collapse the parent folder",
-            \ "X:             collapse all the children of the current folder",
-            \ "f:             fuzzy search files",
-            \ "F:             resume the previous fuzzy searching",
-            \ "-:             go to the parent folder",
-            \ "+:             go to the next sibling of the parent folder",
-            \ "<C-J>:         go to the next sibling of the current folder",
-            \ "<C-K>:         go to the previous sibling of the current folder",
-            \ "(:             go to the start of the current indent level",
-            \ "):             go to the end of the current indent level",
-            \]
+let s:help = {
+            \ "tree": [
+            \   "o:             open the folder or open the diffs of current file",
+            \   "<CR>:          open the folder or open the diffs of current file",
+            \   "<2-LeftMouse>: open the folder or open the diffs of current file",
+            \   "O:             open the folder recursively",
+            \   "t:             open the diffs in a new tabpage",
+            \   "p:             preview the diffs, i.e., like 'o', but leave the cursor in the current panel",
+            \   "x:             collapse the parent folder",
+            \   "X:             collapse all the children of the current folder",
+            \   "f:             fuzzy search files",
+            \   "F:             resume the previous fuzzy searching",
+            \   "-:             go to the parent folder",
+            \   "+:             go to the next sibling of the parent folder",
+            \   "<C-J>:         go to the next sibling of the current folder",
+            \   "<C-K>:         go to the previous sibling of the current folder",
+            \   "(:             go to the start of the current indent level",
+            \   "):             go to the end of the current indent level",
+            \ ]
+            \}
 
 function s:HelpFilter(winid, key)
     if a:key == "\<ESC>" || a:key == "\<F1>"
@@ -138,7 +140,7 @@ function! s:GetRowCol(width, height)
     return {'row': row, 'col': col}
 endfunction
 
-function! leaderf#Git#ShowHelp()
+function! leaderf#Git#ShowHelp(type)
     if has("nvim")
         let borderchars = [
                     \ [g:Lf_PopupBorders[4],  "Lf_hl_popupBorder"],
@@ -151,7 +153,7 @@ function! leaderf#Git#ShowHelp()
                     \ [g:Lf_PopupBorders[3],  "Lf_hl_popupBorder"]
                     \]
         let width = 100
-        let height = len(s:help)
+        let height = len(s:help[a:type])
         let row_col = s:GetRowCol(width, height)
         let options = {
                     \ "title":           " Help ",
@@ -168,7 +170,7 @@ function! leaderf#Git#ShowHelp()
                     \}
         let scratch_buffer = nvim_create_buf(v:false, v:true)
         call nvim_buf_set_option(scratch_buffer, 'bufhidden', 'wipe')
-        call nvim_buf_set_lines(scratch_buffer, 0, -1, v:false, s:help)
+        call nvim_buf_set_lines(scratch_buffer, 0, -1, v:false, s:help[a:type])
         call nvim_buf_set_option(scratch_buffer, 'modifiable', v:false)
         let id = nvim_open_win(scratch_buffer, 1, options)
         call nvim_win_set_option(id, 'winhighlight', 'Normal:Lf_hl_popup_window')
@@ -189,7 +191,7 @@ function! leaderf#Git#ShowHelp()
                     \ "mapping":         0,
                     \}
 
-        let id = popup_create(s:help, options)
+        let id = popup_create(s:help[a:type], options)
         call win_execute(id, 'setlocal wincolor=Lf_hl_popup_window')
         call win_execute(id, 'call matchadd("Special", ''^.\{-}\(:\)\@='')')
         call win_execute(id, 'call matchadd("Comment", ''\(^.\{-}:\s*\)\@<=.*'')')
@@ -200,7 +202,7 @@ function! leaderf#Git#TreeViewMaps(id)
     exec g:Lf_py "import ctypes"
     let tree_view = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
     exec printf('nnoremap <silent> X         :exec g:Lf_py "%s.collapseChildren()"<CR>', tree_view)
-    nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp()<CR>
+    nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("tree")<CR>
     nnoremap <buffer> <silent> -             :call leaderf#Git#OuterIndent(0)<CR>
     nnoremap <buffer> <silent> +             :call leaderf#Git#OuterIndent(1)<CR>
     nnoremap <buffer> <silent> <C-K>         :call leaderf#Git#SameIndent(0)<CR>
@@ -227,6 +229,15 @@ function! leaderf#Git#ExplorerMaps(id)
     exec printf('nnoremap <buffer> <silent> x             :call leaderf#Git#CollapseParent("%s")<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> f             :exec g:Lf_py "%s.fuzzySearch()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> F             :exec g:Lf_py "%s.fuzzySearch(True)"<CR>', explorer_page)
+    nnoremap <buffer> <silent> q             :q<CR>
+endfunction
+
+function! leaderf#Git#BlameMaps(id)
+    exec g:Lf_py "import ctypes"
+    let explorer_page = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
+    exec printf('nnoremap <buffer> <silent> o             :exec g:Lf_py "%s.open()"<CR>', explorer_page)
+    exec printf('nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "%s.open()"<CR>', explorer_page)
+    exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.open()"<CR>', explorer_page)
     nnoremap <buffer> <silent> q             :q<CR>
 endfunction
 

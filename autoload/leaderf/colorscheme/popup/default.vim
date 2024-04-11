@@ -146,10 +146,10 @@ if &background ==? 'dark'
     highlight def link Lf_hl_gitFolder          Directory
     highlight def link Lf_hl_gitFolderIcon      Special
     highlight def link Lf_hl_gitAddIcon         Lf_hl_gitDiffAddition
-    highlight def link Lf_hl_gitCopyIcon        Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitCopyIcon        Number
     highlight def link Lf_hl_gitDelIcon         Lf_hl_gitDiffDeletion
     highlight def link Lf_hl_gitModifyIcon      Lf_hl_gitDiffModification
-    highlight def link Lf_hl_gitRenameIcon      Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitRenameIcon      Constant
     highlight def link Lf_hl_gitNumStatAdd      Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitNumStatDel      Lf_hl_gitDiffDeletion
     highlight def link Lf_hl_gitNumStatBinary   Constant
@@ -300,10 +300,10 @@ else
     highlight def link Lf_hl_gitFolder          Directory
     highlight def link Lf_hl_gitFolderIcon      Special
     highlight def link Lf_hl_gitAddIcon         Lf_hl_gitDiffAddition
-    highlight def link Lf_hl_gitCopyIcon        Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitCopyIcon        Number
     highlight def link Lf_hl_gitDelIcon         Lf_hl_gitDiffDeletion
     highlight def link Lf_hl_gitModifyIcon      Lf_hl_gitDiffModification
-    highlight def link Lf_hl_gitRenameIcon      Lf_hl_gitDiffAddition
+    highlight def link Lf_hl_gitRenameIcon      Constant
     highlight def link Lf_hl_gitNumStatAdd      Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitNumStatDel      Lf_hl_gitDiffDeletion
     highlight def link Lf_hl_gitNumStatBinary   Constant

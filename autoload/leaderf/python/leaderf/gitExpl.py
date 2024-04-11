@@ -13,6 +13,7 @@ if sys.version_info >= (3, 0):
     import queue as Queue
 else:
     import Queue
+from functools import partial
 from enum import Enum
 from collections import OrderedDict
 from .utils import *
@@ -358,9 +359,35 @@ class GitLogExplCommand(GitCommand):
         self._file_type_cmd = ""
 
 
+class GitBlameCommand(GitCommand):
+    def __init__(self, arguments_dict, source):
+        super(GitBlameCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferName(self):
+        source = ""
+        if self._source is not None:
+            source = self._source
+
+        extra_options = ""
+        if "-w" in self._arguments:
+            extra_options += " -w"
+
+        self._cmd = "git blame -f -n {} {} -- ".format(extra_options, source)
+
+        file_name = vim.current.buffer.name
+        if " " in file_name:
+            file_name = file_name.replace(' ', r'\ ')
+        file_name = lfRelpath(file_name)
+
+        self._cmd += file_name
+        self._buffer_name = "LeaderF://git blame {} {}".format(source, file_name)
+        self._file_type = ""
+        self._file_type_cmd = ""
+
+
 class ParallelExecutor(object):
     @staticmethod
-    def run(*cmds):
+    def run(*cmds, format_line=None):
         outputs = [[] for _ in range(len(cmds))]
         stop_thread = False
 
@@ -378,7 +405,7 @@ class ParallelExecutor(object):
         executors = [AsyncExecutor() for _ in range(len(cmds))]
         workers = []
         for i, (exe, cmd) in enumerate(zip(executors, cmds)):
-            content = exe.execute(cmd, encoding=lfEval("&encoding"))
+            content = exe.execute(cmd, encoding=lfEval("&encoding"), format_line=format_line)
             worker = threading.Thread(target=readContent, args=(content, outputs[i]))
             worker.daemon = True
             worker.start()
@@ -403,6 +430,7 @@ class GitCommandView(object):
         self._buffer = None
         self._window_id = -1
         self._bufhidden = 'wipe'
+        self._format_line = None
         self.init()
         owner.register(self)
 
@@ -466,13 +494,11 @@ class GitCommandView(object):
     def enableColor(self, winid):
         pass
 
-    def create(self, winid, bufhidden='wipe', buf_content=None):
+    def create(self, winid, bufhidden='wipe', buf_content=None, format_line=None):
         self._bufhidden = bufhidden
+        self._format_line = format_line
 
         if self._buffer is not None:
-            self._buffer.options['modifiable'] = True
-            del self._buffer[:]
-            self._buffer.options['modifiable'] = False
             self.cleanup()
             lfCmd("call win_gotoid({})".format(self.getWindowId()))
 
@@ -544,7 +570,10 @@ class GitCommandView(object):
 
     def _readContent(self, encoding):
         try:
-            content = self._executor.execute(self._cmd.getCommand(), encoding=encoding)
+            content = self._executor.execute(self._cmd.getCommand(),
+                                             encoding=encoding,
+                                             format_line=self._format_line
+                                             )
             for line in content:
                 self._content.append(line)
                 if self._stop_reader_thread:
@@ -584,6 +613,131 @@ class GitCommandView(object):
 
     def valid(self):
         return self._buffer is not None and self._buffer.valid
+
+
+class GitBlameView(GitCommandView):
+    def __init__(self, owner, cmd):
+        super(GitBlameView, self).__init__(owner, cmd)
+        self._alternative_winid = None
+        self._alternative_win_options = {}
+        self._match_ids = []
+        self._color_table = {
+            '0':   '#000000', '1':   '#800000', '2':   '#008000', '3':   '#808000',
+            '4':   '#000080', '5':   '#800080', '6':   '#008080', '7':   '#c0c0c0',
+            '8':   '#808080', '9':   '#ff0000', '10':  '#00ff00', '11':  '#ffff00',
+            '12':  '#0000ff', '13':  '#ff00ff', '14':  '#00ffff', '15':  '#ffffff',
+            '16':  '#000000', '17':  '#00005f', '18':  '#000087', '19':  '#0000af',
+            '20':  '#0000d7', '21':  '#0000ff', '22':  '#005f00', '23':  '#005f5f',
+            '24':  '#005f87', '25':  '#005faf', '26':  '#005fd7', '27':  '#005fff',
+            '28':  '#008700', '29':  '#00875f', '30':  '#008787', '31':  '#0087af',
+            '32':  '#0087d7', '33':  '#0087ff', '34':  '#00af00', '35':  '#00af5f',
+            '36':  '#00af87', '37':  '#00afaf', '38':  '#00afd7', '39':  '#00afff',
+            '40':  '#00d700', '41':  '#00d75f', '42':  '#00d787', '43':  '#00d7af',
+            '44':  '#00d7d7', '45':  '#00d7ff', '46':  '#00ff00', '47':  '#00ff5f',
+            '48':  '#00ff87', '49':  '#00ffaf', '50':  '#00ffd7', '51':  '#00ffff',
+            '52':  '#5f0000', '53':  '#5f005f', '54':  '#5f0087', '55':  '#5f00af',
+            '56':  '#5f00d7', '57':  '#5f00ff', '58':  '#5f5f00', '59':  '#5f5f5f',
+            '60':  '#5f5f87', '61':  '#5f5faf', '62':  '#5f5fd7', '63':  '#5f5fff',
+            '64':  '#5f8700', '65':  '#5f875f', '66':  '#5f8787', '67':  '#5f87af',
+            '68':  '#5f87d7', '69':  '#5f87ff', '70':  '#5faf00', '71':  '#5faf5f',
+            '72':  '#5faf87', '73':  '#5fafaf', '74':  '#5fafd7', '75':  '#5fafff',
+            '76':  '#5fd700', '77':  '#5fd75f', '78':  '#5fd787', '79':  '#5fd7af',
+            '80':  '#5fd7d7', '81':  '#5fd7ff', '82':  '#5fff00', '83':  '#5fff5f',
+            '84':  '#5fff87', '85':  '#5fffaf', '86':  '#5fffd7', '87':  '#5fffff',
+            '88':  '#870000', '89':  '#87005f', '90':  '#870087', '91':  '#8700af',
+            '92':  '#8700d7', '93':  '#8700ff', '94':  '#875f00', '95':  '#875f5f',
+            '96':  '#875f87', '97':  '#875faf', '98':  '#875fd7', '99':  '#875fff',
+            '100': '#878700', '101': '#87875f', '102': '#878787', '103': '#8787af',
+            '104': '#8787d7', '105': '#8787ff', '106': '#87af00', '107': '#87af5f',
+            '108': '#87af87', '109': '#87afaf', '110': '#87afd7', '111': '#87afff',
+            '112': '#87d700', '113': '#87d75f', '114': '#87d787', '115': '#87d7af',
+            '116': '#87d7d7', '117': '#87d7ff', '118': '#87ff00', '119': '#87ff5f',
+            '120': '#87ff87', '121': '#87ffaf', '122': '#87ffd7', '123': '#87ffff',
+            '124': '#af0000', '125': '#af005f', '126': '#af0087', '127': '#af00af',
+            '128': '#af00d7', '129': '#af00ff', '130': '#af5f00', '131': '#af5f5f',
+            '132': '#af5f87', '133': '#af5faf', '134': '#af5fd7', '135': '#af5fff',
+            '136': '#af8700', '137': '#af875f', '138': '#af8787', '139': '#af87af',
+            '140': '#af87d7', '141': '#af87ff', '142': '#afaf00', '143': '#afaf5f',
+            '144': '#afaf87', '145': '#afafaf', '146': '#afafd7', '147': '#afafff',
+            '148': '#afd700', '149': '#afd75f', '150': '#afd787', '151': '#afd7af',
+            '152': '#afd7d7', '153': '#afd7ff', '154': '#afff00', '155': '#afff5f',
+            '156': '#afff87', '157': '#afffaf', '158': '#afffd7', '159': '#afffff',
+            '160': '#d70000', '161': '#d7005f', '162': '#d70087', '163': '#d700af',
+            '164': '#d700d7', '165': '#d700ff', '166': '#d75f00', '167': '#d75f5f',
+            '168': '#d75f87', '169': '#d75faf', '170': '#d75fd7', '171': '#d75fff',
+            '172': '#d78700', '173': '#d7875f', '174': '#d78787', '175': '#d787af',
+            '176': '#d787d7', '177': '#d787ff', '178': '#d7af00', '179': '#d7af5f',
+            '180': '#d7af87', '181': '#d7afaf', '182': '#d7afd7', '183': '#d7afff',
+            '184': '#d7d700', '185': '#d7d75f', '186': '#d7d787', '187': '#d7d7af',
+            '188': '#d7d7d7', '189': '#d7d7ff', '190': '#d7ff00', '191': '#d7ff5f',
+            '192': '#d7ff87', '193': '#d7ffaf', '194': '#d7ffd7', '195': '#d7ffff',
+            '196': '#ff0000', '197': '#ff005f', '198': '#ff0087', '199': '#ff00af',
+            '200': '#ff00d7', '201': '#ff00ff', '202': '#ff5f00', '203': '#ff5f5f',
+            '204': '#ff5f87', '205': '#ff5faf', '206': '#ff5fd7', '207': '#ff5fff',
+            '208': '#ff8700', '209': '#ff875f', '210': '#ff8787', '211': '#ff87af',
+            '212': '#ff87d7', '213': '#ff87ff', '214': '#ffaf00', '215': '#ffaf5f',
+            '216': '#ffaf87', '217': '#ffafaf', '218': '#ffafd7', '219': '#ffafff',
+            '220': '#ffd700', '221': '#ffd75f', '222': '#ffd787', '223': '#ffd7af',
+            '224': '#ffd7d7', '225': '#ffd7ff', '226': '#ffff00', '227': '#ffff5f',
+            '228': '#ffff87', '229': '#ffffaf', '230': '#ffffd7', '231': '#ffffff',
+            '232': '#080808', '233': '#121212', '234': '#1c1c1c', '235': '#262626',
+            '236': '#303030', '237': '#3a3a3a', '238': '#444444', '239': '#4e4e4e',
+            '240': '#585858', '241': '#626262', '242': '#6c6c6c', '243': '#767676',
+            '244': '#808080', '245': '#8a8a8a', '246': '#949494', '247': '#9e9e9e',
+            '248': '#a8a8a8', '249': '#b2b2b2', '250': '#bcbcbc', '251': '#c6c6c6',
+            '252': '#d0d0d0', '253': '#dadada', '254': '#e4e4e4', '255': '#eeeeee'
+        }
+
+
+    def setOptions(self, winid, bufhidden):
+        super(GitBlameView, self).setOptions(winid, bufhidden)
+        lfCmd("call win_execute({}, 'setlocal nowrap')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal winfixwidth')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal fdc=0')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal number norelativenumber')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal nofoldenable')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal signcolumn=no')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
+
+    def saveAlternativeWinOptions(self, winid):
+        self._alternative_winid = winid
+        self._alternative_win_options = {
+                "foldenable": lfEval("getwinvar({}, '&foldenable')".format(winid)),
+                "scrollbind": lfEval("getwinvar({}, '&scrollbind')".format(winid)),
+                }
+
+    def enableColor(self, winid):
+        if (lfEval("hlexists('Lf_hl_blame_255')") == '0'
+            or lfEval("exists('*hlget')") == '0'
+            or lfEval("hlget('Lf_hl_blame_255')[0]").get("cleared", False)):
+            for cterm_color, gui_color in self._color_table.items():
+                lfCmd("hi def Lf_hl_blame_{} guifg={} guibg=NONE gui=NONE ctermfg={} ctermbg=NONE cterm=NONE"
+                      .format(cterm_color, gui_color, cterm_color))
+
+        for i in range(256):
+            lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_blame_{}'', ''^\^\?{}\x\+'', -100)')"""
+                  .format(winid, i, format(i, '02x')))
+            id = int(lfEval("matchid"))
+            self._match_ids.append(id)
+
+        lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Number'',
+              ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d [+-]\d\d\d\d'', -100)')""" % winid)
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+
+        lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''WarningMsg'', ''Not Committed Yet'', -100)')""" % winid)
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+
+    def suicide(self):
+        super(GitBlameView, self).suicide()
+        if self._alternative_winid is not None:
+            for k, v in self._alternative_win_options.items():
+                lfCmd("call setwinvar({}, '&{}', {})".format(self._alternative_winid, k, v))
+
+        for i in self._match_ids:
+            lfCmd("silent! call matchdelete(%d)" % i)
+        self._match_ids = []
 
 
 class LfOrderedDict(OrderedDict):
@@ -669,9 +823,13 @@ class Bisect(object):
 
 
 class TreeView(GitCommandView):
-    def __init__(self, owner, cmd, project_root):
+    def __init__(self, owner, cmd, project_root, target_path, callback):
         super(TreeView, self).__init__(owner, cmd)
         self._project_root = project_root
+        self._target_path = target_path
+        # the argument is source, source is a tuple like
+        # (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        self._callback = callback
         # key is the parent hash, value is a TreeNode
         self._trees = LfOrderedDict()
         # key is the parent hash, value is a list of MetaInfo
@@ -683,8 +841,6 @@ class TreeView(GitCommandView):
         self._short_stat = {}
         self._num_stat = {}
         self._first_source = {}
-        self._left_most_file = set()
-        self._source_queue = Queue.Queue()
         self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
         folder_icons = lfEval("g:Lf_GitFolderIcons")
         self._closed_folder_icon = folder_icons["closed"]
@@ -765,17 +921,6 @@ class TreeView(GitCommandView):
     def defineMaps(self, winid):
         lfCmd("call win_execute({}, 'call leaderf#Git#TreeViewMaps({})')"
               .format(winid, id(self)))
-
-    def getFirstSource(self):
-        if self._cur_parent in self._first_source:
-            return self._first_source[self._cur_parent]
-        else:
-            parent = ""
-            while(parent != self._cur_parent):
-                parent, source = self._source_queue.get()
-                self._first_source[parent] = source
-
-            return source
 
     def getCurrentParent(self):
         return self._cur_parent
@@ -860,12 +1005,6 @@ class TreeView(GitCommandView):
 
         return None
 
-    def enqueueLeftMostFile(self, parent):
-        self._left_most_file.add(parent)
-
-        tree_node = self._trees[parent]
-        self._source_queue.put((parent, self.getLeftMostFile(tree_node)))
-
     def buildTree(self, line):
         """
         command output is something as follows:
@@ -901,6 +1040,7 @@ class TreeView(GitCommandView):
                 self._file_list[parent] = []
 
             parent, tree_node = self._trees.last_key_value()
+            root_node = tree_node
             mode, source = TreeView.generateSource(line)
             file_path = lfGetFilePath(source)
             icon = webDevIconsGetFileTypeSymbol(file_path) if self._show_icon else ""
@@ -934,9 +1074,6 @@ class TreeView(GitCommandView):
                                                             "{}/{}/".format(level0_dir_name,
                                                                             dir_name)
                                                             )
-
-                                if parent not in self._left_most_file:
-                                    self.enqueueLeftMostFile(parent)
                             elif i == 0:
                                 self.appendRemainingFiles(parent, tree_node)
 
@@ -948,6 +1085,13 @@ class TreeView(GitCommandView):
 
                     tree_node = tree_node.dirs[d]
 
+                if self._target_path == file_path:
+                    node = root_node
+                    node.status = FolderStatus.OPEN
+                    for d in directories:
+                        node = node.dirs[d]
+                        node.status = FolderStatus.OPEN
+
             if mode != "160000":
                 tree_node.files[file] = source
         elif line.startswith(" "):
@@ -955,8 +1099,6 @@ class TreeView(GitCommandView):
             self._short_stat[parent] = line
             self.appendRemainingFiles(parent, tree_node)
             self.appendFiles(parent, 0, tree_node)
-            if parent not in self._left_most_file:
-                self.enqueueLeftMostFile(parent)
         elif line == "":
             pass
         else:
@@ -1007,7 +1149,7 @@ class TreeView(GitCommandView):
 
     def expandOrCollapseFolder(self, recursive=False):
         with self._lock:
-            line_num = vim.current.window.cursor[0]
+            line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
             index = line_num - len(self._head) - 1
             # the root
             if index == -1 and recursive == True:
@@ -1229,10 +1371,10 @@ class TreeView(GitCommandView):
         lfCmd(r"""call win_execute({}, 'let &l:stl="%#Lf_hl_gitStlChangedNum# 0 %#Lf_hl_gitStlFileChanged#file changed, %#Lf_hl_gitStlAdd#0 (+), %#Lf_hl_gitStlDel#0 (-)"')"""
               .format(winid))
         if lfEval("has('nvim')") == '1':
-            lfCmd("call nvim_win_set_option(%d, 'cursorline', v:true)" % winid)
+            lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % winid)
         else:
-            lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
+            lfCmd("call win_execute({}, 'setlocal nocursorline')".format(winid))
             lfCmd("call win_execute({}, 'setlocal nonumber')".format(winid))
         lfCmd("call win_execute({}, 'noautocmd setlocal sw=2 tabstop=4')".format(winid))
         lfCmd("call win_execute({}, 'setlocal signcolumn=no')".format(winid))
@@ -1281,11 +1423,24 @@ class TreeView(GitCommandView):
                         lfCmd("call win_execute({}, 'norm! {}G')".format(self.getWindowId(), init_line))
                         cursor_line = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
 
+                    source = None
                     for info in structure[self._offset_in_content:cur_len]:
                         self._buffer.append(self.buildLine(info))
                         if cursor_line == init_line and not info.is_dir:
-                            cursor_line = len(self._buffer)
-                            lfCmd("call win_execute({}, 'norm! {}G')".format(self.getWindowId(), cursor_line))
+                            if self._target_path is None or info.path == self._target_path:
+                                cursor_line = len(self._buffer)
+                                source = info.info
+
+                    if source is not None:
+                        self._callback(source)
+                        if lfEval("has('nvim')") == '1':
+                            lfCmd("call nvim_win_set_option({}, 'cursorline', v:true)".format(self.getWindowId()))
+                        else:
+                            lfCmd("call win_execute({}, 'setlocal cursorline')".format(self.getWindowId()))
+                        lfCmd("call win_execute({}, 'norm! {}G0zz')".format(self.getWindowId(), cursor_line))
+
+                    if self._target_path is None:
+                        lfCmd("call win_gotoid({})".format(self.getWindowId()))
 
                     self._offset_in_content = cur_len
                     lfCmd("redraw")
@@ -1314,11 +1469,6 @@ class TreeView(GitCommandView):
             else:
                 self._read_finished = 1
                 self._owner.readFinished(self)
-
-            # if content is empty, getFirstSource() will hang
-            if self._cur_parent is None:
-                self._first_source[self._cur_parent] = None
-                self._source_queue.put((None, None))
         except Exception:
             traceback.print_exc()
             traceback.print_stack()
@@ -1326,7 +1476,6 @@ class TreeView(GitCommandView):
 
     def cleanup(self):
         super(TreeView, self).cleanup()
-
         self._match_ids = []
 
 
@@ -1550,10 +1699,12 @@ class DiffViewPanel(Panel):
                    (source[1], source[2], file_path))
         buffer_names = (GitCatFileCommand.buildBufferName(self._commit_id, sources[0]),
                         GitCatFileCommand.buildBufferName(self._commit_id, sources[1]))
+        target_winid = None
         if buffer_names[0] in self._views and buffer_names[1] in self._views:
             win_ids = (self._views[buffer_names[0]].getWindowId(),
                        self._views[buffer_names[1]].getWindowId())
-            lfCmd("call win_gotoid({})".format(win_ids[0]))
+            lfCmd("call win_gotoid({})".format(win_ids[1]))
+            target_winid = win_ids[1]
         elif buffer_names[0] in self._views:
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[0]].getWindowId()))
             cmd = GitCatFileCommand(arguments_dict, sources[1], self._commit_id)
@@ -1562,7 +1713,7 @@ class DiffViewPanel(Panel):
                 self.bufShown(buffer_names[1], int(lfEval("win_getid()")))
             else:
                 GitCommandView(self, cmd).create(int(lfEval("win_getid()")), bufhidden='hide')
-            lfCmd("call win_gotoid({})".format(self._views[buffer_names[0]].getWindowId()))
+            target_winid = int(lfEval("win_getid()"))
         elif buffer_names[1] in self._views:
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
             cmd = GitCatFileCommand(arguments_dict, sources[0], self._commit_id)
@@ -1571,6 +1722,8 @@ class DiffViewPanel(Panel):
                 self.bufShown(buffer_names[0], int(lfEval("win_getid()")))
             else:
                 GitCommandView(self, cmd).create(int(lfEval("win_getid()")), bufhidden='hide')
+            lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
+            target_winid = int(lfEval("win_getid()"))
         else:
             if kwargs.get("mode", '') == 't':
                 lfCmd("noautocmd tabnew | vsp")
@@ -1593,6 +1746,7 @@ class DiffViewPanel(Panel):
                 win_ids = [int(lfEval("bufwinid('{}')".format(escQuote(name)))) for name in buffer_names]
                 win_ids = self.getValidWinIDs(win_ids)
 
+            target_winid = win_ids[1]
             cat_file_cmds = [GitCatFileCommand(arguments_dict, s, self._commit_id) for s in sources]
             outputs = [None, None]
             if (cat_file_cmds[0].getBufferName() not in self._hidden_views
@@ -1621,7 +1775,11 @@ class DiffViewPanel(Panel):
                 else:
                     GitCommandView(self, cmd).create(winid, bufhidden='hide', buf_content=outputs[i])
 
-            lfCmd("call win_gotoid({})".format(win_ids[0]))
+            lfCmd("call win_gotoid({})".format(win_ids[1]))
+
+        if kwargs.get("line_num", None) is not None:
+            lfCmd("call win_execute({}, 'norm! {}G0zbzz')".format(target_winid, kwargs["line_num"]))
+
 
 
 class NavigationPanel(Panel):
@@ -1646,19 +1804,68 @@ class NavigationPanel(Panel):
             self.tree_view.cleanup()
             self.tree_view = None
 
-    def create(self, cmd, winid, project_root):
-        TreeView(self, cmd, project_root).create(winid, bufhidden="hide")
+    def create(self, cmd, winid, project_root, target_path, callback):
+        TreeView(self, cmd, project_root, target_path, callback).create(winid, bufhidden="hide")
 
     def writeBuffer(self):
         # called in idle
         if self.tree_view is not None:
             self.tree_view.writeBuffer()
 
-    def getFirstSource(self):
-        return self.tree_view.getFirstSource()
-
     def getWindowId(self):
         return self.tree_view.getWindowId()
+
+
+class BlamePanel(Panel):
+    def __init__(self, owner):
+        self._owner = owner
+        self._views = {}
+
+    def register(self, view):
+        self._views[view.getBufferName()] = view
+
+    def deregister(self, view):
+        name = view.getBufferName()
+        if name in self._views:
+            self._views[name].cleanup()
+            del self._views[name]
+
+    def formatLine(self, line):
+        """
+        6817817e autoload/leaderf/manager.py 1 (Yggdroot 2014-02-26 00:37:26 +0800 1) #!/usr/bin/env python
+        """
+        return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\([^(]*?)\s+\d+\).*', r'\g<1> \g<4>)\t\g<3> \g<2>', line, 1)
+
+    def create(self, cmd, content=None):
+        buffer_name = cmd.getBufferName()
+        outputs = ParallelExecutor.run(cmd.getCommand(), format_line=self.formatLine)
+        line_num_width = max(len(str(len(vim.current.buffer))) + 1, int(lfEval('&numberwidth')))
+        if len(outputs[0]) > 0:
+            if buffer_name in self._views and self._views[buffer_name].valid():
+                top_line = lfEval("line('w0')")
+                cursor_line = lfEval("line('.')")
+                line_width = outputs[0][0].rfind('\t')
+                self._views[buffer_name].create(-1, buf_content=outputs[0])
+                lfCmd("vertical resize {}".format(line_width + line_num_width))
+                lfCmd("norm! {}Gzt{}G0".format(top_line, cursor_line))
+            else:
+                winid = int(lfEval("win_getid()"))
+                blame_view = GitBlameView(self, cmd)
+                blame_view.saveAlternativeWinOptions(winid)
+                lfCmd("setlocal nofoldenable")
+                top_line = lfEval("line('w0')")
+                cursor_line = lfEval("line('.')")
+                line_width = outputs[0][0].rfind('\t')
+                lfCmd("silent! noa keepa keepj abo {}vsp {}".format(line_width + line_num_width,
+                                                                    buffer_name))
+                blame_winid = int(lfEval("win_getid()"))
+                blame_view.create(blame_winid, buf_content=outputs[0])
+                self._owner.defineMaps(blame_winid)
+                lfCmd("norm! {}Gzt{}G0".format(top_line, cursor_line))
+                lfCmd("call win_execute({}, 'setlocal scrollbind')".format(winid))
+                lfCmd("setlocal scrollbind")
+        else:
+            lfPrintError("No need to blame!")
 
 
 class ExplorerPage(object):
@@ -1721,7 +1928,7 @@ class ExplorerPage(object):
         lfCmd("call win_execute({}, 'call leaderf#Git#ExplorerMaps({})')"
               .format(winid, id(self)))
 
-    def create(self, arguments_dict, cmd):
+    def create(self, arguments_dict, cmd, target_path=None, line_num=None):
         self._arguments = arguments_dict
         lfCmd("noautocmd tabnew")
 
@@ -1731,13 +1938,12 @@ class ExplorerPage(object):
         win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
         winid = self._createWindow(win_pos, cmd.getBufferName())
 
-        self._navigation_panel.create(cmd, winid, self._project_root)
+        callback = partial(self._diff_view_panel.create,
+                           arguments_dict,
+                           winid=diff_view_winid,
+                           line_num=line_num)
+        self._navigation_panel.create(cmd, winid, self._project_root, target_path, callback)
         self.defineMaps(self._navigation_panel.getWindowId())
-
-        source = self._navigation_panel.getFirstSource()
-        if source is not None:
-            self._diff_view_panel.create(arguments_dict, source, winid=diff_view_winid)
-            lfCmd("call win_gotoid({})".format(self._navigation_panel.getWindowId()))
 
     def afterBufhidden(self):
         if self._navigation_panel.isHidden() and self._diff_view_panel.isAllHidden():
@@ -1768,14 +1974,14 @@ class ExplorerPage(object):
                 diff_view_winid = int(lfEval("win_getid()"))
                 self._diff_view_panel.create(self._arguments, source, winid=diff_view_winid)
             else:
-                self._diff_view_panel.create(self._arguments, source)
+                self._diff_view_panel.create(self._arguments, source, **kwargs)
 
             if kwargs.get("preview", False) == True:
                 lfCmd("call win_gotoid({})".format(self._navigation_panel.getWindowId()))
 
-    def locateFile(self, path):
+    def locateFile(self, path, line_num=None, preview=True):
         self._navigation_panel.tree_view.locateFile(path)
-        self.open(False, preview=True)
+        self.open(False, line_num=line_num, preview=preview)
 
     def fuzzySearch(self, recall=False):
         if self._git_diff_manager is None:
@@ -1807,6 +2013,7 @@ class GitExplManager(Manager):
         self._preview_panel = PreviewPanel()
         self._git_diff_manager = None
         self._git_log_manager = None
+        self._git_blame_manager = None
         self._selected_content = None
         self._project_root = ""
 
@@ -1850,6 +2057,10 @@ class GitExplManager(Manager):
             if self._git_log_manager is None:
                 self._git_log_manager = GitLogExplManager()
             return self._git_log_manager
+        elif subcommand == "blame":
+            if self._git_blame_manager is None:
+                self._git_blame_manager = GitBlameExplManager()
+            return self._git_blame_manager
         else:
             return super(GitExplManager, self)
 
@@ -2069,9 +2280,9 @@ class GitDiffExplManager(GitExplManager):
             win_ids = [int(lfEval("win_getid()")), 0]
             lfCmd("keepa keepj abo vsp {}".format(file_name))
             win_ids[1] = int(lfEval("win_getid()"))
-            lfCmd("augroup Lf_Git | augroup END")
-            lfCmd("autocmd! Lf_Git BufWipeout <buffer> call leaderf#Git#DiffOff({})".format(win_ids))
-            lfCmd("call win_execute({}, 'autocmd! Lf_Git BufHidden,BufWipeout <buffer> call leaderf#Git#DiffOff({})')"
+            lfCmd("augroup Lf_Git_Diff | augroup END")
+            lfCmd("autocmd! Lf_Git_Diff BufWipeout <buffer> call leaderf#Git#DiffOff({})".format(win_ids))
+            lfCmd("call win_execute({}, 'autocmd! Lf_Git_Diff BufHidden,BufWipeout <buffer> call leaderf#Git#DiffOff({})')"
                   .format(win_ids[0], win_ids))
             lfCmd("setlocal nobuflisted")
             lfCmd("setlocal buftype=nofile")
@@ -2128,8 +2339,8 @@ class GitDiffExplManager(GitExplManager):
             self._result_panel.create(self.createGitCommand(self._arguments, None))
             self._restoreOrigCwd()
         elif "--explorer" in self._arguments:
-            lfCmd("augroup Lf_Git | augroup END")
-            lfCmd("autocmd! Lf_Git TabClosed * call leaderf#Git#CleanupExplorerPage({})"
+            lfCmd("augroup Lf_Git_Diff | augroup END")
+            lfCmd("autocmd! Lf_Git_Diff TabClosed * call leaderf#Git#CleanupExplorerPage({})"
                   .format(id(self)))
 
             uid = str(int(time.time()))[-7:]
@@ -2213,8 +2424,8 @@ class GitDiffExplManager(GitExplManager):
 class GitLogExplManager(GitExplManager):
     def __init__(self):
         super(GitLogExplManager, self).__init__()
-        lfCmd("augroup Lf_Git | augroup END")
-        lfCmd("autocmd! Lf_Git FileType git call leaderf#Git#DefineSyntax()")
+        lfCmd("augroup Lf_Git_Log | augroup END")
+        lfCmd("autocmd! Lf_Git_Log FileType git call leaderf#Git#DefineSyntax()")
         self._diff_view_panel = None
         # key is source, value is ExplorerPage
         self._pages = {}
@@ -2362,8 +2573,8 @@ class GitLogExplManager(GitExplManager):
             if source in self._pages:
                 vim.current.tabpage = self._pages[source].tabpage
             else:
-                lfCmd("augroup Lf_Git | augroup END")
-                lfCmd("autocmd! Lf_Git TabClosed * call leaderf#Git#CleanupExplorerPage({})"
+                lfCmd("augroup Lf_Git_Log | augroup END")
+                lfCmd("autocmd! Lf_Git_Log TabClosed * call leaderf#Git#CleanupExplorerPage({})"
                       .format(id(self)))
 
                 self._pages[source] = ExplorerPage(self._project_root, source, self)
@@ -2385,6 +2596,70 @@ class GitLogExplManager(GitExplManager):
     def cleanup(self):
         if self._diff_view_panel is not None:
             self._diff_view_panel.cleanup()
+
+    def cleanupExplorerPage(self):
+        for k, v in self._pages.items():
+            if v.tabpage not in vim.tabpages:
+                del self._pages[k]
+                return
+
+
+class GitBlameExplManager(GitExplManager):
+    def __init__(self):
+        super(GitBlameExplManager, self).__init__()
+        self._blame_panel = BlamePanel(self)
+        # key is source, value is ExplorerPage
+        self._pages = {}
+
+    def createGitCommand(self, arguments_dict, source):
+        return GitBlameCommand(arguments_dict, source)
+
+    def getPreviewCommand(self, arguments_dict, source):
+        return GitLogDiffCommand(arguments_dict, source)
+
+    def defineMaps(self, winid):
+        lfCmd("call win_execute({}, 'call leaderf#Git#BlameMaps({})')"
+              .format(winid, id(self)))
+
+    def open(self):
+        source = vim.current.line.lstrip('^').split(None, 1)[0]
+        if source.startswith('0000000'):
+            lfPrintError("Not Committed Yet!")
+            return
+
+        line_num, file_name = vim.current.line.rsplit('\t', 1)[1].split(None, 1)
+
+        if source in self._pages:
+            vim.current.tabpage = self._pages[source].tabpage
+            self._pages[source].locateFile(file_name, line_num, False)
+        else:
+            lfCmd("augroup Lf_Git_Blame | augroup END")
+            lfCmd("autocmd! Lf_Git_Blame TabClosed * call leaderf#Git#CleanupExplorerPage({})"
+                  .format(id(self)))
+
+            self._pages[source] = ExplorerPage(self._project_root, source, self)
+            self._pages[source].create(self._arguments,
+                                       GitLogExplCommand(self._arguments, source),
+                                       target_path=file_name,
+                                       line_num=line_num)
+
+    def startExplorer(self, win_pos, *args, **kwargs):
+        if self.checkWorkingDirectory() == False:
+            return
+
+        arguments_dict = kwargs.get("arguments", {})
+        self.setArguments(arguments_dict)
+
+        if vim.current.buffer.name and not vim.current.buffer.options['bt']:
+            if not vim.current.buffer.name.startswith(self._project_root):
+                lfPrintError("fatal: '{}' is outside repository at '{}'"
+                             .format(lfRelpath(vim.current.buffer.name), self._project_root))
+            else:
+                self._blame_panel.create(self.createGitCommand(self._arguments, None))
+        else:
+            lfPrintError("fatal: no such path '{}' in HEAD".format(vim.current.buffer.name))
+
+        self._restoreOrigCwd()
 
     def cleanupExplorerPage(self):
         for k, v in self._pages.items():
