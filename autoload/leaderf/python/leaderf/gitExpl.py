@@ -720,8 +720,7 @@ class GitBlameView(GitCommandView):
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
 
-        lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Number'',
-              ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d [+-]\d\d\d\d'', -100)')""" % winid)
+        lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Number'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d [+-]\d\d\d\d'', -100)')""" % winid)
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
 
