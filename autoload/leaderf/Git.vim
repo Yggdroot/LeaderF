@@ -119,7 +119,14 @@ let s:help = {
             \   "<C-K>:         go to the previous sibling of the current folder",
             \   "(:             go to the start of the current indent level",
             \   "):             go to the end of the current indent level",
-            \ ]
+            \ ],
+            \ "blame": [
+            \   "o:             show the details of current commit in an explorer page",
+            \   "<CR>:          show the details of current commit in an explorer page",
+            \   "<2-LeftMouse>: show the details of current commit in an explorer page",
+            \   "h:             blame the parent commit",
+            \   "l:             go to the previous blame status",
+            \ ],
             \}
 
 function s:HelpFilter(winid, key)
@@ -238,7 +245,10 @@ function! leaderf#Git#BlameMaps(id)
     exec printf('nnoremap <buffer> <silent> o             :exec g:Lf_py "%s.open()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "%s.open()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.open()"<CR>', explorer_page)
-    nnoremap <buffer> <silent> q             :q<CR>
+    exec printf('nnoremap <buffer> <silent> h             :exec g:Lf_py "%s.blamePrevious()"<CR>', explorer_page)
+    exec printf('nnoremap <buffer> <silent> l             :exec g:Lf_py "%s.blameNext()"<CR>', explorer_page)
+    nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("blame")<CR>
+    nnoremap <buffer> <silent> q             :bwipe<CR>
 endfunction
 
 function! leaderf#Git#TimerCallback(manager_id, id)
