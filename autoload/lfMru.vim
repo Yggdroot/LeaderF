@@ -37,7 +37,7 @@ function! lfMru#record(name)
     let i = 0
     for item in file_list
         let t = split(item, ' ')
-        if t[2] ==# a:name
+        if (len(t) > 2) && (t[2] ==# a:name)
             let found = 1
             let t[1] += 1
             let file_list[i] = printf("%s %s %s", localtime(), t[1], t[2])
