@@ -1726,6 +1726,8 @@ class DiffViewPanel(Panel):
             else:
                 GitCommandView(self, cmd).create(int(lfEval("win_getid()")), bufhidden='hide')
             target_winid = int(lfEval("win_getid()"))
+            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(target_winid))
+            lfCmd("call win_execute({}, 'setlocal cursorline')".format(target_winid))
         elif buffer_names[1] in self._views:
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
             cmd = GitCatFileCommand(arguments_dict, sources[0], self._commit_id)
@@ -1734,6 +1736,8 @@ class DiffViewPanel(Panel):
                 self.bufShown(buffer_names[0], int(lfEval("win_getid()")))
             else:
                 GitCommandView(self, cmd).create(int(lfEval("win_getid()")), bufhidden='hide')
+            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(int(lfEval("win_getid()"))))
+            lfCmd("call win_execute({}, 'setlocal cursorline')".format(int(lfEval("win_getid()"))))
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
             target_winid = int(lfEval("win_getid()"))
         else:
@@ -1775,6 +1779,8 @@ class DiffViewPanel(Panel):
 
                 buffer_name = lfEval("bufname(winbufnr({}))".format(winid))
                 lfCmd("call win_execute({}, 'diffoff | hide edit {}')".format(winid, cmd.getBufferName()))
+                lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(winid))
+                lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
