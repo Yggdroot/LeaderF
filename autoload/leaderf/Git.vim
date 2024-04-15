@@ -113,6 +113,7 @@ let s:help = {
             \   "X:             collapse all the children of the current folder",
             \   "f:             fuzzy search files",
             \   "F:             resume the previous fuzzy searching",
+            \   "m:             show the commit message",
             \   "-:             go to the parent folder",
             \   "+:             go to the next sibling of the parent folder",
             \   "<C-J>:         go to the next sibling of the current folder",
@@ -126,6 +127,7 @@ let s:help = {
             \   "<2-LeftMouse>: show the details of current commit in an explorer page",
             \   "h:             blame the parent commit",
             \   "l:             go to the previous blame status",
+            \   "m:             show the commit message",
             \ ],
             \}
 
@@ -133,7 +135,10 @@ function s:HelpFilter(winid, key)
     if a:key == "\<ESC>" || a:key == "\<F1>"
         call popup_close(a:winid)
         return 1
+    elseif a:key == "\<ScrollWheelDown>" || a:key == "\<ScrollWheelUp>"
+        return 0
     endif
+
     return 1
 endfunction
 
@@ -205,6 +210,72 @@ function! leaderf#Git#ShowHelp(type)
     endif
 endfunction
 
+function s:CommitMessageFilter(winid, key)
+    if a:key == "\<ESC>" || a:key == "m"
+        call popup_close(a:winid)
+        return 1
+    elseif a:key == "\<ScrollWheelDown>" || a:key == "\<ScrollWheelUp>"
+        return 0
+    endif
+
+    return 1
+endfunction
+
+function! leaderf#Git#ShowCommitMessage(message)
+    if has("nvim")
+        let borderchars = [
+                    \ [g:Lf_PopupBorders[4],  "Lf_hl_popupBorder"],
+                    \ [g:Lf_PopupBorders[0],  "Lf_hl_popupBorder"],
+                    \ [g:Lf_PopupBorders[5],  "Lf_hl_popupBorder"],
+                    \ [g:Lf_PopupBorders[1],  "Lf_hl_popupBorder"],
+                    \ [g:Lf_PopupBorders[6],  "Lf_hl_popupBorder"],
+                    \ [g:Lf_PopupBorders[2],  "Lf_hl_popupBorder"],
+                    \ [g:Lf_PopupBorders[7],  "Lf_hl_popupBorder"],
+                    \ [g:Lf_PopupBorders[3],  "Lf_hl_popupBorder"]
+                    \]
+        let width = 100
+        let height = len(a:message)
+        let row_col = s:GetRowCol(width, height)
+        let options = {
+                    \ "title":           " Commit Message ",
+                    \ "title_pos":       "center",
+                    \ "relative":        "editor",
+                    \ "row":             row_col["row"],
+                    \ "col":             row_col["col"],
+                    \ "width":           width,
+                    \ "height":          height,
+                    \ "zindex":          20482,
+                    \ "noautocmd":       1,
+                    \ "border":          borderchars,
+                    \ "style":           "minimal",
+                    \}
+        let scratch_buffer = nvim_create_buf(v:false, v:true)
+        call nvim_buf_set_option(scratch_buffer, 'bufhidden', 'wipe')
+        call nvim_buf_set_lines(scratch_buffer, 0, -1, v:false, a:message)
+        call nvim_buf_set_option(scratch_buffer, 'modifiable', v:false)
+        let id = nvim_open_win(scratch_buffer, 1, options)
+        call nvim_win_set_option(id, 'winhighlight', 'Normal:Lf_hl_popup_window')
+        call win_execute(id, 'nnoremap <buffer> <silent> <ESC> <C-W>c')
+        call win_execute(id, 'setlocal filetype=git')
+    else
+        let options = {
+                    \ "title":           " Commit Message ",
+                    \ "zindex":          20482,
+                    \ "scrollbar":       1,
+                    \ "padding":         [0, 0, 0, 0],
+                    \ "border":          [1, 1, 1, 1],
+                    \ "borderchars":     g:Lf_PopupBorders,
+                    \ "borderhighlight": ["Lf_hl_popupBorder"],
+                    \ "filter":          "s:CommitMessageFilter",
+                    \ "mapping":         0,
+                    \}
+
+        let id = popup_create(a:message, options)
+        call win_execute(id, 'setlocal wincolor=Lf_hl_popup_window')
+        call win_execute(id, 'setlocal filetype=git')
+    endif
+endfunction
+
 function! leaderf#Git#TreeViewMaps(id)
     exec g:Lf_py "import ctypes"
     let tree_view = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
@@ -236,6 +307,7 @@ function! leaderf#Git#ExplorerMaps(id)
     exec printf('nnoremap <buffer> <silent> x             :call leaderf#Git#CollapseParent("%s")<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> f             :exec g:Lf_py "%s.fuzzySearch()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> F             :exec g:Lf_py "%s.fuzzySearch(True)"<CR>', explorer_page)
+    exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', explorer_page)
     nnoremap <buffer> <silent> q             :q<CR>
 endfunction
 
@@ -247,6 +319,7 @@ function! leaderf#Git#BlameMaps(id)
     exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.open()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> h             :exec g:Lf_py "%s.blamePrevious()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> l             :exec g:Lf_py "%s.blameNext()"<CR>', explorer_page)
+    exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', explorer_page)
     nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("blame")<CR>
     nnoremap <buffer> <silent> q             :bwipe<CR>
 endfunction

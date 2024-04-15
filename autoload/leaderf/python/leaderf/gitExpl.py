@@ -2029,6 +2029,10 @@ class ExplorerPage(object):
 
         self._git_diff_manager.startExplorer("popup", **kwargs)
 
+    def showCommitMessage(self):
+        cmd = "git show {} -s --decorate --pretty=fuller".format(self._commit_id)
+        lfCmd("""call leaderf#Git#ShowCommitMessage(systemlist('{}'))""".format(cmd))
+
 
 #*****************************************************
 # GitExplManager
@@ -2788,6 +2792,18 @@ class GitBlameExplManager(GitExplManager):
         lfCmd("setlocal nomodifiable")
         lfCmd("vertical resize {}".format(blame_win_width))
         lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, cursor_line))
+
+    def showCommitMessage(self):
+        if vim.current.line == "":
+            return
+
+        commit_id = vim.current.line.lstrip('^').split(None, 1)[0]
+        if commit_id.startswith('0000000'):
+            lfPrintError("Not Committed Yet!")
+            return
+
+        cmd = "git show {} -s --decorate --pretty=fuller".format(commit_id)
+        lfCmd("""call leaderf#Git#ShowCommitMessage(systemlist('{}'))""".format(cmd))
 
     def open(self):
         if vim.current.line == "":
