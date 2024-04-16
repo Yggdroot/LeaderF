@@ -733,8 +733,9 @@ class GitBlameView(GitCommandView):
     def suicide(self):
         super(GitBlameView, self).suicide()
 
-        lfCmd("call win_execute({}, 'buffer {}')".format(self._alternative_winid,
-                                                         self._alternative_buffer_num))
+        lfCmd("call win_execute({}, 'buffer {} | norm! {}G0')".format(self._alternative_winid,
+                                                                      self._alternative_buffer_num,
+                                                                      vim.current.window.cursor[0]))
 
         if self._alternative_winid is not None:
             for k, v in self._alternative_win_options.items():

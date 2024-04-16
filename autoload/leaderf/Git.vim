@@ -210,10 +210,33 @@ function! leaderf#Git#ShowHelp(type)
     endif
 endfunction
 
+
+function! leaderf#Git#CloseCommitMessageWin()
+    if exists("b:blame_cursorline") && exists("*getmousepos")
+        let pos = getmousepos()
+        if pos.winid == b:blame_winid && b:blame_cursorline != pos["line"]
+            if exists("b:commit_msg_winid") && winbufnr(b:commit_msg_winid) != -1
+                call nvim_win_close(b:commit_msg_winid, 1)
+            endif
+        endif
+    endif
+endfunction
+
 function s:CommitMessageFilter(winid, key)
-    if a:key == "\<ESC>" || a:key == "m"
+    if a:key == "\<ESC>"
         call popup_close(a:winid)
         return 1
+    elseif a:key == "j" || a:key == "k"
+        call popup_close(a:winid)
+        return 0
+    elseif a:key == "\<LeftMouse>"
+        if exists("b:blame_cursorline") && exists("*getmousepos")
+            let pos = getmousepos()
+            if pos.winid == b:blame_winid && b:blame_cursorline != pos["line"]
+                call popup_close(a:winid)
+            endif
+        endif
+        return 0
     elseif a:key == "\<ScrollWheelDown>" || a:key == "\<ScrollWheelUp>"
         return 0
     endif
@@ -222,6 +245,8 @@ function s:CommitMessageFilter(winid, key)
 endfunction
 
 function! leaderf#Git#ShowCommitMessage(message)
+    let b:blame_cursorline = line('.')
+    let b:blame_winid = win_getid()
     if has("nvim")
         let borderchars = [
                     \ [g:Lf_PopupBorders[4],  "Lf_hl_popupBorder"],
@@ -253,10 +278,13 @@ function! leaderf#Git#ShowCommitMessage(message)
         call nvim_buf_set_option(scratch_buffer, 'bufhidden', 'wipe')
         call nvim_buf_set_lines(scratch_buffer, 0, -1, v:false, a:message)
         call nvim_buf_set_option(scratch_buffer, 'modifiable', v:false)
-        let id = nvim_open_win(scratch_buffer, 1, options)
-        call nvim_win_set_option(id, 'winhighlight', 'Normal:Lf_hl_popup_window')
-        call win_execute(id, 'nnoremap <buffer> <silent> <ESC> <C-W>c')
-        call win_execute(id, 'setlocal filetype=git')
+        if exists("b:commit_msg_winid") && winbufnr(b:commit_msg_winid) != -1
+            call nvim_win_close(b:commit_msg_winid, 1)
+        endif
+        let b:commit_msg_winid = nvim_open_win(scratch_buffer, 0, options)
+        call nvim_win_set_option(b:commit_msg_winid, 'winhighlight', 'Normal:Lf_hl_popup_window')
+        call win_execute(b:commit_msg_winid, 'nnoremap <buffer> <silent> <ESC> <C-W>c')
+        call win_execute(b:commit_msg_winid, 'setlocal filetype=git')
     else
         let options = {
                     \ "title":           " Commit Message ",
@@ -320,6 +348,12 @@ function! leaderf#Git#BlameMaps(id)
     exec printf('nnoremap <buffer> <silent> h             :exec g:Lf_py "%s.blamePrevious()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> l             :exec g:Lf_py "%s.blameNext()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', explorer_page)
+    if has("nvim")
+        nnoremap <buffer> <silent> j         :silent! call nvim_win_close(b:commit_msg_winid, 1)<CR>j
+        nnoremap <buffer> <silent> k         :silent! call nvim_win_close(b:commit_msg_winid, 1)<CR>k
+        nnoremap <buffer> <silent> <ESC>     :silent! call nvim_win_close(b:commit_msg_winid, 1)<CR>
+        nnoremap <buffer> <silent> <LeftMouse>     :call leaderf#Git#CloseCommitMessageWin()<CR><LeftMouse>
+    endif
     nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("blame")<CR>
     nnoremap <buffer> <silent> q             :bwipe<CR>
 endfunction
