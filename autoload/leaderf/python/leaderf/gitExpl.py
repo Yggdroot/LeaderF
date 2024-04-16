@@ -311,10 +311,14 @@ class GitLogCommand(GitCommand):
                          ' %cd{}%n%n%s%n%n%b%n" --stat=70 --stat-graph-width=10 -p --no-color'
                          ).format(self._source, sep)
 
-            if "--recall" in self._arguments and "current_file" in self._arguments:
-                self._cmd += " -- {}".format(self._arguments["current_file"])
-            elif "--current-file" in self._arguments and "current_file" in self._arguments:
-                self._cmd += " -- {}".format(self._arguments["current_file"])
+            if (("--recall" in self._arguments or "--current-file" in self._arguments)
+                and "current_file" in self._arguments):
+                self._cmd = ('git show {} --pretty=format:"commit %H%nparent %P%n'
+                             'Author:     %an <%ae>%nAuthorDate: %ad%nCommitter:  %cn <%ce>%nCommitDate:'
+                             ' %cd{}%n%n%s%n%n%b%n%x2d%x2d%x2d" --stat=70 --stat-graph-width=10 --no-color'
+                             ' && git show {} --pretty=format:"%x20" --no-color -- {}'
+                             ).format(self._source, sep, self._source,
+                                      self._arguments["current_file"])
 
             self._buffer_name = "LeaderF://" + self._source
 
@@ -1800,7 +1804,6 @@ class DiffViewPanel(Panel):
             lfCmd("call win_execute({}, 'norm! {}G0zbzz')".format(target_winid, kwargs["line_num"]))
 
 
-
 class NavigationPanel(Panel):
     def __init__(self, bufhidden_callback=None):
         self.tree_view = None
@@ -2582,6 +2585,19 @@ class GitLogExplManager(GitExplManager):
     def _accept(self, file, mode, *args, **kwargs):
         super(GitExplManager, self)._accept(file, mode, *args, **kwargs)
 
+    def _createExplorerPage(self, source, target_path=None):
+        if source in self._pages:
+            vim.current.tabpage = self._pages[source].tabpage
+        else:
+            lfCmd("augroup Lf_Git_Log | augroup END")
+            lfCmd("autocmd! Lf_Git_Log TabClosed * call leaderf#Git#CleanupExplorerPage({})"
+                  .format(id(self)))
+
+            self._pages[source] = ExplorerPage(self._project_root, source, self)
+            self._pages[source].create(self._arguments,
+                                       GitLogExplCommand(self._arguments, source),
+                                       target_path=target_path)
+
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
@@ -2592,27 +2608,21 @@ class GitLogExplManager(GitExplManager):
             return
 
         if "--current-file" in self._arguments and "current_file" in self._arguments:
-            if self._diff_view_panel is None:
-                self._diff_view_panel = DiffViewPanel(self.afterBufhidden)
-
-            self._diff_view_panel.setCommitId(source)
-            cmd = "git show --pretty= --no-color --raw {} -- {}".format(source,
-                                                                        self._arguments["current_file"])
-            outputs = ParallelExecutor.run(cmd)
-            if len(outputs[0]) > 0:
-                _, source = TreeView.generateSource(outputs[0][0])
-                self._diff_view_panel.create(self._arguments, source, **kwargs)
-        elif "--explorer" in self._arguments:
-            if source in self._pages:
-                vim.current.tabpage = self._pages[source].tabpage
+            if "--explorer" in self._arguments:
+                self._createExplorerPage(source, self._arguments["current_file"])
             else:
-                lfCmd("augroup Lf_Git_Log | augroup END")
-                lfCmd("autocmd! Lf_Git_Log TabClosed * call leaderf#Git#CleanupExplorerPage({})"
-                      .format(id(self)))
+                if self._diff_view_panel is None:
+                    self._diff_view_panel = DiffViewPanel(self.afterBufhidden)
 
-                self._pages[source] = ExplorerPage(self._project_root, source, self)
-                self._pages[source].create(self._arguments,
-                                           GitLogExplCommand(self._arguments, source))
+                self._diff_view_panel.setCommitId(source)
+                cmd = "git show --pretty= --no-color --raw {} -- {}".format(source,
+                                                                            self._arguments["current_file"])
+                outputs = ParallelExecutor.run(cmd)
+                if len(outputs[0]) > 0:
+                    _, source = TreeView.generateSource(outputs[0][0])
+                    self._diff_view_panel.create(self._arguments, source, **kwargs)
+        elif "--explorer" in self._arguments:
+            self._createExplorerPage(source)
         else:
             if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
                 self._arguments["mode"] = 't'

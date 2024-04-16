@@ -1246,6 +1246,13 @@ USAGE                                           *leaderf-usage*
 :LeaderfRgRecall                                *LeaderfRgRecall*
     Recall last search of rg.
 
+:LeaderfGit                                     *LeaderfGit*
+    List some frequently used commands of Leaderf git.
+
+:LeaderfGitSplitDiff                            *LeaderfGitSplitDiff*
+    Show the diffs of current file in a vertical split window.
+    It is a shortcut of `:Leaderf git diff --current-file --side-by-side`
+
 Some handy maps for `Leaderf rg`:
 
 | Map                                        | Description

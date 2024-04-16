@@ -257,6 +257,7 @@ command! -bar -nargs=0 LeaderfWindow Leaderf window
 command! -bar -nargs=0 LeaderfQuickFix Leaderf quickfix
 command! -bar -nargs=0 LeaderfLocList  Leaderf loclist
 
+command! -bar -nargs=0 LeaderfGit           Leaderf git
 command! -bar -nargs=0 LeaderfGitSplitDiff  Leaderf git diff --current-file --side-by-side
 
 try

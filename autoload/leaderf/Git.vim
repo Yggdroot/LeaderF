@@ -411,7 +411,8 @@ function! leaderf#Git#Commands()
                     \ {"Leaderf git log --directly":               "view the logs directly"},
                     \ {"Leaderf git log --explorer":               "fuzzy search and view the log in an explorer tabpage"},
                     \ {"Leaderf git log --explorer --navigation-position bottom": "specify the position of navigation panel in explorer tabpage"},
-                    \ {"Leaderf git log --current-file":           "fuzzy search and view the logs of current file"},
+                    \ {"Leaderf git log --current-file":           "fuzzy search and view the log of current file"},
+                    \ {"Leaderf git log --current-file --explorer":"fuzzy search and view the log of current file in explorer tabpage"},
                     \ {"Leaderf git blame":                        "git blame current file"},
                     \ {"Leaderf git blame -w":                     "ignore whitespace when git blame current file"},
                     \ ]
