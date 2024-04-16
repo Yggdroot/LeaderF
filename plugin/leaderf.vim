@@ -257,6 +257,8 @@ command! -bar -nargs=0 LeaderfWindow Leaderf window
 command! -bar -nargs=0 LeaderfQuickFix Leaderf quickfix
 command! -bar -nargs=0 LeaderfLocList  Leaderf loclist
 
+command! -bar -nargs=0 LeaderfGitSplitDiff  Leaderf git diff --current-file --side-by-side
+
 try
     if g:Lf_ShortcutF != ""
         exec 'nnoremap <silent><unique> ' g:Lf_ShortcutF ':<C-U>LeaderfFile<CR>'
