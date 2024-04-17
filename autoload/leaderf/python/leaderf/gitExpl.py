@@ -689,6 +689,8 @@ class GitBlameView(GitCommandView):
         self.blame_stack = []
         # key is commit id, value is (blame_buffer, alternative_buffer_num)
         self.blame_dict = {}
+        # key is alternative buffer name, value is (blame_buffer, alternative_buffer_num)
+        self.blame_buffer_dict = {}
 
     def setOptions(self, winid, bufhidden):
         super(GitBlameView, self).setOptions(winid, bufhidden)
@@ -752,10 +754,11 @@ class GitBlameView(GitCommandView):
         for item in self.blame_dict.values():
             buffer_num = int(item[1])
             # buftype is not empty
-            if vim.buffers[buffer_num].options["buftype"]:
+            if buffer_num in vim.buffers and vim.buffers[buffer_num].options["buftype"]:
                 lfCmd("bwipe {}".format(buffer_num))
         self.blame_dict = {}
         self.blame_stack = []
+        self.blame_buffer_dict = {}
 
 
 class LfOrderedDict(OrderedDict):
@@ -1863,6 +1866,9 @@ class BlamePanel(Panel):
     def getBlameDict(self, buffer_name):
         return self._views[buffer_name].blame_dict
 
+    def getBlameBufferDict(self, buffer_name):
+        return self._views[buffer_name].blame_buffer_dict
+
     @staticmethod
     def formatLine(line):
         """
@@ -2692,33 +2698,28 @@ class GitBlameExplManager(GitExplManager):
         blame_winid = lfEval("win_getid()")
 
         if commit_id not in self._blame_panel.getBlameDict(vim.current.buffer.name):
-            cmd = ["git diff {}^ {} --name-status".format(commit_id, commit_id),
-                   "git rev-parse {}^".format(commit_id)
-                   ]
-            outputs = ParallelExecutor.run(*cmd)
-            orig_name = None
-            first_commit = False
-            for line in outputs[0]:
-                if line.endswith("\t" + file_name):
-                    if line.startswith("A"):
-                        first_commit = True
+            cmd = 'git log -2 --pretty="%H" --name-status --follow {} -- {}'.format(commit_id,
+                                                                                    file_name)
+            # output is as below:
 
-                    if line.startswith("R"):
-                        orig_name = line.split()[1]
-                    else:
-                        orig_name = file_name
-                    break
-
-            if first_commit == True:
+            # a7cdd68e0f9e891e6f5def7b2b657d07d92a3675
+            #
+            # R064    tui.py  src/tui.py
+            # 5a0cd5103deba164a6fb33a5a3f67fb3a5dcf378
+            #
+            # M       tui.py
+            outputs = ParallelExecutor.run(cmd)
+            name_stat = outputs[0][2]
+            if name_stat.startswith("A"):
                 lfPrintError("First commit of current file!")
                 return
+            else:
+                if name_stat.startswith("R"):
+                    orig_name = name_stat.split()[1]
+                else:
+                    orig_name = file_name
 
-            parent_commit_id = outputs[1][0]
-
-            cmd = ["git blame -f -n {} -- {}".format(parent_commit_id, orig_name),
-                   "git show {}:{}".format(parent_commit_id, orig_name)
-                    ]
-            outputs = ParallelExecutor.run(*cmd)
+            parent_commit_id = outputs[0][3]
 
             blame_win_width = vim.current.window.width
             self._blame_panel.getBlameStack(vim.current.buffer.name).append(
@@ -2731,25 +2732,38 @@ class GitBlameExplManager(GitExplManager):
                     )
                 )
 
-            lfCmd("noautocmd call win_gotoid({})".format(alternative_winid))
-            lfCmd("noautocmd enew")
-            self.setOptions(alternative_winid)
+            alternative_buffer_name = "LeaderF://{}:{}".format(parent_commit_id[:7], orig_name)
+            blame_buffer_dict = self._blame_panel.getBlameBufferDict(vim.current.buffer.name)
 
-            vim.current.buffer[:] = outputs[1]
-            vim.current.buffer.name = "LeaderF://{}:{}".format(parent_commit_id[:7], orig_name)
-            lfCmd("doautocmd filetypedetect BufNewFile {}".format(orig_name))
-            lfCmd("setlocal nomodifiable")
+            lfCmd("noautocmd call win_gotoid({})".format(alternative_winid))
+            if alternative_buffer_name in blame_buffer_dict:
+                blame_buffer, alternative_buffer_num = blame_buffer_dict[alternative_buffer_name]
+                lfCmd("buffer {}".format(alternative_buffer_num))
+            else:
+                cmd = ["git blame -f -n {} -- {}".format(parent_commit_id, orig_name),
+                       "git show {}:{}".format(parent_commit_id, orig_name)
+                        ]
+                outputs = ParallelExecutor.run(*cmd)
+                blame_buffer = [BlamePanel.formatLine(line) for line in outputs[0]]
+
+                lfCmd("noautocmd enew")
+                self.setOptions(alternative_winid)
+
+                vim.current.buffer[:] = outputs[1]
+                vim.current.buffer.name = alternative_buffer_name
+                lfCmd("doautocmd filetypedetect BufNewFile {}".format(orig_name))
+                lfCmd("setlocal nomodifiable")
+                alternative_buffer_num = vim.current.buffer.number
+
             lfCmd("noautocmd norm! {}Gzz".format(line_num))
-            alternative_buffer_num = vim.current.buffer.number
             top_line = lfEval("line('w0')")
 
             lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
-            outputs[0] = [BlamePanel.formatLine(line) for line in outputs[0]]
             lfCmd("setlocal modifiable")
-            vim.current.buffer[:] = outputs[0]
+            vim.current.buffer[:] = blame_buffer
             lfCmd("setlocal nomodifiable")
-            if len(outputs[0]) > 0:
-                line_width = outputs[0][0].rfind('\t')
+            if len(blame_buffer) > 0:
+                line_width = blame_buffer[0].rfind('\t')
                 line_num_width = max(len(str(len(vim.current.buffer))) + 1, int(lfEval('&numberwidth')))
                 lfCmd("vertical resize {}".format(line_width + line_num_width))
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, line_num))
@@ -2757,9 +2771,13 @@ class GitBlameExplManager(GitExplManager):
 
             blame_win_width = vim.current.window.width
             self._blame_panel.getBlameDict(vim.current.buffer.name)[commit_id] = (
-                    outputs[0],
+                    blame_buffer,
                     alternative_buffer_num,
                     blame_win_width
+                    )
+            self._blame_panel.getBlameBufferDict(vim.current.buffer.name)[alternative_buffer_name] = (
+                    blame_buffer,
+                    alternative_buffer_num,
                     )
         else:
             self._blame_panel.getBlameStack(vim.current.buffer.name).append(
