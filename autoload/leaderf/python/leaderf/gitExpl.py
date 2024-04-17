@@ -1802,6 +1802,8 @@ class DiffViewPanel(Panel):
 
         if kwargs.get("line_num", None) is not None:
             lfCmd("call win_execute({}, 'norm! {}G0zbzz')".format(target_winid, kwargs["line_num"]))
+        else:
+            lfCmd("call win_execute({}, 'norm! gg]c0')".format(target_winid))
 
 
 class NavigationPanel(Panel):
