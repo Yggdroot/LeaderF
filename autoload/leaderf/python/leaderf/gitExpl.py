@@ -2775,10 +2775,7 @@ class GitBlameExplManager(GitExplManager):
                     alternative_buffer_num,
                     blame_win_width
                     )
-            self._blame_panel.getBlameBufferDict(vim.current.buffer.name)[alternative_buffer_name] = (
-                    blame_buffer,
-                    alternative_buffer_num,
-                    )
+            blame_buffer_dict[alternative_buffer_name] = (blame_buffer, alternative_buffer_num)
         else:
             self._blame_panel.getBlameStack(vim.current.buffer.name).append(
                     (
