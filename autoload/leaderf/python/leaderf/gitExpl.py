@@ -616,9 +616,9 @@ class GitCommandView(object):
 class GitBlameView(GitCommandView):
     def __init__(self, owner, cmd):
         super(GitBlameView, self).__init__(owner, cmd)
-        self._alternative_winid = None
-        self._alternative_buffer_num = None
-        self._alternative_win_options = {}
+        self._alternate_winid = None
+        self._alternate_buffer_num = None
+        self._alternate_win_options = {}
         self._match_ids = []
         self._color_table = {
             '0':   '#000000', '1':   '#800000', '2':   '#008000', '3':   '#808000',
@@ -687,9 +687,9 @@ class GitBlameView(GitCommandView):
             '252': '#d0d0d0', '253': '#dadada', '254': '#e4e4e4', '255': '#eeeeee'
         }
         self.blame_stack = []
-        # key is commit id, value is (blame_buffer, alternative_buffer_num)
+        # key is commit id, value is (blame_buffer, alternate_buffer_num)
         self.blame_dict = {}
-        # key is alternative buffer name, value is (blame_buffer, alternative_buffer_num)
+        # key is alternate buffer name, value is (blame_buffer, alternate_buffer_num)
         self.blame_buffer_dict = {}
 
     def setOptions(self, winid, bufhidden):
@@ -702,17 +702,17 @@ class GitBlameView(GitCommandView):
         lfCmd("call win_execute({}, 'setlocal signcolumn=no')".format(winid))
         lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
 
-    def saveAlternativeWinOptions(self, winid, buffer_num):
-        self._alternative_winid = winid
-        self._alternative_buffer_num = buffer_num
+    def saveAlternateWinOptions(self, winid, buffer_num):
+        self._alternate_winid = winid
+        self._alternate_buffer_num = buffer_num
 
-        self._alternative_win_options = {
+        self._alternate_win_options = {
                 "foldenable": lfEval("getwinvar({}, '&foldenable')".format(winid)),
                 "scrollbind": lfEval("getwinvar({}, '&scrollbind')".format(winid)),
                 }
 
-    def getAlternativeWinid(self):
-        return self._alternative_winid
+    def getAlternateWinid(self):
+        return self._alternate_winid
 
     def enableColor(self, winid):
         if (lfEval("hlexists('Lf_hl_blame_255')") == '0'
@@ -739,13 +739,13 @@ class GitBlameView(GitCommandView):
     def suicide(self):
         super(GitBlameView, self).suicide()
 
-        lfCmd("call win_execute({}, 'buffer {} | norm! {}G0')".format(self._alternative_winid,
-                                                                      self._alternative_buffer_num,
+        lfCmd("call win_execute({}, 'buffer {} | norm! {}G0')".format(self._alternate_winid,
+                                                                      self._alternate_buffer_num,
                                                                       vim.current.window.cursor[0]))
 
-        if self._alternative_winid is not None:
-            for k, v in self._alternative_win_options.items():
-                lfCmd("call setwinvar({}, '&{}', {})".format(self._alternative_winid, k, v))
+        if self._alternate_winid is not None:
+            for k, v in self._alternate_win_options.items():
+                lfCmd("call setwinvar({}, '&{}', {})".format(self._alternate_winid, k, v))
 
         for i in self._match_ids:
             lfCmd("silent! call matchdelete(%d)" % i)
@@ -1858,8 +1858,8 @@ class BlamePanel(Panel):
             self._views[name].cleanup()
             del self._views[name]
 
-    def getAlternativeWinid(self, buffer_name):
-        return self._views[buffer_name].getAlternativeWinid()
+    def getAlternateWinid(self, buffer_name):
+        return self._views[buffer_name].getAlternateWinid()
 
     def getBlameStack(self, buffer_name):
         return self._views[buffer_name].blame_stack
@@ -1892,7 +1892,7 @@ class BlamePanel(Panel):
             else:
                 winid = int(lfEval("win_getid()"))
                 blame_view = GitBlameView(self, cmd)
-                blame_view.saveAlternativeWinOptions(winid, vim.current.buffer.number)
+                blame_view.saveAlternateWinOptions(winid, vim.current.buffer.number)
                 lfCmd("setlocal nofoldenable")
                 top_line = lfEval("line('w0')")
                 cursor_line = lfEval("line('.')")
@@ -2695,7 +2695,7 @@ class GitBlameExplManager(GitExplManager):
             return
 
         line_num, file_name = vim.current.line.rsplit('\t', 1)[1].split(None, 1)
-        alternative_winid = self._blame_panel.getAlternativeWinid(vim.current.buffer.name)
+        alternate_winid = self._blame_panel.getAlternateWinid(vim.current.buffer.name)
         blame_winid = lfEval("win_getid()")
 
         if commit_id not in self._blame_panel.getBlameDict(vim.current.buffer.name):
@@ -2726,20 +2726,20 @@ class GitBlameExplManager(GitExplManager):
             self._blame_panel.getBlameStack(vim.current.buffer.name).append(
                     (
                         vim.current.buffer[:],
-                        lfEval("winbufnr({})".format(alternative_winid)),
+                        lfEval("winbufnr({})".format(alternate_winid)),
                         blame_win_width,
                         vim.current.window.cursor[0],
                         int(lfEval("line('w0')"))
                     )
                 )
 
-            alternative_buffer_name = "LeaderF://{}:{}".format(parent_commit_id[:7], orig_name)
+            alternate_buffer_name = "LeaderF://{}:{}".format(parent_commit_id[:7], orig_name)
             blame_buffer_dict = self._blame_panel.getBlameBufferDict(vim.current.buffer.name)
 
-            lfCmd("noautocmd call win_gotoid({})".format(alternative_winid))
-            if alternative_buffer_name in blame_buffer_dict:
-                blame_buffer, alternative_buffer_num = blame_buffer_dict[alternative_buffer_name]
-                lfCmd("buffer {}".format(alternative_buffer_num))
+            lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
+            if alternate_buffer_name in blame_buffer_dict:
+                blame_buffer, alternate_buffer_num = blame_buffer_dict[alternate_buffer_name]
+                lfCmd("buffer {}".format(alternate_buffer_num))
             else:
                 cmd = ["git blame -f -n {} -- {}".format(parent_commit_id, orig_name),
                        "git show {}:{}".format(parent_commit_id, orig_name)
@@ -2748,13 +2748,13 @@ class GitBlameExplManager(GitExplManager):
                 blame_buffer = [BlamePanel.formatLine(line) for line in outputs[0]]
 
                 lfCmd("noautocmd enew")
-                self.setOptions(alternative_winid)
+                self.setOptions(alternate_winid)
 
                 vim.current.buffer[:] = outputs[1]
-                vim.current.buffer.name = alternative_buffer_name
+                vim.current.buffer.name = alternate_buffer_name
                 lfCmd("doautocmd filetypedetect BufNewFile {}".format(orig_name))
                 lfCmd("setlocal nomodifiable")
-                alternative_buffer_num = vim.current.buffer.number
+                alternate_buffer_num = vim.current.buffer.number
 
             lfCmd("noautocmd norm! {}Gzz".format(line_num))
             top_line = lfEval("line('w0')")
@@ -2768,31 +2768,31 @@ class GitBlameExplManager(GitExplManager):
                 line_num_width = max(len(str(len(vim.current.buffer))) + 1, int(lfEval('&numberwidth')))
                 lfCmd("vertical resize {}".format(line_width + line_num_width))
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, line_num))
-                lfCmd("call win_execute({}, 'setlocal scrollbind')".format(alternative_winid))
+                lfCmd("call win_execute({}, 'setlocal scrollbind')".format(alternate_winid))
 
             blame_win_width = vim.current.window.width
             self._blame_panel.getBlameDict(vim.current.buffer.name)[commit_id] = (
                     blame_buffer,
-                    alternative_buffer_num,
+                    alternate_buffer_num,
                     blame_win_width
                     )
-            blame_buffer_dict[alternative_buffer_name] = (blame_buffer, alternative_buffer_num)
+            blame_buffer_dict[alternate_buffer_name] = (blame_buffer, alternate_buffer_num)
         else:
             self._blame_panel.getBlameStack(vim.current.buffer.name).append(
                     (
                         vim.current.buffer[:],
-                        lfEval("winbufnr({})".format(alternative_winid)),
+                        lfEval("winbufnr({})".format(alternate_winid)),
                         vim.current.window.width,
                         vim.current.window.cursor[0],
                         int(lfEval("line('w0')"))
                     )
                 )
             (blame_buffer,
-             alternative_buffer_num,
+             alternate_buffer_num,
              blame_win_width
              ) = self._blame_panel.getBlameDict(vim.current.buffer.name)[commit_id]
-            lfCmd("noautocmd call win_gotoid({})".format(alternative_winid))
-            lfCmd("buffer {}".format(alternative_buffer_num))
+            lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
+            lfCmd("buffer {}".format(alternate_buffer_num))
             lfCmd("noautocmd norm! {}Gzz".format(line_num))
             top_line = lfEval("line('w0')")
 
@@ -2808,12 +2808,12 @@ class GitBlameExplManager(GitExplManager):
         if len(blame_stack) == 0:
             return
 
-        blame_buffer, alternative_buffer_num, blame_win_width, cursor_line, top_line = blame_stack.pop()
+        blame_buffer, alternate_buffer_num, blame_win_width, cursor_line, top_line = blame_stack.pop()
         blame_winid = lfEval("win_getid()")
-        alternative_winid = self._blame_panel.getAlternativeWinid(vim.current.buffer.name)
+        alternate_winid = self._blame_panel.getAlternateWinid(vim.current.buffer.name)
 
-        lfCmd("noautocmd call win_gotoid({})".format(alternative_winid))
-        lfCmd("buffer {}".format(alternative_buffer_num))
+        lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
+        lfCmd("buffer {}".format(alternate_buffer_num))
 
         lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
         lfCmd("setlocal modifiable")
