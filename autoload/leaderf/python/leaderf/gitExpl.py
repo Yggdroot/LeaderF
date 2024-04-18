@@ -754,7 +754,8 @@ class GitBlameView(GitCommandView):
         for item in self.blame_dict.values():
             buffer_num = int(item[1])
             # buftype is not empty
-            if buffer_num in vim.buffers and vim.buffers[buffer_num].options["buftype"]:
+            if (lfEval("bufexists({})".format(buffer_num)) == "1"
+                and vim.buffers[buffer_num].options["buftype"]):
                 lfCmd("bwipe {}".format(buffer_num))
         self.blame_dict = {}
         self.blame_stack = []
