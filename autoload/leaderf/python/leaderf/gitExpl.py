@@ -358,27 +358,32 @@ class GitLogExplCommand(GitCommand):
 
 
 class GitBlameCommand(GitCommand):
-    def __init__(self, arguments_dict, source):
-        super(GitBlameCommand, self).__init__(arguments_dict, source)
+    def __init__(self, arguments_dict, commit_id):
+        super(GitBlameCommand, self).__init__(arguments_dict, commit_id)
 
-    def buildCommandAndBufferName(self):
-        source = ""
-        if self._source is not None:
-            source = self._source
-
+    @staticmethod
+    def buildCommand(arguments_dict, commit_id, file_name):
         extra_options = ""
-        if "-w" in self._arguments:
+        if "-w" in arguments_dict:
             extra_options += " -w"
 
-        self._cmd = "git blame -f -n {} {} -- ".format(extra_options, source)
+        if "--date" in arguments_dict:
+            extra_options += " --date={}".format(arguments_dict["--date"][0])
+
+        return "git blame -f -n {} {} -- {}".format(extra_options, commit_id, file_name)
+
+    def buildCommandAndBufferName(self):
+        commit_id = ""
+        if self._source is not None:
+            commit_id = self._source
 
         file_name = vim.current.buffer.name
         if " " in file_name:
             file_name = file_name.replace(' ', r'\ ')
         file_name = lfRelpath(file_name)
 
-        self._cmd += file_name
-        self._buffer_name = "LeaderF://git blame {} {}".format(source, file_name)
+        self._cmd = GitBlameCommand.buildCommand(self._arguments, commit_id, file_name)
+        self._buffer_name = "LeaderF://git blame {} {}".format(commit_id, file_name)
         self._file_type = ""
         self._file_type_cmd = ""
 
@@ -728,7 +733,24 @@ class GitBlameView(GitCommandView):
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
 
-        lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Number'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d [+-]\d\d\d\d'', -100)')""" % winid)
+        arguments_dict = self._cmd.getArguments()
+        date_format = arguments_dict.get("--date", [""])[0]
+        if date_format in ["", "iso", "short"]:
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\{4}-\d\d-\d\d\( \d\d:\d\d:\d\d [+-]\d\d\d\d\)\?'', -100)')""" % winid)
+        elif date_format == "relative":
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\+\s\+.\{-}ago'', -100)')""" % winid)
+        elif date_format == "local":
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\(Mon\|Tue\|Wed\|Thu\|Fri\|Sat\|Sun\)\s\+\a\{3}\s\+\d\+.\{-}\(\s*)\)\@='', -100)')""" % winid)
+        elif date_format == "iso-strict":
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d\d:\d\d'', -100)')""" % winid)
+        elif date_format == "rfc":
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\(Mon\|Tue\|Wed\|Thu\|Fri\|Sat\|Sun\),\s\+\d\+.\{-}\(\s*)\)\@='', -100)')""" % winid)
+        elif date_format == "human":
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\a\{3}\s\+\d\+\s\+\d\{4}\(\s*)\)\@='', -100)')""" % winid)
+        elif date_format == "default":
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\(Mon\|Tue\|Wed\|Thu\|Fri\|Sat\|Sun\)\s\+\a\{3}\s\+\d\+.\{-}\(\s*)\)\@='', -100)')""" % winid)
+        else:
+            raise ValueError("impossible value of '--date'")
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
 
@@ -1878,16 +1900,48 @@ class BlamePanel(Panel):
         return self._views[buffer_name].blame_buffer_dict
 
     @staticmethod
-    def formatLine(line):
-        """
-        6817817e autoload/leaderf/manager.py 1 (Yggdroot 2014-02-26 00:37:26 +0800 1) #!/usr/bin/env python
-        """
-        return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\([^(]*?)\s+\d+\).*', r'\g<1> \g<4>)\t\g<3> \g<2>', line, 1)
+    def formatLine(arguments_dict, line_num_width, line):
+        date_format = arguments_dict.get("--date", [""])[0]
+        if date_format in ["", "iso", "iso-strict", "short"]:
+            # 6817817e autoload/leaderf/manager.py 1 (Yggdroot 2014-02-26 00:37:26 +0800 1) #!/usr/bin/env python
+            return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\([^(]*?)\s+\d+\).*',
+                          r'\g<1> \g<4>)\t\g<3> \g<2>', line, 1)
+        elif date_format == "relative":
+            # c5c6d072 autoload/leaderf/python/leaderf/manager.py 63 (Yggdroot 4 years, 6 months ago    66) def catchException(func):
+            line = re.sub(r'(^.*?\d+\)).*', r'\g<1>', line, 1)
+            return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
+                          r'\g<1> \g<4>)\t\g<3> \g<2>',
+                          line[:-(line_num_width + 1)], 1)
+        elif date_format == "local":
+            # 6817817e autoload/leaderf/manager.py 1 (Yggdroot Wed Feb 26 00:37:26 2014  1) #!/usr/bin/env python
+            line = re.sub(r'(^.*?\d+\)).*', r'\g<1>', line, 1)
+            return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
+                          r'\g<1> \g<4>)\t\g<3> \g<2>',
+                          line[:-(line_num_width + 7)], 1)
+        elif date_format in ("rfc", "default"):
+            # 6817817e autoload/leaderf/manager.py 1 (Yggdroot Wed, 26 Feb 2014 00:37:26 +0800    1) #!/usr/bin/env python
+            # 6817817e autoload/leaderf/manager.py 1 (Yggdroot Wed Feb 26 00:37:26 2014 +0800    1) #!/usr/bin/env python
+            line = re.sub(r'(^.*?\d+\)).*', r'\g<1>', line, 1)
+            return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
+                          r'\g<1> \g<4>)\t\g<3> \g<2>',
+                          line[:-(line_num_width + 1)], 1)
+        elif date_format == "human":
+            # 6817817e autoload/leaderf/manager.py 1 (Yggdroot Feb 26 2014   1) #!/usr/bin/env python
+            line = re.sub(r'(^.*?\d+\)).*', r'\g<1>', line, 1)
+            return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
+                          r'\g<1> \g<4>)\t\g<3> \g<2>',
+                          line[:-(line_num_width + 6)], 1)
+        else:
+            return line
 
-    def create(self, cmd, content=None):
+    def create(self, arguments_dict, cmd, content=None):
         buffer_name = cmd.getBufferName()
-        outputs = ParallelExecutor.run(cmd.getCommand(), format_line=BlamePanel.formatLine)
-        line_num_width = max(len(str(len(vim.current.buffer))) + 1, int(lfEval('&numberwidth')))
+        line_num_width = len(str(len(vim.current.buffer))) + 1
+        outputs = ParallelExecutor.run(cmd.getCommand(),
+                                       format_line=partial(BlamePanel.formatLine,
+                                                           arguments_dict,
+                                                           line_num_width))
+        line_num_width = max(line_num_width, int(lfEval('&numberwidth')))
         if len(outputs[0]) > 0:
             if buffer_name in self._views and self._views[buffer_name].valid():
                 top_line = lfEval("line('w0')")
@@ -2667,14 +2721,14 @@ class GitBlameExplManager(GitExplManager):
     def __init__(self):
         super(GitBlameExplManager, self).__init__()
         self._blame_panel = BlamePanel(self)
-        # key is source, value is ExplorerPage
+        # key is commit_id, value is ExplorerPage
         self._pages = {}
 
-    def createGitCommand(self, arguments_dict, source):
-        return GitBlameCommand(arguments_dict, source)
+    def createGitCommand(self, arguments_dict, commit_id):
+        return GitBlameCommand(arguments_dict, commit_id)
 
-    def getPreviewCommand(self, arguments_dict, source):
-        return GitLogDiffCommand(arguments_dict, source)
+    def getPreviewCommand(self, arguments_dict, commit_id):
+        return GitLogDiffCommand(arguments_dict, commit_id)
 
     def defineMaps(self, winid):
         lfCmd("call win_execute({}, 'call leaderf#Git#BlameMaps({})')"
@@ -2748,11 +2802,14 @@ class GitBlameExplManager(GitExplManager):
                 blame_buffer, alternate_buffer_num = blame_buffer_dict[alternate_buffer_name]
                 lfCmd("buffer {}".format(alternate_buffer_num))
             else:
-                cmd = ["git blame -f -n {} -- {}".format(parent_commit_id, orig_name),
+                cmd = [GitBlameCommand.buildCommand(self._arguments, parent_commit_id, orig_name),
                        "git show {}:{}".format(parent_commit_id, orig_name)
-                        ]
+                       ]
                 outputs = ParallelExecutor.run(*cmd)
-                blame_buffer = [BlamePanel.formatLine(line) for line in outputs[0]]
+                line_num_width = len(str(len(outputs[1]))) + 1
+                blame_buffer = [BlamePanel.formatLine(self._arguments, line_num_width, line)
+                                for line in outputs[0]
+                                ]
 
                 lfCmd("noautocmd enew")
                 self.setOptions(alternate_winid)
@@ -2845,24 +2902,24 @@ class GitBlameExplManager(GitExplManager):
         if vim.current.line == "":
             return
 
-        source = vim.current.line.lstrip('^').split(None, 1)[0]
-        if source.startswith('0000000'):
+        commit_id = vim.current.line.lstrip('^').split(None, 1)[0]
+        if commit_id.startswith('0000000'):
             lfPrintError("Not Committed Yet!")
             return
 
         line_num, file_name = vim.current.line.rsplit('\t', 1)[1].split(None, 1)
 
-        if source in self._pages:
-            vim.current.tabpage = self._pages[source].tabpage
-            self._pages[source].locateFile(file_name, line_num, False)
+        if commit_id in self._pages:
+            vim.current.tabpage = self._pages[commit_id].tabpage
+            self._pages[commit_id].locateFile(file_name, line_num, False)
         else:
             lfCmd("augroup Lf_Git_Blame | augroup END")
             lfCmd("autocmd! Lf_Git_Blame TabClosed * call leaderf#Git#CleanupExplorerPage({})"
                   .format(id(self)))
 
-            self._pages[source] = ExplorerPage(self._project_root, source, self)
-            self._pages[source].create(self._arguments,
-                                       GitLogExplCommand(self._arguments, source),
+            self._pages[commit_id] = ExplorerPage(self._project_root, commit_id, self)
+            self._pages[commit_id].create(self._arguments,
+                                       GitLogExplCommand(self._arguments, commit_id),
                                        target_path=file_name,
                                        line_num=line_num)
 
@@ -2878,7 +2935,7 @@ class GitBlameExplManager(GitExplManager):
                 lfPrintError("fatal: '{}' is outside repository at '{}'"
                              .format(lfRelpath(vim.current.buffer.name), self._project_root))
             else:
-                self._blame_panel.create(self.createGitCommand(self._arguments, None))
+                self._blame_panel.create(arguments_dict, self.createGitCommand(self._arguments, None))
         else:
             lfPrintError("fatal: no such path '{}' in HEAD".format(vim.current.buffer.name))
 
