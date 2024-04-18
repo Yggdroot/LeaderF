@@ -146,6 +146,10 @@ def equal(str1, str2, ignorecase=True):
 
 def lfRelpath(path, start=os.curdir):
     try:
+        # LeaderF://git diff
+        if not os.path.isabs(path):
+            return path
+
         return lfEncode(os.path.relpath(lfDecode(path), start))
     except ValueError:
         return path
