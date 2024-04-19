@@ -213,6 +213,9 @@ class GitCommand(object):
 
 class GitDiffCommand(GitCommand):
     def __init__(self, arguments_dict, source):
+        """
+        source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        """
         super(GitDiffCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
@@ -240,6 +243,9 @@ class GitDiffCommand(GitCommand):
 
 class GitLogDiffCommand(GitCommand):
     def __init__(self, arguments_dict, source):
+        """
+        source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        """
         super(GitLogDiffCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
@@ -290,6 +296,9 @@ class GitCatFileCommand(GitCommand):
 
 class GitLogCommand(GitCommand):
     def __init__(self, arguments_dict, source):
+        """
+        source is a commit id
+        """
         super(GitLogCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
@@ -347,6 +356,9 @@ class GitDiffExplCommand(GitCommand):
 
 class GitLogExplCommand(GitCommand):
     def __init__(self, arguments_dict, source):
+        """
+        source is a commit id
+        """
         super(GitLogExplCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
@@ -2533,7 +2545,7 @@ class GitLogExplManager(GitExplManager):
         lfCmd("augroup Lf_Git_Log | augroup END")
         lfCmd("autocmd! Lf_Git_Log FileType git call leaderf#Git#DefineSyntax()")
         self._diff_view_panel = None
-        # key is source, value is ExplorerPage
+        # key is commit id, value is ExplorerPage
         self._pages = {}
 
     def _getExplorer(self):
@@ -2572,8 +2584,8 @@ class GitLogExplManager(GitExplManager):
     def getPreviewCommand(self, arguments_dict, source):
         return GitLogDiffCommand(arguments_dict, source)
 
-    def createGitCommand(self, arguments_dict, source):
-        return GitLogCommand(arguments_dict, source)
+    def createGitCommand(self, arguments_dict, commit_id):
+        return GitLogCommand(arguments_dict, commit_id)
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
         if source is None:
@@ -2655,17 +2667,17 @@ class GitLogExplManager(GitExplManager):
     def _accept(self, file, mode, *args, **kwargs):
         super(GitExplManager, self)._accept(file, mode, *args, **kwargs)
 
-    def _createExplorerPage(self, source, target_path=None):
-        if source in self._pages:
-            vim.current.tabpage = self._pages[source].tabpage
+    def _createExplorerPage(self, commit_id, target_path=None):
+        if commit_id in self._pages:
+            vim.current.tabpage = self._pages[commit_id].tabpage
         else:
             lfCmd("augroup Lf_Git_Log | augroup END")
             lfCmd("autocmd! Lf_Git_Log TabClosed * call leaderf#Git#CleanupExplorerPage({})"
                   .format(id(self)))
 
-            self._pages[source] = ExplorerPage(self._project_root, source, self)
-            self._pages[source].create(self._arguments,
-                                       GitLogExplCommand(self._arguments, source),
+            self._pages[commit_id] = ExplorerPage(self._project_root, commit_id, self)
+            self._pages[commit_id].create(self._arguments,
+                                       GitLogExplCommand(self._arguments, commit_id),
                                        target_path=target_path)
 
     def _acceptSelection(self, *args, **kwargs):
@@ -2673,34 +2685,34 @@ class GitLogExplManager(GitExplManager):
             return
 
         line = args[0]
-        source = self.getSource(line)
-        if source is None:
+        commit_id = self.getSource(line)
+        if commit_id is None:
             return
 
         if "--current-file" in self._arguments and "current_file" in self._arguments:
             if "--explorer" in self._arguments:
-                self._createExplorerPage(source, self._arguments["current_file"])
+                self._createExplorerPage(commit_id, self._arguments["current_file"])
             else:
                 if self._diff_view_panel is None:
                     self._diff_view_panel = DiffViewPanel(self.afterBufhidden)
 
-                self._diff_view_panel.setCommitId(source)
-                cmd = "git show --pretty= --no-color --raw {} -- {}".format(source,
+                self._diff_view_panel.setCommitId(commit_id)
+                cmd = "git show --pretty= --no-color --raw {} -- {}".format(commit_id,
                                                                             self._arguments["current_file"])
                 outputs = ParallelExecutor.run(cmd)
                 if len(outputs[0]) > 0:
                     _, source = TreeView.generateSource(outputs[0][0])
                     self._diff_view_panel.create(self._arguments, source, **kwargs)
         elif "--explorer" in self._arguments:
-            self._createExplorerPage(source)
+            self._createExplorerPage(commit_id)
         else:
-            if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
+            if kwargs.get("mode", '') == 't' and commit_id not in self._result_panel.getSources():
                 self._arguments["mode"] = 't'
                 lfCmd("tabnew")
 
             tabpage_count = len(vim.tabpages)
 
-            self._result_panel.create(self.createGitCommand(self._arguments, source),
+            self._result_panel.create(self.createGitCommand(self._arguments, commit_id),
                                       self._selected_content)
 
             if kwargs.get("mode", '') == 't' and len(vim.tabpages) > tabpage_count:
@@ -2727,8 +2739,8 @@ class GitBlameExplManager(GitExplManager):
     def createGitCommand(self, arguments_dict, commit_id):
         return GitBlameCommand(arguments_dict, commit_id)
 
-    def getPreviewCommand(self, arguments_dict, commit_id):
-        return GitLogDiffCommand(arguments_dict, commit_id)
+    def getPreviewCommand(self, arguments_dict, source):
+        return GitLogDiffCommand(arguments_dict, source)
 
     def defineMaps(self, winid):
         lfCmd("call win_execute({}, 'call leaderf#Git#BlameMaps({})')"
