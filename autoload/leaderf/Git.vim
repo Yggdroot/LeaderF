@@ -13,7 +13,7 @@ endif
 
 exec g:Lf_py "from leaderf.gitExpl import *"
 
-function! leaderf#Git#Maps(id)
+function! leaderf#Git#Maps(id) abort
     nmapclear <buffer>
     exec g:Lf_py "import ctypes"
     let manager = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
@@ -42,7 +42,7 @@ endfunction
 " direction:
 "   0, backward
 "   1, forward
-function! leaderf#Git#OuterIndent(direction)
+function! leaderf#Git#OuterIndent(direction) abort
     let spaces = substitute(getline('.'), '^\(\s*\).*', '\1', '')
     let width = strdisplaywidth(spaces)
     if width == 0
@@ -59,7 +59,7 @@ endfunction
 " direction:
 "   0, backward
 "   1, forward
-function! leaderf#Git#SameIndent(direction)
+function! leaderf#Git#SameIndent(direction) abort
     let spaces = substitute(getline('.'), '^\(\s*\).*', '\1', '')
     let width = strdisplaywidth(spaces)
     if a:direction == 0
@@ -77,7 +77,7 @@ function! leaderf#Git#SameIndent(direction)
     call search(printf('^\s\{%d}\zs\S', width), flags, stopline)
 endfunction
 
-function! leaderf#Git#SpecificMaps(id)
+function! leaderf#Git#SpecificMaps(id) abort
     exec g:Lf_py "import ctypes"
     let manager = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
     exec printf('nnoremap <buffer> <silent> e :exec g:Lf_py "%s.editCommand()"<CR>', manager)
@@ -86,7 +86,7 @@ endfunction
 " direction:
 "   0, backward
 "   1, forward
-function! leaderf#Git#OuterBlock(direction)
+function! leaderf#Git#OuterBlock(direction) abort
     let column = col('.')
     if column >= match(getline('.'), '\S') + 1
         noautocmd norm! ^
@@ -131,7 +131,7 @@ let s:help = {
             \ ],
             \}
 
-function s:HelpFilter(winid, key)
+function s:HelpFilter(winid, key) abort
     if a:key == "\<ESC>" || a:key == "\<F1>"
         call popup_close(a:winid)
         return 1
@@ -142,7 +142,7 @@ function s:HelpFilter(winid, key)
     return 1
 endfunction
 
-function! s:GetRowCol(width, height)
+function! s:GetRowCol(width, height) abort
     let win_width = &columns
     let win_height = &lines
 
@@ -152,7 +152,7 @@ function! s:GetRowCol(width, height)
     return {'row': row, 'col': col}
 endfunction
 
-function! leaderf#Git#ShowHelp(type)
+function! leaderf#Git#ShowHelp(type) abort
     if has("nvim")
         let borderchars = [
                     \ [g:Lf_PopupBorders[4],  "Lf_hl_popupBorder"],
@@ -211,7 +211,7 @@ function! leaderf#Git#ShowHelp(type)
 endfunction
 
 
-function! leaderf#Git#CloseCommitMessageWin()
+function! leaderf#Git#CloseCommitMessageWin() abort
     if exists("b:blame_cursorline") && exists("*getmousepos")
         let pos = getmousepos()
         if pos.winid == b:blame_winid && b:blame_cursorline != pos["line"]
@@ -222,7 +222,7 @@ function! leaderf#Git#CloseCommitMessageWin()
     endif
 endfunction
 
-function s:CommitMessageFilter(winid, key)
+function s:CommitMessageFilter(winid, key) abort
     if a:key == "\<ESC>"
         call popup_close(a:winid)
         return 1
@@ -244,7 +244,7 @@ function s:CommitMessageFilter(winid, key)
     return 1
 endfunction
 
-function! leaderf#Git#ShowCommitMessage(message)
+function! leaderf#Git#ShowCommitMessage(message) abort
     let b:blame_cursorline = line('.')
     let b:blame_winid = win_getid()
     if has("nvim")
@@ -304,7 +304,7 @@ function! leaderf#Git#ShowCommitMessage(message)
     endif
 endfunction
 
-function! leaderf#Git#TreeViewMaps(id)
+function! leaderf#Git#TreeViewMaps(id) abort
     exec g:Lf_py "import ctypes"
     let tree_view = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
     exec printf('nnoremap <silent> X         :exec g:Lf_py "%s.collapseChildren()"<CR>', tree_view)
@@ -317,13 +317,13 @@ function! leaderf#Git#TreeViewMaps(id)
     nnoremap <buffer> <silent> )             :call leaderf#Git#OuterBlock(1)<CR>
 endfunction
 
-function! leaderf#Git#CollapseParent(explorer_page)
+function! leaderf#Git#CollapseParent(explorer_page) abort
     if leaderf#Git#OuterIndent(0) != 0
         exec g:Lf_py printf("%s.open(False)", a:explorer_page)
     endif
 endfunction
 
-function! leaderf#Git#ExplorerMaps(id)
+function! leaderf#Git#ExplorerMaps(id) abort
     exec g:Lf_py "import ctypes"
     let explorer_page = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
     exec printf('nnoremap <buffer> <silent> o             :exec g:Lf_py "%s.open(False)"<CR>', explorer_page)
@@ -339,7 +339,7 @@ function! leaderf#Git#ExplorerMaps(id)
     nnoremap <buffer> <silent> q             :q<CR>
 endfunction
 
-function! leaderf#Git#BlameMaps(id)
+function! leaderf#Git#BlameMaps(id) abort
     exec g:Lf_py "import ctypes"
     let explorer_page = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
     exec printf('nnoremap <buffer> <silent> o             :exec g:Lf_py "%s.open()"<CR>', explorer_page)
@@ -358,37 +358,37 @@ function! leaderf#Git#BlameMaps(id)
     nnoremap <buffer> <silent> q             :bwipe<CR>
 endfunction
 
-function! leaderf#Git#TimerCallback(manager_id, id)
+function! leaderf#Git#TimerCallback(manager_id, id) abort
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value._callback(bang=True)", a:manager_id)
 endfunction
 
-function! leaderf#Git#WriteBuffer(view_id, id)
+function! leaderf#Git#WriteBuffer(view_id, id) abort
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.writeBuffer()", a:view_id)
 endfunction
 
-function! leaderf#Git#Cleanup(owner_id, id)
+function! leaderf#Git#Cleanup(owner_id, id) abort
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.cleanup()", a:owner_id)
 endfunction
 
-function! leaderf#Git#Suicide(view_id)
+function! leaderf#Git#Suicide(view_id) abort
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.suicide()", a:view_id)
 endfunction
 
-function! leaderf#Git#Bufhidden(view_id)
+function! leaderf#Git#Bufhidden(view_id) abort
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.bufHidden()", a:view_id)
 endfunction
 
-function! leaderf#Git#CleanupExplorerPage(view_id)
+function! leaderf#Git#CleanupExplorerPage(view_id) abort
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.cleanupExplorerPage()", a:view_id)
 endfunction
 
-function! leaderf#Git#Commands()
+function! leaderf#Git#Commands() abort
     if !exists("g:Lf_GitCommands")
         let g:Lf_GitCommands = [
                     \ {"Leaderf git diff":                         "fuzzy search and view the diffs"},
