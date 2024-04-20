@@ -502,7 +502,7 @@ class RgExplorer(Explorer):
         return escQuote(lfEncode(self._cmd_work_dir))
 
     def supportsNameOnly(self):
-        return False
+        return True
 
     def cleanup(self):
         for exe in self._executor:
@@ -538,6 +538,13 @@ class RgExplManager(Manager):
 
     def _defineMaps(self):
         lfCmd("call leaderf#Rg#Maps(%d)" % int("--heading" in self._arguments))
+
+    def setStlMode(self, mode):
+        if mode == "FullPath":
+            mode = "WholeLine"
+        elif mode == "NameOnly":
+            mode = "Contents"
+        super(RgExplManager, self).setStlMode(mode)
 
     def _getFileInfo(self, args):
         line = args[0]
@@ -700,9 +707,12 @@ class RgExplManager(Manager):
                   1, return the name only
                   2, return the directory name
         """
-        if self._match_path:
+        if mode == 0 or self._match_path:
             return line
-        else:
+        elif mode == 1:
+            if mode == 0:
+                return line
+
             if self._getExplorer().displayMulti():
                 if line == self._getExplorer().getContextSeparator():
                     return ""
@@ -723,6 +733,8 @@ class RgExplManager(Manager):
                     return line.split(":", 3)[-1]
                 else:
                     return line.split(":", 2)[-1]
+        else:
+            return line.split(":", 1)[0]
 
     def _getDigestStartPos(self, line, mode):
         """
@@ -732,7 +744,7 @@ class RgExplManager(Manager):
                   1, return the start postion of name only
                   2, return the start postion of directory name
         """
-        if self._match_path:
+        if mode == 0 or mode == 2 or self._match_path:
             return 0
         else:
             if self._getExplorer().displayMulti():

@@ -34,7 +34,6 @@ def lfGetFilePath(source):
 class GitExplorer(Explorer):
     def __init__(self):
         self._executor = []
-        self._display_multi = False
         self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
 
     def getContent(self, *args, **kwargs):
@@ -63,9 +62,6 @@ class GitExplorer(Explorer):
 
     def getContextSeparator(self):
         return self._context_separator
-
-    def displayMulti(self):
-        return self._display_multi
 
 
 class GitDiffExplorer(GitExplorer):

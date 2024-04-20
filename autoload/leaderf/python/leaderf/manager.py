@@ -279,8 +279,11 @@ class Manager(object):
         elif self._cli._is_live:
             mode = 'Fuzzy'
 
-        self._getInstance().setStlMode(mode)
+        self.setStlMode(mode)
         self._cli.setCurrentMode(mode)
+
+    def setStlMode(self, mode):
+        self._getInstance().setStlMode(mode)
 
     def _beforeEnter(self):
         self._resetAutochdir()
@@ -1746,7 +1749,7 @@ class Manager(object):
                                             pattern=pattern, is_name_only=True, sort_results=do_sort)
                     getHighlights = partial(fuzzyEngine.getHighlights, engine=self._fuzzy_engine,
                                             pattern=pattern, is_name_only=True)
-                    highlight_method = partial(self._highlight, True, getHighlights, True)
+                    highlight_method = partial(self._highlight, False, getHighlights, True)
                 elif is_fuzzyMatch_C and isAscii(self._cli.pattern[0]):
                     use_fuzzy_match_c = True
                     pattern = fuzzyMatchC.initPattern(self._cli.pattern[0])
@@ -1838,7 +1841,7 @@ class Manager(object):
                                                 is_name_only=True, sort_results=do_sort)
                 elif self._getExplorer().getStlCategory() == "Rg":
                     return_index = False
-                    if "--match-path" in self._arguments:
+                    if self._cli.isFullPath or "--match-path" in self._arguments:
                         filter_method = partial(fuzzyEngine.fuzzyMatch, engine=self._fuzzy_engine, pattern=pattern,
                                                 is_name_only=True, sort_results=do_sort)
                     else:

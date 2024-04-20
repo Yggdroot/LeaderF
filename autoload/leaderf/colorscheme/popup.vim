@@ -10,6 +10,8 @@
 let s:matchModeMap = {
             \   'NameOnly': 'Lf_hl_popup_nameOnlyMode',
             \   'FullPath': 'Lf_hl_popup_fullPathMode',
+            \   'Contents': 'Lf_hl_popup_nameOnlyMode',
+            \   'WholeLine': 'Lf_hl_popup_fullPathMode',
             \   'Fuzzy': 'Lf_hl_popup_fuzzyMode',
             \   'Regex': 'Lf_hl_popup_regexMode',
             \   'Live': 'Lf_hl_popup_fuzzyMode'
