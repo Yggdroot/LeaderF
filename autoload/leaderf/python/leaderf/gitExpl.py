@@ -8,6 +8,7 @@ import sys
 import os.path
 import json
 import bisect
+import tempfile
 from functools import partial
 from enum import Enum
 from collections import OrderedDict
@@ -374,13 +375,16 @@ class GitBlameCommand(GitCommand):
         super(GitBlameCommand, self).__init__(arguments_dict, commit_id)
 
     @staticmethod
-    def buildCommand(arguments_dict, commit_id, file_name):
+    def buildCommand(arguments_dict, commit_id, file_name, use_contents=False):
         extra_options = ""
         if "-w" in arguments_dict:
             extra_options += " -w"
 
         if "--date" in arguments_dict:
             extra_options += " --date={}".format(arguments_dict["--date"][0])
+
+        if use_contents and "--contents" in arguments_dict:
+            extra_options += " --contents {}".format(arguments_dict["--contents"][0])
 
         return "git blame -f -n {} {} -- {}".format(extra_options, commit_id, file_name)
 
@@ -394,7 +398,7 @@ class GitBlameCommand(GitCommand):
             file_name = file_name.replace(' ', r'\ ')
         file_name = lfRelpath(file_name)
 
-        self._cmd = GitBlameCommand.buildCommand(self._arguments, commit_id, file_name)
+        self._cmd = GitBlameCommand.buildCommand(self._arguments, commit_id, file_name, True)
         self._buffer_name = "LeaderF://git blame {} {}".format(commit_id, file_name)
         self._file_type = ""
         self._file_type_cmd = ""
@@ -2947,7 +2951,22 @@ class GitBlameExplManager(GitExplManager):
                 lfPrintError("fatal: '{}' is outside repository at '{}'"
                              .format(lfRelpath(vim.current.buffer.name), self._project_root))
             else:
+                tmp_file_name = None
+                if vim.current.buffer.options["modified"]:
+                    if sys.version_info >= (3, 0):
+                        tmp_file = partial(tempfile.NamedTemporaryFile, encoding=lfEval("&encoding"))
+                    else:
+                        tmp_file = tempfile.NamedTemporaryFile
+
+                    with tmp_file(mode='w+', delete=False) as f:
+                        for line in vim.current.buffer:
+                            f.write(line + '\n')
+                        tmp_file_name = f.name
+                    self._arguments["--contents"] = [tmp_file_name]
+
                 self._blame_panel.create(arguments_dict, self.createGitCommand(self._arguments, None))
+                if tmp_file_name is not None:
+                    os.remove(tmp_file_name)
         else:
             lfPrintError("fatal: no such path '{}' in HEAD".format(vim.current.buffer.name))
 
