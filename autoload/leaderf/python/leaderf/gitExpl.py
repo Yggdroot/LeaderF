@@ -127,7 +127,7 @@ class GitLogExplorer(GitExplorer):
         options = GitLogExplorer.generateOptions(arguments_dict)
         cmd = 'git log {} --pretty=format:"%h%d %s"'.format(options)
         if "--current-file" in arguments_dict and "current_file" in arguments_dict:
-            cmd += " -- {}".format(arguments_dict["current_file"])
+            cmd += " --follow -- {}".format(arguments_dict["current_file"])
 
         if "extra" in arguments_dict:
             cmd += " " + " ".join(arguments_dict["extra"])
@@ -307,7 +307,7 @@ class GitLogCommand(GitCommand):
                 self._cmd += " " + " ".join(self._arguments["extra"])
 
             if "--current-file" in self._arguments and "current_file" in self._arguments:
-                self._cmd += " -- {}".format(self._arguments["current_file"])
+                self._cmd += " --follow -- {}".format(self._arguments["current_file"])
 
             self._buffer_name = "LeaderF://" + self._cmd
         else:
@@ -2677,8 +2677,37 @@ class GitLogExplManager(GitExplManager):
 
             self._pages[commit_id] = ExplorerPage(self._project_root, commit_id, self)
             self._pages[commit_id].create(self._arguments,
-                                       GitLogExplCommand(self._arguments, commit_id),
-                                       target_path=target_path)
+                                          GitLogExplCommand(self._arguments, commit_id),
+                                          target_path=target_path)
+
+    def getOriginalName(self, commit_id, file_name):
+        cmd = 'git log --pretty="%H" --name-status --follow HEAD -- {}'.format(file_name)
+        # output is as below:
+
+        # a7cdd68e0f9e891e6f5def7b2b657d07d92a3675
+        #
+        # R064    tui.py  src/tui.py
+        # 5a0cd5103deba164a6fb33a5a3f67fb3a5dcf378
+        #
+        # M       tui.py
+        outputs = ParallelExecutor.run(cmd)
+        for i, line in enumerate(outputs[0]):
+            if line.startswith(commit_id):
+                name_stat = outputs[0][i+2]
+                orig_name = name_stat.split()[1]
+                return orig_name
+
+        return file_name
+
+    def createDiffViewPanel(self, commit_id, file_name, **kwargs):
+        cmd = "git show --pretty= --no-color --raw {} -- {}".format(commit_id, file_name)
+        outputs = ParallelExecutor.run(cmd)
+        if len(outputs[0]) > 0:
+            _, source = TreeView.generateSource(outputs[0][0])
+            self._diff_view_panel.create(self._arguments, source, **kwargs)
+            return True
+        else:
+            return False
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -2697,12 +2726,10 @@ class GitLogExplManager(GitExplManager):
                     self._diff_view_panel = DiffViewPanel(self.afterBufhidden)
 
                 self._diff_view_panel.setCommitId(commit_id)
-                cmd = "git show --pretty= --no-color --raw {} -- {}".format(commit_id,
-                                                                            self._arguments["current_file"])
-                outputs = ParallelExecutor.run(cmd)
-                if len(outputs[0]) > 0:
-                    _, source = TreeView.generateSource(outputs[0][0])
-                    self._diff_view_panel.create(self._arguments, source, **kwargs)
+                file_name = self._arguments["current_file"]
+                status = self.createDiffViewPanel(commit_id, file_name, **kwargs)
+                if status == False:
+                    self.createDiffViewPanel(commit_id, self.getOriginalName(commit_id, file_name), **kwargs)
         elif "--explorer" in self._arguments:
             self._createExplorerPage(commit_id)
         else:
