@@ -28,6 +28,24 @@ def lfGetFilePath(source):
     """
     return source[3] if source[4] == "" else source[4]
 
+def getOriginalName(commit_id, file_name):
+    cmd = 'git log --pretty=format:%H --name-status --follow HEAD -- {}'.format(file_name)
+    # output is as below:
+
+    # a7cdd68e0f9e891e6f5def7b2b657d07d92a3675
+    # R064    tui.py  src/tui.py
+    #
+    # 5a0cd5103deba164a6fb33a5a3f67fb3a5dcf378
+    # M       tui.py
+    outputs = ParallelExecutor.run(cmd)
+    for i in range(0, len(outputs[0]), 3):
+        if outputs[0][i].startswith(commit_id):
+            name_stat = outputs[0][i+1]
+            orig_name = name_stat.split()[1]
+            return orig_name
+
+    return file_name
+
 #*****************************************************
 # GitExplorer
 #*****************************************************
@@ -2680,25 +2698,6 @@ class GitLogExplManager(GitExplManager):
                                           GitLogExplCommand(self._arguments, commit_id),
                                           target_path=target_path)
 
-    def getOriginalName(self, commit_id, file_name):
-        cmd = 'git log --pretty="%H" --name-status --follow HEAD -- {}'.format(file_name)
-        # output is as below:
-
-        # a7cdd68e0f9e891e6f5def7b2b657d07d92a3675
-        #
-        # R064    tui.py  src/tui.py
-        # 5a0cd5103deba164a6fb33a5a3f67fb3a5dcf378
-        #
-        # M       tui.py
-        outputs = ParallelExecutor.run(cmd)
-        for i, line in enumerate(outputs[0]):
-            if line.startswith(commit_id):
-                name_stat = outputs[0][i+2]
-                orig_name = name_stat.split()[1]
-                return orig_name
-
-        return file_name
-
     def createDiffViewPanel(self, commit_id, file_name, **kwargs):
         cmd = "git show --pretty= --no-color --raw {} -- {}".format(commit_id, file_name)
         outputs = ParallelExecutor.run(cmd)
@@ -2720,7 +2719,9 @@ class GitLogExplManager(GitExplManager):
 
         if "--current-file" in self._arguments and "current_file" in self._arguments:
             if "--explorer" in self._arguments:
-                self._createExplorerPage(commit_id, self._arguments["current_file"])
+                file_name = self._arguments["current_file"]
+                # if the file was renamed, we should use the corresponding file name in commit_id
+                self._createExplorerPage(commit_id, getOriginalName(commit_id, file_name))
             else:
                 if self._diff_view_panel is None:
                     self._diff_view_panel = DiffViewPanel(self.afterBufhidden)
@@ -2729,7 +2730,9 @@ class GitLogExplManager(GitExplManager):
                 file_name = self._arguments["current_file"]
                 status = self.createDiffViewPanel(commit_id, file_name, **kwargs)
                 if status == False:
-                    self.createDiffViewPanel(commit_id, self.getOriginalName(commit_id, file_name), **kwargs)
+                    self.createDiffViewPanel(commit_id,
+                                             getOriginalName(commit_id, file_name),
+                                             **kwargs)
         elif "--explorer" in self._arguments:
             self._createExplorerPage(commit_id)
         else:
