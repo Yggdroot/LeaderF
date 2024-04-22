@@ -128,6 +128,7 @@ let s:help = {
             \   "h:             blame the parent commit",
             \   "l:             go to the previous blame status",
             \   "m:             show the commit message",
+            \   "p:             preview the diffs around the current line",
             \ ],
             \}
 
@@ -211,12 +212,20 @@ function! leaderf#Git#ShowHelp(type) abort
 endfunction
 
 
-function! leaderf#Git#CloseCommitMessageWin() abort
+function! leaderf#Git#CloseFloatWinMouse() abort
     if exists("b:blame_cursorline") && exists("*getmousepos")
         let pos = getmousepos()
         if pos.winid == b:blame_winid && b:blame_cursorline != pos["line"]
             if exists("b:commit_msg_winid") && winbufnr(b:commit_msg_winid) != -1
                 call nvim_win_close(b:commit_msg_winid, 1)
+            endif
+        endif
+    endif
+    if exists("b:blame_preview_cursorline") && exists("*getmousepos")
+        let pos = getmousepos()
+        if pos.winid == b:blame_winid && b:blame_preview_cursorline != pos["line"]
+            if exists("b:preview_winid") && winbufnr(b:preview_winid) != -1
+                call nvim_win_close(b:preview_winid, 1)
             endif
         endif
     endif
@@ -304,6 +313,39 @@ function! leaderf#Git#ShowCommitMessage(message) abort
     endif
 endfunction
 
+function leaderf#Git#PreviewFilter(winid, key) abort
+    if a:key == "\<LeftMouse>"
+        if exists("*getmousepos")
+            let pos = getmousepos()
+            if pos.winid != a:winid
+                call popup_close(a:winid)
+            endif
+        endif
+    endif
+
+    if a:key == "\<ESC>"
+        call popup_close(a:winid)
+        return 1
+    elseif a:key == "j" || a:key == "k"
+        call popup_close(a:winid)
+        return 0
+    elseif a:key == "\<CR>"
+        call popup_close(a:winid)
+        call feedkeys("\<CR>", 't')
+        return 1
+    elseif a:key == "\<C-J>"
+        call win_execute(a:winid, "norm! j")
+        return 1
+    elseif a:key == "\<C-K>"
+        call win_execute(a:winid, "norm! k")
+        return 1
+    else
+        return leaderf#popupModePreviewFilter(a:winid, a:key)
+    endif
+
+    return 1
+endfunction
+
 function! leaderf#Git#TreeViewMaps(id) abort
     exec g:Lf_py "import ctypes"
     let tree_view = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
@@ -339,20 +381,30 @@ function! leaderf#Git#ExplorerMaps(id) abort
     nnoremap <buffer> <silent> q             :q<CR>
 endfunction
 
+function! leaderf#Git#CloseFloatWin() abort
+    if exists("b:commit_msg_winid") && winbufnr(b:commit_msg_winid) != -1
+        call nvim_win_close(b:commit_msg_winid, 1)
+    endif
+    if exists("b:preview_winid") && winbufnr(b:preview_winid) != -1
+        call nvim_win_close(b:preview_winid, 1)
+    endif
+endfunction
+
 function! leaderf#Git#BlameMaps(id) abort
     exec g:Lf_py "import ctypes"
-    let explorer_page = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
-    exec printf('nnoremap <buffer> <silent> o             :exec g:Lf_py "%s.open()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "%s.open()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.open()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> h             :exec g:Lf_py "%s.blamePrevious()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> l             :exec g:Lf_py "%s.blameNext()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', explorer_page)
+    let blame_manager = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
+    exec printf('nnoremap <buffer> <silent> o             :exec g:Lf_py "%s.open()"<CR>', blame_manager)
+    exec printf('nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "%s.open()"<CR>', blame_manager)
+    exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.open()"<CR>', blame_manager)
+    exec printf('nnoremap <buffer> <silent> h             :exec g:Lf_py "%s.blamePrevious()"<CR>', blame_manager)
+    exec printf('nnoremap <buffer> <silent> l             :exec g:Lf_py "%s.blameNext()"<CR>', blame_manager)
+    exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', blame_manager)
+    exec printf('nnoremap <buffer> <silent> p             :exec g:Lf_py "%s.preview()"<CR>', blame_manager)
     if has("nvim")
-        nnoremap <buffer> <silent> j         :silent! call nvim_win_close(b:commit_msg_winid, 1)<CR>j
-        nnoremap <buffer> <silent> k         :silent! call nvim_win_close(b:commit_msg_winid, 1)<CR>k
-        nnoremap <buffer> <silent> <ESC>     :silent! call nvim_win_close(b:commit_msg_winid, 1)<CR>
-        nnoremap <buffer> <silent> <LeftMouse>     :call leaderf#Git#CloseCommitMessageWin()<CR><LeftMouse>
+        nnoremap <buffer> <silent> j         :call leaderf#Git#CloseFloatWin()<CR>j
+        nnoremap <buffer> <silent> k         :call leaderf#Git#CloseFloatWin()<CR>k
+        nnoremap <buffer> <silent> <ESC>     :call leaderf#Git#CloseFloatWin()<CR>
+        nnoremap <buffer> <silent> <LeftMouse>     :call leaderf#Git#CloseFloatWinMouse()<CR><LeftMouse>
     endif
     nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("blame")<CR>
     nnoremap <buffer> <silent> q             :bwipe<CR>

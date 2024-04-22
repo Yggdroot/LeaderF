@@ -424,6 +424,26 @@ class GitBlameCommand(GitCommand):
         self._file_type_cmd = ""
 
 
+class GitShowCommand(GitCommand):
+    def __init__(self, arguments_dict, commit_id, file_name):
+        self._commit_id = commit_id
+        self._file_name = file_name
+        super(GitShowCommand, self).__init__(arguments_dict, None)
+
+    def buildCommandAndBufferName(self):
+        self._cmd = "git show {} -- {}".format(self._commit_id, self._file_name)
+        self._file_type = "git"
+        self._file_type_cmd = "setlocal filetype=git"
+
+
+class GitCustomizeCommand(GitCommand):
+    def __init__(self, arguments_dict, cmd, file_type, file_type_cmd):
+        super(GitCustomizeCommand, self).__init__(arguments_dict, None)
+        self._cmd = cmd
+        self._file_type = file_type
+        self._file_type_cmd = file_type_cmd
+
+
 class ParallelExecutor(object):
     @staticmethod
     def run(*cmds, format_line=None):
@@ -1664,7 +1684,7 @@ class PreviewPanel(Panel):
             self._view.cleanup()
             self._view = None
 
-    def create(self, cmd, config):
+    def create(self, cmd, config, buf_content=None):
         if lfEval("has('nvim')") == '1':
             lfCmd("noautocmd let scratch_buffer = nvim_create_buf(0, 1)")
             self._preview_winid = int(lfEval("nvim_open_win(scratch_buffer, 0, %s)"
@@ -1673,7 +1693,7 @@ class PreviewPanel(Panel):
             lfCmd("noautocmd silent! let winid = popup_create([], %s)" % json.dumps(config))
             self._preview_winid = int(lfEval("winid"))
 
-        GitCommandView(self, cmd).create(self._preview_winid)
+        GitCommandView(self, cmd).create(self._preview_winid, buf_content=buf_content)
 
     def createView(self, cmd):
         if self._preview_winid > 0:
@@ -1704,6 +1724,11 @@ class PreviewPanel(Panel):
         if self._view:
             self._view.setContent(content)
 
+    def getViewContent(self):
+        if self._view:
+            return self._view.getContent()
+
+        return []
 
 class DiffViewPanel(Panel):
     def __init__(self, bufhidden_callback=None, commit_id=""):
@@ -2960,9 +2985,136 @@ class GitBlameExplManager(GitExplManager):
 
             self._pages[commit_id] = ExplorerPage(self._project_root, commit_id, self)
             self._pages[commit_id].create(self._arguments,
-                                       GitLogExplCommand(self._arguments, commit_id),
-                                       target_path=file_name,
-                                       line_num=line_num)
+                                          GitLogExplCommand(self._arguments, commit_id),
+                                          target_path=file_name,
+                                          line_num=line_num)
+
+    def generateConfig(self):
+        maxheight = int(lfEval("get(g:, 'Lf_GitBlamePreviewHeight', {})"
+                               .format(vim.current.window.height // 3)))
+        if maxheight < 5:
+            maxheight = 5
+
+        alternate_winid = self._blame_panel.getAlternateWinid(vim.current.buffer.name)
+        screenpos = lfEval("screenpos({}, {}, {})".format(alternate_winid,
+                                                          vim.current.window.cursor[0],
+                                                          1))
+        col = int(screenpos["col"])
+        maxwidth = int(lfEval("&columns")) - col
+
+        if lfEval("has('nvim')") == '1':
+            row = int(screenpos["row"])
+
+            popup_borders = lfEval("g:Lf_PopupBorders")
+            borderchars = [
+                    [popup_borders[4],  "Lf_hl_popupBorder"],
+                    [popup_borders[0],  "Lf_hl_popupBorder"],
+                    [popup_borders[5],  "Lf_hl_popupBorder"],
+                    [popup_borders[1],  "Lf_hl_popupBorder"],
+                    [popup_borders[6],  "Lf_hl_popupBorder"],
+                    [popup_borders[2],  "Lf_hl_popupBorder"],
+                    [popup_borders[7],  "Lf_hl_popupBorder"],
+                    [popup_borders[3],  "Lf_hl_popupBorder"]
+                    ]
+
+            if row > maxheight + 2:
+                anchor = "SW"
+                row -= 1
+            else:
+                anchor = "NW"
+
+            config = {
+                    "title":           " Preview ",
+                    "title_pos":       "center",
+                    "relative":        "editor",
+                    "anchor":           anchor,
+                    "row":             row,
+                    "col":             col - 1,
+                    "width":           maxwidth,
+                    "height":          maxheight,
+                    "zindex":          20482,
+                    "noautocmd":       1,
+                    "border":          borderchars,
+                    "style":           "minimal",
+                    }
+        else:
+            config = {
+                "title":           " Preview ",
+                "maxwidth":        maxwidth,
+                "minwidth":        maxwidth,
+                "maxheight":       maxheight,
+                "minheight":       maxheight,
+                "zindex":          20482,
+                "pos":             "botleft",
+                "line":            "cursor-1",
+                "col":             col,
+                "scrollbar":       0,
+                "padding":         [0, 0, 0, 0],
+                "border":          [1, 1, 1, 1],
+                "borderchars":     lfEval("g:Lf_PopupBorders"),
+                "borderhighlight": ["Lf_hl_popupBorder"],
+                "filter":          "leaderf#Git#PreviewFilter",
+                "mapping":         0,
+                }
+
+        return config
+
+    def preview(self):
+        if vim.current.line == "":
+            return
+
+        commit_id = vim.current.line.lstrip('^').split(None, 1)[0]
+        if commit_id.startswith('0000000'):
+            lfPrintError("Not Committed Yet!")
+            return
+
+        line_num, file_name = vim.current.line.rsplit('\t', 1)[1].split(None, 1)
+        line_num = int(line_num)
+
+        if lfEval("has('nvim')") == '1':
+            lfCmd("let b:blame_preview_cursorline = line('.')")
+            lfCmd("let b:blame_winid = win_getid()")
+            if lfEval("exists('b:preview_winid') && winbufnr(b:preview_winid) != -1") == '1':
+                lfCmd("call nvim_win_close(b:preview_winid, 1)")
+
+        cmd = GitShowCommand(self._arguments, commit_id, file_name)
+        outputs = ParallelExecutor.run(cmd.getCommand())
+        self._preview_panel.create(cmd, self.generateConfig(), outputs[0])
+        preview_winid = self._preview_panel.getPreviewWinId()
+        self._setWinOptions(preview_winid)
+        if lfEval("has('nvim')") == '1':
+            lfCmd("let b:preview_winid = {}".format(preview_winid))
+            lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % preview_winid)
+        else:
+            lfCmd("call win_execute({}, 'setlocal nonumber')".format(preview_winid))
+
+        self.gotoLine(preview_winid, line_num)
+
+    def gotoLine(self, winid, line_num):
+        found = False
+        current_line = 0
+        view_content = self._preview_panel.getViewContent()
+        for i, line in enumerate(view_content, 1):
+            if found:
+                if not line.startswith("-"):
+                    current_line += 1
+                    if current_line == line_num:
+                        lfCmd("call win_execute({}, 'norm! {}Gzz')".format(winid, i))
+                        break
+            # @@ -2,11 +2,21 @@
+            elif line.startswith("@@"):
+                line_numbers = line.split("+", 1)[1].split(None, 1)[0]
+                if "," in line_numbers:
+                    start, count = line_numbers.split(",")
+                    start = int(start)
+                    count = int(count)
+                else:
+                    start = int(line_numbers)
+                    count = 0
+
+                if start + count > line_num:
+                    found = True
+                    current_line = start - 1
 
     def startExplorer(self, win_pos, *args, **kwargs):
         if self.checkWorkingDirectory() == False:
