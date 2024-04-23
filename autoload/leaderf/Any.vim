@@ -236,6 +236,7 @@ let g:Lf_Arguments = {
             \           {"name": ["--all"], "nargs": 0, "help": "Pretend as if all the refs in refs/, along with HEAD, are listed on the command line as <commit>."},
             \           {"name": ["--graph"], "nargs": 0, "help": "Draw a text-based graphical representation of the commit history on the left hand side of the output."},
             \           {"name": ["--reverse-order"], "nargs": 0, "help": "Output the commits chosen to be shown in reverse order."},
+            \           {"name": ["--find-copies-harder"], "nargs": 0, "help": "This flag makes the command inspect unmodified files as candidates for the source of copy."},
             \           {"name": ["extra"], "nargs": "*", "help": "extra arguments of git log"},
             \       ],
             \       "diff": [

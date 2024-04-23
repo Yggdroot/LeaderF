@@ -325,18 +325,23 @@ class GitLogCommand(GitCommand):
             self._buffer_name = "LeaderF://" + self._cmd
         else:
             sep = ' ' if os.name == 'nt' else ''
-            self._cmd = ('git show {} --pretty=format:"commit %H%nparent %P%n'
+            if "--find-copies-harder" in self._arguments:
+                find_copies_harder = " -C"
+            else:
+                find_copies_harder = ""
+
+            self._cmd = ('git show {} -C{} --pretty=format:"commit %H%nparent %P%n'
                          'Author:     %an <%ae>%nAuthorDate: %ad%nCommitter:  %cn <%ce>%nCommitDate:'
                          ' %cd{}%n%n%s%n%n%b%n" --stat=70 --stat-graph-width=10 -p --no-color'
-                         ).format(self._source, sep)
+                         ).format(self._source, find_copies_harder, sep)
 
             if (("--recall" in self._arguments or "--current-file" in self._arguments)
                 and "current_file" in self._arguments):
-                self._cmd = ('git show {} --pretty=format:"commit %H%nparent %P%n'
+                self._cmd = ('git show {} -C{} --pretty=format:"commit %H%nparent %P%n'
                              'Author:     %an <%ae>%nAuthorDate: %ad%nCommitter:  %cn <%ce>%nCommitDate:'
                              ' %cd{}%n%n%s%n%n%b%n%x2d%x2d%x2d" --stat=70 --stat-graph-width=10 --no-color'
                              ' && git show {} --pretty=format:"%x20" --no-color -- {}'
-                             ).format(self._source, sep, self._source,
+                             ).format(self._source, find_copies_harder, sep, self._source,
                                       self._arguments["orig_name"].get(self._source,
                                                                        self._arguments["current_file"]))
 
@@ -373,8 +378,13 @@ class GitLogExplCommand(GitCommand):
         super(GitLogExplCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
-        self._cmd = ('git show -m --raw -C --numstat --shortstat '
-                     '--pretty=format:"# %P" --no-abbrev {}').format(self._source)
+        if "--find-copies-harder" in self._arguments:
+            find_copies_harder = " -C"
+        else:
+            find_copies_harder = ""
+
+        self._cmd = ('git show -m --raw -C{} --numstat --shortstat '
+                     '--pretty=format:"# %P" --no-abbrev {}').format(find_copies_harder, self._source)
 
         self._buffer_name = "LeaderF://navigation/" + self._source
         self._file_type_cmd = ""
@@ -2803,7 +2813,7 @@ class GitBlameExplManager(GitExplManager):
             # M       tui.py
             outputs = ParallelExecutor.run(cmd)
             name_stat = outputs[0][2]
-            if name_stat.startswith("A"):
+            if name_stat.startswith("A") or name_stat.startswith("C"):
                 lfPrintError("First commit of current file!")
                 return
             else:
