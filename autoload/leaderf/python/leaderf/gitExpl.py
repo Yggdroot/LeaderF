@@ -28,24 +28,6 @@ def lfGetFilePath(source):
     """
     return source[3] if source[4] == "" else source[4]
 
-def getOriginalName(commit_id, file_name):
-    cmd = 'git log --pretty=format:%H --name-status --follow HEAD -- {}'.format(file_name)
-    # output is as below:
-
-    # a7cdd68e0f9e891e6f5def7b2b657d07d92a3675
-    # R064    tui.py  src/tui.py
-    #
-    # 5a0cd5103deba164a6fb33a5a3f67fb3a5dcf378
-    # M       tui.py
-    outputs = ParallelExecutor.run(cmd)
-    for i in range(0, len(outputs[0]), 3):
-        if outputs[0][i].startswith(commit_id):
-            name_stat = outputs[0][i+1]
-            orig_name = name_stat.split()[1]
-            return orig_name
-
-    return file_name
-
 #*****************************************************
 # GitExplorer
 #*****************************************************
@@ -145,7 +127,7 @@ class GitLogExplorer(GitExplorer):
         options = GitLogExplorer.generateOptions(arguments_dict)
         cmd = 'git log {} --pretty=format:"%h%d %s"'.format(options)
         if "--current-file" in arguments_dict and "current_file" in arguments_dict:
-            cmd += " --follow -- {}".format(arguments_dict["current_file"])
+            cmd += " -- {}".format(arguments_dict["current_file"])
 
         if "extra" in arguments_dict:
             cmd += " " + " ".join(arguments_dict["extra"])
@@ -325,7 +307,7 @@ class GitLogCommand(GitCommand):
                 self._cmd += " " + " ".join(self._arguments["extra"])
 
             if "--current-file" in self._arguments and "current_file" in self._arguments:
-                self._cmd += " --follow -- {}".format(self._arguments["current_file"])
+                self._cmd += " -- {}".format(self._arguments["current_file"])
 
             self._buffer_name = "LeaderF://" + self._cmd
         else:
@@ -908,7 +890,6 @@ class TreeView(GitCommandView):
         super(TreeView, self).__init__(owner, cmd)
         self._project_root = project_root
         self._target_path = target_path
-        self._target_path_found = False
         # the argument is source, source is a tuple like
         # (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         self._callback = callback
@@ -1513,8 +1494,6 @@ class TreeView(GitCommandView):
                                 source = info.info
 
                     if source is not None:
-                        self._target_path_found = True
-
                         self._callback(source)
                         if lfEval("has('nvim')") == '1':
                             lfCmd("call nvim_win_set_option({}, 'cursorline', v:true)".format(self.getWindowId()))
@@ -1531,11 +1510,6 @@ class TreeView(GitCommandView):
                 self._buffer.options['modifiable'] = False
 
         if self._read_finished == 1 and self._offset_in_content == len(structure):
-            if self._target_path is not None and self._target_path_found == False:
-                self.locateFile(getOriginalName(self._cmd.getSource(), self._target_path))
-                structure = self._file_structures[self._cur_parent]
-                self._callback(structure[vim.current.window.cursor[0] - len(self._head) - 1].info)
-
             shortstat = re.sub(r"( \d+)( files? changed)",
                                r"%#Lf_hl_gitStlChangedNum#\1%#Lf_hl_gitStlFileChanged#\2",
                                self._short_stat[self._cur_parent])
@@ -2703,18 +2677,8 @@ class GitLogExplManager(GitExplManager):
 
             self._pages[commit_id] = ExplorerPage(self._project_root, commit_id, self)
             self._pages[commit_id].create(self._arguments,
-                                          GitLogExplCommand(self._arguments, commit_id),
-                                          target_path=target_path)
-
-    def createDiffViewPanel(self, commit_id, file_name, **kwargs):
-        cmd = "git show --pretty= --no-color --raw {} -- {}".format(commit_id, file_name)
-        outputs = ParallelExecutor.run(cmd)
-        if len(outputs[0]) > 0:
-            _, source = TreeView.generateSource(outputs[0][0])
-            self._diff_view_panel.create(self._arguments, source, **kwargs)
-            return True
-        else:
-            return False
+                                       GitLogExplCommand(self._arguments, commit_id),
+                                       target_path=target_path)
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -2727,19 +2691,18 @@ class GitLogExplManager(GitExplManager):
 
         if "--current-file" in self._arguments and "current_file" in self._arguments:
             if "--explorer" in self._arguments:
-                file_name = self._arguments["current_file"]
-                self._createExplorerPage(commit_id, file_name)
+                self._createExplorerPage(commit_id, self._arguments["current_file"])
             else:
                 if self._diff_view_panel is None:
                     self._diff_view_panel = DiffViewPanel(self.afterBufhidden)
 
                 self._diff_view_panel.setCommitId(commit_id)
-                file_name = self._arguments["current_file"]
-                status = self.createDiffViewPanel(commit_id, file_name, **kwargs)
-                if status == False:
-                    self.createDiffViewPanel(commit_id,
-                                             getOriginalName(commit_id, file_name),
-                                             **kwargs)
+                cmd = "git show --pretty= --no-color --raw {} -- {}".format(commit_id,
+                                                                            self._arguments["current_file"])
+                outputs = ParallelExecutor.run(cmd)
+                if len(outputs[0]) > 0:
+                    _, source = TreeView.generateSource(outputs[0][0])
+                    self._diff_view_panel.create(self._arguments, source, **kwargs)
         elif "--explorer" in self._arguments:
             self._createExplorerPage(commit_id)
         else:

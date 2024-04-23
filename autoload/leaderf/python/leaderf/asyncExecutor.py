@@ -103,7 +103,7 @@ class AsyncExecutor(object):
 
                     err = b"".join(iter(self._errQueue.get, None))
                     if err and raise_except:
-                        raise Exception(cmd + "\n" + lfBytes2Str(err) + lfBytes2Str(err, encoding))
+                        raise Exception(lfBytes2Str(err) + lfBytes2Str(err, encoding))
                 except ValueError:
                     pass
                 finally:
