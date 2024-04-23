@@ -146,7 +146,7 @@ class GitLogExplorer(GitExplorer):
         content = executor.execute(cmd, encoding=lfEval("&encoding"))
 
         if "--current-file" in arguments_dict and "current_file" in arguments_dict:
-            return self.generateContent(content)
+            return AsyncExecutor.Result(self.generateContent(content))
 
         return content
 
