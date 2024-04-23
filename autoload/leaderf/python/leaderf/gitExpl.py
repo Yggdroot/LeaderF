@@ -1934,30 +1934,30 @@ class BlamePanel(Panel):
         date_format = arguments_dict.get("--date", [""])[0]
         if date_format in ["", "iso", "iso-strict", "short"]:
             # 6817817e autoload/leaderf/manager.py 1 (Yggdroot 2014-02-26 00:37:26 +0800 1) #!/usr/bin/env python
-            return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\([^(]*?)\s+\d+\).*',
+            return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*?\d\d)\s+\d+\).*',
                           r'\g<1> \g<4>)\t\g<3> \g<2>', line, 1)
         elif date_format == "relative":
             # c5c6d072 autoload/leaderf/python/leaderf/manager.py 63 (Yggdroot 4 years, 6 months ago    66) def catchException(func):
-            line = re.sub(r'(^.*?\d+\)).*', r'\g<1>', line, 1)
+            line = re.sub(r'(^.*?\s\d+\)).*', r'\g<1>', line, 1)
             return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
                           r'\g<1> \g<4>)\t\g<3> \g<2>',
                           line[:-(line_num_width + 1)], 1)
         elif date_format == "local":
             # 6817817e autoload/leaderf/manager.py 1 (Yggdroot Wed Feb 26 00:37:26 2014  1) #!/usr/bin/env python
-            line = re.sub(r'(^.*?\d+\)).*', r'\g<1>', line, 1)
+            line = re.sub(r'(^.*?\s\d+\)).*', r'\g<1>', line, 1)
             return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
                           r'\g<1> \g<4>)\t\g<3> \g<2>',
                           line[:-(line_num_width + 7)], 1)
         elif date_format in ("rfc", "default"):
             # 6817817e autoload/leaderf/manager.py 1 (Yggdroot Wed, 26 Feb 2014 00:37:26 +0800    1) #!/usr/bin/env python
             # 6817817e autoload/leaderf/manager.py 1 (Yggdroot Wed Feb 26 00:37:26 2014 +0800    1) #!/usr/bin/env python
-            line = re.sub(r'(^.*?\d+\)).*', r'\g<1>', line, 1)
+            line = re.sub(r'(^.*?\s\d+\)).*', r'\g<1>', line, 1)
             return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
                           r'\g<1> \g<4>)\t\g<3> \g<2>',
                           line[:-(line_num_width + 1)], 1)
         elif date_format == "human":
             # 6817817e autoload/leaderf/manager.py 1 (Yggdroot Feb 26 2014   1) #!/usr/bin/env python
-            line = re.sub(r'(^.*?\d+\)).*', r'\g<1>', line, 1)
+            line = re.sub(r'(^.*?\s\d+\)).*', r'\g<1>', line, 1)
             return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
                           r'\g<1> \g<4>)\t\g<3> \g<2>',
                           line[:-(line_num_width + 6)], 1)
