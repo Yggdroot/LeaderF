@@ -759,6 +759,10 @@ class GitBlameView(GitCommandView):
             id = int(lfEval("matchid"))
             self._match_ids.append(id)
 
+        if lfEval("hlexists('Lf_hl_gitBlameDate')") == '0':
+            lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
+                  .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
+
         arguments_dict = self._cmd.getArguments()
         date_format = arguments_dict.get("--date", [""])[0]
         if date_format in ["", "iso", "short"]:
@@ -944,8 +948,8 @@ class TreeView(GitCommandView):
 
     def enableColor(self, winid):
         if lfEval("hlexists('Lf_hl_help')") == '0':
-            lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')".format("git",
-                    lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
+            lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
+                  .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
         lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitHelp'', ''^".*'', -100)')"""
               .format(winid))
