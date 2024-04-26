@@ -2031,6 +2031,8 @@ class BlamePanel(Panel):
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, cursor_line))
                 lfCmd("call win_execute({}, 'setlocal scrollbind')".format(winid))
                 lfCmd("setlocal scrollbind")
+                lfCmd(r"""call win_execute({}, 'let &l:stl=" Press <F1> for help."')"""
+                      .format(blame_winid))
         else:
             lfPrintError("No need to blame!")
 

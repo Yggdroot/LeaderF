@@ -122,6 +122,7 @@ let s:help = {
             \   "):             go to the end of the current indent level",
             \ ],
             \ "blame": [
+            \   "<F1>:          toggle the help",
             \   "o:             show the details of current commit in an explorer page",
             \   "<CR>:          show the details of current commit in an explorer page",
             \   "<2-LeftMouse>: show the details of current commit in an explorer page",
@@ -129,6 +130,7 @@ let s:help = {
             \   "l:             go to the previous blame status",
             \   "m:             show the commit message",
             \   "p:             preview the diffs around the current line",
+            \   "q:             quit the blame window",
             \ ],
             \}
 
