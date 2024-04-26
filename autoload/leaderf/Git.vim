@@ -231,28 +231,6 @@ function! leaderf#Git#CloseFloatWinMouse() abort
     endif
 endfunction
 
-function s:CommitMessageFilter(winid, key) abort
-    if a:key == "\<ESC>"
-        call popup_close(a:winid)
-        return 1
-    elseif a:key == "j" || a:key == "k"
-        call popup_close(a:winid)
-        return 0
-    elseif a:key == "\<LeftMouse>"
-        if exists("b:blame_cursorline") && exists("*getmousepos")
-            let pos = getmousepos()
-            if pos.winid == b:blame_winid && b:blame_cursorline != pos["line"]
-                call popup_close(a:winid)
-            endif
-        endif
-        return 0
-    elseif a:key == "\<ScrollWheelDown>" || a:key == "\<ScrollWheelUp>"
-        return 0
-    endif
-
-    return 1
-endfunction
-
 function! leaderf#Git#ShowCommitMessage(message) abort
     let b:blame_cursorline = line('.')
     let b:blame_winid = win_getid()
@@ -267,7 +245,7 @@ function! leaderf#Git#ShowCommitMessage(message) abort
                     \ [g:Lf_PopupBorders[7],  "Lf_hl_popupBorder"],
                     \ [g:Lf_PopupBorders[3],  "Lf_hl_popupBorder"]
                     \]
-        let width = 100
+        let width = 80
         let height = len(a:message)
         let row_col = s:GetRowCol(width, height)
         let options = {
@@ -295,15 +273,20 @@ function! leaderf#Git#ShowCommitMessage(message) abort
         call win_execute(b:commit_msg_winid, 'nnoremap <buffer> <silent> <ESC> <C-W>c')
         call win_execute(b:commit_msg_winid, 'setlocal filetype=git')
     else
+        let maxheight = &lines / 3
         let options = {
                     \ "title":           " Commit Message ",
+                    \ "maxwidth":        80,
+                    \ "minwidth":        80,
+                    \ "maxheight":       maxheight,
+                    \ "minheight":       maxheight,
                     \ "zindex":          20482,
                     \ "scrollbar":       1,
                     \ "padding":         [0, 0, 0, 0],
                     \ "border":          [1, 1, 1, 1],
                     \ "borderchars":     g:Lf_PopupBorders,
                     \ "borderhighlight": ["Lf_hl_popupBorder"],
-                    \ "filter":          "s:CommitMessageFilter",
+                    \ "filter":          "leaderf#Git#PreviewFilter",
                     \ "mapping":         0,
                     \}
 
