@@ -452,6 +452,7 @@ function! leaderf#Git#Commands() abort
                     \ {"Leaderf git log --current-file --explorer":"fuzzy search and view the log of current file in explorer tabpage"},
                     \ {"Leaderf git blame":                        "git blame current file"},
                     \ {"Leaderf git blame -w":                     "ignore whitespace when git blame current file"},
+                    \ {"Leaderf git blame --date relative":        "show relative date when git blame current file"},
                     \ ]
     endif
 
