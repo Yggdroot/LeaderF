@@ -2565,10 +2565,10 @@ class GitDiffExplManager(GitExplManager):
         line = args[0]
         source = self.getSource(line)
 
-        if "-s" in self._arguments:
-            self._diff_view_panel.create(self._arguments, source, **kwargs)
-        elif "accept" in self._arguments:
+        if "accept" in self._arguments:
             self._arguments["accept"](lfGetFilePath(source))
+        elif "-s" in self._arguments:
+            self._diff_view_panel.create(self._arguments, source, **kwargs)
         else:
             if kwargs.get("mode", '') == 't' and source not in self._result_panel.getSources():
                 self._arguments["mode"] = 't'
