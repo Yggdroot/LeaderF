@@ -261,10 +261,10 @@ class GitLogDiffCommand(GitCommand):
     def buildCommandAndBufferName(self):
         # fuzzy search in navigation panel
         if not self._arguments["parent"].startswith("0000000"):
-            self._cmd = "git diff --no-color {}..{} -- {}".format(self._arguments["parent"],
-                                                                  self._arguments["commit_id"],
-                                                                  lfGetFilePath(self._source)
-                                                                  )
+            self._cmd = "git diff --follow --no-color {}..{} -- {}".format(self._arguments["parent"],
+                                                                           self._arguments["commit_id"],
+                                                                           lfGetFilePath(self._source)
+                                                                           )
         else:
             self._cmd = "git show --pretty= --no-color {} -- {}".format(self._arguments["commit_id"],
                                                                         lfGetFilePath(self._source)
@@ -340,7 +340,7 @@ class GitLogCommand(GitCommand):
                 self._cmd = ('git show {} -C{} --pretty=format:"commit %H%nparent %P%n'
                              'Author:     %an <%ae>%nAuthorDate: %ad%nCommitter:  %cn <%ce>%nCommitDate:'
                              ' %cd{}%n%n%s%n%n%b%n%x2d%x2d%x2d" --stat=70 --stat-graph-width=10 --no-color'
-                             ' && git show {} --pretty=format:"%x20" --no-color -- {}'
+                             ' && git log -1 -p --follow --pretty=format:"%x20" --no-color {} -- {}'
                              ).format(self._source, find_copies_harder, sep, self._source,
                                       self._arguments["orig_name"].get(self._source,
                                                                        self._arguments["current_file"]))
@@ -2754,7 +2754,8 @@ class GitLogExplManager(GitExplManager):
                     self._diff_view_panel = DiffViewPanel(self.afterBufhidden)
 
                 self._diff_view_panel.setCommitId(commit_id)
-                cmd = "git show --pretty= --no-color --raw {} -- {}".format(commit_id, file_name)
+                cmd = "git log -1 --follow --pretty= --no-color --raw {} -- {}".format(commit_id,
+                                                                                       file_name)
                 outputs = ParallelExecutor.run(cmd)
                 if len(outputs[0]) > 0:
                     _, source = TreeView.generateSource(outputs[0][0])
