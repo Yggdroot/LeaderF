@@ -1130,46 +1130,60 @@ g:Lf_GitCommands                              *g:Lf_GitCommands*
     Define a list of commands you may want to use frequently.
     The list is as follows: >
     let g:Lf_GitCommands = [
-                    \ {"Leaderf git diff":                       "fuzzy search and view the diffs"},
-                    \ {"Leaderf git diff --cached":              "fuzzy search and view `git diff --cached`"},
-                    \ {"Leaderf git diff HEAD":                  "fuzzy search and view `git diff HEAD`"},
-                    \ {"Leaderf git diff --side-by-side":        "fuzzy search and view the side-by-side diffs"},
+                    \ {"Leaderf git diff":                "fuzzy search and view the diffs"},
+                    \ {"Leaderf git diff --cached":       "fuzzy search and view `git diff --cached`"},
+                    \ {"Leaderf git diff HEAD":           "fuzzy search and view `git diff HEAD`"},
+                    \ {"Leaderf git diff --side-by-side": "fuzzy search and view the side-by-side diffs"},
                     \ ]
 <
     Open the commands panel using `:Leaderf git` .
 
 g:Lf_GitFolderIcons                           *g:Lf_GitFolderIcons*
-   To customize the folder icons in tree panel.
-   Default value is { 'open': '', 'closed': '' }.
+    To customize the folder icons in tree panel.
+    Default value is { 'open': '', 'closed': '' }.
 
 g:Lf_GitAddIcon                               *g:Lf_GitAddIcon*
-   To customize the icon of added file in tree panel.
-   Default value is ''.
+    To customize the icon of added file in tree panel.
+    Default value is ''.
 
 g:Lf_GitCopyIcon                              *g:Lf_GitCopyIcon*
-   To customize the icon of copied file in tree panel.
-   Default value is ''.
+    To customize the icon of copied file in tree panel.
+    Default value is ''.
 
 g:Lf_GitDelIcon                               *g:Lf_GitDelIcon*
-   To customize the icon of deleted file in tree panel.
-   Default value is ''.
+    To customize the icon of deleted file in tree panel.
+    Default value is ''.
 
 g:Lf_GitModifyIcon                            *g:Lf_GitModifyIcon*
-   To customize the icon of modified file in tree panel.
-   Default value is ''.
+    To customize the icon of modified file in tree panel.
+    Default value is ''.
 
 g:Lf_GitRenameIcon                            *g:Lf_GitRenameIcon*
-   To customize the icon of renamed file in tree panel.
-   Default value is ''.
+    To customize the icon of renamed file in tree panel.
+    Default value is ''.
 
 g:Lf_GitNavigationPanelHeight                 *g:Lf_GitNavigationPanelHeight*
-   To customize the height of navigation(tree) panel.
-   Default value is &lines * 0.3.
+    To customize the height of navigation(tree) panel.
+    Default value is &lines * 0.3.
 
 g:Lf_GitNavigationPanelWidth                  *g:Lf_GitNavigationPanelWidth*
-   To customize the width of navigation(tree) panel.
-   Default value is &columns * 0.2.
+    To customize the width of navigation(tree) panel.
+    Default value is &columns * 0.2.
 
+g:Lf_GitContextNum                            *g:Lf_GitContextNum*
+    Show diffs with g:Lf_GitContextNum lines of context.
+    Default value is 6.
+
+g:Lf_GitDiffViewMode                          *g:Lf_GitDiffViewMode*
+    Show diffs in a side by side view or in a unified view.
+    Value can be: 'side_by_side' or 'unified'.
+    Default value is 'side_by_side'.
+
+g:Lf_GitHightlightLineNumber                  *g:Lf_GitHightlightLineNumber*
+    Specify whether to highlight the line number when diff view is in
+    'unified' mode. If enabled, the line numbers of changed lines are also
+    highlighted with 'DiffAdd' or 'DiffDelete'.
+    Default value is 0.
 
 ==============================================================================
 USAGE                                           *leaderf-usage*

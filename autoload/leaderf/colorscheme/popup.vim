@@ -99,6 +99,56 @@ function! s:HighlightSeperator(category) abort
     endfor
 endfunction
 
+function! s:getSynAttr(sid) abort
+    let attr = ""
+    if synIDattr(a:sid, "bold")
+        let attr = "bold"
+    endif
+    if synIDattr(a:sid, "italic")
+        if attr == ""
+            let attr = "italic"
+        else
+            let attr = attr . ",italic"
+        endif
+    endif
+    if synIDattr(a:sid, "standout")
+        if attr == ""
+            let attr = "standout"
+        else
+            let attr = attr . ",standout"
+        endif
+    endif
+    if synIDattr(a:sid, "underline")
+        if attr == ""
+            let attr = "underline"
+        else
+            let attr = attr . ",underline"
+        endif
+    endif
+    if synIDattr(a:sid, "undercurl")
+        if attr == ""
+            let attr = "undercurl"
+        else
+            let attr = attr . ",undercurl"
+        endif
+    endif
+    if synIDattr(a:sid, "strike")
+        if attr == ""
+            let attr = "strike"
+        else
+            let attr = attr . ",strike"
+        endif
+    endif
+    if synIDattr(a:sid, "nocombine")
+        if attr == ""
+            let attr = "nocombine"
+        else
+            let attr = attr . ",nocombine"
+        endif
+    endif
+    return attr
+endfunction
+
 " https://github.com/vim/vim/issues/5227
 " same as `hi link` but filter out the `reverse` attribute
 function! leaderf#colorscheme#popup#link_no_reverse(from, to) abort
@@ -114,16 +164,12 @@ function! leaderf#colorscheme#popup#link_no_reverse(from, to) abort
         let ctermbg = synIDattr(sid, "bg", "cterm")
         let ctermfg = synIDattr(sid, "fg", "cterm")
     endif
-    let bold = synIDattr(sid, "bold") ? "bold" : ""
-    let italic = synIDattr(sid, "italic") ? "italic" : ""
-    if bold == "" && italic == ""
+
+    let attr = s:getSynAttr(sid)
+    if attr == ""
         let attr = "gui=NONE cterm=NONE"
-    elseif bold == "bold" && italic == "italic"
-        let attr = "gui=bold,italic cterm=bold,italic"
-    elseif bold == "bold"
-        let attr = "gui=bold cterm=bold"
     else
-        let attr = "gui=italic cterm=italic"
+        let attr = "gui=" . attr . " cterm=" . attr
     endif
     let hiCmd = printf("hi def %s %s", a:from, attr)
     let hiCmd .= printf(" guifg=%s guibg=%s", guifg == '' ? 'NONE': guifg, guibg == '' ? 'NONE': guibg)
@@ -166,16 +212,11 @@ function! leaderf#colorscheme#popup#link_two(from, bg, fg, no_attr) abort
     if a:no_attr
         let attr = "gui=NONE cterm=NONE"
     else
-        let bold = synIDattr(fg_sid, "bold") ? "bold" : ""
-        let italic = synIDattr(fg_sid, "italic") ? "italic" : ""
-        if bold == "" && italic == ""
+        let attr = s:getSynAttr(sid)
+        if attr == ""
             let attr = "gui=NONE cterm=NONE"
-        elseif bold == "bold" && italic == "italic"
-            let attr = "gui=bold,italic cterm=bold,italic"
-        elseif bold == "bold"
-            let attr = "gui=bold cterm=bold"
         else
-            let attr = "gui=italic cterm=italic"
+            let attr = "gui=" . attr . "cterm=" . attr
         endif
     endif
     let hiCmd = printf("hi def %s %s", a:from, attr)
@@ -227,6 +268,38 @@ function! leaderf#colorscheme#popup#hiMatchMode(category, mode) abort
     exec printf("hi Lf_hl_popup_%s_sep2 ctermfg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
 endfunction
 
+" define Lf_hl_LineNr
+function! s:hiDefineLineNr() abort
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_LineNr", "LineNr")
+    let sid = synIDtrans(hlID("Lf_hl_LineNr"))
+    if synIDattr(sid, "nocombine") == ""
+        let attr = s:getSynAttr(sid)
+        if attr == ""
+            let attr = "nocombine"
+        else
+            let attr = attr . ",nocombine"
+        endif
+
+        let guibg = synIDattr(sid, "bg", "gui")
+        let ctermbg = synIDattr(sid, "bg", "cterm")
+        if guibg == ""
+            let guibg = synIDattr(synIDtrans(hlID("Normal")), "bg", "gui")
+            if guibg == ""
+                let guibg = "NONE"
+            endif
+        endif
+        if ctermbg == ""
+            let ctermbg = synIDattr(synIDtrans(hlID("Normal")), "bg", "cterm")
+            if ctermbg == ""
+                let ctermbg = "NONE"
+            endif
+        endif
+
+        let hiCmd = printf("hi Lf_hl_LineNr cterm=%s ctermbg=%s gui=%s guibg=%s", attr, ctermbg, attr, guibg)
+        exec hiCmd
+    endif
+endfunction
+
 function! s:AddPropType() abort
     silent! highlight def link Lf_hl_cursor Cursor
     silent! call prop_type_add("Lf_hl_popup_cursor", {'highlight': "Lf_hl_cursor", 'priority': 20})
@@ -245,6 +318,11 @@ function! s:AddPropType() abort
     silent! call prop_type_add("Lf_hl_popup_blank", {'highlight': "Lf_hl_popup_blank", 'priority': 20})
     silent! call prop_type_add("Lf_hl_popup_lineInfo", {'highlight': "Lf_hl_popup_lineInfo", 'priority': 20})
     silent! call prop_type_add("Lf_hl_popup_total", {'highlight': "Lf_hl_popup_total", 'priority': 20})
+    silent! call prop_type_add("Lf_hl_gitDiffAdd", {'highlight': "Lf_hl_gitDiffAdd", 'priority': 20})
+    silent! call prop_type_add("Lf_hl_gitDiffDelete", {'highlight': "Lf_hl_gitDiffDelete", 'priority': 20})
+    silent! call prop_type_add("Lf_hl_gitDiffChange", {'highlight': "Lf_hl_gitDiffChange", 'priority': 21})
+    silent! call prop_type_add("Lf_hl_gitDiffText", {'highlight': "Lf_hl_gitDiffText", 'priority': 22})
+    silent! call prop_type_add("Lf_hl_LineNr", {'highlight': "Lf_hl_LineNr", 'priority': 20})
 endfunction
 
 "
@@ -295,6 +373,7 @@ function! leaderf#colorscheme#popup#load(category, name)
         exec 'runtime autoload/leaderf/colorscheme/popup/default.vim'
     endif
 
+    call s:hiDefineLineNr()
     if !has("nvim")
         call s:AddPropType()
     endif

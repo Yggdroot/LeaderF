@@ -168,6 +168,10 @@ if &background ==? 'dark'
     highlight def link Lf_hl_gitGraph4          Lf_hl_gitGraph1
     highlight def link Lf_hl_gitGraphSlash      Constant
     highlight def link Lf_hl_gitBlameDate       Number
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffAdd", "DiffAdd")
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffDelete", "DiffDelete")
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffChange", "DiffChange")
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffText", "DiffText")
 else
     " Lf_hl_popup_inputText is the wincolor of input window
     highlight def Lf_hl_popup_inputText guifg=#525252 guibg=#f4f3d7 gui=NONE ctermfg=239 ctermbg=230 cterm=NONE
@@ -323,4 +327,8 @@ else
     highlight def link Lf_hl_gitGraph4          Lf_hl_gitGraph1
     highlight def link Lf_hl_gitGraphSlash      Constant
     highlight def link Lf_hl_gitBlameDate       Number
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffAdd", "DiffAdd")
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffDelete", "DiffDelete")
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffChange", "DiffChange")
+    call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffText", "DiffText")
 endif

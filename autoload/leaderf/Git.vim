@@ -420,6 +420,16 @@ function! leaderf#Git#Bufhidden(view_id) abort
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.bufHidden()", a:view_id)
 endfunction
 
+function! leaderf#Git#ClearMatches() abort
+    for m in b:Leaderf_matches
+        call matchdelete(m.id)
+    endfor
+endfunction
+
+function! leaderf#Git#SetMatches() abort
+    call setmatches(b:Leaderf_matches)
+endfunction
+
 function! leaderf#Git#CleanupExplorerPage(view_id) abort
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.cleanupExplorerPage()", a:view_id)
@@ -432,6 +442,7 @@ function! leaderf#Git#Commands() abort
                     \ {"Leaderf git diff --side-by-side":          "fuzzy search and view the side-by-side diffs"},
                     \ {"Leaderf git diff --side-by-side --current-file":"view the side-by-side diffs of the current file"},
                     \ {"Leaderf git diff --explorer":              "view the diffs in an explorer tabpage"},
+                    \ {"Leaderf git diff --explorer --unified":    "view the diffs in an explorer tabpage, the diffs is shown in unified view"},
                     \ {"Leaderf git diff --directly":              "view the diffs directly"},
                     \ {"Leaderf git diff --directly --position right":"view the diffs in the right split window"},
                     \ {"Leaderf git diff --cached":                "fuzzy search and view `git diff --cached`"},
@@ -447,6 +458,7 @@ function! leaderf#Git#Commands() abort
                     \ {"Leaderf git log":                          "fuzzy search and view the log"},
                     \ {"Leaderf git log --directly":               "view the logs directly"},
                     \ {"Leaderf git log --explorer":               "fuzzy search and view the log in an explorer tabpage"},
+                    \ {"Leaderf git log --explorer --unified":     "fuzzy search and view the log in an explorer tabpage, the diffs is shown in unified view"},
                     \ {"Leaderf git log --explorer --navigation-position bottom": "specify the position of navigation panel in explorer tabpage"},
                     \ {"Leaderf git log --current-file":           "fuzzy search and view the log of current file"},
                     \ {"Leaderf git log --current-file --explorer":"fuzzy search and view the log of current file in explorer tabpage"},
@@ -487,5 +499,51 @@ endfunction
 function! leaderf#Git#DiffOff(win_ids) abort
     for id in a:win_ids
         call win_execute(id, "diffoff")
+    endfor
+endfunction
+
+function! leaderf#Git#FoldExpr() abort
+    return has_key(b:Leaderf_fold_ranges_dict, v:lnum)
+endfunction
+
+function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num)
+    if len(a:line_num_content) == 0
+        return
+    endif
+
+    let line = a:line_num_content[0]
+    let line_len = strlen(line)
+
+    let hi_line_num = get(g:, 'Lf_GitHightlightLineNumber', 0)
+    let delimiter = get(g:, 'Lf_GitDelimiter', '│')
+    let delimiter_len = len(delimiter)
+    let ns_id = nvim_create_namespace('LeaderF')
+
+    for i in range(len(a:line_num_content))
+        let line = a:line_num_content[i]
+        let last_part = strcharpart(line, line_len - (delimiter_len + 1), 2)
+
+        if last_part[0] == '-'
+            if hi_line_num == 1
+                let hl_group1 = "Lf_hl_gitDiffDelete"
+            else
+                let hl_group1 = "Lf_hl_LineNr"
+            endif
+            let hl_group2 = "Lf_hl_gitDiffDelete"
+            let first_part = strcharpart(line, 0, line_len - (delimiter_len + 1))
+            call nvim_buf_set_extmark(a:buffer_num, ns_id, i, 0, {'virt_text': [[first_part, hl_group1], [last_part, hl_group2]], 'virt_text_pos': 'inline'})
+        elseif last_part[0] == '+'
+            if hi_line_num == 1
+                let hl_group1 = "Lf_hl_gitDiffAdd"
+            else
+                let hl_group1 = "Lf_hl_LineNr"
+            endif
+            let hl_group2 = "Lf_hl_gitDiffAdd"
+            let first_part = strcharpart(line, 0, line_len - (delimiter_len + 1))
+            call nvim_buf_set_extmark(a:buffer_num, ns_id, i, 0, {'virt_text': [[first_part, hl_group1], [last_part, hl_group2]], 'virt_text_pos': 'inline'})
+        else
+            let hl_group = "Lf_hl_LineNr"
+            call nvim_buf_set_extmark(a:buffer_num, ns_id, i, 0, {'virt_text': [[line, hl_group]], 'virt_text_pos': 'inline'})
+        endif
     endfor
 endfunction

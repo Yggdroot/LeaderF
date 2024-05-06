@@ -9,6 +9,9 @@ import os.path
 import json
 import bisect
 import tempfile
+import itertools
+from difflib import Differ, SequenceMatcher
+from itertools import islice
 from functools import partial
 from enum import Enum
 from collections import OrderedDict
@@ -440,9 +443,10 @@ class GitShowCommand(GitCommand):
 
 
 class GitCustomizeCommand(GitCommand):
-    def __init__(self, arguments_dict, cmd, file_type, file_type_cmd):
+    def __init__(self, arguments_dict, cmd, buf_name, file_type, file_type_cmd):
         super(GitCustomizeCommand, self).__init__(arguments_dict, None)
         self._cmd = cmd
+        self._buffer_name = buf_name
         self._file_type = file_type
         self._file_type_cmd = file_type_cmd
 
@@ -772,7 +776,7 @@ class GitBlameView(GitCommandView):
         super(GitBlameView, self).setOptions(winid, bufhidden)
         lfCmd("call win_execute({}, 'setlocal nowrap')".format(winid))
         lfCmd("call win_execute({}, 'setlocal winfixwidth')".format(winid))
-        lfCmd("call win_execute({}, 'setlocal fdc=0')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal foldcolumn=0')".format(winid))
         lfCmd("call win_execute({}, 'setlocal number norelativenumber')".format(winid))
         lfCmd("call win_execute({}, 'setlocal nofoldenable')".format(winid))
         lfCmd("call win_execute({}, 'setlocal signcolumn=no')".format(winid))
@@ -1774,7 +1778,8 @@ class DiffViewPanel(Panel):
 
     def bufHidden(self, view):
         name = view.getBufferName()
-        del self._views[name]
+        if name in self._views:
+            del self._views[name]
         self._hidden_views[name] = view
         lfCmd("call win_execute({}, 'diffoff')".format(view.getWindowId()))
 
@@ -1798,9 +1803,13 @@ class DiffViewPanel(Panel):
     def writeFinished(self, winid):
         lfCmd("call win_execute({}, 'diffthis')".format(winid))
 
-    def getValidWinIDs(self, win_ids):
+    def getValidWinIDs(self, win_ids, win_pos):
         if win_ids == [-1, -1]:
-            lfCmd("wincmd w | leftabove new")
+            if win_pos in ["top", "left"]:
+                lfCmd("wincmd w")
+            else:
+                lfCmd("wincmd W")
+            lfCmd("leftabove new")
             win_ids[1] = int(lfEval("win_getid()"))
             lfCmd("noautocmd leftabove vertical new")
             win_ids[0] = int(lfEval("win_getid()"))
@@ -1814,9 +1823,6 @@ class DiffViewPanel(Panel):
             win_ids[1] = int(lfEval("win_getid()"))
 
         return win_ids
-
-    def hasView(self):
-        return vim.current.tabpage in self._buffer_names
 
     def isAllHidden(self):
         return len(self._views) == 0
@@ -1865,7 +1871,7 @@ class DiffViewPanel(Panel):
                 tabmove()
                 win_ids = [int(lfEval("win_getid({})".format(w.number)))
                            for w in vim.current.tabpage.windows]
-            elif "winid" in kwargs: # --explorer
+            elif "winid" in kwargs: # --explorer create
                 win_ids = [kwargs["winid"], 0]
                 lfCmd("call win_gotoid({})".format(win_ids[0]))
                 lfCmd("noautocmd bel vsp")
@@ -1876,10 +1882,11 @@ class DiffViewPanel(Panel):
                 tabmove()
                 win_ids = [int(lfEval("win_getid({})".format(w.number)))
                            for w in vim.current.tabpage.windows]
-            else:
+            else: # open
                 buffer_names = self._buffer_names[vim.current.tabpage]
                 win_ids = [int(lfEval("bufwinid('{}')".format(escQuote(name)))) for name in buffer_names]
-                win_ids = self.getValidWinIDs(win_ids)
+                win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
+                win_ids = self.getValidWinIDs(win_ids, win_pos)
 
             target_winid = win_ids[1]
             cat_file_cmds = [GitCatFileCommand(arguments_dict, s, self._commit_id) for s in sources]
@@ -1918,6 +1925,439 @@ class DiffViewPanel(Panel):
             lfCmd("call win_execute({}, 'norm! {}G0zbzz')".format(target_winid, kwargs["line_num"]))
         else:
             lfCmd("call win_execute({}, 'norm! gg]c0')".format(target_winid))
+
+
+class UnifiedDiffViewPanel(Panel):
+    def __init__(self, bufhidden_callback=None, commit_id=""):
+        self._commit_id = commit_id
+        self._views = {}
+        self._hidden_views = {}
+        self._bufhidden_cb = bufhidden_callback
+        lfCmd("sign define Leaderf_diff_add linehl=Lf_hl_gitDiffAdd")
+        lfCmd("sign define Leaderf_diff_delete linehl=Lf_hl_gitDiffDelete")
+        lfCmd("sign define Leaderf_diff_change linehl=Lf_hl_gitDiffChange")
+
+    def setCommitId(self, commit_id):
+        self._commit_id = commit_id
+
+    def register(self, view):
+        self._views[view.getBufferName()] = view
+
+    def deregister(self, view):
+        # :bw
+        name = view.getBufferName()
+        if name in self._views:
+            self._views[name].cleanup(wipe=False)
+            del self._views[name]
+
+        if name in self._hidden_views:
+            self._hidden_views[name].cleanup(wipe=False)
+            del self._hidden_views[name]
+
+    def bufHidden(self, view):
+        lfCmd("silent! call leaderf#Git#ClearMatches()")
+        name = view.getBufferName()
+        if name in self._views:
+            del self._views[name]
+        self._hidden_views[name] = view
+
+        if self._bufhidden_cb is not None:
+            self._bufhidden_cb()
+
+    def bufShown(self, buffer_name, winid):
+        view = self._hidden_views[buffer_name]
+        view.setWindowId(winid)
+        del self._hidden_views[buffer_name]
+        self._views[buffer_name] = view
+        lfCmd("call setmatches(b:Leaderf_matches, {})".format(winid))
+
+    def cleanup(self):
+        for view in self._hidden_views.values():
+            view.cleanup()
+        self._hidden_views = {}
+
+    def isAllHidden(self):
+        return len(self._views) == 0
+
+    def signPlace(self, added_line_nums, deleted_line_nums, buf_number):
+        for i in added_line_nums:
+            lfCmd("""call sign_place(0, "LeaderF", "Leaderf_diff_add", %d, {'lnum': %d})"""
+                  % (buf_number, i))
+
+        for i in deleted_line_nums:
+            lfCmd("""call sign_place(0, "LeaderF", "Leaderf_diff_delete", %d, {'lnum': %d})"""
+                  % (buf_number, i))
+
+    def setLineNumberWin(self, line_num_content, buffer_num):
+        if lfEval("has('nvim')") == '1':
+            self.nvim_setLineNumberWin(line_num_content, buffer_num)
+            return
+
+        hi_line_num = int(lfEval("get(g:, 'Lf_GitHightlightLineNumber', 0)"))
+        for i, line in enumerate(line_num_content, 1):
+            if line[-2] == '-':
+                if hi_line_num == 1:
+                    property_type = "Lf_hl_gitDiffDelete"
+                else:
+                    property_type = "Lf_hl_LineNr"
+                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
+                      % (i, property_type, line[:-2], buffer_num))
+                property_type = "Lf_hl_gitDiffDelete"
+                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
+                      % (i, property_type, line[-2:], buffer_num))
+            elif line[-2] == '+':
+                if hi_line_num == 1:
+                    property_type = "Lf_hl_gitDiffAdd"
+                else:
+                    property_type = "Lf_hl_LineNr"
+                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
+                      % (i, property_type, line[:-2], buffer_num))
+                property_type = "Lf_hl_gitDiffAdd"
+                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
+                      % (i, property_type, line[-2:], buffer_num))
+            else:
+                property_type = "Lf_hl_LineNr"
+                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
+                      % (i, property_type, line, buffer_num))
+
+    def nvim_setLineNumberWin(self, line_num_content, buffer_num):
+        lfCmd("call leaderf#Git#SetLineNumberWin({}, {})".format(str(line_num_content),
+                                                                 buffer_num))
+
+    def highlight(self, winid, status, content, line_num, line):
+        i = 0
+        while i < len(line):
+            if line[i] == status or line[i] == '^':
+                c = line[i]
+                beg = i
+                i += 1
+                while i < len(line) and line[i] == c:
+                    i += 1
+                end = i
+                col = lfBytesLen(content[line_num-1][:beg]) + 1
+                length = lfBytesLen(content[line_num - 1][beg : end])
+                if c == '^':
+                    hl_group = "Lf_hl_gitDiffText"
+                elif c == '-':
+                    hl_group = "Lf_hl_gitDiffText"
+                else:
+                    hl_group = "Lf_hl_gitDiffText"
+                lfCmd("""call win_execute({}, "let matchid = matchaddpos('{}', [{}], -100)")"""
+                        .format(winid, hl_group, str([line_num, col, length])))
+            else:
+                i += 1
+
+    def highlightOneline(self, winid, content, minus_beg, plus_beg):
+        sm = SequenceMatcher(None, content[minus_beg-1], content[plus_beg-1])
+        opcodes = sm.get_opcodes()
+        if len(opcodes) == 1 and opcodes[0][0] == "replace":
+            return
+
+        hl_group = "Lf_hl_gitDiffChange"
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''{}'', ''\%{}l'', -101)')"""
+              .format(winid, hl_group, minus_beg))
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''{}'', ''\%{}l'', -101)')"""
+              .format(winid, hl_group, plus_beg))
+
+        for tag, beg1, end1, beg2, end2 in sm.get_opcodes():
+            if tag == "delete":
+                col = lfBytesLen(content[minus_beg-1][:beg1]) + 1
+                length = lfBytesLen(content[minus_beg - 1][beg1 : end1])
+                hl_group = "Lf_hl_gitDiffText"
+                lfCmd("""call win_execute({}, "let matchid = matchaddpos('{}', [{}], -100)")"""
+                      .format(winid, hl_group, str([minus_beg, col, length])))
+            elif tag == "insert":
+                col = lfBytesLen(content[plus_beg-1][:beg2]) + 1
+                length = lfBytesLen(content[plus_beg - 1][beg2 : end2])
+                hl_group = "Lf_hl_gitDiffText"
+                lfCmd("""call win_execute({}, "let matchid = matchaddpos('{}', [{}], -100)")"""
+                      .format(winid, hl_group, str([plus_beg, col, length])))
+            elif tag == "replace":
+                col = lfBytesLen(content[minus_beg-1][:beg1]) + 1
+                length = lfBytesLen(content[minus_beg - 1][beg1 : end1])
+                hl_group = "Lf_hl_gitDiffText"
+                lfCmd("""call win_execute({}, "let matchid = matchaddpos('{}', [{}], -100)")"""
+                      .format(winid, hl_group, str([minus_beg, col, length])))
+
+                col = lfBytesLen(content[plus_beg-1][:beg2]) + 1
+                length = lfBytesLen(content[plus_beg - 1][beg2 : end2])
+                hl_group = "Lf_hl_gitDiffText"
+                lfCmd("""call win_execute({}, "let matchid = matchaddpos('{}', [{}], -100)")"""
+                      .format(winid, hl_group, str([plus_beg, col, length])))
+
+    def highlightDiff(self, winid, content, minus_plus_lines):
+        for minus_beg, minus_end, plus_beg, plus_end in minus_plus_lines:
+            if minus_beg == minus_end and plus_beg == plus_end:
+                self.highlightOneline(winid, content, minus_beg, plus_beg)
+                continue
+
+            minus_text = content[minus_beg - 1 : minus_end]
+            plus_text = content[plus_beg - 1 : plus_end]
+            minus_line_num = minus_beg - 1
+            plus_line_num = plus_beg - 1
+            status = ' '
+            changed_line_num = 0
+            for line in Differ().compare(minus_text, plus_text):
+                if line.startswith('- '):
+                    status = '-'
+                    minus_line_num += 1
+                elif line.startswith('+ '):
+                    status = '+'
+                    plus_line_num += 1
+                elif line.startswith('? '):
+                    if status == '-':
+                        hl_group = "Lf_hl_gitDiffChange"
+                        changed_line_num = plus_line_num + 1
+                        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''{}'', ''\%{}l'', -101)')"""
+                              .format(winid, hl_group, minus_line_num))
+                        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''{}'', ''\%{}l'', -101)')"""
+                              .format(winid, hl_group, plus_line_num + 1))
+                        self.highlight(winid, status, content, minus_line_num, line[2:])
+                    elif status == '+':
+                        hl_group = "Lf_hl_gitDiffChange"
+                        if changed_line_num != plus_line_num:
+                            lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''{}'', ''\%{}l'', -101)')"""
+                                  .format(winid, hl_group, minus_line_num))
+                            lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''{}'', ''\%{}l'', -101)')"""
+                                  .format(winid, hl_group, plus_line_num))
+                        self.highlight(winid, status, content, plus_line_num, line[2:])
+                elif line.startswith('  '):
+                    status = ' '
+                    minus_line_num += 1
+                    plus_line_num += 1
+
+    def setSomeOptions(self):
+        lfCmd("setlocal foldcolumn=1")
+        lfCmd("setlocal signcolumn=no")
+        lfCmd("setlocal nonumber")
+        lfCmd("setlocal conceallevel=0")
+        lfCmd("setlocal nowrap")
+        lfCmd("setlocal foldmethod=expr")
+        lfCmd("setlocal foldexpr=leaderf#Git#FoldExpr()")
+        lfCmd("setlocal foldlevel=0")
+
+    def create(self, arguments_dict, source, **kwargs):
+        """
+        source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        """
+        buf_name = "LeaderF://{}:{}".format(self._commit_id, lfGetFilePath(source))
+        if buf_name in self._views:
+            winid = self._views[buf_name].getWindowId()
+            lfCmd("call win_gotoid({})".format(winid))
+        else:
+            if kwargs.get("mode", '') == 't':
+                lfCmd("noautocmd tabnew")
+                tabmove()
+                winid = int(lfEval("win_getid()"))
+            elif "winid" in kwargs: # --explorer
+                winid = kwargs["winid"]
+            else:
+                win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
+                if win_pos in ["top", "left"]:
+                    lfCmd("wincmd w")
+                else:
+                    lfCmd("wincmd W")
+                winid = int(lfEval("win_getid()"))
+
+            if buf_name not in self._hidden_views:
+                fold_ranges = []
+                minus_plus_lines = []
+                line_num_dict = {}
+                change_start_lines = []
+                delimiter = lfEval("get(g:, 'Lf_GitDelimiter', '│')")
+                if source[0].startswith("0000000"):
+                    git_cmd = "git show {}".format(source[1])
+                    outputs = ParallelExecutor.run(git_cmd)
+                    line_num_width = len(str(len(outputs[0])))
+                    content = outputs[0]
+                    line_num_content = ["{:>{}} +{}".format(i, line_num_width, delimiter)
+                                        for i in range(1, len(content) + 1)]
+                    deleted_line_nums = []
+                    added_line_nums = range(1, len(outputs[0]) + 1)
+                elif source[1].startswith("0000000") and source[2] != 'M':
+                    git_cmd = "git show {}".format(source[0])
+                    outputs = ParallelExecutor.run(git_cmd)
+                    line_num_width = len(str(len(outputs[0])))
+                    content = outputs[0]
+                    line_num_content = ["{:>{}} -{}".format(i, line_num_width, delimiter)
+                                        for i in range(1, len(content) + 1)]
+                    deleted_line_nums = range(1, len(outputs[0]) + 1)
+                    added_line_nums = []
+                else:
+                    if source[1].startswith("0000000"):
+                        extra_options = ""
+                        if "--cached" in arguments_dict:
+                            extra_options += " --cached"
+
+                        if "extra" in arguments_dict:
+                            extra_options += " " + " ".join(arguments_dict["extra"])
+                        git_cmd = "git diff -U999999 --no-color {} -- {}".format(extra_options,
+                                                                                 source[3])
+                    else:
+                        git_cmd = "git diff -U999999 --no-color {} {}".format(source[0], source[1])
+                    outputs = ParallelExecutor.run(git_cmd)
+                    start = 0
+                    for i, line in enumerate(outputs[0], 1):
+                        if line.startswith("@@"):
+                            start = i
+                            break
+
+                    line_num_width = len(str(len(outputs[0]) - start))
+
+                    content = []
+                    line_num_content = []
+                    orig_line_num = 0
+                    line_num = 0
+
+                    minus_beg = 0
+                    minus_end = 0
+                    plus_beg = 0
+                    plus_end = 0
+
+                    change_start = 0
+                    deleted_line_nums = []
+                    added_line_nums = []
+                    context_num = int(lfEval("get(g:, 'Lf_GitContextNum', 6)"))
+                    if context_num < 0:
+                        context_num = 6
+                    beg = 1
+                    for i, line in enumerate(islice(outputs[0], start, None), 1):
+                        content.append(line[1:])
+                        if line.startswith("-"):
+                            # for fold
+                            if beg != 0:
+                                end = i - context_num - 1
+                                if end > beg:
+                                    fold_ranges.append([beg, end])
+                                beg = 0
+
+                            # for highlight
+                            if plus_beg != 0:
+                                plus_end = i - 1
+                                minus_plus_lines.append((minus_beg, minus_end, plus_beg, plus_end))
+                                minus_beg = 0
+                                plus_beg = 0
+
+                            if minus_beg == 0:
+                                minus_beg = i
+
+                            if change_start == 0:
+                                change_start = i
+
+                            deleted_line_nums.append(i)
+                            orig_line_num += 1
+                            line_num_content.append("{:>{}} {:{}} -{}".format(orig_line_num,
+                                                                              line_num_width,
+                                                                              " ",
+                                                                              line_num_width,
+                                                                              delimiter))
+                        elif line.startswith("+"):
+                            # for fold
+                            if beg != 0:
+                                end = i - context_num - 1
+                                if end > beg:
+                                    fold_ranges.append([beg, end])
+                                beg = 0
+
+                            # for highlight
+                            if minus_beg != 0 and plus_beg == 0:
+                                minus_end = i - 1
+                                plus_beg = i
+
+                            if change_start == 0:
+                                change_start = i
+
+                            added_line_nums.append(i)
+                            line_num += 1
+                            line_num_dict[line_num] = i
+                            line_num_content.append("{:{}} {:>{}} +{}".format(" ",
+                                                                              line_num_width,
+                                                                              line_num,
+                                                                              line_num_width,
+                                                                              delimiter))
+                        else:
+                            # for fold
+                            if beg == 0:
+                                beg = i + context_num
+
+                            # for highlight
+                            if plus_beg != 0:
+                                plus_end = i - 1
+                                minus_plus_lines.append((minus_beg, minus_end, plus_beg, plus_end))
+                                plus_beg = 0
+
+                            minus_beg = 0
+
+                            if change_start != 0:
+                                change_start_lines.append(change_start)
+                                change_start = 0
+
+                            orig_line_num += 1
+                            line_num += 1
+                            line_num_dict[line_num] = i
+                            line_num_content.append("{:>{}} {:>{}}  {}".format(orig_line_num,
+                                                                               line_num_width,
+                                                                               line_num,
+                                                                               line_num_width,
+                                                                               delimiter))
+                    else:
+                        # for fold
+                        end = len(outputs[0]) - start
+                        if beg != 0 and end > beg:
+                            fold_ranges.append([beg, end])
+
+                        # for highlight
+                        if plus_beg != 0:
+                            plus_end = end
+                            minus_plus_lines.append((minus_beg, minus_end, plus_beg, plus_end))
+
+                        if change_start != 0:
+                            change_start_lines.append(change_start)
+
+                lfCmd("call win_gotoid({})".format(winid))
+                if not vim.current.buffer.name: # buffer name is empty
+                    lfCmd("setlocal bufhidden=wipe")
+                lfCmd("silent hide edit {}".format(buf_name))
+                lfCmd("augroup Lf_Git_Log | augroup END")
+                lfCmd("autocmd! Lf_Git_Log BufWinEnter <buffer> call leaderf#Git#SetMatches()")
+                ranges = (range(sublist[0], sublist[1] + 1) for sublist in fold_ranges)
+                fold_ranges_dict = {i: 0 for i in itertools.chain.from_iterable(ranges)}
+                lfCmd("let b:Leaderf_fold_ranges_dict = {}".format(str(fold_ranges_dict)))
+                lfCmd("silent! IndentLinesDisable")
+                self.setSomeOptions()
+
+                cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
+                view = GitCommandView(self, cmd)
+                view.line_num_dict = line_num_dict
+                view.change_start_lines = change_start_lines
+                view.create(winid, bufhidden='hide', buf_content=content)
+
+                buffer_num = int(lfEval("winbufnr({})".format(winid)))
+                self.signPlace(added_line_nums, deleted_line_nums, buffer_num)
+
+                self.setLineNumberWin(line_num_content, buffer_num)
+                self.highlightDiff(winid, content, minus_plus_lines)
+                lfCmd("let b:Leaderf_matches = getmatches()")
+            else:
+                lfCmd("call win_gotoid({})".format(winid))
+                if not vim.current.buffer.name: # buffer name is empty
+                    lfCmd("setlocal bufhidden=wipe")
+                lfCmd("silent hide edit {}".format(buf_name))
+                self.bufShown(buf_name, winid)
+                self.setSomeOptions()
+
+        target_line_num = kwargs.get("line_num", None)
+        if target_line_num is not None:
+            target_line_num = int(target_line_num)
+            line_num = self._views[buf_name].line_num_dict.get(target_line_num, target_line_num)
+            lfCmd("call win_execute({}, 'norm! {}G0zbzz')".format(winid, line_num))
+        else:
+            change_start_lines = self._views[buf_name].change_start_lines
+            if len(change_start_lines) == 0:
+                first_change = 1
+            else:
+                first_change = change_start_lines[0]
+            lfCmd("call win_execute({}, 'norm! {}G0zbzz')".format(winid, first_change))
 
 
 class NavigationPanel(Panel):
@@ -2058,15 +2498,14 @@ class ExplorerPage(object):
         self._project_root = project_root
         self._navigation_panel = NavigationPanel(self.afterBufhidden)
         self._diff_view_panel = DiffViewPanel(self.afterBufhidden, commit_id)
+        self._unified_diff_view_panel = UnifiedDiffViewPanel(self.afterBufhidden, commit_id)
         self._commit_id = commit_id
         self._owner = owner
         self._arguments = {}
-        self._win_pos = None
         self.tabpage = None
         self._git_diff_manager = None
 
     def _createWindow(self, win_pos, buffer_name):
-        self._win_pos = win_pos
         if win_pos == 'top':
             height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
             lfCmd("silent! noa keepa keepj abo {}sp {}".format(height, buffer_name))
@@ -2113,6 +2552,12 @@ class ExplorerPage(object):
         lfCmd("call win_execute({}, 'call leaderf#Git#ExplorerMaps({})')"
               .format(winid, id(self)))
 
+    def getDiffViewPanel(self):
+        if self._diff_view_mode == "side_by_side":
+            return self._diff_view_panel
+        else:
+            return self._unified_diff_view_panel
+
     def create(self, arguments_dict, cmd, target_path=None, line_num=None):
         self._arguments = arguments_dict
         lfCmd("noautocmd tabnew")
@@ -2123,7 +2568,14 @@ class ExplorerPage(object):
         win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
         winid = self._createWindow(win_pos, cmd.getBufferName())
 
-        callback = partial(self._diff_view_panel.create,
+        if "-u" in arguments_dict:
+            self._diff_view_mode = "unified"
+        elif "-s" in arguments_dict:
+            self._diff_view_mode = "side_by_side"
+        else:
+            self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'side_by_side')")
+
+        callback = partial(self.getDiffViewPanel().create,
                            arguments_dict,
                            winid=diff_view_winid,
                            line_num=line_num)
@@ -2131,35 +2583,30 @@ class ExplorerPage(object):
         self.defineMaps(self._navigation_panel.getWindowId())
 
     def afterBufhidden(self):
-        if self._navigation_panel.isHidden() and self._diff_view_panel.isAllHidden():
+        if (self._navigation_panel.isHidden() and self._diff_view_panel.isAllHidden()
+            and self._unified_diff_view_panel.isAllHidden()):
             lfCmd("call timer_start(1, function('leaderf#Git#Cleanup', [{}]))".format(id(self)))
 
     def cleanup(self):
         self._navigation_panel.cleanup()
         self._diff_view_panel.cleanup()
+        self._unified_diff_view_panel.cleanup()
 
     def open(self, recursive, **kwargs):
         source = self._navigation_panel.tree_view.expandOrCollapseFolder(recursive)
         if source is not None:
             if kwargs.get("mode", '') == 't':
                 tabpage_count = len(vim.tabpages)
-                self._diff_view_panel.create(self._arguments, source, mode='t')
+                self.getDiffViewPanel().create(self._arguments, source, **kwargs)
                 if len(vim.tabpages) > tabpage_count:
                     tabmove()
             elif len(vim.current.tabpage.windows) == 1:
                 win_pos = self._arguments.get("--navigation-position", ["left"])[0]
                 diff_view_winid = self.splitWindow(win_pos)
-                self._diff_view_panel.create(self._arguments, source, winid=diff_view_winid)
-            elif not self._diff_view_panel.hasView():
-                if self._win_pos in ["top", "left"]:
-                    lfCmd("wincmd w")
-                else:
-                    lfCmd("wincmd W")
-                lfCmd("noautocmd leftabove sp")
-                diff_view_winid = int(lfEval("win_getid()"))
-                self._diff_view_panel.create(self._arguments, source, winid=diff_view_winid)
+                kwargs["winid"] = diff_view_winid
+                self.getDiffViewPanel().create(self._arguments, source, **kwargs)
             else:
-                self._diff_view_panel.create(self._arguments, source, **kwargs)
+                self.getDiffViewPanel().create(self._arguments, source, **kwargs)
 
             if kwargs.get("preview", False) == True:
                 lfCmd("call win_gotoid({})".format(self._navigation_panel.getWindowId()))
