@@ -287,6 +287,9 @@ class GitCatFileCommand(GitCommand):
         """
         source is a tuple like (b90f76fc1, R099, src/version.c)
         """
+        if source[1].startswith("C"):
+            return "{}:{}:{}:{}".format(commit_id[:7], source[0][:9], "C", source[2])
+
         return "{}:{}:{}".format(commit_id[:7], source[0][:9], source[2])
 
     def buildCommandAndBufferName(self):
