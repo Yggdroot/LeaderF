@@ -17,6 +17,11 @@ from functools import wraps
 
 lfCmd = vim.command
 lfEval = vim.eval
+# https://github.com/neovim/neovim/issues/8336
+if lfEval("has('nvim')") == '1':
+    lfChdir = vim.chdir
+else:
+    lfChdir = os.chdir
 
 lf_encoding = lfEval("&encoding")
 

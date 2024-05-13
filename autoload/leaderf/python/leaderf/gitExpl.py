@@ -449,7 +449,19 @@ class GitCustomizeCommand(GitCommand):
 
 class ParallelExecutor(object):
     @staticmethod
-    def run(*cmds, format_line=None):
+    def run(*cmds, format_line=None, directory=None):
+        try:
+            if directory is not None:
+                orig_cwd = lfGetCwd()
+                lfChdir(directory)
+
+            return ParallelExecutor._run(*cmds, format_line=format_line)
+        finally:
+            if directory is not None:
+                lfChdir(orig_cwd)
+
+    @staticmethod
+    def _run(*cmds, format_line=None):
         outputs = [[] for _ in range(len(cmds))]
         stop_thread = False
 
@@ -2245,12 +2257,7 @@ class GitExplManager(Manager):
         self._orig_cwd = lfGetCwd()
         self._project_root = nearestAncestor([".git"], self._orig_cwd)
         if self._project_root: # there exists a root marker in nearest ancestor path
-            # https://github.com/neovim/neovim/issues/8336
-            if lfEval("has('nvim')") == '1':
-                chdir = vim.chdir
-            else:
-                chdir = os.chdir
-            chdir(self._project_root)
+            lfChdir(self._project_root)
         else:
             lfPrintError("Not a git repository (or any of the parent directories): .git")
             return False
@@ -2442,7 +2449,7 @@ class GitDiffExplManager(GitExplManager):
                 cmd = "git diff {} --raw -- {}".format(" ".join(self._arguments["extra"]),
                                                  self._arguments["current_file"])
 
-                outputs = ParallelExecutor.run(cmd)
+                outputs = ParallelExecutor.run(cmd, directory=self._project_root)
                 if len(outputs[0]) == 0:
                     lfPrintError("No diffs!")
                     return
@@ -2468,7 +2475,7 @@ class GitDiffExplManager(GitExplManager):
             lfCmd("setlocal noswapfile")
             lfCmd("setlocal nospell")
 
-            outputs = ParallelExecutor.run(cmd)
+            outputs = ParallelExecutor.run(cmd, directory=self._project_root)
             vim.current.buffer[:] = outputs[0]
             lfCmd("setlocal nomodifiable")
 
@@ -2482,7 +2489,7 @@ class GitDiffExplManager(GitExplManager):
 
             cmd = "git diff {} --cached --raw -- {}".format(extra,
                                                             self._arguments["current_file"])
-            outputs = ParallelExecutor.run(cmd)
+            outputs = ParallelExecutor.run(cmd, directory=self._project_root)
             if len(outputs[0]) > 0:
                 _, source = TreeView.generateSource(outputs[0][0])
                 self._diff_view_panel.create(self._arguments, source, **{"mode": 't'})
@@ -2760,7 +2767,7 @@ class GitLogExplManager(GitExplManager):
                 self._diff_view_panel.setCommitId(commit_id)
                 cmd = "git log -1 --follow --pretty= --no-color --raw {} -- {}".format(commit_id,
                                                                                        file_name)
-                outputs = ParallelExecutor.run(cmd)
+                outputs = ParallelExecutor.run(cmd, directory=self._project_root)
                 if len(outputs[0]) > 0:
                     _, source = TreeView.generateSource(outputs[0][0])
                     self._diff_view_panel.create(self._arguments, source, **kwargs)
@@ -2843,7 +2850,7 @@ class GitBlameExplManager(GitExplManager):
             # 5a0cd5103deba164a6fb33a5a3f67fb3a5dcf378
             #
             # M       tui.py
-            outputs = ParallelExecutor.run(cmd)
+            outputs = ParallelExecutor.run(cmd, directory=self._project_root)
             name_stat = outputs[0][2]
             if name_stat.startswith("A") or name_stat.startswith("C"):
                 lfPrintError("First commit of current file!")
@@ -2878,7 +2885,7 @@ class GitBlameExplManager(GitExplManager):
                 cmd = [GitBlameCommand.buildCommand(self._arguments, parent_commit_id, orig_name),
                        "git show {}:{}".format(parent_commit_id, orig_name)
                        ]
-                outputs = ParallelExecutor.run(*cmd)
+                outputs = ParallelExecutor.run(*cmd, directory=self._project_root)
                 line_num_width = len(str(len(outputs[1]))) + 1
                 blame_buffer = [BlamePanel.formatLine(self._arguments, line_num_width, line)
                                 for line in outputs[0]
@@ -3085,7 +3092,7 @@ class GitBlameExplManager(GitExplManager):
                 lfCmd("call nvim_win_close(b:preview_winid, 1)")
 
         cmd = GitShowCommand(self._arguments, commit_id, file_name)
-        outputs = ParallelExecutor.run(cmd.getCommand())
+        outputs = ParallelExecutor.run(cmd.getCommand(), directory=self._project_root)
         self._preview_panel.create(cmd, self.generateConfig(), outputs[0])
         preview_winid = self._preview_panel.getPreviewWinId()
         self._setWinOptions(preview_winid)
