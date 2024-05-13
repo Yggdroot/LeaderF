@@ -765,6 +765,7 @@ class GitBlameView(GitCommandView):
         lfCmd("call win_execute({}, 'setlocal nofoldenable')".format(winid))
         lfCmd("call win_execute({}, 'setlocal signcolumn=no')".format(winid))
         lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal scrolloff=0')".format(winid))
 
     def saveAlternateWinOptions(self, winid, buffer_num):
         self._alternate_winid = winid
