@@ -1980,13 +1980,8 @@ class UnifiedDiffViewPanel(Panel):
         return len(self._views) == 0
 
     def signPlace(self, added_line_nums, deleted_line_nums, buf_number):
-        for i in added_line_nums:
-            lfCmd("""call sign_place(0, "LeaderF", "Leaderf_diff_add", %d, {'lnum': %d})"""
-                  % (buf_number, i))
-
-        for i in deleted_line_nums:
-            lfCmd("""call sign_place(0, "LeaderF", "Leaderf_diff_delete", %d, {'lnum': %d})"""
-                  % (buf_number, i))
+        lfCmd("call leaderf#Git#SignPlace({}, {}, {})"
+              .format(str(added_line_nums), str(deleted_line_nums), buf_number))
 
     def setLineNumberWin(self, line_num_content, buffer_num):
         if lfEval("has('nvim')") == '1':
@@ -2195,6 +2190,7 @@ class UnifiedDiffViewPanel(Panel):
                                                                                  source[3])
                     else:
                         git_cmd = "git diff -U999999 --no-color {} {}".format(source[0], source[1])
+
                     outputs = ParallelExecutor.run(git_cmd)
                     start = 0
                     for i, line in enumerate(outputs[0], 1):

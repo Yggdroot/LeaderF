@@ -506,7 +506,7 @@ function! leaderf#Git#FoldExpr() abort
     return has_key(b:Leaderf_fold_ranges_dict, v:lnum)
 endfunction
 
-function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num)
+function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
     if len(a:line_num_content) == 0
         return
     endif
@@ -545,5 +545,16 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num)
             let hl_group = "Lf_hl_LineNr"
             call nvim_buf_set_extmark(a:buffer_num, ns_id, i, 0, {'virt_text': [[line, hl_group]], 'virt_text_pos': 'inline'})
         endif
+    endfor
+endfunction
+
+
+function! leaderf#Git#SignPlace(added_line_nums, deleted_line_nums, buf_number) abort
+    for i in a:added_line_nums
+        call sign_place(0, "LeaderF", "Leaderf_diff_add", a:buf_number, {'lnum': i})
+    endfor
+
+    for i in a:deleted_line_nums
+        call sign_place(0, "LeaderF", "Leaderf_diff_delete", a:buf_number, {'lnum': i})
     endfor
 endfunction
