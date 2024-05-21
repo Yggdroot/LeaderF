@@ -1185,6 +1185,16 @@ g:Lf_GitHightlightLineNumber                  *g:Lf_GitHightlightLineNumber*
     highlighted with 'DiffAdd' or 'DiffDelete'.
     Default value is 0.
 
+g:Lf_GitWorkingDirectoryMode                  *g:Lf_GitWorkingDirectoryMode*
+    Specify the working directory when launch Leaderf git command. The value
+    can be:
+    c - the nearest ancestor directory of current working directory that
+        contains '.git'.
+    f - the nearest ancestor directory of current file that contains '.git'.
+        Fall back to 'c' if no such ancestor directory found.
+
+    Default value is 'f'.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

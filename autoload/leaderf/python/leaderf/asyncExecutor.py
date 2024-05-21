@@ -35,13 +35,15 @@ class AsyncExecutor(object):
         finally:
             queue.put(None)
 
-    def execute(self, cmd, encoding=None, cleanup=None, env=None, raise_except=True, format_line=None):
+    def execute(self, cmd, encoding=None, cleanup=None, env=None,
+                raise_except=True, format_line=None, cwd=None):
         if os.name == 'nt':
             self._process = subprocess.Popen(cmd, bufsize=-1,
                                              stdin=lfDEVNULL,
                                              stdout=subprocess.PIPE,
                                              stderr=subprocess.PIPE,
                                              shell=True,
+                                             cwd=cwd,
                                              env=env,
                                              universal_newlines=False)
         else:
@@ -51,6 +53,7 @@ class AsyncExecutor(object):
                                              stderr=subprocess.PIPE,
                                              preexec_fn=os.setsid,
                                              shell=True,
+                                             cwd=cwd,
                                              env=env,
                                              universal_newlines=False)
 

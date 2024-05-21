@@ -217,7 +217,7 @@ endfunction
 function! leaderf#Git#CloseFloatWinMouse() abort
     if exists("b:blame_cursorline") && exists("*getmousepos")
         let pos = getmousepos()
-        if pos.winid == b:blame_winid && b:blame_cursorline != pos["line"]
+        if pos.winid == b:lf_blame_winid && b:blame_cursorline != pos["line"]
             if exists("b:commit_msg_winid") && winbufnr(b:commit_msg_winid) != -1
                 call nvim_win_close(b:commit_msg_winid, 1)
             endif
@@ -225,9 +225,9 @@ function! leaderf#Git#CloseFloatWinMouse() abort
     endif
     if exists("b:blame_preview_cursorline") && exists("*getmousepos")
         let pos = getmousepos()
-        if pos.winid == b:blame_winid && b:blame_preview_cursorline != pos["line"]
-            if exists("b:preview_winid") && winbufnr(b:preview_winid) != -1
-                call nvim_win_close(b:preview_winid, 1)
+        if pos.winid == b:lf_blame_winid && b:blame_preview_cursorline != pos["line"]
+            if exists("b:lf_preview_winid") && winbufnr(b:lf_preview_winid) != -1
+                call nvim_win_close(b:lf_preview_winid, 1)
             endif
         endif
     endif
@@ -235,7 +235,7 @@ endfunction
 
 function! leaderf#Git#ShowCommitMessage(message) abort
     let b:blame_cursorline = line('.')
-    let b:blame_winid = win_getid()
+    let b:lf_blame_winid = win_getid()
     if has("nvim")
         let borderchars = [
                     \ [g:Lf_PopupBorders[4],  "Lf_hl_popupBorder"],
@@ -370,8 +370,8 @@ function! leaderf#Git#CloseFloatWin() abort
     if exists("b:commit_msg_winid") && winbufnr(b:commit_msg_winid) != -1
         call nvim_win_close(b:commit_msg_winid, 1)
     endif
-    if exists("b:preview_winid") && winbufnr(b:preview_winid) != -1
-        call nvim_win_close(b:preview_winid, 1)
+    if exists("b:lf_preview_winid") && winbufnr(b:lf_preview_winid) != -1
+        call nvim_win_close(b:lf_preview_winid, 1)
     endif
 endfunction
 
