@@ -1288,6 +1288,9 @@ USAGE                                           *leaderf-usage*
     Show the diffs of current file in a vertical split window.
     It is a shortcut of `:Leaderf git diff --current-file --side-by-side`
 
+:LeaderfGitNavigationOpen                       *LeaderfGitNavigationOpen*
+    Open the navigation panel.
+
 Some handy maps for `Leaderf rg`:
 
 | Map                                        | Description

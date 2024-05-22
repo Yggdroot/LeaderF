@@ -430,11 +430,6 @@ function! leaderf#Git#SetMatches() abort
     call setmatches(b:Leaderf_matches)
 endfunction
 
-function! leaderf#Git#CleanupExplorerPage(view_id) abort
-    exec g:Lf_py "import ctypes"
-    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.cleanupExplorerPage()", a:view_id)
-endfunction
-
 function! leaderf#Git#Commands() abort
     if !exists("g:Lf_GitCommands")
         let g:Lf_GitCommands = [
@@ -594,4 +589,13 @@ function! leaderf#Git#NextChange() abort
     if high < size
         exec printf("norm! %dG0", b:lf_change_start_lines[high])
     endif
+endfunction
+
+function! leaderf#Git#ExplorerPageDisplay() abort
+    if !exists("b:lf_explorer_page_id") || b:lf_explorer_page_id == 0
+        return
+    endif
+
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.openNavigationPanel()", b:lf_explorer_page_id)
 endfunction

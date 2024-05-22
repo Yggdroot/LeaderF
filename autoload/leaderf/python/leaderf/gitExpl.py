@@ -531,9 +531,14 @@ class GitCommandView(object):
     def getBufferName(self):
         return self._cmd.getBufferName()
 
+    def getBufferNum(self):
+        if self._buffer is None:
+            return -1
+        else:
+            return self._buffer.number
+
     def getWindowId(self):
-        if lfEval("win_id2tabwin({})".format(self._window_id)) == ['0', '0']:
-            self._window_id = int(lfEval("bufwinid('{}')".format(escQuote(self._buffer.name))))
+        self._window_id = int(lfEval("bufwinid('{}')".format(escQuote(self._buffer.name))))
         return self._window_id
 
     def setWindowId(self, winid):
@@ -1928,6 +1933,8 @@ class DiffViewPanel(Panel):
                 lfCmd("call win_execute({}, 'diffoff | hide edit {}')".format(winid, cmd.getBufferName()))
                 lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(winid))
                 lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
+                lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
+                      .format(winid, kwargs.get("explorer_page_id", 0)))
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
@@ -2358,6 +2365,7 @@ class UnifiedDiffViewPanel(Panel):
                 self.highlightDiff(winid, content, minus_plus_lines)
                 lfCmd("let b:Leaderf_matches = getmatches()")
                 lfCmd("let b:lf_change_start_lines = {}".format(str(change_start_lines)))
+                lfCmd("let b:lf_explorer_page_id = {}".format(kwargs.get("explorer_page_id", 0)))
                 blame_map = lfEval("g:Lf_GitKeyMap")
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#PreviousChange()<CR>".format(blame_map["previous_change"]))
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange()<CR>".format(blame_map["next_change"]))
@@ -2388,18 +2396,16 @@ class NavigationPanel(Panel):
         super(NavigationPanel, self).__init__()
         self.tree_view = None
         self._bufhidden_cb = bufhidden_callback
-        self._is_hidden = False
 
     def register(self, view):
         self.tree_view = view
 
     def bufHidden(self, view):
-        self._is_hidden = True
         if self._bufhidden_cb is not None:
             self._bufhidden_cb()
 
     def isHidden(self):
-        return self._is_hidden
+        return lfEval("len(win_findbuf({})) == 0".format(self.tree_view.getBufferNum())) == "1"
 
     def cleanup(self):
         if self.tree_view is not None:
@@ -2408,6 +2414,7 @@ class NavigationPanel(Panel):
 
     def create(self, cmd, winid, project_root, target_path, callback):
         TreeView(self, cmd, project_root, target_path, callback).create(winid, bufhidden="hide")
+        lfCmd("call win_execute({}, 'let b:lf_navigation_matches = getmatches()')".format(winid))
 
     def writeBuffer(self):
         # called in idle
@@ -2528,13 +2535,43 @@ class ExplorerPage(object):
     def __init__(self, project_root, commit_id, owner):
         self._project_root = project_root
         self._navigation_panel = NavigationPanel(self.afterBufhidden)
+        self._navigation_buffer_name = None
         self._diff_view_panel = DiffViewPanel(self.afterBufhidden, commit_id)
         self._unified_diff_view_panel = UnifiedDiffViewPanel(self.afterBufhidden, commit_id)
-        self._commit_id = commit_id
+        self.commit_id = commit_id
         self._owner = owner
         self._arguments = {}
         self.tabpage = None
         self._git_diff_manager = None
+
+    def openNavigationPanel(self):
+        buffer_name = self._navigation_buffer_name
+        navigation_winid = int(lfEval("bufwinid('{}')".format(escQuote(buffer_name))))
+        if navigation_winid != -1:
+            lfCmd("call win_gotoid({})".format(navigation_winid))
+            return
+
+        current_file_path = vim.current.buffer.name.rsplit(':', 1)[1]
+        win_pos = self._arguments.get("--navigation-position", ["left"])[0]
+        if win_pos == 'top':
+            height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
+            lfCmd("silent! noa keepa keepj topleft {}sp {}".format(height, buffer_name))
+        elif win_pos == 'bottom':
+            height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
+            lfCmd("silent! noa keepa keepj botright {}sp {}".format(height, buffer_name))
+        elif win_pos == 'left':
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
+        elif win_pos == 'right':
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            lfCmd("silent! noa keepa keepj botright {}vsp {}".format(width, buffer_name))
+        else: # left
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
+
+        lfCmd("call setmatches(b:lf_navigation_matches)")
+        lfCmd("setlocal winfixwidth | wincmd =")
+        self._navigation_panel.tree_view.locateFile(current_file_path)
 
     def _createWindow(self, win_pos, buffer_name):
         if win_pos == 'top':
@@ -2597,7 +2634,8 @@ class ExplorerPage(object):
         diff_view_winid = int(lfEval("win_getid()"))
 
         win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
-        winid = self._createWindow(win_pos, cmd.getBufferName())
+        self._navigation_buffer_name = cmd.getBufferName()
+        winid = self._createWindow(win_pos, self._navigation_buffer_name)
 
         if "-u" in arguments_dict:
             self._diff_view_mode = "unified"
@@ -2610,7 +2648,8 @@ class ExplorerPage(object):
                            arguments_dict,
                            winid=diff_view_winid,
                            line_num=line_num,
-                           project_root=self._project_root)
+                           project_root=self._project_root,
+                           explorer_page_id=id(self))
         self._navigation_panel.create(cmd, winid, self._project_root, target_path, callback)
         self.defineMaps(self._navigation_panel.getWindowId())
 
@@ -2623,9 +2662,11 @@ class ExplorerPage(object):
         self._navigation_panel.cleanup()
         self._diff_view_panel.cleanup()
         self._unified_diff_view_panel.cleanup()
+        self._owner.cleanupExplorerPage(self)
 
     def open(self, recursive, **kwargs):
         kwargs["project_root"] = self._project_root
+        kwargs["explorer_page_id"] = id(self)
         source = self._navigation_panel.tree_view.expandOrCollapseFolder(recursive)
         if source is not None:
             if kwargs.get("mode", '') == 't':
@@ -2656,7 +2697,7 @@ class ExplorerPage(object):
         kwargs = {}
         kwargs["arguments"] = {
                 "owner": self._owner,
-                "commit_id": self._commit_id,
+                "commit_id": self.commit_id,
                 "parent": self._navigation_panel.tree_view.getCurrentParent(),
                 "content": self._navigation_panel.tree_view.getFileList(),
                 "accept": self.locateFile
@@ -2669,7 +2710,7 @@ class ExplorerPage(object):
 
     @ensureWorkingDirectory
     def showCommitMessage(self):
-        cmd = "git show {} -s --decorate --pretty=fuller".format(self._commit_id)
+        cmd = "git show {} -s --decorate --pretty=fuller".format(self.commit_id)
         lfCmd("""call leaderf#Git#ShowCommitMessage(systemlist('{}'))""".format(cmd))
 
 
@@ -3017,10 +3058,6 @@ class GitDiffExplManager(GitExplManager):
             self._result_panel.create(self.createGitCommand(self._arguments, None))
             self._restoreOrigCwd()
         elif "--explorer" in self._arguments:
-            lfCmd("augroup Lf_Git_Diff | augroup END")
-            lfCmd("autocmd! Lf_Git_Diff TabClosed * call leaderf#Git#CleanupExplorerPage({})"
-                  .format(id(self)))
-
             uid = str(int(time.time()))[-7:]
             page = ExplorerPage(self._project_root, uid, self)
             page.create(arguments_dict, GitDiffExplCommand(arguments_dict, uid))
@@ -3093,11 +3130,8 @@ class GitDiffExplManager(GitExplManager):
     def cleanup(self):
         self._diff_view_panel.cleanup()
 
-    def cleanupExplorerPage(self):
-        for page in self._pages:
-            if page.tabpage not in vim.tabpages:
-                self._pages.discard(page)
-                return
+    def cleanupExplorerPage(self, page):
+        self._pages.discard(page)
 
 
 class GitLogExplManager(GitExplManager):
@@ -3235,10 +3269,6 @@ class GitLogExplManager(GitExplManager):
         if commit_id in self._pages:
             vim.current.tabpage = self._pages[commit_id].tabpage
         else:
-            lfCmd("augroup Lf_Git_Log | augroup END")
-            lfCmd("autocmd! Lf_Git_Log TabClosed * call leaderf#Git#CleanupExplorerPage({})"
-                  .format(id(self)))
-
             self._pages[commit_id] = ExplorerPage(self._project_root, commit_id, self)
             self._pages[commit_id].create(self._arguments,
                                           GitLogExplCommand(self._arguments, commit_id),
@@ -3287,11 +3317,8 @@ class GitLogExplManager(GitExplManager):
         if self._diff_view_panel is not None:
             self._diff_view_panel.cleanup()
 
-    def cleanupExplorerPage(self):
-        for k, v in self._pages.items():
-            if v.tabpage not in vim.tabpages:
-                del self._pages[k]
-                return
+    def cleanupExplorerPage(self, page):
+        del self._pages[page.commit_id]
 
 
 class GitBlameExplManager(GitExplManager):
@@ -3498,10 +3525,6 @@ class GitBlameExplManager(GitExplManager):
             vim.current.tabpage = self._pages[commit_id].tabpage
             self._pages[commit_id].locateFile(file_name, line_num, False)
         else:
-            lfCmd("augroup Lf_Git_Blame | augroup END")
-            lfCmd("autocmd! Lf_Git_Blame TabClosed * call leaderf#Git#CleanupExplorerPage({})"
-                  .format(id(self)))
-
             project_root = lfEval("b:lf_blame_project_root")
             self._pages[commit_id] = ExplorerPage(project_root, commit_id, self)
             self._pages[commit_id].create(self._arguments,
@@ -3676,11 +3699,8 @@ class GitBlameExplManager(GitExplManager):
 
         self._restoreOrigCwd()
 
-    def cleanupExplorerPage(self):
-        for k, v in self._pages.items():
-            if v.tabpage not in vim.tabpages:
-                del self._pages[k]
-                return
+    def cleanupExplorerPage(self, page):
+        del self._pages[page.commit_id]
 
 
 #*****************************************************
