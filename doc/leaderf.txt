@@ -1195,6 +1195,17 @@ g:Lf_GitWorkingDirectoryMode                  *g:Lf_GitWorkingDirectoryMode*
 
     Default value is 'f'.
 
+g:Lf_GitKeyMap                                *g:Lf_GitKeyMap*
+    Customize the shortcut keys.
+    Default value is : >
+    let g:Lf_GitKeyMap = {
+            \ 'previous_change': '[c',
+            \ 'next_change': ']c',
+            \ }
+<
+    it means you can use [c to jump backwards to the previous start of a change
+    and use ]c to jump forwards to the next start of a change.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

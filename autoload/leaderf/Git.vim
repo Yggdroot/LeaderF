@@ -223,9 +223,9 @@ function! leaderf#Git#CloseFloatWinMouse() abort
             endif
         endif
     endif
-    if exists("b:blame_preview_cursorline") && exists("*getmousepos")
+    if exists("b:lf_blame_preview_cursorline") && exists("*getmousepos")
         let pos = getmousepos()
-        if pos.winid == b:lf_blame_winid && b:blame_preview_cursorline != pos["line"]
+        if pos.winid == b:lf_blame_winid && b:lf_blame_preview_cursorline != pos["line"]
             if exists("b:lf_preview_winid") && winbufnr(b:lf_preview_winid) != -1
                 call nvim_win_close(b:lf_preview_winid, 1)
             endif
@@ -557,4 +557,41 @@ function! leaderf#Git#SignPlace(added_line_nums, deleted_line_nums, buf_number) 
     for i in a:deleted_line_nums
         call sign_place(0, "LeaderF", "Leaderf_diff_delete", a:buf_number, {'lnum': i})
     endfor
+endfunction
+
+function! leaderf#Git#PreviousChange() abort
+    let n = line('.')
+    let low = 0
+    let high = len(b:lf_change_start_lines)
+    while low < high
+        let mid = (low + high)/2
+        if b:lf_change_start_lines[mid] < n
+            let low = mid + 1
+        else
+            let high = mid
+        endif
+    endwhile
+
+    if low - 1 >= 0
+        exec printf("norm! %dG0", b:lf_change_start_lines[low - 1])
+    endif
+endfunction
+
+function! leaderf#Git#NextChange() abort
+    let n = line('.')
+    let low = 0
+    let size = len(b:lf_change_start_lines)
+    let high = size
+    while low < high
+        let mid = (low + high)/2
+        if b:lf_change_start_lines[mid] <= n
+            let low = mid + 1
+        else
+            let high = mid
+        endif
+    endwhile
+
+    if high < size
+        exec printf("norm! %dG0", b:lf_change_start_lines[high])
+    endif
 endfunction

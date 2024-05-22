@@ -2357,6 +2357,10 @@ class UnifiedDiffViewPanel(Panel):
                 self.setLineNumberWin(line_num_content, buffer_num)
                 self.highlightDiff(winid, content, minus_plus_lines)
                 lfCmd("let b:Leaderf_matches = getmatches()")
+                lfCmd("let b:lf_change_start_lines = {}".format(str(change_start_lines)))
+                blame_map = lfEval("g:Lf_GitKeyMap")
+                lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#PreviousChange()<CR>".format(blame_map["previous_change"]))
+                lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange()<CR>".format(blame_map["next_change"]))
             else:
                 lfCmd("call win_gotoid({})".format(winid))
                 if not vim.current.buffer.name: # buffer name is empty
@@ -3589,7 +3593,7 @@ class GitBlameExplManager(GitExplManager):
         line_num = int(line_num)
 
         if lfEval("has('nvim')") == '1':
-            lfCmd("let b:blame_preview_cursorline = line('.')")
+            lfCmd("let b:lf_blame_preview_cursorline = line('.')")
             lfCmd("let b:lf_blame_winid = win_getid()")
             if lfEval("exists('b:lf_preview_winid') && winbufnr(b:lf_preview_winid) != -1") == '1':
                 lfCmd("call nvim_win_close(b:lf_preview_winid, 1)")

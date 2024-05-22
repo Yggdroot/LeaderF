@@ -147,6 +147,10 @@ call s:InitVar('g:Lf_GitFolderIcons', {
             \ 'open': '',
             \ 'closed': '',
             \})
+call s:InitVar('g:Lf_GitKeyMap', {
+            \ 'previous_change': '[c',
+            \ 'next_change': ']c',
+            \})
 
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
