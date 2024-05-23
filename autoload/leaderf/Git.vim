@@ -120,6 +120,9 @@ let s:help = {
             \   "<C-K>:         go to the previous sibling of the current folder",
             \   "(:             go to the start of the current indent level",
             \   "):             go to the end of the current indent level",
+            \   "q:             quit the navigation window",
+            \   ":LeaderfGitNavigationOpen",
+            \   "               open the navigation window",
             \ ],
             \ "blame": [
             \   "<F1>:          toggle the help",
@@ -190,7 +193,9 @@ function! leaderf#Git#ShowHelp(type) abort
         let id = nvim_open_win(scratch_buffer, 1, options)
         call nvim_win_set_option(id, 'winhighlight', 'Normal:Lf_hl_popup_window')
         call win_execute(id, 'call matchadd("Special", ''^.\{-}\(:\)\@='')')
-        call win_execute(id, 'call matchadd("Comment", ''\(^.\{-}:\s*\)\@<=.*'')')
+        call win_execute(id, 'call matchadd("Special", ''^:\w\+'')')
+        call win_execute(id, 'call matchadd("Comment", ''\(^.\{-1,}:\s*\)\@<=.*'')')
+        call win_execute(id, 'call matchadd("Comment", ''\(^\s\+\)\@<=.*'')')
         call win_execute(id, 'nnoremap <buffer> <silent> <ESC> <C-W>c')
         call win_execute(id, 'nnoremap <buffer> <silent> <F1> <C-W>c')
     else
@@ -209,7 +214,9 @@ function! leaderf#Git#ShowHelp(type) abort
         let id = popup_create(s:help[a:type], options)
         call win_execute(id, 'setlocal wincolor=Lf_hl_popup_window')
         call win_execute(id, 'call matchadd("Special", ''^.\{-}\(:\)\@='')')
-        call win_execute(id, 'call matchadd("Comment", ''\(^.\{-}:\s*\)\@<=.*'')')
+        call win_execute(id, 'call matchadd("Special", ''^:\w\+'')')
+        call win_execute(id, 'call matchadd("Comment", ''\(^.\{-1,}:\s*\)\@<=.*'')')
+        call win_execute(id, 'call matchadd("Comment", ''\(^\s\+\)\@<=.*'')')
     endif
 endfunction
 
