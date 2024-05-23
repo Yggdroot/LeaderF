@@ -538,7 +538,13 @@ class GitCommandView(object):
             return self._buffer.number
 
     def getWindowId(self):
-        self._window_id = int(lfEval("bufwinid('{}')".format(escQuote(self._buffer.name))))
+        self._window_id = int(lfEval("bufwinid({})".format(self._buffer.number)))
+        # window not exist in current tabpage
+        if self._window_id == -1:
+            ids = lfEval("win_findbuf({})".format(self._buffer.number))
+            if len(ids) > 0:
+                self._window_id = int(ids[0])
+
         return self._window_id
 
     def setWindowId(self, winid):
