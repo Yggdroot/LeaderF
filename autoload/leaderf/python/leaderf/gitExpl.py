@@ -835,8 +835,8 @@ class GitBlameView(GitCommandView):
                   .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
         arguments_dict = self._cmd.getArguments()
-        date_format = arguments_dict.get("--date", [""])[0]
-        if date_format in ["", "iso", "short"]:
+        date_format = arguments_dict.get("--date", ["iso"])[0]
+        if date_format in ["iso", "short"]:
             lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\{4}-\d\d-\d\d\( \d\d:\d\d:\d\d [+-]\d\d\d\d\)\?'', -100)')""" % winid)
         elif date_format == "relative":
             lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\+\s\+.\{-}ago'', -100)')""" % winid)
@@ -2463,8 +2463,8 @@ class BlamePanel(Panel):
 
     @staticmethod
     def formatLine(arguments_dict, line_num_width, line):
-        date_format = arguments_dict.get("--date", [""])[0]
-        if date_format in ["", "iso", "iso-strict", "short"]:
+        date_format = arguments_dict.get("--date", ["iso"])[0]
+        if date_format in ["iso", "iso-strict", "short"]:
             # 6817817e autoload/leaderf/manager.py 1 (Yggdroot 2014-02-26 00:37:26 +0800 1) #!/usr/bin/env python
             return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*?\d\d)\s+\d+\).*',
                           r'\g<1> \g<4>)\t\g<3> \g<2>', line, 1)
