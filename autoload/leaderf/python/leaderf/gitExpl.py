@@ -10,7 +10,7 @@ import json
 import bisect
 import tempfile
 import itertools
-from difflib import Differ, SequenceMatcher
+from difflib import SequenceMatcher
 from itertools import islice
 from functools import partial
 from enum import Enum
@@ -18,6 +18,7 @@ from collections import OrderedDict
 from .utils import *
 from .explorer import *
 from .manager import *
+from .diff import LfDiffer
 from .devicons import (
     webDevIconsGetFileTypeSymbol,
     matchaddDevIconsDefault,
@@ -2127,7 +2128,7 @@ class UnifiedDiffViewPanel(Panel):
             plus_line_num = plus_beg - 1
             status = ' '
             changed_line_num = 0
-            for line in Differ().compare(minus_text, plus_text):
+            for line in LfDiffer().compare(minus_text, plus_text):
                 if line.startswith('- '):
                     status = '-'
                     minus_line_num += 1
