@@ -262,8 +262,8 @@ let g:Lf_Arguments = {
             \       ],
             \       "blame": [
             \           {"name": ["-w"], "nargs": 0, "help": "Ignore whitespace when comparing the parent’s version and the child’s to find where the lines came from."},
-            \           {"name": ["--date"], "nargs": 1, "choices": ["relative", "local", "iso", "iso-strict", "rfc", "short", "human", "default"],
-            \               "metavar": "<format>", "help": "Specifies the format used to output dates. .i.e, git blame --date=<format>. <format> can be one of ['relative', 'local', 'iso', 'iso-strict', 'rfc', 'short', 'human', 'default']"},
+            \           {"name": ["--date"], "nargs": 1, "choices": ["relative", "local", "iso", "iso-strict", "rfc", "short", "default"],
+            \               "metavar": "<format>", "help": "Specifies the format used to output dates. .i.e, git blame --date=<format>. <format> can be one of ['relative', 'local', 'iso', 'iso-strict', 'rfc', 'short', 'default']"},
             \       ],
             \   },
             \}
@@ -412,7 +412,7 @@ function! leaderf#Any#parseArguments(argLead, cmdline, cursorPos) abort
 
         if argNum > 3 && argList[1] == "git" && argList[2] == "blame"
             if get(existingOptions, -1, "") == "--date"
-                return ["relative", "local", "iso", "iso-strict", "rfc", "short", "human", "default"]
+                return ["relative", "local", "iso", "iso-strict", "rfc", "short", "default"]
             endif
         endif
 

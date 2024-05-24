@@ -846,8 +846,6 @@ class GitBlameView(GitCommandView):
             lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\d\{4}-\d\d-\d\dT\d\d:\d\d:\d\d[+-]\d\d:\d\d'', -100)')""" % winid)
         elif date_format == "rfc":
             lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\(Mon\|Tue\|Wed\|Thu\|Fri\|Sat\|Sun\),\s\+\d\+.\{-}\(\s*)\)\@='', -100)')""" % winid)
-        elif date_format == "human":
-            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\a\{3}\s\+\d\+\s\+\d\{4}\(\s*)\)\@='', -100)')""" % winid)
         elif date_format == "default":
             lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitBlameDate'', ''\(^\^\?\x\+.*(.\{-}\s\)\@<=\(Mon\|Tue\|Wed\|Thu\|Fri\|Sat\|Sun\)\s\+\a\{3}\s\+\d\+.\{-}\(\s*)\)\@='', -100)')""" % winid)
         else:
@@ -2487,12 +2485,6 @@ class BlamePanel(Panel):
             return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
                           r'\g<1> \g<4>)\t\g<3> \g<2>',
                           line[:-(line_num_width + 1)], 1)
-        elif date_format == "human":
-            # 6817817e autoload/leaderf/manager.py 1 (Yggdroot Feb 26 2014   1) #!/usr/bin/env python
-            line = re.sub(r'(^.*?\s\d+\)).*', r'\g<1>', line, 1)
-            return re.sub(r'(^\^?\w+)\s+(.*?)\s+(\d+)\s+(\(.*)',
-                          r'\g<1> \g<4>)\t\g<3> \g<2>',
-                          line[:-(line_num_width + 6)], 1)
         else:
             return line
 
