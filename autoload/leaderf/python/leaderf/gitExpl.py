@@ -2542,6 +2542,9 @@ class BlamePanel(Panel):
 
     @staticmethod
     def formatLine(arguments_dict, line_num_width, line):
+        if line.startswith("0000000"):
+            line = line.replace("External file (--contents)", "Not Committed Yet         ")
+
         date_format = arguments_dict.get("--date", ["iso"])[0]
         if date_format in ["iso", "iso-strict", "short"]:
             # 6817817e autoload/leaderf/manager.py 1 (Yggdroot 2014-02-26 00:37:26 +0800 1) #!/usr/bin/env python
