@@ -796,11 +796,11 @@ class GitBlameView(GitCommandView):
         }
 
         self._heat_colors = {
-            "dark":  ['196', '202', '208', '214', '220', '226', '190', '154', '118', '46',
-                      '47', '48', '49', '50', '51', '45', '39', '33', '27', '21', '243', '241'
+            "dark":  ['160', '196', '202', '208', '214', '220', '226', '190', '154', '118', '46',
+                      '47', '48', '49', '50', '51', '45', '39', '33', '27', '21', '244', '242', '240'
             ],
-            "light":  ['196', '202', '208', '214', '220', '226', '190', '154', '118', '46',
-                      '47', '48', '49', '50', '51', '45', '39', '33', '27', '21', '243', '241'
+            "light": ['160', '196', '202', '208', '214', '178', '142', '106', '70', '34', '35',
+                      '36', '37', '38', '39', '33', '32', '27', '26', '21', '232'
             ]
         }
 
@@ -925,22 +925,18 @@ class GitBlameView(GitCommandView):
         heat_seconds = sorted((current_time - timestamp for date, timestamp in self._date_dict.values()))
         heat_seconds_len = len(heat_seconds)
         if heat_seconds_len > color_num:
-            # 2h, 6h, 12h
-            special_heat_seconds = [7200, 21600, 43200]
-            index = Bisect.bisect_right(heat_seconds, special_heat_seconds[-1])
-            step, remainder = divmod(heat_seconds_len - index, color_num - len(special_heat_seconds))
-            if step == 0:
-                heat_seconds = special_heat_seconds + heat_seconds[index:]
-            else:
-                t = heat_seconds[index + step - 1 : heat_seconds_len - remainder : step]
+            step, remainder = divmod(heat_seconds_len, color_num)
+            if step > 0:
+                tmp = heat_seconds[step - 1 : heat_seconds_len - remainder : step]
                 if remainder > 0:
-                    t[-1] = heat_seconds[-1]
-                heat_seconds = special_heat_seconds + t
+                    tmp[-1] = heat_seconds[-1]
+                heat_seconds = tmp
 
         self._heat_seconds = heat_seconds
         for date, timestamp in self._date_dict.values():
             index = Bisect.bisect_left(heat_seconds, current_time - timestamp)
-            id = int(lfEval(r'''matchadd('Lf_hl_blame_heat_{}', '\<{}\>', -100)'''.format(index, date)))
+            id = int(lfEval(r'''matchadd('Lf_hl_blame_heat_{}', '\(, \)\@<!\<{}\>', -100)'''
+                            .format(index, date)))
             self._match_ids.append(id)
 
     def highlightRestHeatDate(self, normal_blame_list, unix_blame_list):
@@ -967,7 +963,8 @@ class GitBlameView(GitCommandView):
         current_time = int(time.time())
         for date, timestamp in date_dict.values():
             index = Bisect.bisect_left(self._heat_seconds, current_time - timestamp)
-            id = int(lfEval(r'''matchadd('Lf_hl_blame_heat_{}', '\<{}\>', -100)'''.format(index, date)))
+            id = int(lfEval(r'''matchadd('Lf_hl_blame_heat_{}', '\(, \)\@<!\<{}\>', -100)'''
+                            .format(index, date)))
             self._match_ids.append(id)
 
 
