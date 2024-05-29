@@ -108,6 +108,7 @@ let s:help = {
             \   "<2-LeftMouse>: open the folder or open the diffs of current file",
             \   "O:             open the folder recursively",
             \   "t:             open the diffs in a new tabpage",
+            \   "s:             toggle between side by side diff view and unified diff view",
             \   "p:             preview the diffs, i.e., like 'o', but leave the cursor in the current panel",
             \   "x:             collapse the parent folder",
             \   "X:             collapse all the children of the current folder",
@@ -365,6 +366,7 @@ function! leaderf#Git#ExplorerMaps(id) abort
     exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.open(False)"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> O             :exec g:Lf_py "%s.open(True)"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> t             :exec g:Lf_py "%s.open(False, mode=''t'')"<CR>', explorer_page)
+    exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.toggleDiffMode()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> p             :exec g:Lf_py "%s.open(False, preview=True)"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> x             :call leaderf#Git#CollapseParent("%s")<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> f             :exec g:Lf_py "%s.fuzzySearch()"<CR>', explorer_page)

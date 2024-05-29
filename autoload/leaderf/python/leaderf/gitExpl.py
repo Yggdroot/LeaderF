@@ -2018,6 +2018,7 @@ class DiffViewPanel(Panel):
                 lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
                 lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
                       .format(winid, kwargs.get("explorer_page_id", 0)))
+                lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side_by_side"')""".format(winid))
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
@@ -2036,6 +2037,9 @@ class DiffViewPanel(Panel):
             lfCmd("call win_execute({}, 'norm! {}G0zbzz')".format(target_winid, kwargs["line_num"]))
         else:
             lfCmd("call win_execute({}, 'norm! gg]c0')".format(target_winid))
+
+        # sometimes the two sides don't align.
+        lfCmd("call win_execute({}, 'norm! ztzz')".format(target_winid))
 
 
 class UnifiedDiffViewPanel(Panel):
@@ -2449,6 +2453,7 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("let b:Leaderf_matches = getmatches()")
                 lfCmd("let b:lf_change_start_lines = {}".format(str(change_start_lines)))
                 lfCmd("let b:lf_explorer_page_id = {}".format(kwargs.get("explorer_page_id", 0)))
+                lfCmd("let b:lf_diff_view_mode = 'unified'")
                 blame_map = lfEval("g:Lf_GitKeyMap")
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#PreviousChange()<CR>".format(blame_map["previous_change"]))
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange()<CR>".format(blame_map["next_change"]))
@@ -2640,6 +2645,7 @@ class ExplorerPage(object):
         self._arguments = {}
         self.tabpage = None
         self._git_diff_manager = None
+        self._diff_view_mode = None
 
     def openNavigationPanel(self):
         buffer_name = self._navigation_buffer_name
@@ -2761,11 +2767,29 @@ class ExplorerPage(object):
         self._unified_diff_view_panel.cleanup()
         self._owner.cleanupExplorerPage(self)
 
+    def toggleDiffMode(self):
+        if self._diff_view_mode == 'side_by_side':
+            self._diff_view_mode = 'unified'
+        else:
+            self._diff_view_mode = 'side_by_side'
+
+        self.open(False)
+
+    def makeOnly(self):
+        for w in vim.current.tabpage.windows:
+            if (lfEval("getbufvar({}, 'lf_diff_view_mode', '{}')".format(w.buffer.number,
+                                                                        self._diff_view_mode))
+                != self._diff_view_mode):
+                lfCmd("only")
+                break
+
     def open(self, recursive, **kwargs):
         kwargs["project_root"] = self._project_root
         kwargs["explorer_page_id"] = id(self)
         source = self._navigation_panel.tree_view.expandOrCollapseFolder(recursive)
         if source is not None:
+            self.makeOnly()
+
             if kwargs.get("mode", '') == 't':
                 tabpage_count = len(vim.tabpages)
                 self.getDiffViewPanel().create(self._arguments, source, **kwargs)
