@@ -2018,7 +2018,7 @@ class DiffViewPanel(Panel):
                 lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
                 lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
                       .format(winid, kwargs.get("explorer_page_id", 0)))
-                lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side_by_side"')""".format(winid))
+                lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side-by-side"')""".format(winid))
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
@@ -2724,7 +2724,7 @@ class ExplorerPage(object):
               .format(winid, id(self)))
 
     def getDiffViewPanel(self):
-        if self._diff_view_mode == "side_by_side":
+        if self._diff_view_mode == "side-by-side":
             return self._diff_view_panel
         else:
             return self._unified_diff_view_panel
@@ -2743,9 +2743,9 @@ class ExplorerPage(object):
         if "-u" in arguments_dict:
             self._diff_view_mode = "unified"
         elif "-s" in arguments_dict:
-            self._diff_view_mode = "side_by_side"
+            self._diff_view_mode = "side-by-side"
         else:
-            self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'side_by_side')")
+            self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'side-by-side')")
 
         callback = partial(self.getDiffViewPanel().create,
                            arguments_dict,
@@ -2768,10 +2768,10 @@ class ExplorerPage(object):
         self._owner.cleanupExplorerPage(self)
 
     def toggleDiffMode(self):
-        if self._diff_view_mode == 'side_by_side':
+        if self._diff_view_mode == 'side-by-side':
             self._diff_view_mode = 'unified'
         else:
-            self._diff_view_mode = 'side_by_side'
+            self._diff_view_mode = 'side-by-side'
 
         self.open(False)
 

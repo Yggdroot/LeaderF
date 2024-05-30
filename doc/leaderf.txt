@@ -1176,8 +1176,8 @@ g:Lf_GitContextNum                            *g:Lf_GitContextNum*
 
 g:Lf_GitDiffViewMode                          *g:Lf_GitDiffViewMode*
     Show diffs in a side by side view or in a unified view.
-    Value can be: 'side_by_side' or 'unified'.
-    Default value is 'side_by_side'.
+    Value can be: 'side-by-side' or 'unified'.
+    Default value is 'side-by-side'.
 
 g:Lf_GitHightlightLineNumber                  *g:Lf_GitHightlightLineNumber*
     Specify whether to highlight the line number when diff view is in
