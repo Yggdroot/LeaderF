@@ -168,6 +168,8 @@ if &background ==? 'dark'
     highlight def link Lf_hl_gitGraph4          Lf_hl_gitGraph1
     highlight def link Lf_hl_gitGraphSlash      Constant
     highlight def link Lf_hl_gitBlameDate       Number
+    highlight def link Lf_hl_gitSelectedOption  Tag
+    highlight def link Lf_hl_gitNonSelectedOption Comment
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffAdd", "DiffAdd")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffDelete", "DiffDelete")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffChange", "DiffChange")
@@ -327,6 +329,8 @@ else
     highlight def link Lf_hl_gitGraph4          Lf_hl_gitGraph1
     highlight def link Lf_hl_gitGraphSlash      Constant
     highlight def link Lf_hl_gitBlameDate       Number
+    highlight def link Lf_hl_gitSelectedOption  Tag
+    highlight def link Lf_hl_gitNonSelectedOption Comment
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffAdd", "DiffAdd")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffDelete", "DiffDelete")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffChange", "DiffChange")

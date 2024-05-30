@@ -1088,10 +1088,19 @@ class TreeView(GitCommandView):
                 }
         self._head = [
                 '" Press <F1> for help',
+                ' Side-by-side ✔    Unified ✘',
                 '',
                 self._project_root + "/",
                 ]
         self._match_ids = []
+
+    def setDiffViewMode(self, mode):
+        self._buffer.options['modifiable'] = True
+        if mode == 'side-by-side':
+            self._buffer[1] = ' Side-by-side ✔    Unified ✘'
+        else:
+            self._buffer[1] = ' Side-by-side ✘    Unified ✔'
+        self._buffer.options['modifiable'] = False
 
     def enableColor(self, winid):
         if lfEval("hlexists('Lf_hl_help')") == '0':
@@ -1142,6 +1151,27 @@ class TreeView(GitCommandView):
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
         lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNumStatBinary'', ''\t\zs(Bin)'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Identifier'', '''', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\( \)\@<=\S\+ ✔\@='', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\( \S\+ \)\@<=✔'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\( \)\@<=\S\+ ✘\@='', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\( \S\+ \)\@<=✘'', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
@@ -2754,6 +2784,7 @@ class ExplorerPage(object):
                            project_root=self._project_root,
                            explorer_page_id=id(self))
         self._navigation_panel.create(cmd, winid, self._project_root, target_path, callback)
+        self._navigation_panel.tree_view.setDiffViewMode(self._diff_view_mode)
         self.defineMaps(self._navigation_panel.getWindowId())
 
     def afterBufhidden(self):
@@ -2767,11 +2798,32 @@ class ExplorerPage(object):
         self._unified_diff_view_panel.cleanup()
         self._owner.cleanupExplorerPage(self)
 
-    def toggleDiffMode(self):
+    def selectDiffViewMode(self):
+        mouse_pos = lfEval("getmousepos()")
+        if mouse_pos["line"] == '2':
+            column = int(mouse_pos["column"])
+            if column >= 5 and column <= 16:
+                mode = 'side-by-side'
+            elif column >= 28 and column <= 34:
+                mode = 'unified'
+            else:
+                mode = None
+
+            if mode is not None and mode != self._diff_view_mode:
+                self.toggleDiffViewMode()
+
+    def toggleDiffViewMode(self):
         if self._diff_view_mode == 'side-by-side':
             self._diff_view_mode = 'unified'
         else:
             self._diff_view_mode = 'side-by-side'
+        self._navigation_panel.tree_view.setDiffViewMode(self._diff_view_mode)
+
+        for w in vim.current.tabpage.windows:
+            if lfEval("getbufvar({}, 'lf_explorer_page_id', 0)".format(w.buffer.number)) != '0':
+                current_file_path = w.buffer.name.rsplit(':', 1)[1]
+                self._navigation_panel.tree_view.locateFile(current_file_path)
+                break
 
         self.open(False)
 
