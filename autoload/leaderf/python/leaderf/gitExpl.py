@@ -3906,6 +3906,7 @@ class GitBlameExplManager(GitExplManager):
             lfCmd("call win_execute({}, 'setlocal nonumber')".format(preview_winid))
 
         self.gotoLine(preview_winid, line_num)
+        lfCmd("call win_execute({}, 'setlocal filetype=diff')".format(preview_winid))
 
     def gotoLine(self, winid, line_num):
         found = False
