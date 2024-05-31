@@ -1092,6 +1092,7 @@ class TreeView(GitCommandView):
         self._head = [
                 '" Press <F1> for help',
                 ' Side-by-side ✔    Unified ✘',
+                ' Ignore Whitespace 🗷 ',
                 '',
                 self._project_root + "/",
                 ]
@@ -1101,8 +1102,27 @@ class TreeView(GitCommandView):
         self._buffer.options['modifiable'] = True
         if mode == 'side-by-side':
             self._buffer[1] = ' Side-by-side ✔    Unified ✘'
+
+            if "iwhiteall" in lfEval("&diffopt"):
+                self._buffer[2] = ' Ignore Whitespace 🗹 '
+            else:
+                self._buffer[2] = ' Ignore Whitespace 🗷 '
         else:
             self._buffer[1] = ' Side-by-side ✘    Unified ✔'
+        self._buffer.options['modifiable'] = False
+
+    def setIgnoreWhitespace(self, diff_view_mode, ignore):
+        self._buffer.options['modifiable'] = True
+        if diff_view_mode == 'side-by-side':
+            if "iwhiteall" in lfEval("&diffopt"):
+                self._buffer[2] = ' Ignore Whitespace 🗹 '
+            else:
+                self._buffer[2] = ' Ignore Whitespace 🗷 '
+        else:
+            if ignore == True:
+                self._buffer[2] = ' Ignore Whitespace 🗹 '
+            else:
+                self._buffer[2] = ' Ignore Whitespace 🗷 '
         self._buffer.options['modifiable'] = False
 
     def enableColor(self, winid):
@@ -1175,6 +1195,22 @@ class TreeView(GitCommandView):
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
         lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\( \S\+ \)\@<=✘'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\( \)\@<=Ignore Whitespace 🗹\@='', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\( Ignore Whitespace \)\@<=🗹 '', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\( \)\@<=Ignore Whitespace 🗷\@='', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\( Ignore Whitespace \)\@<=🗷 '', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
@@ -2052,6 +2088,8 @@ class DiffViewPanel(Panel):
                 lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
                       .format(winid, kwargs.get("explorer_page_id", 0)))
                 lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side-by-side"')""".format(winid))
+                lfCmd("""call win_execute({}, "let b:lf_diff_view_source = {}")""".format(winid,
+                                                                                          str(list(source))))
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
@@ -2285,7 +2323,10 @@ class UnifiedDiffViewPanel(Panel):
         source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         """
         self._project_root = kwargs.get("project_root", None)
-        buf_name = "LeaderF://{}:{}".format(self._commit_id, lfGetFilePath(source))
+        ignore_whitespace = int(kwargs.get("ignore_whitespace", False))
+        buf_name = "LeaderF://{}:{}:{}".format(self._commit_id,
+                                               ignore_whitespace,
+                                               lfGetFilePath(source))
         if buf_name in self._views:
             winid = self._views[buf_name].getWindowId()
             lfCmd("call win_gotoid({})".format(winid))
@@ -2336,10 +2377,20 @@ class UnifiedDiffViewPanel(Panel):
 
                         if "extra" in arguments_dict:
                             extra_options += " " + " ".join(arguments_dict["extra"])
+
+                        if kwargs.get("ignore_whitespace", False) == True:
+                            extra_options += " -w"
+
                         git_cmd = "git diff -U999999 --no-color {} -- {}".format(extra_options,
                                                                                  source[3])
                     else:
-                        git_cmd = "git diff -U999999 --no-color {} {}".format(source[0], source[1])
+                        extra_options = ""
+                        if kwargs.get("ignore_whitespace", False) == True:
+                            extra_options += " -w"
+
+                        git_cmd = "git diff -U999999 --no-color {} {} {}".format(extra_options,
+                                                                                 source[0],
+                                                                                 source[1])
 
                     outputs = ParallelExecutor.run(git_cmd, directory=self._project_root)
                     start = 0
@@ -2487,6 +2538,7 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("let b:lf_change_start_lines = {}".format(str(change_start_lines)))
                 lfCmd("let b:lf_explorer_page_id = {}".format(kwargs.get("explorer_page_id", 0)))
                 lfCmd("let b:lf_diff_view_mode = 'unified'")
+                lfCmd("let b:lf_diff_view_source = {}".format(str(list(source))))
                 blame_map = lfEval("g:Lf_GitKeyMap")
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#PreviousChange()<CR>".format(blame_map["previous_change"]))
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange()<CR>".format(blame_map["next_change"]))
@@ -2679,6 +2731,7 @@ class ExplorerPage(object):
         self.tabpage = None
         self._git_diff_manager = None
         self._diff_view_mode = None
+        self._ignore_whitespace = False
 
     def openNavigationPanel(self):
         buffer_name = self._navigation_buffer_name
@@ -2801,7 +2854,7 @@ class ExplorerPage(object):
         self._unified_diff_view_panel.cleanup()
         self._owner.cleanupExplorerPage(self)
 
-    def selectDiffViewMode(self):
+    def selectOption(self):
         mouse_pos = lfEval("getmousepos()")
         if mouse_pos["line"] == '2':
             column = int(mouse_pos["column"])
@@ -2814,21 +2867,48 @@ class ExplorerPage(object):
 
             if mode is not None and mode != self._diff_view_mode:
                 self.toggleDiffViewMode()
+        elif mouse_pos["line"] == '3':
+            column = int(mouse_pos["column"])
+            if column >= 5 and column <= 23:
+                self.toggleIgnoreWhitespace()
+
+    def getExistingSource(self):
+        for w in vim.current.tabpage.windows:
+            source = lfEval("getbufvar({}, 'lf_diff_view_source', 0)".format(w.buffer.number))
+            if source != '0':
+                return source
+
+        return None
 
     def toggleDiffViewMode(self):
         if self._diff_view_mode == 'side-by-side':
             self._diff_view_mode = 'unified'
+            self._ignore_whitespace = "iwhiteall" in lfEval("&diffopt")
         else:
             self._diff_view_mode = 'side-by-side'
+            if self._ignore_whitespace == True:
+                lfCmd("set diffopt+=iwhiteall")
+            else:
+                lfCmd("set diffopt-=iwhiteall")
+
         self._navigation_panel.tree_view.setDiffViewMode(self._diff_view_mode)
 
-        for w in vim.current.tabpage.windows:
-            if lfEval("getbufvar({}, 'lf_explorer_page_id', 0)".format(w.buffer.number)) != '0':
-                current_file_path = w.buffer.name.rsplit(':', 1)[1]
-                self._navigation_panel.tree_view.locateFile(current_file_path)
-                break
+        source = self.getExistingSource()
+        self.open(False, preview=True, diff_view_source=source)
 
-        self.open(False)
+    def toggleIgnoreWhitespace(self):
+        if self._diff_view_mode == 'side-by-side':
+            if "iwhiteall" in lfEval("&diffopt"):
+                lfCmd("set diffopt-=iwhiteall")
+            else:
+                lfCmd("set diffopt+=iwhiteall")
+        else:
+            self._ignore_whitespace = not self._ignore_whitespace
+            source = self.getExistingSource()
+            self.open(False, preview=True, diff_view_source=source)
+
+        self._navigation_panel.tree_view.setIgnoreWhitespace(self._diff_view_mode,
+                                                             self._ignore_whitespace)
 
     def makeOnly(self):
         for w in vim.current.tabpage.windows:
@@ -2841,7 +2921,11 @@ class ExplorerPage(object):
     def open(self, recursive, **kwargs):
         kwargs["project_root"] = self._project_root
         kwargs["explorer_page_id"] = id(self)
-        source = self._navigation_panel.tree_view.expandOrCollapseFolder(recursive)
+        kwargs["ignore_whitespace"] = self._ignore_whitespace
+        if "diff_view_source" in kwargs:
+            source = kwargs["diff_view_source"]
+        else:
+            source = self._navigation_panel.tree_view.expandOrCollapseFolder(recursive)
         if source is not None:
             self.makeOnly()
 

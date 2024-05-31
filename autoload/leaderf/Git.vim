@@ -109,6 +109,7 @@ let s:help = {
             \   "O:             open the folder recursively",
             \   "t:             open the diffs in a new tabpage",
             \   "s:             toggle between side by side diff view and unified diff view",
+            \   "i:             toggle between ignoring whitespace and not ignoring whitespace",
             \   "p:             preview the diffs, i.e., like 'o', but leave the cursor in the current panel",
             \   "x:             collapse the parent folder",
             \   "X:             collapse all the children of the current folder",
@@ -367,13 +368,13 @@ function! leaderf#Git#ExplorerMaps(id) abort
     exec printf('nnoremap <buffer> <silent> O             :exec g:Lf_py "%s.open(True)"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> t             :exec g:Lf_py "%s.open(False, mode=''t'')"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.toggleDiffViewMode()"<CR>', explorer_page)
+    exec printf('nnoremap <buffer> <silent> i             :exec g:Lf_py "%s.toggleIgnoreWhitespace()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> p             :exec g:Lf_py "%s.open(False, preview=True)"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> x             :call leaderf#Git#CollapseParent("%s")<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> f             :exec g:Lf_py "%s.fuzzySearch()"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> F             :exec g:Lf_py "%s.fuzzySearch(True)"<CR>', explorer_page)
     exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> <LeftMouse>   <LeftMouse>:exec g:Lf_py "%s.selectDiffViewMode()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> <LeftRelease> :exec g:Lf_py "%s.selectDiffViewMode()"<CR>', explorer_page)
+    exec printf('nnoremap <buffer> <silent> <LeftRelease> <LeftRelease>:exec g:Lf_py "%s.selectOption()"<CR>', explorer_page)
     nnoremap <buffer> <silent> q             :q<CR>
 endfunction
 
