@@ -1020,6 +1020,9 @@ class KeyWrapper(object):
         self._key = key
 
     def __getitem__(self, i):
+        if self._key is None:
+            return self._list[i]
+
         return self._key(self._list[i])
 
     def __len__(self):
