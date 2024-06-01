@@ -1091,8 +1091,9 @@ class TreeView(GitCommandView):
                 }
         self._head = [
                 '" Press <F1> for help',
-                ' Side-by-side ✔    Unified ✘',
+                ' Side-by-side  Unified ',
                 ' Ignore Whitespace 🗷 ',
+                ' Myers  Minimal  Patience  Histogram ',
                 '',
                 self._project_root + "/",
                 ]
@@ -1101,14 +1102,19 @@ class TreeView(GitCommandView):
     def setDiffViewMode(self, mode):
         self._buffer.options['modifiable'] = True
         if mode == 'side-by-side':
-            self._buffer[1] = ' Side-by-side ✔    Unified ✘'
+            self._buffer[1] = ' Side-by-side  Unified '
 
-            if "iwhiteall" in lfEval("&diffopt"):
+            diffopt = lfEval("&diffopt")
+            if "iwhiteall" in diffopt:
                 self._buffer[2] = ' Ignore Whitespace 🗹 '
             else:
                 self._buffer[2] = ' Ignore Whitespace 🗷 '
+
+            if "algorithm:" in diffopt:
+                algo = re.sub(r".*algorithm:(\w+).*", r"\1", diffopt)
+                self.setDiffAlgorithm(algo)
         else:
-            self._buffer[1] = ' Side-by-side ✘    Unified ✔'
+            self._buffer[1] = ' Side-by-side  Unified '
         self._buffer.options['modifiable'] = False
 
     def setIgnoreWhitespace(self, diff_view_mode, ignore):
@@ -1123,6 +1129,18 @@ class TreeView(GitCommandView):
                 self._buffer[2] = ' Ignore Whitespace 🗹 '
             else:
                 self._buffer[2] = ' Ignore Whitespace 🗷 '
+        self._buffer.options['modifiable'] = False
+
+    def setDiffAlgorithm(self, algorithm):
+        self._buffer.options['modifiable'] = True
+        if algorithm == 'myers':
+            self._buffer[3] = ' Myers  Minimal  Patience  Histogram '
+        elif algorithm == 'minimal':
+            self._buffer[3] = ' Myers  Minimal  Patience  Histogram '
+        elif algorithm == 'patience':
+            self._buffer[3] = ' Myers  Minimal  Patience  Histogram '
+        elif algorithm == 'histogram':
+            self._buffer[3] = ' Myers  Minimal  Patience  Histogram '
         self._buffer.options['modifiable'] = False
 
     def enableColor(self, winid):
@@ -1182,19 +1200,19 @@ class TreeView(GitCommandView):
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\( \)\@<=\S\+ ✔\@='', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\S\+ \@='', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\( \S\+ \)\@<=✔'', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\(\S\+ \)\@<='', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\( \)\@<=\S\+ ✘\@='', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\S\+ \@='', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\( \S\+ \)\@<=✘'', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\(\S\+ \)\@<='', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
@@ -2323,9 +2341,17 @@ class UnifiedDiffViewPanel(Panel):
         source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         """
         self._project_root = kwargs.get("project_root", None)
-        ignore_whitespace = int(kwargs.get("ignore_whitespace", False))
+        ignore_whitespace = kwargs.get("ignore_whitespace", False)
+        diff_algorithm = kwargs.get("diff_algorithm", "myers")
+        algo_dict = {
+            "myers": 0,
+            "minimal": 2,
+            "patience": 4,
+            "histogram": 6
+        }
+        uid = algo_dict[diff_algorithm] + int(ignore_whitespace)
         buf_name = "LeaderF://{}:{}:{}".format(self._commit_id,
-                                               ignore_whitespace,
+                                               uid,
                                                lfGetFilePath(source))
         if buf_name in self._views:
             winid = self._views[buf_name].getWindowId()
@@ -2371,21 +2397,21 @@ class UnifiedDiffViewPanel(Panel):
                     added_line_nums = []
                 else:
                     if source[1].startswith("0000000"):
-                        extra_options = ""
+                        extra_options = "--diff-algorithm=" + diff_algorithm
                         if "--cached" in arguments_dict:
                             extra_options += " --cached"
 
                         if "extra" in arguments_dict:
                             extra_options += " " + " ".join(arguments_dict["extra"])
 
-                        if kwargs.get("ignore_whitespace", False) == True:
+                        if ignore_whitespace == True:
                             extra_options += " -w"
 
                         git_cmd = "git diff -U999999 --no-color {} -- {}".format(extra_options,
                                                                                  source[3])
                     else:
-                        extra_options = ""
-                        if kwargs.get("ignore_whitespace", False) == True:
+                        extra_options = "--diff-algorithm=" + diff_algorithm
+                        if ignore_whitespace == True:
                             extra_options += " -w"
 
                         git_cmd = "git diff -U999999 --no-color {} {} {}".format(extra_options,
@@ -2732,6 +2758,7 @@ class ExplorerPage(object):
         self._git_diff_manager = None
         self._diff_view_mode = None
         self._ignore_whitespace = False
+        self._diff_algorithm = 'myers'
 
     def openNavigationPanel(self):
         buffer_name = self._navigation_buffer_name
@@ -2749,13 +2776,13 @@ class ExplorerPage(object):
             height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
             lfCmd("silent! noa keepa keepj botright {}sp {}".format(height, buffer_name))
         elif win_pos == 'left':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
             lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
         elif win_pos == 'right':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
             lfCmd("silent! noa keepa keepj botright {}vsp {}".format(width, buffer_name))
         else: # left
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
             lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
 
         lfCmd("call setmatches(b:lf_navigation_matches)")
@@ -2770,13 +2797,13 @@ class ExplorerPage(object):
             height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
             lfCmd("silent! noa keepa keepj bel {}sp {}".format(height, buffer_name))
         elif win_pos == 'left':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
             lfCmd("silent! noa keepa keepj abo {}vsp {}".format(width, buffer_name))
         elif win_pos == 'right':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
             lfCmd("silent! noa keepa keepj bel {}vsp {}".format(width, buffer_name))
         else: # left
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
             lfCmd("silent! noa keepa keepj abo {}vsp {}".format(width, buffer_name))
 
         return int(lfEval("win_getid()"))
@@ -2791,16 +2818,16 @@ class ExplorerPage(object):
             height = int(lfEval("&lines")) - height - 4
             lfCmd("silent! noa keepa keepj abo {}sp".format(height))
         elif win_pos == 'left':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
-            width = int(lfEval("&columns")) - width + 1
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(lfEval("&columns")) - width - 1
             lfCmd("silent! noa keepa keepj bel {}vsp".format(width))
         elif win_pos == 'right':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
             width = int(lfEval("&columns")) - width - 1
             lfCmd("silent! noa keepa keepj abo {}vsp".format(width))
         else: # left
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', &columns * 0.2)")))
-            width = int(lfEval("&columns")) - width + 1
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(lfEval("&columns")) - width - 1
             lfCmd("silent! noa keepa keepj bel {}vsp".format(width))
 
         return int(lfEval("win_getid()"))
@@ -2856,11 +2883,11 @@ class ExplorerPage(object):
 
     def selectOption(self):
         mouse_pos = lfEval("getmousepos()")
+        column = int(mouse_pos["column"])
         if mouse_pos["line"] == '2':
-            column = int(mouse_pos["column"])
-            if column >= 5 and column <= 16:
+            if column >= 5 and column <= 18:
                 mode = 'side-by-side'
-            elif column >= 28 and column <= 34:
+            elif column >= 22 and column <= 30:
                 mode = 'unified'
             else:
                 mode = None
@@ -2868,9 +2895,35 @@ class ExplorerPage(object):
             if mode is not None and mode != self._diff_view_mode:
                 self.toggleDiffViewMode()
         elif mouse_pos["line"] == '3':
-            column = int(mouse_pos["column"])
             if column >= 5 and column <= 23:
                 self.toggleIgnoreWhitespace()
+        elif mouse_pos["line"] == '4':
+            if column >= 5 and column <= 11:
+                diff_algorithm = 'myers'
+            elif column >= 15 and column <= 23:
+                diff_algorithm = 'minimal'
+            elif column >= 27 and column <= 36:
+                diff_algorithm = 'patience'
+            elif column >= 40 and column <= 50:
+                diff_algorithm = 'histogram'
+
+            if self._diff_algorithm != diff_algorithm:
+                self._diff_algorithm = diff_algorithm
+                self.selectDiffAlgorithm()
+
+    def selectDiffAlgorithm(self):
+        self._navigation_panel.tree_view.setDiffAlgorithm(self._diff_algorithm)
+        if self._diff_view_mode == 'side-by-side':
+            lfCmd("set diffopt+=internal")
+            diffopt = lfEval("&diffopt")
+            if "algorithm:" in diffopt:
+                diffopt = re.sub(r"(?<=algorithm:)\w+", self._diff_algorithm, diffopt)
+                lfCmd("let &diffopt = '{}'".format(diffopt))
+            else:
+                lfCmd("set diffopt+=algorithm:{}".format(self._diff_algorithm))
+        else:
+            source = self.getExistingSource()
+            self.open(False, preview=True, diff_view_source=source)
 
     def getExistingSource(self):
         for w in vim.current.tabpage.windows:
@@ -2902,13 +2955,15 @@ class ExplorerPage(object):
                 lfCmd("set diffopt-=iwhiteall")
             else:
                 lfCmd("set diffopt+=iwhiteall")
+            self._navigation_panel.tree_view.setIgnoreWhitespace(self._diff_view_mode,
+                                                                 self._ignore_whitespace)
         else:
             self._ignore_whitespace = not self._ignore_whitespace
+            self._navigation_panel.tree_view.setIgnoreWhitespace(self._diff_view_mode,
+                                                                 self._ignore_whitespace)
             source = self.getExistingSource()
             self.open(False, preview=True, diff_view_source=source)
 
-        self._navigation_panel.tree_view.setIgnoreWhitespace(self._diff_view_mode,
-                                                             self._ignore_whitespace)
 
     def makeOnly(self):
         for w in vim.current.tabpage.windows:
@@ -2922,6 +2977,7 @@ class ExplorerPage(object):
         kwargs["project_root"] = self._project_root
         kwargs["explorer_page_id"] = id(self)
         kwargs["ignore_whitespace"] = self._ignore_whitespace
+        kwargs["diff_algorithm"] = self._diff_algorithm
         if "diff_view_source" in kwargs:
             source = kwargs["diff_view_source"]
         else:

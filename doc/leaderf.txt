@@ -1168,7 +1168,7 @@ g:Lf_GitNavigationPanelHeight                 *g:Lf_GitNavigationPanelHeight*
 
 g:Lf_GitNavigationPanelWidth                  *g:Lf_GitNavigationPanelWidth*
     To customize the width of navigation(tree) panel.
-    Default value is &columns * 0.2.
+    Default value is 43.
 
 g:Lf_GitContextNum                            *g:Lf_GitContextNum*
     Show diffs with g:Lf_GitContextNum lines of context.
