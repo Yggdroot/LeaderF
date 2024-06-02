@@ -603,7 +603,7 @@ function! leaderf#Git#NextChange() abort
     endif
 endfunction
 
-function! leaderf#Git#ExplorerPageDisplay() abort
+function! leaderf#Git#OpenNavigationPanel() abort
     if !exists("b:lf_explorer_page_id") || b:lf_explorer_page_id == 0
         return
     endif

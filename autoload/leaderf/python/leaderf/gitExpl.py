@@ -2595,16 +2595,19 @@ class NavigationPanel(Panel):
         super(NavigationPanel, self).__init__()
         self.tree_view = None
         self._bufhidden_cb = bufhidden_callback
+        self._is_hidden = False
+        self._arguments = {}
 
     def register(self, view):
         self.tree_view = view
 
     def bufHidden(self, view):
+        self._is_hidden = True
         if self._bufhidden_cb is not None:
             self._bufhidden_cb()
 
     def isHidden(self):
-        return lfEval("len(win_findbuf({})) == 0".format(self.tree_view.getBufferNum())) == "1"
+        return self._is_hidden
 
     def cleanup(self):
         if self.tree_view is not None:
@@ -2612,8 +2615,39 @@ class NavigationPanel(Panel):
             self.tree_view = None
 
     def create(self, cmd, winid, project_root, target_path, callback):
+        self._arguments = cmd.getArguments()
         TreeView(self, cmd, project_root, target_path, callback).create(winid, bufhidden="hide")
         lfCmd("call win_execute({}, 'let b:lf_navigation_matches = getmatches()')".format(winid))
+
+    def open(self):
+        buffer_name = self.tree_view.getBufferName()
+        navigation_winid = int(lfEval("bufwinid('{}')".format(escQuote(buffer_name))))
+        if navigation_winid != -1:
+            lfCmd("call win_gotoid({})".format(navigation_winid))
+            return
+
+        current_file_path = vim.current.buffer.name.rsplit(':', 1)[1]
+        win_pos = self._arguments.get("--navigation-position", ["left"])[0]
+        if win_pos == 'top':
+            height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
+            lfCmd("silent! noa keepa keepj topleft {}sp {}".format(height, buffer_name))
+        elif win_pos == 'bottom':
+            height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
+            lfCmd("silent! noa keepa keepj botright {}sp {}".format(height, buffer_name))
+        elif win_pos == 'left':
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
+        elif win_pos == 'right':
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            lfCmd("silent! noa keepa keepj botright {}vsp {}".format(width, buffer_name))
+        else: # left
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
+
+        lfCmd("call setmatches(b:lf_navigation_matches)")
+        lfCmd("setlocal winfixwidth | wincmd =")
+        self._is_hidden = False
+        self.tree_view.locateFile(current_file_path)
 
     def writeBuffer(self):
         # called in idle
@@ -2761,33 +2795,7 @@ class ExplorerPage(object):
         self._diff_algorithm = 'myers'
 
     def openNavigationPanel(self):
-        buffer_name = self._navigation_buffer_name
-        navigation_winid = int(lfEval("bufwinid('{}')".format(escQuote(buffer_name))))
-        if navigation_winid != -1:
-            lfCmd("call win_gotoid({})".format(navigation_winid))
-            return
-
-        current_file_path = vim.current.buffer.name.rsplit(':', 1)[1]
-        win_pos = self._arguments.get("--navigation-position", ["left"])[0]
-        if win_pos == 'top':
-            height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
-            lfCmd("silent! noa keepa keepj topleft {}sp {}".format(height, buffer_name))
-        elif win_pos == 'bottom':
-            height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
-            lfCmd("silent! noa keepa keepj botright {}sp {}".format(height, buffer_name))
-        elif win_pos == 'left':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
-            lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
-        elif win_pos == 'right':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
-            lfCmd("silent! noa keepa keepj botright {}vsp {}".format(width, buffer_name))
-        else: # left
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
-            lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
-
-        lfCmd("call setmatches(b:lf_navigation_matches)")
-        lfCmd("setlocal winfixwidth | wincmd =")
-        self._navigation_panel.tree_view.locateFile(current_file_path)
+        self._navigation_panel.open()
 
     def _createWindow(self, win_pos, buffer_name):
         if win_pos == 'top':

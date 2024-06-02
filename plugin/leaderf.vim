@@ -259,7 +259,7 @@ command! -bar -nargs=0 LeaderfLocList  Leaderf loclist
 
 command! -bar -nargs=0 LeaderfGit           Leaderf git
 command! -bar -nargs=0 LeaderfGitSplitDiff  Leaderf git diff --current-file --side-by-side
-command! -bar -nargs=0 LeaderfGitNavigationOpen call leaderf#Git#ExplorerPageDisplay()
+command! -bar -nargs=0 LeaderfGitNavigationOpen call leaderf#Git#OpenNavigationPanel()
 
 try
     if g:Lf_ShortcutF != ""
