@@ -1091,9 +1091,9 @@ class TreeView(GitCommandView):
                 }
         self._head = [
                 '" Press <F1> for help',
-                ' Side-by-side  Unified ',
+                ' Side-by-side ◉ Unified ○',
                 ' Ignore Whitespace 🗷 ',
-                ' Myers  Minimal  Patience  Histogram ',
+                ' Myers ◉ Minimal ○ Patience ○ Histogram ○',
                 '',
                 self._project_root + "/",
                 ]
@@ -1102,7 +1102,7 @@ class TreeView(GitCommandView):
     def setDiffViewMode(self, mode):
         self._buffer.options['modifiable'] = True
         if mode == 'side-by-side':
-            self._buffer[1] = ' Side-by-side  Unified '
+            self._buffer[1] = ' Side-by-side ◉ Unified ○'
 
             diffopt = lfEval("&diffopt")
             if "iwhiteall" in diffopt:
@@ -1114,7 +1114,7 @@ class TreeView(GitCommandView):
                 algo = re.sub(r".*algorithm:(\w+).*", r"\1", diffopt)
                 self.setDiffAlgorithm(algo)
         else:
-            self._buffer[1] = ' Side-by-side  Unified '
+            self._buffer[1] = ' Side-by-side ○ Unified ◉'
         self._buffer.options['modifiable'] = False
 
     def setIgnoreWhitespace(self, diff_view_mode, ignore):
@@ -1134,13 +1134,13 @@ class TreeView(GitCommandView):
     def setDiffAlgorithm(self, algorithm):
         self._buffer.options['modifiable'] = True
         if algorithm == 'myers':
-            self._buffer[3] = ' Myers  Minimal  Patience  Histogram '
+            self._buffer[3] = ' Myers ◉ Minimal ○ Patience ○ Histogram ○'
         elif algorithm == 'minimal':
-            self._buffer[3] = ' Myers  Minimal  Patience  Histogram '
+            self._buffer[3] = ' Myers ○ Minimal ◉ Patience ○ Histogram ○'
         elif algorithm == 'patience':
-            self._buffer[3] = ' Myers  Minimal  Patience  Histogram '
+            self._buffer[3] = ' Myers ○ Minimal ○ Patience ◉ Histogram ○'
         elif algorithm == 'histogram':
-            self._buffer[3] = ' Myers  Minimal  Patience  Histogram '
+            self._buffer[3] = ' Myers ○ Minimal ○ Patience ○ Histogram ◉'
         self._buffer.options['modifiable'] = False
 
     def enableColor(self, winid):
@@ -1200,19 +1200,19 @@ class TreeView(GitCommandView):
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\S\+ \@='', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\S\+ ◉\@='', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\(\S\+ \)\@<='', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\(\S\+ \)\@<=◉'', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\S\+ \@='', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\S\+ ○\@='', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\(\S\+ \)\@<='', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\(\S\+ \)\@<=○'', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
@@ -2635,13 +2635,13 @@ class NavigationPanel(Panel):
             height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
             lfCmd("silent! noa keepa keepj botright {}sp {}".format(height, buffer_name))
         elif win_pos == 'left':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 44)")))
             lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
         elif win_pos == 'right':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 44)")))
             lfCmd("silent! noa keepa keepj botright {}vsp {}".format(width, buffer_name))
         else: # left
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 44)")))
             lfCmd("silent! noa keepa keepj topleft {}vsp {}".format(width, buffer_name))
 
         lfCmd("call setmatches(b:lf_navigation_matches)")
@@ -2805,13 +2805,13 @@ class ExplorerPage(object):
             height = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelHeight', &lines * 0.3)")))
             lfCmd("silent! noa keepa keepj bel {}sp {}".format(height, buffer_name))
         elif win_pos == 'left':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 44)")))
             lfCmd("silent! noa keepa keepj abo {}vsp {}".format(width, buffer_name))
         elif win_pos == 'right':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 44)")))
             lfCmd("silent! noa keepa keepj bel {}vsp {}".format(width, buffer_name))
         else: # left
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 44)")))
             lfCmd("silent! noa keepa keepj abo {}vsp {}".format(width, buffer_name))
 
         return int(lfEval("win_getid()"))
@@ -2826,15 +2826,15 @@ class ExplorerPage(object):
             height = int(lfEval("&lines")) - height - 4
             lfCmd("silent! noa keepa keepj abo {}sp".format(height))
         elif win_pos == 'left':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 44)")))
             width = int(lfEval("&columns")) - width - 1
             lfCmd("silent! noa keepa keepj bel {}vsp".format(width))
         elif win_pos == 'right':
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 44)")))
             width = int(lfEval("&columns")) - width - 1
             lfCmd("silent! noa keepa keepj abo {}vsp".format(width))
         else: # left
-            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 43)")))
+            width = int(float(lfEval("get(g:, 'Lf_GitNavigationPanelWidth', 44)")))
             width = int(lfEval("&columns")) - width - 1
             lfCmd("silent! noa keepa keepj bel {}vsp".format(width))
 
@@ -2914,6 +2914,8 @@ class ExplorerPage(object):
                 diff_algorithm = 'patience'
             elif column >= 40 and column <= 50:
                 diff_algorithm = 'histogram'
+            else:
+                diff_algorithm = self._diff_algorithm
 
             if self._diff_algorithm != diff_algorithm:
                 self._diff_algorithm = diff_algorithm
