@@ -1012,6 +1012,7 @@ class MetaInfo(object):
         self.name = name
         self.info = info
         self.path = path
+        self.has_num_stat = False
 
 
 class KeyWrapper(object):
@@ -1666,6 +1667,9 @@ class TreeView(GitCommandView):
             return "{}{} {}/".format("  " * meta_info.level, icon, meta_info.name)
         else:
             num_stat = self._num_stat.get(self._cur_parent, {}).get(meta_info.path, "")
+            if num_stat != "":
+                meta_info.has_num_stat = True
+
             icon = self._status_icons.get(meta_info.info[2][0], self._modification_icon)
 
             orig_name = ""
@@ -1710,6 +1714,19 @@ class TreeView(GitCommandView):
         self._buffer.options['modifiable'] = True
         try:
             self._buffer[:] = self._head
+        finally:
+            self._buffer.options['modifiable'] = False
+
+    def refreshNumStat(self):
+        self._buffer.options['modifiable'] = True
+        try:
+            init_line = len(self._head)
+            structure = self._file_structures[self._cur_parent]
+            for i, info in enumerate(structure, init_line):
+                if info.has_num_stat == True:
+                    return
+                if not info.is_dir:
+                    self._buffer[i] = self.buildLine(info)
         finally:
             self._buffer.options['modifiable'] = False
 
@@ -1762,6 +1779,7 @@ class TreeView(GitCommandView):
                 self._buffer.options['modifiable'] = False
 
         if self._read_finished == 1 and self._offset_in_content == len(structure):
+            self.refreshNumStat()
             shortstat = re.sub(r"( \d+)( files? changed)",
                                r"%#Lf_hl_gitStlChangedNum#\1%#Lf_hl_gitStlFileChanged#\2",
                                self._short_stat[self._cur_parent])
