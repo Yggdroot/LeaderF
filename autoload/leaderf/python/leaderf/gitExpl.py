@@ -3824,6 +3824,10 @@ class GitBlameExplManager(GitExplManager):
             if alternate_buffer_name in blame_buffer_dict:
                 blame_buffer, alternate_buffer_num = blame_buffer_dict[alternate_buffer_name]
                 lfCmd("buffer {}".format(alternate_buffer_num))
+                lfCmd("noautocmd norm! {}Gzz".format(line_num))
+                top_line = lfEval("line('w0')")
+
+                lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
             else:
                 date_format = self._arguments.get("--date", ["iso"])[0]
                 if date_format in ["iso", "iso-strict", "short"]:
@@ -3858,16 +3862,16 @@ class GitBlameExplManager(GitExplManager):
                 lfCmd("setlocal nomodifiable")
                 alternate_buffer_num = vim.current.buffer.number
 
+                lfCmd("noautocmd norm! {}Gzz".format(line_num))
+                top_line = lfEval("line('w0')")
+
+                lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
                 blame_view = blame_panel.getBlameView(blame_buffer_name)
                 if date_format in ["iso", "iso-strict", "short"]:
                     blame_view.highlightRestHeatDate1(date_format, outputs[0])
                 else:
                     blame_view.highlightRestHeatDate2(outputs[2], outputs[3])
 
-            lfCmd("noautocmd norm! {}Gzz".format(line_num))
-            top_line = lfEval("line('w0')")
-
-            lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
             lfCmd("setlocal modifiable")
             vim.current.buffer[:] = blame_buffer
             lfCmd("setlocal nomodifiable")
