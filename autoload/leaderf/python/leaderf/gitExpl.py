@@ -1012,8 +1012,8 @@ class GitBlameView(GitCommandView):
             if commit_id not in self._date_dict:
                 date = rest.split('\t')[1].strip()
                 timestamp = int(unix_blame_list[i].split('\t')[2])
-                self._date_dict[commit_id] = (date, timestamp)
                 date_dict[commit_id] = (date, timestamp)
+                self._date_dict[commit_id] = date_dict[commit_id]
 
         current_time = int(time.time())
         self._highlight(current_time, date_dict)
@@ -1021,8 +1021,8 @@ class GitBlameView(GitCommandView):
     def _highlight(self, current_time, date_dict):
         for date, timestamp in date_dict.values():
             index = Bisect.bisect_left(self._heat_seconds, current_time - timestamp)
-            id = int(lfEval(r'''matchadd('Lf_hl_blame_heat_{}', '\(, \)\@<!\<{}\>', -100)'''
-                            .format(index, date)))
+            id = int(lfEval(r'''matchadd('Lf_hl_blame_heat_%d', '\(^.\{-}\)\@<=\<%s\>', -100)'''
+                            % (index, date)))
             self._match_ids.append(id)
 
 
@@ -3872,6 +3872,7 @@ class GitBlameExplManager(GitExplManager):
                 else:
                     blame_view.highlightRestHeatDate2(outputs[2], outputs[3])
 
+            # here we are in the blame window
             lfCmd("setlocal modifiable")
             vim.current.buffer[:] = blame_buffer
             lfCmd("setlocal nomodifiable")
