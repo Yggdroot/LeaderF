@@ -15,6 +15,7 @@ from itertools import islice
 from functools import partial
 from enum import Enum
 from collections import OrderedDict
+from datetime import datetime
 from .utils import *
 from .explorer import *
 from .manager import *
@@ -900,7 +901,43 @@ class GitBlameView(GitCommandView):
         self.blame_stack = []
         self.blame_buffer_dict = {}
 
-    def highlightHeatDate(self, normal_blame_list, unix_blame_list):
+    def _helper(self, date_format):
+        if date_format == "iso":
+            # 6817817e (Yggdroot       2014-02-26 00:37:26 +0800) 1 autoload/leaderf/manager.py
+            pattern = r"\b\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} [+-]\d{4}\b"
+            format_str = "%Y-%m-%d %H:%M:%S %z"
+            to_timestamp = lambda date: int(datetime.strptime(date, format_str).timestamp())
+        elif date_format == "iso-strict":
+            # 6817817e (Yggdroot       2014-02-26T00:37:26+08:00) 1 autoload/leaderf/manager.py
+            pattern = r"\b\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}\b"
+            to_timestamp = lambda date: int(datetime.fromisoformat(date).timestamp())
+        elif date_format == "short":
+            # 6817817e (Yggdroot       2014-02-26) 1 autoload/leaderf/manager.py
+            pattern = r"\b\d{4}-\d{2}-\d{2}\b"
+            to_timestamp = lambda date: int(datetime.fromisoformat(date).timestamp())
+        else:
+            lfPrintError("Error. date_format = {}".format(date_format))
+
+        return (pattern, to_timestamp)
+
+    def highlightHeatDate1(self, date_format, blame_list):
+        pattern, to_timestamp = self._helper(date_format)
+        self._date_dict = {}
+        for line in blame_list:
+            commit_id, rest = line.split(None, 1)
+            if commit_id not in self._date_dict:
+                match = re.search(pattern, rest)
+                if match:
+                    date = match.group(0)
+                    timestamp = to_timestamp(date)
+                else:
+                    lfPrintError("Error. pattern '{}' can not be found in '{}'".format(pattern, rest))
+
+                self._date_dict[commit_id] = (date, timestamp)
+
+        self._highlightHeatDate()
+
+    def highlightHeatDate2(self, normal_blame_list, unix_blame_list):
         """
         normal_blame_list:
         ["6817817e\t(  Yggdroot\t10 years ago          \t1)#!/usr/bin/env python",
@@ -920,6 +957,9 @@ class GitBlameView(GitCommandView):
                 timestamp = int(unix_blame_list[i].split('\t')[2])
                 self._date_dict[commit_id] = (date, timestamp)
 
+        self._highlightHeatDate()
+
+    def _highlightHeatDate(self):
         color_num = len(self._heat_colors[lfEval("&bg")])
         current_time = int(time.time())
         heat_seconds = sorted((current_time - timestamp for date, timestamp in self._date_dict.values()))
@@ -933,13 +973,28 @@ class GitBlameView(GitCommandView):
                 heat_seconds = tmp
 
         self._heat_seconds = heat_seconds
-        for date, timestamp in self._date_dict.values():
-            index = Bisect.bisect_left(heat_seconds, current_time - timestamp)
-            id = int(lfEval(r'''matchadd('Lf_hl_blame_heat_{}', '\(, \)\@<!\<{}\>', -100)'''
-                            .format(index, date)))
-            self._match_ids.append(id)
+        self._highlight(current_time, self._date_dict)
 
-    def highlightRestHeatDate(self, normal_blame_list, unix_blame_list):
+    def highlightRestHeatDate1(self, date_format, blame_list):
+        pattern, to_timestamp = self._helper(date_format)
+        date_dict = {}
+        for line in blame_list:
+            commit_id, rest = line.split(None, 1)
+            if commit_id not in self._date_dict:
+                match = re.search(pattern, rest)
+                if match:
+                    date = match.group(0)
+                    timestamp = to_timestamp(date)
+                else:
+                    lfPrintError("Error. pattern '{}' can not be found in '{}'".format(pattern, rest))
+
+                date_dict[commit_id] = (date, timestamp)
+                self._date_dict[commit_id] = date_dict[commit_id]
+
+        current_time = int(time.time())
+        self._highlight(current_time, date_dict)
+
+    def highlightRestHeatDate2(self, normal_blame_list, unix_blame_list):
         """
         normal_blame_list:
         ["6817817e\t(  Yggdroot\t10 years ago          \t1)#!/usr/bin/env python",
@@ -961,6 +1016,9 @@ class GitBlameView(GitCommandView):
                 date_dict[commit_id] = (date, timestamp)
 
         current_time = int(time.time())
+        self._highlight(current_time, date_dict)
+
+    def _highlight(self, current_time, date_dict):
         for date, timestamp in date_dict.values():
             index = Bisect.bisect_left(self._heat_seconds, current_time - timestamp)
             id = int(lfEval(r'''matchadd('Lf_hl_blame_heat_{}', '\(, \)\@<!\<{}\>', -100)'''
@@ -2745,23 +2803,31 @@ class BlamePanel(Panel):
         buffer_name = cmd.getBufferName()
         line_num_width = len(str(len(vim.current.buffer))) + 1
 
-        arguments_dict2 = arguments_dict.copy()
-        arguments_dict2["-c"] = []
-        cmd2 = GitBlameCommand(arguments_dict2, None)
+        date_format = arguments_dict.get("--date", ["iso"])[0]
+        if date_format in ["iso", "iso-strict", "short"]:
+            outputs = ParallelExecutor.run(cmd.getCommand(),
+                                           format_line=partial(BlamePanel.formatLine,
+                                                               arguments_dict,
+                                                               line_num_width),
+                                           directory=self._project_root)
+        else:
+            arguments_dict2 = arguments_dict.copy()
+            arguments_dict2["-c"] = []
+            cmd2 = GitBlameCommand(arguments_dict2, None)
 
-        arguments_dict3 = arguments_dict2.copy()
-        arguments_dict3["--date"] = ["unix"]
-        cmd3 = GitBlameCommand(arguments_dict3, None)
+            arguments_dict3 = arguments_dict2.copy()
+            arguments_dict3["--date"] = ["unix"]
+            cmd3 = GitBlameCommand(arguments_dict3, None)
 
-        outputs = ParallelExecutor.run(cmd.getCommand(),
-                                       cmd2.getCommand(),
-                                       cmd3.getCommand(),
-                                       format_line=[partial(BlamePanel.formatLine,
-                                                            arguments_dict,
-                                                            line_num_width),
-                                                    None,
-                                                    None],
-                                       directory=self._project_root)
+            outputs = ParallelExecutor.run(cmd.getCommand(),
+                                           cmd2.getCommand(),
+                                           cmd3.getCommand(),
+                                           format_line=[partial(BlamePanel.formatLine,
+                                                                arguments_dict,
+                                                                line_num_width),
+                                                        None,
+                                                        None],
+                                           directory=self._project_root)
 
         line_num_width = max(line_num_width, int(lfEval('&numberwidth')))
         if len(outputs[0]) > 0:
@@ -2784,7 +2850,10 @@ class BlamePanel(Panel):
                                                                     buffer_name))
                 blame_winid = int(lfEval("win_getid()"))
                 blame_view.create(blame_winid, buf_content=outputs[0])
-                blame_view.highlightHeatDate(outputs[1], outputs[2])
+                if date_format in ["iso", "iso-strict", "short"]:
+                    blame_view.highlightHeatDate1(date_format, outputs[0])
+                else:
+                    blame_view.highlightHeatDate2(outputs[1], outputs[2])
                 self._owner.defineMaps(blame_winid)
                 lfCmd("let b:lf_blame_project_root = '{}'".format(self._project_root))
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, cursor_line))
@@ -3709,10 +3778,11 @@ class GitBlameExplManager(GitExplManager):
         line_num, file_name = vim.current.line.rsplit('\t', 1)[1].split(None, 1)
         project_root = lfEval("b:lf_blame_project_root")
         blame_panel = self._blame_panels[project_root]
-        alternate_winid = blame_panel.getAlternateWinid(vim.current.buffer.name)
+        blame_buffer_name = vim.current.buffer.name
+        alternate_winid = blame_panel.getAlternateWinid(blame_buffer_name)
         blame_winid = lfEval("win_getid()")
 
-        if commit_id not in blame_panel.getBlameDict(vim.current.buffer.name):
+        if commit_id not in blame_panel.getBlameDict(blame_buffer_name):
             cmd = 'git log -2 --pretty="%H" --name-status --follow {} -- {}'.format(commit_id,
                                                                                     file_name)
             # output is as below:
@@ -3737,7 +3807,7 @@ class GitBlameExplManager(GitExplManager):
             parent_commit_id = outputs[0][3]
 
             blame_win_width = vim.current.window.width
-            blame_panel.getBlameStack(vim.current.buffer.name).append(
+            blame_panel.getBlameStack(blame_buffer_name).append(
                     (
                         vim.current.buffer[:],
                         lfEval("winbufnr({})".format(alternate_winid)),
@@ -3748,24 +3818,30 @@ class GitBlameExplManager(GitExplManager):
                 )
 
             alternate_buffer_name = "LeaderF://{}:{}".format(parent_commit_id[:7], orig_name)
-            blame_buffer_dict = blame_panel.getBlameBufferDict(vim.current.buffer.name)
+            blame_buffer_dict = blame_panel.getBlameBufferDict(blame_buffer_name)
 
             lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
             if alternate_buffer_name in blame_buffer_dict:
                 blame_buffer, alternate_buffer_num = blame_buffer_dict[alternate_buffer_name]
                 lfCmd("buffer {}".format(alternate_buffer_num))
             else:
-                arguments_dict2 = self._arguments.copy()
-                arguments_dict2["-c"] = []
+                date_format = self._arguments.get("--date", ["iso"])[0]
+                if date_format in ["iso", "iso-strict", "short"]:
+                    cmd = [GitBlameCommand.buildCommand(self._arguments, parent_commit_id, orig_name),
+                           "git show {}:{}".format(parent_commit_id, orig_name),
+                           ]
+                else:
+                    arguments_dict2 = self._arguments.copy()
+                    arguments_dict2["-c"] = []
 
-                arguments_dict3 = arguments_dict2.copy()
-                arguments_dict3["--date"] = ["unix"]
+                    arguments_dict3 = arguments_dict2.copy()
+                    arguments_dict3["--date"] = ["unix"]
 
-                cmd = [GitBlameCommand.buildCommand(self._arguments, parent_commit_id, orig_name),
-                       "git show {}:{}".format(parent_commit_id, orig_name),
-                       GitBlameCommand.buildCommand(arguments_dict2, parent_commit_id, orig_name),
-                       GitBlameCommand.buildCommand(arguments_dict3, parent_commit_id, orig_name),
-                       ]
+                    cmd = [GitBlameCommand.buildCommand(self._arguments, parent_commit_id, orig_name),
+                           "git show {}:{}".format(parent_commit_id, orig_name),
+                           GitBlameCommand.buildCommand(arguments_dict2, parent_commit_id, orig_name),
+                           GitBlameCommand.buildCommand(arguments_dict3, parent_commit_id, orig_name),
+                           ]
 
                 outputs = ParallelExecutor.run(*cmd, directory=project_root)
                 line_num_width = len(str(len(outputs[1]))) + 1
@@ -3782,6 +3858,12 @@ class GitBlameExplManager(GitExplManager):
                 lfCmd("setlocal nomodifiable")
                 alternate_buffer_num = vim.current.buffer.number
 
+                blame_view = blame_panel.getBlameView(blame_buffer_name)
+                if date_format in ["iso", "iso-strict", "short"]:
+                    blame_view.highlightRestHeatDate1(date_format, outputs[0])
+                else:
+                    blame_view.highlightRestHeatDate2(outputs[2], outputs[3])
+
             lfCmd("noautocmd norm! {}Gzz".format(line_num))
             top_line = lfEval("line('w0')")
 
@@ -3796,18 +3878,15 @@ class GitBlameExplManager(GitExplManager):
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, line_num))
                 lfCmd("call win_execute({}, 'setlocal scrollbind')".format(alternate_winid))
 
-            blame_view = blame_panel.getBlameView(vim.current.buffer.name)
-            blame_view.highlightRestHeatDate(outputs[2], outputs[3])
-
             blame_win_width = vim.current.window.width
-            blame_panel.getBlameDict(vim.current.buffer.name)[commit_id] = (
+            blame_panel.getBlameDict(blame_buffer_name)[commit_id] = (
                     blame_buffer,
                     alternate_buffer_num,
                     blame_win_width
                     )
             blame_buffer_dict[alternate_buffer_name] = (blame_buffer, alternate_buffer_num)
         else:
-            blame_panel.getBlameStack(vim.current.buffer.name).append(
+            blame_panel.getBlameStack(blame_buffer_name).append(
                     (
                         vim.current.buffer[:],
                         lfEval("winbufnr({})".format(alternate_winid)),
@@ -3819,7 +3898,7 @@ class GitBlameExplManager(GitExplManager):
             (blame_buffer,
              alternate_buffer_num,
              blame_win_width
-             ) = blame_panel.getBlameDict(vim.current.buffer.name)[commit_id]
+             ) = blame_panel.getBlameDict(blame_buffer_name)[commit_id]
             lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
             lfCmd("buffer {}".format(alternate_buffer_num))
             lfCmd("noautocmd norm! {}Gzz".format(line_num))
