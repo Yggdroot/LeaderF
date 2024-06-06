@@ -729,7 +729,6 @@ class GitBlameView(GitCommandView):
         self._alternate_winid = None
         self._alternate_buffer_num = None
         self._alternate_win_options = {}
-        self._match_ids = []
         self._color_table = {
             '0':   '#000000', '1':   '#800000', '2':   '#008000', '3':   '#808000',
             '4':   '#000080', '5':   '#800080', '6':   '#008080', '7':   '#c0c0c0',
@@ -860,16 +859,11 @@ class GitBlameView(GitCommandView):
             lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
                   .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
-        lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''WarningMsg'', ''Not Committed Yet'', -100)')""" % winid)
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
+        lfCmd(r"""call win_execute(%d, 'syn match WarningMsg /\<Not Committed Yet\>/')""" % winid)
 
     def highlightCommitId(self, commit_id):
         n = int(commit_id[:2], 16)
-        lfCmd(r"""let matchid = matchadd('Lf_hl_blame_{}', '^\^\?{}\x\+', -100)"""
-              .format(n, commit_id[:2]))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
+        lfCmd(r"syn match Lf_hl_blame_{} /^\^\?{}\x\+/".format(n, commit_id[:2]))
 
     def suicide(self):
         super(GitBlameView, self).suicide()
@@ -888,10 +882,6 @@ class GitBlameView(GitCommandView):
         if self._alternate_winid is not None:
             for k, v in self._alternate_win_options.items():
                 lfCmd("call setwinvar({}, '&{}', {})".format(self._alternate_winid, k, v))
-
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete(%d)" % i)
-        self._match_ids = []
 
         for item in self.blame_dict.values():
             buffer_num = int(item[1])
@@ -1030,9 +1020,7 @@ class GitBlameView(GitCommandView):
     def _highlight(self, current_time, date_dict):
         for date, timestamp in date_dict.values():
             index = Bisect.bisect_left(self._heat_seconds, current_time - timestamp)
-            id = int(lfEval(r'''matchadd('Lf_hl_blame_heat_%d', '\(^.\{-}\)\@<=\<%s\>', -100)'''
-                            % (index, date)))
-            self._match_ids.append(id)
+            lfCmd(r"syn match Lf_hl_blame_heat_{} /\<{}\>/".format(index, date))
 
 
 class LfOrderedDict(OrderedDict):
