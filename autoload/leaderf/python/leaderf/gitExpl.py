@@ -856,17 +856,18 @@ class GitBlameView(GitCommandView):
 
             lfCmd("let g:Lf_GitStlHeatLine = '{}'".format(stl))
 
-        for i in range(256):
-            lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_blame_{}'', ''^\^\?{}\x\+'', -100)')"""
-                  .format(winid, i, format(i, '02x')))
-            id = int(lfEval("matchid"))
-            self._match_ids.append(id)
-
         if lfEval("hlexists('Lf_hl_gitBlameDate')") == '0':
             lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
                   .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
         lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''WarningMsg'', ''Not Committed Yet'', -100)')""" % winid)
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+
+    def highlightCommitId(self, commit_id):
+        n = int(commit_id[:2], 16)
+        lfCmd(r"""let matchid = matchadd('Lf_hl_blame_{}', '^\^\?{}\x\+', -100)"""
+              .format(n, commit_id[:2]))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
 
@@ -927,6 +928,7 @@ class GitBlameView(GitCommandView):
         for line in blame_list:
             commit_id, rest = line.split(None, 1)
             if commit_id not in self._date_dict:
+                self.highlightCommitId(commit_id)
                 match = re.search(pattern, rest)
                 if match:
                     date = match.group(0)
@@ -955,6 +957,7 @@ class GitBlameView(GitCommandView):
         for i, line in enumerate(normal_blame_list):
             commit_id, rest = line.split('\t', 1)
             if commit_id not in self._date_dict:
+                self.highlightCommitId(commit_id)
                 date = rest.split('\t')[1].strip()
                 timestamp = int(unix_blame_list[i].split('\t')[2])
                 self._date_dict[commit_id] = (date, timestamp)
@@ -984,6 +987,7 @@ class GitBlameView(GitCommandView):
         for line in blame_list:
             commit_id, rest = line.split(None, 1)
             if commit_id not in self._date_dict:
+                self.highlightCommitId(commit_id)
                 match = re.search(pattern, rest)
                 if match:
                     date = match.group(0)
@@ -1014,6 +1018,7 @@ class GitBlameView(GitCommandView):
         for i, line in enumerate(normal_blame_list):
             commit_id, rest = line.split('\t', 1)
             if commit_id not in self._date_dict:
+                self.highlightCommitId(commit_id)
                 date = rest.split('\t')[1].strip()
                 timestamp = int(unix_blame_list[i].split('\t')[2])
                 date_dict[commit_id] = (date, timestamp)
