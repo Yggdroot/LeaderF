@@ -409,7 +409,8 @@ class GitLogExplCommand(GitCommand):
             find_copies_harder = ""
 
         self._cmd = ('git show -m --raw -C{} --numstat --shortstat '
-                     '--pretty=format:"# %P" --no-abbrev {}').format(find_copies_harder, self._source)
+                     '--pretty=format:"# %P" --no-abbrev {}').format(find_copies_harder,
+                                                                     self._source)
 
         self._buffer_name = "LeaderF://navigation/" + self._source
         self._file_type_cmd = ""
@@ -931,7 +932,8 @@ class GitBlameView(GitCommandView):
                     date = match.group(0)
                     timestamp = to_timestamp(date)
                 else:
-                    lfPrintError("Error. pattern '{}' can not be found in '{}'".format(pattern, rest))
+                    lfPrintError("Error. pattern '{}' can not be found in '{}'"
+                                 .format(pattern, rest))
 
                 self._date_dict[commit_id] = (date, timestamp)
 
@@ -962,7 +964,8 @@ class GitBlameView(GitCommandView):
     def _highlightHeatDate(self):
         color_num = len(self._heat_colors[lfEval("&bg")])
         current_time = int(time.time())
-        heat_seconds = sorted((current_time - timestamp for date, timestamp in self._date_dict.values()))
+        heat_seconds = sorted((current_time - timestamp
+                               for date, timestamp in self._date_dict.values()))
         heat_seconds_len = len(heat_seconds)
         if heat_seconds_len > color_num:
             step, remainder = divmod(heat_seconds_len, color_num)
@@ -986,7 +989,8 @@ class GitBlameView(GitCommandView):
                     date = match.group(0)
                     timestamp = to_timestamp(date)
                 else:
-                    lfPrintError("Error. pattern '{}' can not be found in '{}'".format(pattern, rest))
+                    lfPrintError("Error. pattern '{}' can not be found in '{}'"
+                                 .format(pattern, rest))
 
                 date_dict[commit_id] = (date, timestamp)
                 self._date_dict[commit_id] = date_dict[commit_id]
@@ -1809,7 +1813,8 @@ class TreeView(GitCommandView):
                     init_line = len(self._head)
 
                     if cursor_line <= init_line:
-                        lfCmd("call win_execute({}, 'norm! {}G')".format(self.getWindowId(), init_line))
+                        lfCmd("call win_execute({}, 'norm! {}G')"
+                              .format(self.getWindowId(), init_line))
                         cursor_line = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
 
                     source = None
@@ -1823,10 +1828,13 @@ class TreeView(GitCommandView):
                     if source is not None:
                         self._callback(source)
                         if lfEval("has('nvim')") == '1':
-                            lfCmd("call nvim_win_set_option({}, 'cursorline', v:true)".format(self.getWindowId()))
+                            lfCmd("call nvim_win_set_option({}, 'cursorline', v:true)"
+                                  .format(self.getWindowId()))
                         else:
-                            lfCmd("call win_execute({}, 'setlocal cursorline')".format(self.getWindowId()))
-                        lfCmd("call win_execute({}, 'norm! {}G0zz')".format(self.getWindowId(), cursor_line))
+                            lfCmd("call win_execute({}, 'setlocal cursorline')"
+                                  .format(self.getWindowId()))
+                        lfCmd("call win_execute({}, 'norm! {}G0zz')"
+                              .format(self.getWindowId(), cursor_line))
 
                     if self._target_path is None:
                         lfCmd("call win_gotoid({})".format(self.getWindowId()))
@@ -2132,7 +2140,8 @@ class DiffViewPanel(Panel):
                 self.bufShown(buffer_names[0], int(lfEval("win_getid()")))
             else:
                 GitCommandView(self, cmd).create(int(lfEval("win_getid()")), bufhidden='hide')
-            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(int(lfEval("win_getid()"))))
+            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')"
+                  .format(int(lfEval("win_getid()"))))
             lfCmd("call win_execute({}, 'setlocal cursorline')".format(int(lfEval("win_getid()"))))
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
             target_winid = int(lfEval("win_getid()"))
@@ -2155,7 +2164,8 @@ class DiffViewPanel(Panel):
                            for w in vim.current.tabpage.windows]
             else: # open
                 buffer_names = self._buffer_names[vim.current.tabpage]
-                win_ids = [int(lfEval("bufwinid('{}')".format(escQuote(name)))) for name in buffer_names]
+                win_ids = [int(lfEval("bufwinid('{}')".format(escQuote(name))))
+                           for name in buffer_names]
                 win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
                 win_ids = self.getValidWinIDs(win_ids, win_pos)
 
@@ -2176,14 +2186,16 @@ class DiffViewPanel(Panel):
                     lfCmd("call win_execute({}, 'setlocal bufhidden=wipe')".format(winid))
 
                 buffer_name = lfEval("bufname(winbufnr({}))".format(winid))
-                lfCmd("call win_execute({}, 'diffoff | hide edit {}')".format(winid, cmd.getBufferName()))
+                lfCmd("call win_execute({}, 'diffoff | hide edit {}')"
+                      .format(winid, cmd.getBufferName()))
                 lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(winid))
                 lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
                 lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
                       .format(winid, kwargs.get("explorer_page_id", 0)))
-                lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side-by-side"')""".format(winid))
-                lfCmd("""call win_execute({}, "let b:lf_diff_view_source = {}")""".format(winid,
-                                                                                          str(list(source))))
+                lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side-by-side"')"""
+                      .format(winid))
+                lfCmd("""call win_execute({}, "let b:lf_diff_view_source = {}")"""
+                      .format(winid, str(list(source))))
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
@@ -2194,12 +2206,14 @@ class DiffViewPanel(Panel):
                 if cmd.getBufferName() in self._hidden_views:
                     self.bufShown(cmd.getBufferName(), winid)
                 else:
-                    GitCommandView(self, cmd).create(winid, bufhidden='hide', buf_content=outputs[i])
+                    GitCommandView(self, cmd).create(winid, bufhidden='hide',
+                                                     buf_content=outputs[i])
 
             lfCmd("call win_gotoid({})".format(win_ids[1]))
 
         if kwargs.get("line_num", None) is not None:
-            lfCmd("call win_execute({}, 'norm! {}G0zbzz')".format(target_winid, kwargs["line_num"]))
+            lfCmd("call win_execute({}, 'norm! {}G0zbzz')"
+                  .format(target_winid, kwargs["line_num"]))
         else:
             lfCmd("call win_execute({}, 'norm! gg]c0')".format(target_winid))
 
@@ -2642,8 +2656,10 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("let b:lf_diff_view_mode = 'unified'")
                 lfCmd("let b:lf_diff_view_source = {}".format(str(list(source))))
                 blame_map = lfEval("g:Lf_GitKeyMap")
-                lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#PreviousChange()<CR>".format(blame_map["previous_change"]))
-                lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange()<CR>".format(blame_map["next_change"]))
+                lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#PreviousChange()<CR>"
+                      .format(blame_map["previous_change"]))
+                lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange()<CR>"
+                      .format(blame_map["next_change"]))
             else:
                 lfCmd("call win_gotoid({})".format(winid))
                 if not vim.current.buffer.name: # buffer name is empty
@@ -3413,7 +3429,8 @@ class GitDiffExplManager(GitExplManager):
             lfCmd("keepa keepj abo vsp {}".format(file_name))
             win_ids[1] = int(lfEval("win_getid()"))
             lfCmd("augroup Lf_Git_Diff | augroup END")
-            lfCmd("autocmd! Lf_Git_Diff BufWipeout <buffer> call leaderf#Git#DiffOff({})".format(win_ids))
+            lfCmd("autocmd! Lf_Git_Diff BufWipeout <buffer> call leaderf#Git#DiffOff({})"
+                  .format(win_ids))
             lfCmd("call win_execute({}, 'autocmd! Lf_Git_Diff BufHidden,BufWipeout <buffer> call leaderf#Git#DiffOff({})')"
                   .format(win_ids[0], win_ids))
             lfCmd("setlocal nobuflisted")
@@ -3878,7 +3895,8 @@ class GitBlameExplManager(GitExplManager):
             lfCmd("setlocal nomodifiable")
             if len(blame_buffer) > 0:
                 line_width = blame_buffer[0].rfind('\t')
-                line_num_width = max(len(str(len(vim.current.buffer))) + 1, int(lfEval('&numberwidth')))
+                line_num_width = max(len(str(len(vim.current.buffer))) + 1,
+                                     int(lfEval('&numberwidth')))
                 lfCmd("vertical resize {}".format(line_width + line_num_width))
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, line_num))
                 lfCmd("call win_execute({}, 'setlocal scrollbind')".format(alternate_winid))
@@ -4117,7 +4135,8 @@ class GitBlameExplManager(GitExplManager):
                 tmp_file_name = None
                 if vim.current.buffer.options["modified"]:
                     if sys.version_info >= (3, 0):
-                        tmp_file = partial(tempfile.NamedTemporaryFile, encoding=lfEval("&encoding"))
+                        tmp_file = partial(tempfile.NamedTemporaryFile,
+                                           encoding=lfEval("&encoding"))
                     else:
                         tmp_file = tempfile.NamedTemporaryFile
 
@@ -4131,7 +4150,8 @@ class GitBlameExplManager(GitExplManager):
                     self._blame_panels[self._project_root] = BlamePanel(self)
 
                 self._blame_panels[self._project_root].create(arguments_dict,
-                                                              self.createGitCommand(self._arguments, None),
+                                                              self.createGitCommand(self._arguments,
+                                                                                    None),
                                                               project_root=self._project_root)
                 if tmp_file_name is not None:
                     os.remove(tmp_file_name)
