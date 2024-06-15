@@ -3473,6 +3473,8 @@ class GitDiffExplManager(GitExplManager):
                     self.vsplitDiff()
                 else:
                     self._accept(self._arguments["current_file"], "")
+
+                self._restoreOrigCwd()
                 return
 
         if "--recall" in arguments_dict:
