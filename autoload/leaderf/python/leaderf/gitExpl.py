@@ -862,7 +862,7 @@ class GitBlameView(GitCommandView):
         lfCmd(r"""call win_execute(%d, 'syn match WarningMsg /\<Not Committed Yet\>/')""" % winid)
 
     def highlightCommitId(self, commit_id):
-        n = int(commit_id[:2], 16)
+        n = int(commit_id.lstrip('^')[:2], 16)
         lfCmd(r"syn match Lf_hl_blame_{} /^\^\?{}\x\+/".format(n, commit_id[:2]))
 
     def suicide(self):
