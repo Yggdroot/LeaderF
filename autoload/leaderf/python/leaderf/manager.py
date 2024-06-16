@@ -899,7 +899,7 @@ class Manager(object):
                         self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
             else:
                 if isinstance(source, int):
-                    lfCmd("noautocmd call popup_settext(%d, getbufline(%d, 1, '$'))" % (self._preview_winid, source))
+                    lfCmd("noautocmd call popup_settext(%d, getbufline(%d, 1, 4096))" % (self._preview_winid, source))
                     filename = vim.buffers[source].name
                 else:
                     filename = source
