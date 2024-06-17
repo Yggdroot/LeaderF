@@ -4131,8 +4131,8 @@ class GitBlameExplManager(GitExplManager):
         lfCmd("let g:Lf_git_inline_blame_enabled = 1")
 
         lfCmd("augroup Lf_Git_Blame | augroup END")
-        lfCmd("autocmd! Lf_Git_Blame BufRead * call leaderf#Git#StartInlineBlame()")
-        lfCmd("autocmd! Lf_Git_Blame BufWinEnter * call leaderf#Git#StartInlineBlame()")
+        lfCmd("autocmd! Lf_Git_Blame BufRead * silent call leaderf#Git#StartInlineBlame()")
+        lfCmd("autocmd! Lf_Git_Blame BufWinEnter * silent call leaderf#Git#StartInlineBlame()")
 
         file_name = vim.current.buffer.name
         self._initial_changedtick[vim.current.buffer.number] = vim.current.buffer.vars["changedtick"]
