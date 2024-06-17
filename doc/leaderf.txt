@@ -1206,6 +1206,12 @@ g:Lf_GitKeyMap                                *g:Lf_GitKeyMap*
     it means you can use [c to jump backwards to the previous start of a change
     and use ]c to jump forwards to the next start of a change.
 
+g:Lf_GitBlameTimeFormat                       *g:Lf_GitBlameTimeFormat*
+    Specify a string representing the date and time, controlled by an explicit format string.
+    The format string is the same as used by strftime(), for example, '%Y-%m-%d %H:%M:%S'.
+
+    Default value is "".
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

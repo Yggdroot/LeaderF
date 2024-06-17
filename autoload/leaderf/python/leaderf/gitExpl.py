@@ -4182,7 +4182,7 @@ class GitBlameExplManager(GitExplManager):
 
         line_number = vim.current.window.cursor[0]
         _, author, author_time, summary = blame_infos[line_number]
-        author_time = self.relative_time(author_time)
+        author_time = self.formated_time(author_time)
         blame_info = "{} • {} • {}".format(author, author_time, summary)
         if lfEval("has('nvim')") == '1':
             lfCmd("let ns_id = nvim_create_namespace('LeaderF_Git_Blame_1')")
@@ -4198,6 +4198,13 @@ class GitBlameExplManager(GitExplManager):
               .format(id(self)))
         lfCmd("autocmd! Lf_Git_Blame InsertLeave <buffer> call leaderf#Git#ShowInlineBlame({})"
               .format(id(self)))
+
+    def formated_time(self, timestamp):
+        time_format = lfEval("get(g:, 'Lf_GitBlameTimeFormat', '')")
+        if time_format == "":
+            return self.relative_time(timestamp)
+        else:
+            return datetime.fromtimestamp(timestamp).strftime(time_format)
 
     def relative_time(self, timestamp):
         def format_time_unit(value, unit):
@@ -4261,7 +4268,7 @@ class GitBlameExplManager(GitExplManager):
             line, author, author_time, summary = self._blame_infos[vim.current.buffer.number][prop_id]
             if (vim.current.buffer.vars["changedtick"] == self._initial_changedtick[vim.current.buffer.number]
                 or vim.current.line == line):
-                author_time = self.relative_time(author_time)
+                author_time = self.formated_time(author_time)
                 blame_info = "{} • {} • {}".format(author, author_time, summary)
                 lfCmd("call prop_add(line('.'), 0, {'type': 'Lf_hl_gitInlineBlame', 'text': '    %s'})"
                       % (escQuote(blame_info)))
@@ -4284,7 +4291,7 @@ class GitBlameExplManager(GitExplManager):
             line, author, author_time, summary = self._blame_infos[vim.current.buffer.number][mark_id]
             if (vim.current.buffer.vars["changedtick"] == self._initial_changedtick[vim.current.buffer.number]
                 or vim.current.line == line):
-                author_time = self.relative_time(author_time)
+                author_time = self.formated_time(author_time)
                 blame_info = "{} • {} • {}".format(author, author_time, summary)
                 if lfEval("has('nvim')") == '1':
                     lfCmd("call nvim_buf_set_extmark(0, ns_id_1, line('.') - 1, 0, {'id': 1, 'virt_text': [['    %s', 'Lf_hl_gitInlineBlame']]})"
