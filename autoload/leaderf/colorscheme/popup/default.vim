@@ -174,6 +174,7 @@ if &background ==? 'dark'
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffDelete", "DiffDelete")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffChange", "DiffChange")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffText", "DiffText")
+    highlight def link Lf_hl_gitInlineBlame Comment
 else
     " Lf_hl_popup_inputText is the wincolor of input window
     highlight def Lf_hl_popup_inputText guifg=#525252 guibg=#f4f3d7 gui=NONE ctermfg=239 ctermbg=230 cterm=NONE
@@ -335,4 +336,5 @@ else
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffDelete", "DiffDelete")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffChange", "DiffChange")
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_gitDiffText", "DiffText")
+    highlight def link Lf_hl_gitInlineBlame Comment
 endif

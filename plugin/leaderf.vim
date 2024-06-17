@@ -260,6 +260,10 @@ command! -bar -nargs=0 LeaderfLocList  Leaderf loclist
 command! -bar -nargs=0 LeaderfGit           Leaderf git
 command! -bar -nargs=0 LeaderfGitSplitDiff  Leaderf git diff --current-file --side-by-side
 command! -bar -nargs=0 LeaderfGitNavigationOpen call leaderf#Git#OpenNavigationPanel()
+command! -bar -nargs=0 LeaderfGitEnableInlineBlame Leaderf git blame --inline
+command! -bar -nargs=0 LeaderfGitDisableInlineBlame call leaderf#Git#DisableInlineBlame()
+command! -bar -nargs=0 LeaderfGitToggleInlineBlame call leaderf#Git#ToggleInlineBlame()
+command! -bar -nargs=0 LeaderfGitUpdateInlineBlame call leaderf#Git#RestartInlineBlame()
 
 try
     if g:Lf_ShortcutF != ""

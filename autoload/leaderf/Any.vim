@@ -264,6 +264,7 @@ let g:Lf_Arguments = {
             \           {"name": ["-w"], "nargs": 0, "help": "Ignore whitespace when comparing the parent’s version and the child’s to find where the lines came from."},
             \           {"name": ["--date"], "nargs": 1, "choices": ["relative", "local", "iso", "iso-strict", "rfc", "short", "default"],
             \               "metavar": "<format>", "help": "Specifies the format used to output dates. .i.e, git blame --date=<format>. <format> can be one of ['relative', 'local', 'iso', 'iso-strict', 'rfc', 'short', 'default']"},
+            \           {"name": ["--inline"], "nargs": 0, "help": "Display inline git blame information."},
             \       ],
             \   },
             \}

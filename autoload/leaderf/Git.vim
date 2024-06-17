@@ -432,6 +432,47 @@ function! leaderf#Git#Bufhidden(view_id) abort
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.bufHidden()", a:view_id)
 endfunction
 
+function! leaderf#Git#UpdateInlineBlame(manager_id) abort
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.updateInlineBlame()", a:manager_id)
+endfunction
+
+function! leaderf#Git#StartInlineBlame() abort
+    Leaderf git blame --inline
+endfunction
+
+function! leaderf#Git#DisableInlineBlame() abort
+    if !exists("g:lf_blame_manager_id") || g:lf_blame_manager_id == 0
+        return
+    endif
+
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.disableInlineBlame()", g:lf_blame_manager_id)
+endfunction
+
+function! leaderf#Git#RestartInlineBlame() abort
+    call leaderf#Git#DisableInlineBlame()
+    call leaderf#Git#StartInlineBlame()
+endfunction
+
+function! leaderf#Git#HideInlineBlame(manager_id) abort
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.hideInlineBlame()", a:manager_id)
+endfunction
+
+function! leaderf#Git#ShowInlineBlame(manager_id) abort
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.showInlineBlame()", a:manager_id)
+endfunction
+
+function! leaderf#Git#ToggleInlineBlame() abort
+    if !exists("g:Lf_git_inline_blame_enabled") || g:Lf_git_inline_blame_enabled == 0
+        call leaderf#Git#StartInlineBlame()
+    else
+        call leaderf#Git#DisableInlineBlame()
+    endif
+endfunction
+
 function! leaderf#Git#ClearMatches() abort
     for m in b:Leaderf_matches
         call matchdelete(m.id)
@@ -472,6 +513,10 @@ function! leaderf#Git#Commands() abort
                     \ {"Leaderf git blame":                        "git blame current file"},
                     \ {"Leaderf git blame -w":                     "ignore whitespace when git blame current file"},
                     \ {"Leaderf git blame --date relative":        "show relative date when git blame current file"},
+                    \ {"LeaderfGitEnableInlineBlame":              "Enable inline blame. This command is a shortcut of `:Leaderf git blame --inline`"},
+                    \ {"LeaderfGitDisableInlineBlame":             "Disable inline blame"},
+                    \ {"LeaderfGitToggleInlineBlame":              "Toggle inline blame"},
+                    \ {"LeaderfGitUpdateInlineBlame":              "If the file is updated in the git repository, we need to use this command to update the inline blame."},
                     \ ]
     endif
 
@@ -555,7 +600,6 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
     endfor
 endfunction
 
-
 function! leaderf#Git#SignPlace(added_line_nums, deleted_line_nums, buf_number) abort
     for i in a:added_line_nums
         call sign_place(0, "LeaderF", "Leaderf_diff_add", a:buf_number, {'lnum': i})
@@ -610,4 +654,16 @@ function! leaderf#Git#OpenNavigationPanel() abort
 
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.openNavigationPanel()", b:lf_explorer_page_id)
+endfunction
+
+function! leaderf#Git#RemoveExtmarks(buffer_num) abort
+    let ns_id_0 = nvim_create_namespace('LeaderF_Git_Blame_0')
+    for [mark_id, row, col] in nvim_buf_get_extmarks(a:buffer_num, ns_id_0, 0, -1, {})
+        call nvim_buf_del_extmark(a:buffer_num, ns_id_0, mark_id)
+    endfor
+
+    let ns_id_1 = nvim_create_namespace('LeaderF_Git_Blame_1')
+    for [mark_id, row, col] in nvim_buf_get_extmarks(a:buffer_num, ns_id_1, 0, -1, {})
+        call nvim_buf_del_extmark(a:buffer_num, ns_id_1, mark_id)
+    endfor
 endfunction

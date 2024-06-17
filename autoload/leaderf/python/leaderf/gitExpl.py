@@ -476,7 +476,7 @@ class GitCustomizeCommand(GitCommand):
 
 class ParallelExecutor(object):
     @staticmethod
-    def run(*cmds, format_line=None, directory=None):
+    def run(*cmds, format_line=None, directory=None, silent=False):
         outputs = [[] for _ in range(len(cmds))]
         stop_thread = False
 
@@ -487,8 +487,9 @@ class ParallelExecutor(object):
                     if stop_thread:
                         break
             except Exception:
-                traceback.print_exc()
-                traceback.print_stack()
+                if silent == False:
+                    traceback.print_exc()
+                    traceback.print_stack()
 
 
         executors = [AsyncExecutor() for _ in range(len(cmds))]
@@ -2267,9 +2268,9 @@ class UnifiedDiffViewPanel(Panel):
     def isAllHidden(self):
         return len(self._views) == 0
 
-    def signPlace(self, added_line_nums, deleted_line_nums, buf_number):
+    def signPlace(self, added_line_nums, deleted_line_nums, buffer_num):
         lfCmd("call leaderf#Git#SignPlace({}, {}, {})"
-              .format(str(added_line_nums), str(deleted_line_nums), buf_number))
+              .format(str(added_line_nums), str(deleted_line_nums), buffer_num))
 
     def setLineNumberWin(self, line_num_content, buffer_num):
         if lfEval("has('nvim')") == '1':
@@ -3752,6 +3753,14 @@ class GitBlameExplManager(GitExplManager):
         self._blame_panels = {}
         # key is commit_id, value is ExplorerPage
         self._pages = {}
+        # key is buffer number
+        self._blame_infos = {}
+        # key is buffer number
+        self._initial_changedtick = {}
+        lfCmd("let g:lf_blame_manager_id = {}".format(id(self)))
+        if lfEval("hlexists('Lf_hl_gitInlineBlame')") == '0':
+            lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
+                  .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
     def discardPanel(self, project_root):
         del self._blame_panels[project_root]
@@ -4115,6 +4124,217 @@ class GitBlameExplManager(GitExplManager):
                     found = True
                     current_line = start - 1
 
+    def startInlineBlame(self, tmp_file_name):
+        if lfEval("exists('b:lf_blame_changedtick')") == "1":
+            return
+
+        lfCmd("let g:Lf_git_inline_blame_enabled = 1")
+
+        lfCmd("augroup Lf_Git_Blame | augroup END")
+        lfCmd("autocmd! Lf_Git_Blame BufRead * call leaderf#Git#StartInlineBlame()")
+        lfCmd("autocmd! Lf_Git_Blame BufWinEnter * call leaderf#Git#StartInlineBlame()")
+
+        file_name = vim.current.buffer.name
+        self._initial_changedtick[vim.current.buffer.number] = vim.current.buffer.vars["changedtick"]
+
+        if " " in file_name:
+            file_name = file_name.replace(' ', r'\ ')
+
+        if tmp_file_name is None:
+            git_cmd = (r'git blame --line-porcelain -- {} | grep "^author \|^author-time\|^summary"'
+                       .format(file_name))
+        else:
+            git_cmd = (r'git blame --line-porcelain --contents {} -- {} | grep "^author \|^author-time\|^summary"'
+                       .format(tmp_file_name, file_name))
+
+        outputs = ParallelExecutor.run(git_cmd, directory=self._project_root, silent=True)
+        if len(outputs[0]) == 0:
+            return
+
+        lfCmd("let b:lf_blame_line_number = line('.')")
+        lfCmd("let b:lf_blame_changedtick = b:changedtick")
+        blame_list = iter(outputs[0])
+        i = 0
+        self._blame_infos[vim.current.buffer.number] = {}
+        blame_infos = self._blame_infos[vim.current.buffer.number]
+        if lfEval("has('nvim')") == '1':
+            lfCmd("let ns_id = nvim_create_namespace('LeaderF_Git_Blame_0')")
+            for i, (author, author_time, summary) in enumerate(itertools.zip_longest(blame_list,
+                                                                                     blame_list,
+                                                                                     blame_list)):
+                author = author.split(None, 1)[1].replace("External file (--contents)", "Not Committed Yet")
+                author_time = int(author_time.split(None, 1)[1])
+                summary = summary.split(None, 1)[1]
+                mark_id = i + 1
+                blame_infos[mark_id] = (vim.current.buffer[i], author, author_time, summary)
+                lfCmd("call nvim_buf_set_extmark(0, ns_id, %d, 0, {'id': %d})" % (i, mark_id))
+        else:
+            for i, (author, author_time, summary) in enumerate(itertools.zip_longest(blame_list,
+                                                                                     blame_list,
+                                                                                     blame_list)):
+                author = author.split(None, 1)[1].replace("External file (--contents)", "Not Committed Yet")
+                author_time = int(author_time.split(None, 1)[1])
+                summary = summary.split(None, 1)[1]
+                prop_id = i + 1
+                blame_infos[prop_id] = (vim.current.buffer[i], author, author_time, summary)
+                lfCmd('call prop_add(%d, 1, {"type": "Lf_hl_gitTransparent", "length": 0, "id": %d})'
+                      % (i+1, prop_id))
+
+        line_number = vim.current.window.cursor[0]
+        _, author, author_time, summary = blame_infos[line_number]
+        author_time = self.relative_time(author_time)
+        blame_info = "{} • {} • {}".format(author, author_time, summary)
+        if lfEval("has('nvim')") == '1':
+            lfCmd("let ns_id = nvim_create_namespace('LeaderF_Git_Blame_1')")
+            lfCmd("call nvim_buf_set_extmark(0, ns_id, line('.') - 1, 0, {'id': 1, 'virt_text': [['    %s', 'Lf_hl_gitInlineBlame']]})"
+                  % (escQuote(blame_info)))
+        else:
+            lfCmd("call prop_add(line('.'), 0, {'type': 'Lf_hl_gitInlineBlame', 'text': '    %s'})"
+                  % (escQuote(blame_info)))
+
+        lfCmd("autocmd! Lf_Git_Blame CursorMoved <buffer> call leaderf#Git#UpdateInlineBlame({})"
+              .format(id(self)))
+        lfCmd("autocmd! Lf_Git_Blame InsertEnter <buffer> call leaderf#Git#HideInlineBlame({})"
+              .format(id(self)))
+        lfCmd("autocmd! Lf_Git_Blame InsertLeave <buffer> call leaderf#Git#ShowInlineBlame({})"
+              .format(id(self)))
+
+    def relative_time(self, timestamp):
+        def format_time_unit(value, unit):
+            if value == 1:
+                return "{} {}".format(value, unit)
+            else:
+                return "{} {}s".format(value, unit)
+
+        current_time = datetime.now()
+        past_time = datetime.fromtimestamp(timestamp)
+
+        delta = current_time - past_time
+
+        years = delta.days // 365
+        months = (delta.days % 365) // 30
+        if years >= 1:
+            if months == 0:
+                return "{} ago".format(format_time_unit(years, "year"))
+            else:
+                return "{}, {} ago".format(format_time_unit(years, "year"),
+                                           format_time_unit(months, "month"))
+        elif months >= 1:
+            return "{} ago".format(format_time_unit(months, "month"))
+        else:
+            days = delta.days
+            if days >= 7:
+                weeks = days // 7
+                return "{} ago".format(format_time_unit(weeks, "week"))
+            elif days >= 1:
+                return "{} ago".format(format_time_unit(days, "day"))
+            else:
+                hours = delta.seconds // 3600
+                if hours >= 1:
+                    return "{} ago".format(format_time_unit(hours, "hour"))
+                else:
+                    minutes = delta.seconds // 60
+                    if minutes >= 1:
+                        return "{} ago".format(format_time_unit(minutes, "minute"))
+                    else:
+                        return "{} ago".format(format_time_unit(delta.seconds, "second"))
+
+    def updateInlineBlame(self):
+        if (lfEval("b:lf_blame_line_number == line('.')") == '1'
+            and lfEval("b:lf_blame_changedtick == b:changedtick") == '1'):
+            return
+
+        self.showInlineBlame()
+
+    def showInlineBlame(self):
+        if lfEval("has('nvim')") == '1':
+            self.nvim_showInlineBlame()
+            return
+
+        lfCmd("let b:lf_blame_line_number = line('.')")
+        lfCmd("let b:lf_blame_changedtick = b:changedtick")
+
+        lfCmd("call prop_remove({'type': 'Lf_hl_gitInlineBlame'})")
+        prop_list = lfEval("prop_list(line('.'), {'types':['Lf_hl_gitTransparent']})")
+        if len(prop_list) > 0:
+            prop_id = int(prop_list[0]["id"])
+            line, author, author_time, summary = self._blame_infos[vim.current.buffer.number][prop_id]
+            if (vim.current.buffer.vars["changedtick"] == self._initial_changedtick[vim.current.buffer.number]
+                or vim.current.line == line):
+                author_time = self.relative_time(author_time)
+                blame_info = "{} • {} • {}".format(author, author_time, summary)
+                lfCmd("call prop_add(line('.'), 0, {'type': 'Lf_hl_gitInlineBlame', 'text': '    %s'})"
+                      % (escQuote(blame_info)))
+            else:
+                lfCmd("call prop_add(line('.'), 0, {'type': 'Lf_hl_gitInlineBlame', 'text': '    Not Committed Yet'})")
+        else:
+            lfCmd("call prop_add(line('.'), 0, {'type': 'Lf_hl_gitInlineBlame', 'text': '    Not Committed Yet'})")
+
+    def nvim_showInlineBlame(self):
+        lfCmd("let b:lf_blame_line_number = line('.')")
+        lfCmd("let b:lf_blame_changedtick = b:changedtick")
+
+        lfCmd("let ns_id_1 = nvim_create_namespace('LeaderF_Git_Blame_1')")
+        lfCmd("call nvim_buf_del_extmark(0, ns_id_1, 1)")
+
+        lfCmd("let ns_id_0 = nvim_create_namespace('LeaderF_Git_Blame_0')")
+        mark_list = lfEval("nvim_buf_get_extmarks(0, ns_id_0, [line('.')-1, 0], [line('.')-1, -1], {})")
+        if len(mark_list) > 0:
+            mark_id = int(mark_list[0][0])
+            line, author, author_time, summary = self._blame_infos[vim.current.buffer.number][mark_id]
+            if (vim.current.buffer.vars["changedtick"] == self._initial_changedtick[vim.current.buffer.number]
+                or vim.current.line == line):
+                author_time = self.relative_time(author_time)
+                blame_info = "{} • {} • {}".format(author, author_time, summary)
+                if lfEval("has('nvim')") == '1':
+                    lfCmd("call nvim_buf_set_extmark(0, ns_id_1, line('.') - 1, 0, {'id': 1, 'virt_text': [['    %s', 'Lf_hl_gitInlineBlame']]})"
+                          % (escQuote(blame_info)))
+                else:
+                    lfCmd("call prop_add(line('.'), 0, {'type': 'Lf_hl_gitInlineBlame', 'text': '    %s'})"
+                          % (escQuote(blame_info)))
+            else:
+                if lfEval("has('nvim')") == '1':
+                    lfCmd("call nvim_buf_set_extmark(0, ns_id_1, line('.') - 1, 0, {'id': 1, 'virt_text': [[ '    Not Committed Yet', 'Lf_hl_gitInlineBlame']]})")
+                else:
+                    lfCmd("call prop_add(line('.'), 0, {'type': 'Lf_hl_gitInlineBlame', 'text': '    Not Committed Yet'})")
+        else:
+            if lfEval("has('nvim')") == '1':
+                lfCmd("call nvim_buf_set_extmark(0, ns_id_1, line('.') - 1, 0, {'id': 1, 'virt_text': [[ '    Not Committed Yet', 'Lf_hl_gitInlineBlame']]})")
+            else:
+                lfCmd("call prop_add(line('.'), 0, {'type': 'Lf_hl_gitInlineBlame', 'text': '    Not Committed Yet'})")
+
+    def hideInlineBlame(self):
+        if lfEval("has('nvim')") == '1':
+            lfCmd("let ns_id_1 = nvim_create_namespace('LeaderF_Git_Blame_1')")
+            lfCmd("call nvim_buf_del_extmark(0, ns_id_1, 1)")
+        else:
+            lfCmd("call prop_remove({'type': 'Lf_hl_gitInlineBlame'})")
+
+    def disableInlineBlame(self):
+        lfCmd("let g:Lf_git_inline_blame_enabled = 0")
+        lfCmd("augroup Lf_Git_Blame | au! | augroup END")
+        buffers = {b.number for b in vim.buffers}
+        if lfEval("has('nvim')") == '1':
+            for buffer_num in self._blame_infos:
+                if buffer_num not in buffers:
+                    continue
+
+                lfCmd("call leaderf#Git#RemoveExtmarks(%d)" % buffer_num)
+                del vim.buffers[buffer_num].vars["lf_blame_changedtick"]
+        else:
+            for buffer_num in self._blame_infos:
+                if buffer_num not in buffers:
+                    continue
+
+                lfCmd("call prop_remove({'type': 'Lf_hl_gitInlineBlame', 'bufnr': %d})"
+                      % buffer_num)
+                lfCmd("call prop_remove({'type': 'Lf_hl_gitTransparent', 'bufnr': %d})"
+                      % buffer_num)
+                del vim.buffers[buffer_num].vars["lf_blame_changedtick"]
+
+        self._blame_infos = {}
+        self._initial_changedtick = {}
+
     def startExplorer(self, win_pos, *args, **kwargs):
         if self.checkWorkingDirectory() == False:
             return
@@ -4141,13 +4361,16 @@ class GitBlameExplManager(GitExplManager):
                         tmp_file_name = f.name
                     self._arguments["--contents"] = [tmp_file_name]
 
-                if self._project_root not in self._blame_panels:
-                    self._blame_panels[self._project_root] = BlamePanel(self)
+                if "--inline" in self._arguments:
+                    self.startInlineBlame(tmp_file_name)
+                else:
+                    if self._project_root not in self._blame_panels:
+                        self._blame_panels[self._project_root] = BlamePanel(self)
 
-                self._blame_panels[self._project_root].create(arguments_dict,
-                                                              self.createGitCommand(self._arguments,
-                                                                                    None),
-                                                              project_root=self._project_root)
+                    self._blame_panels[self._project_root].create(arguments_dict,
+                                                                  self.createGitCommand(self._arguments,
+                                                                                        None),
+                                                                  project_root=self._project_root)
                 if tmp_file_name is not None:
                     os.remove(tmp_file_name)
         else:
