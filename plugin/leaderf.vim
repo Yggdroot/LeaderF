@@ -136,6 +136,13 @@ augroup LeaderF_Gtags
     endif
 augroup END
 
+if get(g:, 'Lf_GitInlineBlameEnable', 0) == 1
+    augroup Lf_Git_Blame
+    autocmd! BufRead * silent call leaderf#Git#StartInlineBlame()
+    autocmd! BufWinEnter * silent call leaderf#Git#StartInlineBlame()
+    augroup END
+endif
+
 noremap <silent> <Plug>LeaderfFileTop        :<C-U>Leaderf file --top<CR>
 noremap <silent> <Plug>LeaderfFileBottom     :<C-U>Leaderf file --bottom<CR>
 noremap <silent> <Plug>LeaderfFileLeft       :<C-U>Leaderf file --left<CR>
