@@ -131,7 +131,7 @@ let s:help = {
             \   "o:             show the details of current commit in an explorer page",
             \   "<CR>:          show the details of current commit in an explorer page",
             \   "<2-LeftMouse>: show the details of current commit in an explorer page",
-            \   "h:             blame the parent commit",
+            \   "h:             blame the parent commit of this line",
             \   "l:             go to the previous blame status",
             \   "m:             show the commit message",
             \   "p:             preview the diffs around the current line",
@@ -513,9 +513,9 @@ function! leaderf#Git#Commands() abort
                     \ {"Leaderf git blame":                        "git blame current file"},
                     \ {"Leaderf git blame -w":                     "ignore whitespace when git blame current file"},
                     \ {"Leaderf git blame --date relative":        "show relative date when git blame current file"},
-                    \ {"LeaderfGitInlineBlameEnable":              "Enable inline blame. This command is a shortcut of `:Leaderf git blame --inline`"},
-                    \ {"LeaderfGitInlineBlameDisable":             "Disable inline blame"},
-                    \ {"LeaderfGitInlineBlameToggle":              "Toggle inline blame"},
+                    \ {"LeaderfGitInlineBlameEnable":              "Enable inline blame. This command is a shortcut of `:Leaderf git blame --inline`."},
+                    \ {"LeaderfGitInlineBlameDisable":             "Disable inline blame."},
+                    \ {"LeaderfGitInlineBlameToggle":              "Toggle inline blame."},
                     \ {"LeaderfGitInlineBlameUpdate":              "If the file is updated in the git repository, we need to use this command to update the inline blame."},
                     \ ]
     endif
