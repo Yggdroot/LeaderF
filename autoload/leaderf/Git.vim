@@ -513,10 +513,10 @@ function! leaderf#Git#Commands() abort
                     \ {"Leaderf git blame":                        "git blame current file"},
                     \ {"Leaderf git blame -w":                     "ignore whitespace when git blame current file"},
                     \ {"Leaderf git blame --date relative":        "show relative date when git blame current file"},
-                    \ {"LeaderfGitEnableInlineBlame":              "Enable inline blame. This command is a shortcut of `:Leaderf git blame --inline`"},
-                    \ {"LeaderfGitDisableInlineBlame":             "Disable inline blame"},
-                    \ {"LeaderfGitToggleInlineBlame":              "Toggle inline blame"},
-                    \ {"LeaderfGitUpdateInlineBlame":              "If the file is updated in the git repository, we need to use this command to update the inline blame."},
+                    \ {"LeaderfGitInlineBlameEnable":              "Enable inline blame. This command is a shortcut of `:Leaderf git blame --inline`"},
+                    \ {"LeaderfGitInlineBlameDisable":             "Disable inline blame"},
+                    \ {"LeaderfGitInlineBlameToggle":              "Toggle inline blame"},
+                    \ {"LeaderfGitInlineBlameUpdate":              "If the file is updated in the git repository, we need to use this command to update the inline blame."},
                     \ ]
     endif
 

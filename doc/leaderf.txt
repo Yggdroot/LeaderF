@@ -1302,16 +1302,16 @@ USAGE                                           *leaderf-usage*
 :LeaderfGitNavigationOpen                       *LeaderfGitNavigationOpen*
     Open the navigation panel.
 
-:LeaderfGitEnableInlineBlame                    *LeaderfGitEnableInlineBlame*
+:LeaderfGitInlineBlameEnable                    *LeaderfGitInlineBlameEnable*
     Enable inline blame. This command is a shortcut of `:Leaderf git blame --inline`
 
-:LeaderfGitDisableInlineBlame                   *LeaderfGitDisableInlineBlame*
+:LeaderfGitInlineBlameDisable                   *LeaderfGitInlineBlameDisable*
     Disable inline blame.
 
-:LeaderfGitToggleInlineBlame                    *LeaderfGitToggleInlineBlame*
+:LeaderfGitInlineBlameToggle                    *LeaderfGitInlineBlameToggle*
     Toggle inline blame.
 
-:LeaderfGitUpdateInlineBlame                    *LeaderfGitUpdateInlineBlame*
+:LeaderfGitInlineBlameUpdate                    *LeaderfGitInlineBlameUpdate*
     If the file is updated in the git repository, we need to use this command
     to update the inline blame.
 
