@@ -357,8 +357,9 @@ class GitLogCommand(GitCommand):
 
             self._cmd = ('git show {} -C{} --pretty=format:"commit %H%nparent %P%n'
                          'Author:     %an <%ae>%nAuthorDate: %ad%nCommitter:  %cn <%ce>%nCommitDate:'
-                         ' %cd{}%n%n%s%n%n%b%n" --stat=70 --stat-graph-width=10 -p --no-color'
-                         ).format(self._source, find_copies_harder, sep)
+                         ' %cd{}%n%n%s%n%n%b%n%x2d%x2d%x2d" --stat=70 --stat-graph-width=10 --no-color'
+                         ' && git log -1 -p --pretty=format:"%x20" --no-color {}'
+                         ).format(self._source, find_copies_harder, sep, self._source)
 
             if (("--recall" in self._arguments or "--current-file" in self._arguments)
                 and "current_file" in self._arguments):
