@@ -647,6 +647,52 @@ function! leaderf#Git#NextChange() abort
     endif
 endfunction
 
+function! leaderf#Git#EditFile(tag) abort
+    if !filereadable(b:lf_git_buffer_name)
+        return
+    endif
+
+    if a:tag == 0
+        let start_line_num = line('.')
+        let line_num_content = b:lf_git_line_num_content
+        if len(line_num_content) == 0
+            return
+        endif
+
+        let line = line_num_content[0]
+        let line_len = strlen(line)
+
+        let delimiter = get(g:, 'Lf_GitDelimiter', '│')
+        let delimiter_len = len(delimiter)
+
+        let buffer_num = bufnr(b:lf_git_buffer_name)
+        if buffer_num == -1
+            exec "tabedit " . b:lf_git_buffer_name
+        else
+            let buf_ids = win_findbuf(buffer_num)
+            call win_gotoid(buf_ids[0])
+        endif
+
+        let i = start_line_num - 1
+        while i < len(line_num_content)
+            let line = line_num_content[i]
+            let last_part = strcharpart(line, line_len - (delimiter_len + 1), 2)
+            if last_part[0] != '-'
+                let numbers = split(line, ' ')
+                if len(numbers) == 2
+                    let line_num = numbers[0]
+                else
+                    let line_num = numbers[1]
+                endif
+                exec "norm! " . line_num . "G"
+                return
+            endif
+            let i += 1
+        endwhile
+        norm! G
+    endif
+endfunction
+
 function! leaderf#Git#OpenNavigationPanel() abort
     if !exists("b:lf_explorer_page_id") || b:lf_explorer_page_id == 0
         return

@@ -150,6 +150,7 @@ call s:InitVar('g:Lf_GitFolderIcons', {
 call s:InitVar('g:Lf_GitKeyMap', {
             \ 'previous_change': '[c',
             \ 'next_change': ']c',
+            \ 'edit_file': '<CR>',
             \})
 
 let s:Lf_CommandMap = {

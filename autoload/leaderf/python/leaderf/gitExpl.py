@@ -2626,6 +2626,8 @@ class UnifiedDiffViewPanel(Panel):
                 if not vim.current.buffer.name: # buffer name is empty
                     lfCmd("setlocal bufhidden=wipe")
                 lfCmd("silent hide edit {}".format(buf_name))
+                lfCmd("let b:lf_git_buffer_name = '%s'" % escQuote(os.path.abspath(lfGetFilePath(source))))
+                lfCmd("let b:lf_git_line_num_content = {}".format(str(line_num_content)))
                 lfCmd("augroup Lf_Git_Log | augroup END")
                 lfCmd("autocmd! Lf_Git_Log BufWinEnter <buffer> call leaderf#Git#SetMatches()")
                 ranges = (range(sublist[0], sublist[1] + 1) for sublist in fold_ranges)
@@ -2655,6 +2657,8 @@ class UnifiedDiffViewPanel(Panel):
                       .format(blame_map["previous_change"]))
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange()<CR>"
                       .format(blame_map["next_change"]))
+                lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(0)<CR>"
+                      .format(blame_map["edit_file"]))
             else:
                 lfCmd("call win_gotoid({})".format(winid))
                 if not vim.current.buffer.name: # buffer name is empty
