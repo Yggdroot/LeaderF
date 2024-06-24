@@ -2191,6 +2191,11 @@ class DiffViewPanel(Panel):
                       .format(winid))
                 lfCmd("""call win_execute({}, "let b:lf_diff_view_source = {}")"""
                       .format(winid, str(list(source))))
+                key_map = lfEval("g:Lf_GitKeyMap")
+                lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} [c')"""
+                      .format(winid, key_map["previous_change"]))
+                lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} ]c')"""
+                      .format(winid, key_map["next_change"]))
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
