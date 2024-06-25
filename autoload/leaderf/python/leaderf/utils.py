@@ -1104,6 +1104,7 @@ extension_ft = {
     ".csh"         : "csh",
     ".tcsh"        : "tcsh",
     ".xml"         : "xml",
+    ".make"        : "make",
     ".csproj.user"        : "xml",
     ".fsproj.user"        : "xml",
     ".vbproj.user"        : "xml",

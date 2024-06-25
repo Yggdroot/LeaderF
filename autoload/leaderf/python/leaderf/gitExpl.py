@@ -270,7 +270,10 @@ class GitDiffCommand(GitCommand):
         self._cmd += extra_options
         self._buffer_name = "LeaderF://git diff" + extra_options
         self._file_type = "diff"
-        self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
+        if lfEval("has('nvim')") == '1':
+            self._file_type_cmd = "setlocal filetype=diff"
+        else:
+            self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
 
 
 class GitLogDiffCommand(GitCommand):
@@ -293,7 +296,10 @@ class GitLogDiffCommand(GitCommand):
                                                                         )
         self._buffer_name = "LeaderF://" + self._cmd
         self._file_type = "diff"
-        self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
+        if lfEval("has('nvim')") == '1':
+            self._file_type_cmd = "setlocal filetype=diff"
+        else:
+            self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile *.diff"
 
 
 class GitCatFileCommand(GitCommand):

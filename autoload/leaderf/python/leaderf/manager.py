@@ -539,7 +539,11 @@ class Manager(object):
             cur_winid = lfEval("win_getid()")
             lfCmd("noautocmd call win_gotoid(%d)" % self._preview_winid)
             if not isinstance(source, int):
-                lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % source)
+                file_type = getExtension(source)
+                if file_type is None:
+                    lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % source)
+                else:
+                    lfCmd("setf %s" % getExtension(source))
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
 
             self._setWinOptions(self._preview_winid)
@@ -895,7 +899,11 @@ class Manager(object):
 
                     cur_filetype = getExtension(source)
                     if cur_filetype != self._preview_filetype:
-                        lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')" % (self._preview_winid, escQuote(source)))
+                        if cur_filetype is None:
+                            lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')"
+                                  % (self._preview_winid, escQuote(source)))
+                        else:
+                            lfCmd("call win_execute(%d, 'setf %s')" % (self._preview_winid, cur_filetype))
                         self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
             else:
                 if isinstance(source, int):
