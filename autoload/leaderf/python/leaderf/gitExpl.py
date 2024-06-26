@@ -1964,7 +1964,8 @@ class ResultPanel(Panel):
                       .format(winid, key_map["previous_change"]))
                 lfCmd("call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange(1)<CR>')"
                       .format(winid, key_map["next_change"]))
-
+                lfCmd("call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(1)<CR>')"
+                      .format(winid, key_map["edit_file"]))
 
     def writeBuffer(self):
         for v in self._views.values():

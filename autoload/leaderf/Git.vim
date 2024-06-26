@@ -677,12 +677,26 @@ EOF
     endif
 endfunction
 
-function! leaderf#Git#EditFile(tag) abort
-    if !filereadable(b:lf_git_buffer_name)
+function! s:GoToFile(file_name) abort
+    if !filereadable(a:file_name)
         return
     endif
 
+    let buffer_num = bufnr(fnamemodify(a:file_name, ':p'))
+    if buffer_num == -1
+        exec "tabedit " . a:file_name
+    else
+        let buf_ids = win_findbuf(buffer_num)
+        call win_gotoid(buf_ids[0])
+    endif
+endfunction
+
+function! leaderf#Git#EditFile(tag) abort
     if a:tag == 0
+        if !filereadable(b:lf_git_buffer_name)
+            return
+        endif
+
         let start_line_num = line('.')
         let line_num_content = b:lf_git_line_num_content
         if len(line_num_content) == 0
@@ -720,6 +734,45 @@ function! leaderf#Git#EditFile(tag) abort
             let i += 1
         endwhile
         norm! G
+    else
+        let cur_line = getline('.')
+        if cur_line =~ '^diff --git a/\S* b/\S*'
+            let file_name = split(getline('.'))[3][2:]
+            call s:GoToFile(file_name)
+            return
+        endif
+
+        let diff_line_num = search('^diff --git a/\S* b/\S*', 'bnW')
+        if diff_line_num == 0
+            return
+        endif
+        let diff_line = getline(diff_line_num)
+        let file_name = split(diff_line)[3][2:]
+        let at_line_num = search('^@@', 'bnW')
+        if at_line_num < diff_line_num || cur_line =~ '^@@'
+            call s:GoToFile(file_name)
+            return
+        endif
+
+        let start_line_num = matchstr(getline(at_line_num), '+\zs\(\d\+\)')
+        let i = at_line_num + 1
+        let cur_line_num = line('.')
+        let delta = 0
+        while i <= cur_line_num
+            if getline(i) !~ '^-'
+                let delta += 1
+            endif
+            let i += 1
+        endwhile
+
+        if cur_line !~ '^-'
+            let line_num = start_line_num + delta - 1
+        else
+            let line_num = start_line_num + delta
+        endif
+        call s:GoToFile(file_name)
+        exec "norm! " . line_num . "G"
+        setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!
     endif
 endfunction
 
