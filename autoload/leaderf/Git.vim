@@ -610,40 +610,70 @@ function! leaderf#Git#SignPlace(added_line_nums, deleted_line_nums, buf_number) 
     endfor
 endfunction
 
-function! leaderf#Git#PreviousChange() abort
-    let n = line('.')
-    let low = 0
-    let high = len(b:lf_change_start_lines)
-    while low < high
-        let mid = (low + high)/2
-        if b:lf_change_start_lines[mid] < n
-            let low = mid + 1
-        else
-            let high = mid
-        endif
-    endwhile
+function! leaderf#Git#PreviousChange(tag) abort
+    if a:tag == 0
+        let n = line('.')
+        let low = 0
+        let high = len(b:lf_change_start_lines)
+        while low < high
+            let mid = (low + high)/2
+            if b:lf_change_start_lines[mid] < n
+                let low = mid + 1
+            else
+                let high = mid
+            endif
+        endwhile
 
-    if low - 1 >= 0
-        exec printf("norm! %dG0", b:lf_change_start_lines[low - 1])
+        if low - 1 >= 0
+            exec printf("norm! %dG0", b:lf_change_start_lines[low - 1])
+        endif
+    else
+exec g:Lf_py "<< EOF"
+cur_line = vim.current.window.cursor[0]
+flag = False
+for i, line in enumerate(reversed(vim.current.buffer[:cur_line])):
+    if len(line) > 0 and line[0] in '-+':
+        if flag == True:
+            vim.current.window.cursor = [cur_line - i, 0]
+            break
+    else:
+        flag = True
+
+EOF
     endif
 endfunction
 
-function! leaderf#Git#NextChange() abort
-    let n = line('.')
-    let low = 0
-    let size = len(b:lf_change_start_lines)
-    let high = size
-    while low < high
-        let mid = (low + high)/2
-        if b:lf_change_start_lines[mid] <= n
-            let low = mid + 1
-        else
-            let high = mid
-        endif
-    endwhile
+function! leaderf#Git#NextChange(tag) abort
+    if a:tag == 0
+        let n = line('.')
+        let low = 0
+        let size = len(b:lf_change_start_lines)
+        let high = size
+        while low < high
+            let mid = (low + high)/2
+            if b:lf_change_start_lines[mid] <= n
+                let low = mid + 1
+            else
+                let high = mid
+            endif
+        endwhile
 
-    if high < size
-        exec printf("norm! %dG0", b:lf_change_start_lines[high])
+        if high < size
+            exec printf("norm! %dG0", b:lf_change_start_lines[high])
+        endif
+    else
+exec g:Lf_py "<< EOF"
+cur_line = vim.current.window.cursor[0] - 1
+flag = False
+for i, line in enumerate(vim.current.buffer[cur_line:], cur_line):
+    if len(line) > 0 and line[0] in '-+':
+        if flag == True:
+            vim.current.window.cursor = [i+1, 0]
+            break
+    else:
+        flag = True
+
+EOF
     endif
 endfunction
 

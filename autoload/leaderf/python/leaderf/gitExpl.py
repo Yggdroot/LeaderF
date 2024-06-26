@@ -1958,6 +1958,13 @@ class ResultPanel(Panel):
                 win_pos = arguments.get("--position", ["top"])[0]
             winid = self._createWindow(win_pos, buffer_name)
             GitCommandView(self, cmd).create(winid, buf_content=content)
+            if cmd.getFileType() in ("diff", "git"):
+                key_map = lfEval("g:Lf_GitKeyMap")
+                lfCmd("call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#PreviousChange(1)<CR>')"
+                      .format(winid, key_map["previous_change"]))
+                lfCmd("call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange(1)<CR>')"
+                      .format(winid, key_map["next_change"]))
+
 
     def writeBuffer(self):
         for v in self._views.values():
