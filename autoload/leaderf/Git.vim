@@ -734,7 +734,7 @@ function! leaderf#Git#EditFile(tag) abort
             let i += 1
         endwhile
         norm! G
-    else
+    elseif a:tag == 1
         let cur_line = getline('.')
         if cur_line =~ '^diff --git a/\S* b/\S*'
             let file_name = split(getline('.'))[3][2:]
@@ -769,6 +769,16 @@ function! leaderf#Git#EditFile(tag) abort
             let line_num = start_line_num + delta - 1
         else
             let line_num = start_line_num + delta
+        endif
+        call s:GoToFile(file_name)
+        exec "norm! " . line_num . "G"
+        setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!
+    else
+        let file_name = b:lf_git_buffer_name
+        if b:lf_git_diff_win_pos == 1
+            let line_num = line('.')
+        else
+            let line_num = getcurpos(b:lf_git_diff_win_id)[1]
         endif
         call s:GoToFile(file_name)
         exec "norm! " . line_num . "G"

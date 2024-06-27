@@ -2201,6 +2201,10 @@ class DiffViewPanel(Panel):
                 lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
                 lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
                       .format(winid, kwargs.get("explorer_page_id", 0)))
+                lfCmd("call win_execute({}, 'let b:lf_git_diff_win_pos = {}')".format(winid, i))
+                lfCmd("call win_execute({}, 'let b:lf_git_diff_win_id = {}')".format(winid, win_ids[1]))
+                lfCmd("""call win_execute(%d, "let b:lf_git_buffer_name = '%s'")"""
+                      % (winid, escQuote(os.path.abspath(lfGetFilePath(source)))))
                 lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side-by-side"')"""
                       .format(winid))
                 lfCmd("""call win_execute({}, "let b:lf_diff_view_source = {}")"""
@@ -2210,6 +2214,8 @@ class DiffViewPanel(Panel):
                       .format(winid, key_map["previous_change"]))
                 lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} ]c')"""
                       .format(winid, key_map["next_change"]))
+                lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(2)<CR>')"""
+                      .format(winid, key_map["edit_file"]))
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
