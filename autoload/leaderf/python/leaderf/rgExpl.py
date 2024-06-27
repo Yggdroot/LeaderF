@@ -1518,7 +1518,7 @@ class RgExplManager(Manager):
             lfCmd("undo")
             lfCmd("echohl WarningMsg | redraw | echo ' undo finished!' | echohl None")
 
-    def quit(self):
+    def confirm(self):
         if self._getInstance().buffer.options["modified"]:
             selection = int(lfEval("""confirm("buffer changed, apply changes or discard?", "&apply\n&discard")"""))
             if selection == 0:
@@ -1537,8 +1537,14 @@ class RgExplManager(Manager):
         self._getInstance().buffer.options["modifiable"] = False
         self._getInstance().buffer.options["undolevels"] = -1
 
+    def quit(self):
+        self.confirm()
         super(RgExplManager, self).quit()
+        lfCmd("silent! autocmd! Lf_Rg_ReplaceMode")
 
+    def accept(self, mode=''):
+        self.confirm()
+        super(RgExplManager, self).accept(mode)
         lfCmd("silent! autocmd! Lf_Rg_ReplaceMode")
 
     def _writeBuffer(self):
