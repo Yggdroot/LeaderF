@@ -556,6 +556,44 @@ class Manager(object):
                 lfCmd("""call nvim_win_set_cursor(%d, [%d, 1])""" % (self._preview_winid, line_num))
             lfCmd("norm! zz")
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
+        elif lfEval("exists('*popup_setbuf')") == "1":
+            if isinstance(source, int):
+                lfCmd("noautocmd silent! let winid = popup_create(%d, %s)"
+                      % (source, json.dumps(config)))
+            else:
+                filename = source
+                try:
+                    if self._isBinaryFile(filename):
+                        lfCmd("""let content = map(range(128), '"^@"')""")
+                    else:
+                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
+                except vim.error as e:
+                    lfPrintError(e)
+                    return
+
+                lfCmd("noautocmd silent! let winid = popup_create(bufadd('/Lf_preview_%s'), %s)"
+                      % (id(self), json.dumps(config)))
+                lfCmd("call win_execute(winid, 'setlocal modeline')")
+                lfCmd("call win_execute(winid, 'setlocal undolevels=-1')")
+                lfCmd("call win_execute(winid, 'setlocal noswapfile')")
+                lfCmd("call win_execute(winid, 'setlocal nobuflisted')")
+                lfCmd("call win_execute(winid, 'setlocal bufhidden=hide')")
+                lfCmd("call win_execute(winid, 'setlocal buftype=nofile')")
+                lfCmd("noautocmd call popup_settext(winid, content)")
+
+                lfCmd("call win_execute(winid, 'silent! doautocmd filetypedetect BufNewFile %s')"
+                      % escQuote(filename))
+
+            self._preview_winid = int(lfEval("winid"))
+            self._setWinOptions(self._preview_winid)
+            self._preview_filetype = lfEval("getbufvar(winbufnr(winid), '&ft')")
+
+            if jump_cmd:
+                lfCmd("""call win_execute(%d, '%s')""" % (self._preview_winid, escQuote(jump_cmd)))
+                lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
+            elif line_num > 0:
+                lfCmd("""call win_execute(%d, "call cursor(%d, 1)")""" % (self._preview_winid, line_num))
+                lfCmd("call win_execute(%d, 'norm! zz')" % self._preview_winid)
         else:
             if isinstance(source, int):
                 lfCmd("let content = getbufline(%d, 1, '$')" % source)
@@ -904,6 +942,28 @@ class Manager(object):
                                   % (self._preview_winid, escQuote(source)))
                         else:
                             lfCmd("call win_execute(%d, 'setf %s')" % (self._preview_winid, cur_filetype))
+                        self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
+            elif lfEval("exists('*popup_setbuf')") == "1":
+                if isinstance(source, int):
+                    lfCmd("call popup_setbuf(%d, %d)" % (self._preview_winid, source))
+                    self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
+                else:
+                    filename = source
+                    try:
+                        if self._isBinaryFile(filename):
+                            lfCmd("""let content = map(range(128), '"^@"')""")
+                        else:
+                            lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
+                    except vim.error as e:
+                        lfPrintError(e)
+                        return
+                    lfCmd("call popup_setbuf(%d, bufadd('/Lf_preview_%d'))" % (self._preview_winid, id(self)))
+                    lfCmd("noautocmd call popup_settext(%d, content)" % self._preview_winid)
+
+                    cur_filetype = getExtension(filename)
+                    if cur_filetype != self._preview_filetype:
+                        lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')"
+                              % (self._preview_winid, escQuote(filename)))
                         self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
             else:
                 if isinstance(source, int):
