@@ -1692,7 +1692,7 @@ class TreeView(GitCommandView):
         if index < len(structure) and structure[index].path == path:
             # lfCmd("call win_gotoid({})" .format(self.getWindowId()))
             # lfCmd("{} | norm! 0zz" .format(index + 1 + len(self._head)))
-            lfCmd("call win_execute({}, 'norm! {}Gzz')"
+            lfCmd("call win_execute({}, 'norm! {}G0zz')"
                   .format(self.getWindowId(), index + 1 + len(self._head)))
         else:
             if not self.inFileStructure(path):
@@ -1714,7 +1714,7 @@ class TreeView(GitCommandView):
 
             index = Bisect.bisect_left(structure, 0, index, index + increment, key=getKey)
             if index < len(structure) and structure[index].path == path:
-                lfCmd("call win_execute({}, 'norm! {}Gzz')"
+                lfCmd("call win_execute({}, 'norm! {}G0zz')"
                       .format(self.getWindowId(), index + 1 + len(self._head)))
                 # lfCmd("call win_gotoid({})" .format(self.getWindowId()))
                 # lfCmd("{} | norm! 0zz" .format(index + 1 + len(self._head)))
