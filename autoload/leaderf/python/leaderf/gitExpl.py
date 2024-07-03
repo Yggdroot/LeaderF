@@ -1178,6 +1178,8 @@ class TreeView(GitCommandView):
             if "algorithm:" in diffopt:
                 algo = re.sub(r".*algorithm:(\w+).*", r"\1", diffopt)
                 self.setDiffAlgorithm(algo)
+            else:
+                self.setDiffAlgorithm("myers")
         else:
             self._buffer[1] = ' Side-by-side ○ Unified ◉'
         self._buffer.options['modifiable'] = False
@@ -3083,6 +3085,14 @@ class ExplorerPage(object):
                 lfCmd("set diffopt-=iwhiteall")
 
         self._navigation_panel.tree_view.setDiffViewMode(self._diff_view_mode)
+
+        if self._diff_view_mode == 'side-by-side':
+            diffopt = lfEval("&diffopt")
+            if "algorithm:" in diffopt:
+                algo = re.sub(r".*algorithm:(\w+).*", r"\1", diffopt)
+                self._diff_algorithm = algo
+            else:
+                self._diff_algorithm = "myers"
 
         source = self.getExistingSource()
         self.open(False, preview=True, diff_view_source=source)
