@@ -260,10 +260,11 @@ class GitDiffCommand(GitCommand):
             extra_options += " " + " ".join(self._arguments["extra"])
 
         if self._source is not None:
-            file_name = lfGetFilePath(self._source)
-            if " " in file_name:
-                file_name = file_name.replace(' ', r'\ ')
-            extra_options += " -- {}".format(file_name)
+            if " -- " not in self._arguments["arg_line"]:
+                file_name = lfGetFilePath(self._source)
+                if " " in file_name:
+                    file_name = file_name.replace(' ', r'\ ')
+                extra_options += " -- {}".format(file_name)
         elif "--current-file" in self._arguments and "current_file" in self._arguments:
             extra_options += " -- {}".format(self._arguments["current_file"])
 
