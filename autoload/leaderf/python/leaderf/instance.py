@@ -1189,7 +1189,8 @@ class LfInstance(object):
                 vim.options['eventignore'] = saved_eventignore
 
             if len(vim.windows) > 1:
-                lfCmd("silent! hide")
+                if self._manager.is_autocmd == False:
+                    lfCmd("silent! hide")
                 if self._orig_win_id is not None:
                     lfCmd("call win_gotoid(%d)" % self._orig_win_id)
                 else:

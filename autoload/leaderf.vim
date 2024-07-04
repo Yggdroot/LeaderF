@@ -621,7 +621,9 @@ endfunction
 
 function! leaderf#Quit(manager_id) abort
     exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.is_autocmd = True", a:manager_id)
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:manager_id)
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.is_autocmd = False", a:manager_id)
 endfunction
 
 function! leaderf#ResetPopupOptions(winid, option, value) abort

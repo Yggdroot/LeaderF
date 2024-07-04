@@ -131,6 +131,7 @@ class Manager(object):
         self._preview_filetype = None
         self._orig_source = None
         self._preview_config = {}
+        self.is_autocmd = False
         self._circular_scroll = lfEval("get(g:, 'Lf_EnableCircularScroll', 0)") == '1'
         if lfEval("has('patch-8.1.1615') || has('nvim-0.5.0')") == '0':
             lfCmd("let g:Lf_PreviewInPopup = 0")
