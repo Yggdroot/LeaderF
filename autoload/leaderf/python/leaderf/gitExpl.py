@@ -3824,6 +3824,51 @@ class GitBlameExplManager(GitExplManager):
         lfCmd("call win_execute({}, 'setlocal noswapfile')".format(winid))
         lfCmd("call win_execute({}, 'setlocal nospell')".format(winid))
 
+    def getLineNumber(self, commit_id, file_name, line_num, text, project_root):
+        cmd = 'git show --pretty= -U0 {} -- {}'.format(commit_id, file_name)
+        outputs = ParallelExecutor.run(cmd, directory=project_root)
+        found = False
+        for i, line in enumerate(outputs[0]):
+            # @@ -2,11 +2,21 @@
+            if line.startswith("@@"):
+                line_numbers = line.split("+", 1)[1].split(None, 1)[0]
+                if "," in line_numbers:
+                    start, count = line_numbers.split(",")
+                    start = int(start)
+                    count = int(count)
+                else:
+                    # @@ -1886 +1893 @@
+                    start = int(line_numbers)
+                    count = 1
+
+                if start + count > line_num:
+                    found = True
+                    orig_line_numbers = line.split(None, 2)[1].lstrip("-")
+                    if "," in orig_line_numbers:
+                        orig_start, orig_count = orig_line_numbers.split(",")
+                        orig_start = int(orig_start)
+                        orig_count = int(orig_count)
+                    else:
+                        orig_start = int(orig_line_numbers)
+                        orig_count = 1
+
+                    if orig_count == 1 or orig_count == 0:
+                        return orig_start
+                    elif orig_count == count:
+                        return orig_start + line_num - start
+                    else:
+                        ratio = 0
+                        index = i + 1
+                        for j, line in enumerate(outputs[0][index: index + orig_count], index):
+                            r = SequenceMatcher(None, text, line).ratio()
+                            if r > ratio:
+                                ratio = r
+                                index = j
+
+                        return orig_start + index - i - 1
+
+        return line_num
+
     def blamePrevious(self):
         if vim.current.line == "":
             return
@@ -3838,11 +3883,16 @@ class GitBlameExplManager(GitExplManager):
             return
 
         line_num, file_name = vim.current.line.rsplit('\t', 1)[1].split(None, 1)
+        line_num = int(line_num)
         project_root = lfEval("b:lf_blame_project_root")
         blame_panel = self._blame_panels[project_root]
         blame_buffer_name = vim.current.buffer.name
         alternate_winid = blame_panel.getAlternateWinid(blame_buffer_name)
         blame_winid = lfEval("win_getid()")
+
+        alternate_buffer_num = int(lfEval("winbufnr({})".format(alternate_winid)))
+        text = vim.buffers[alternate_buffer_num][vim.current.window.cursor[0] - 1]
+        line_num = self.getLineNumber(commit_id, file_name, line_num, text, project_root)
 
         if commit_id not in blame_panel.getBlameDict(blame_buffer_name):
             cmd = 'git log -2 --pretty="%H" --name-status --follow {} -- {}'.format(commit_id,
@@ -4158,8 +4208,9 @@ class GitBlameExplManager(GitExplManager):
                     start = int(start)
                     count = int(count)
                 else:
+                    # @@ -1886 +1893 @@
                     start = int(line_numbers)
-                    count = 0
+                    count = 1
 
                 if start + count > line_num:
                     found = True
