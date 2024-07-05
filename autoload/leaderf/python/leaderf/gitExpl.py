@@ -3893,6 +3893,7 @@ class GitBlameExplManager(GitExplManager):
         alternate_buffer_num = int(lfEval("winbufnr({})".format(alternate_winid)))
         text = vim.buffers[alternate_buffer_num][vim.current.window.cursor[0] - 1]
         line_num = self.getLineNumber(commit_id, file_name, line_num, text, project_root)
+        top_line_delta = vim.current.window.cursor[0] - int(lfEval("line('w0')"))
 
         if commit_id not in blame_panel.getBlameDict(blame_buffer_name):
             cmd = 'git log -2 --pretty="%H" --name-status --follow {} -- {}'.format(commit_id,
@@ -3936,7 +3937,7 @@ class GitBlameExplManager(GitExplManager):
             if alternate_buffer_name in blame_buffer_dict:
                 blame_buffer, alternate_buffer_num = blame_buffer_dict[alternate_buffer_name]
                 lfCmd("buffer {}".format(alternate_buffer_num))
-                lfCmd("noautocmd norm! {}Gzz".format(line_num))
+                lfCmd("noautocmd norm! {}Gzt{}G0".format(line_num-top_line_delta, line_num))
                 top_line = lfEval("line('w0')")
 
                 lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
@@ -3974,7 +3975,7 @@ class GitBlameExplManager(GitExplManager):
                 lfCmd("setlocal nomodifiable")
                 alternate_buffer_num = vim.current.buffer.number
 
-                lfCmd("noautocmd norm! {}Gzz".format(line_num))
+                lfCmd("noautocmd norm! {}Gzt{}G0".format(line_num-top_line_delta, line_num))
                 top_line = lfEval("line('w0')")
 
                 lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
@@ -4019,7 +4020,7 @@ class GitBlameExplManager(GitExplManager):
              ) = blame_panel.getBlameDict(blame_buffer_name)[commit_id]
             lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
             lfCmd("buffer {}".format(alternate_buffer_num))
-            lfCmd("noautocmd norm! {}Gzz".format(line_num))
+            lfCmd("noautocmd norm! {}Gzt{}G0".format(line_num-top_line_delta, line_num))
             top_line = lfEval("line('w0')")
 
             lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
