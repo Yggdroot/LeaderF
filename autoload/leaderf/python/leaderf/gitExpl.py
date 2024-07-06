@@ -1027,9 +1027,16 @@ class GitBlameView(GitCommandView):
         self._highlight(current_time, date_dict)
 
     def _highlight(self, current_time, date_dict):
+        date_set = set()
         for date, timestamp in date_dict.values():
-            index = Bisect.bisect_left(self._heat_seconds, current_time - timestamp)
-            lfCmd(r"syn match Lf_hl_blame_heat_{} /\<{}\>/".format(index, date))
+            if date not in date_set:
+                date_set.add(date)
+                index = Bisect.bisect_left(self._heat_seconds, current_time - timestamp)
+                lfCmd(r"syn match Lf_hl_blame_heat_{} /\<{}\>/".format(index, date))
+
+    def clearHeatSyntax(self):
+        for i in range(len(self._heat_seconds)):
+            lfCmd("silent! syn clear Lf_hl_blame_heat_{}".format(i))
 
 
 class LfOrderedDict(OrderedDict):
@@ -2881,6 +2888,14 @@ class BlamePanel(Panel):
                 self._views[buffer_name].create(-1, buf_content=outputs[0])
                 lfCmd("vertical resize {}".format(line_width + line_num_width))
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, cursor_line))
+                if date_format != lfEval("b:lf_blame_date_format"):
+                    lfCmd("let b:lf_blame_date_format = '{}'".format(date_format))
+                    blame_view = self._views[buffer_name]
+                    blame_view.clearHeatSyntax()
+                    if date_format in ["iso", "iso-strict", "short"]:
+                        blame_view.highlightHeatDate1(date_format, outputs[0])
+                    else:
+                        blame_view.highlightHeatDate2(outputs[1], outputs[2])
             else:
                 winid = int(lfEval("win_getid()"))
                 blame_view = GitBlameView(self, cmd)
@@ -2899,6 +2914,7 @@ class BlamePanel(Panel):
                     blame_view.highlightHeatDate2(outputs[1], outputs[2])
                 self._owner.defineMaps(blame_winid)
                 lfCmd("let b:lf_blame_project_root = '{}'".format(self._project_root))
+                lfCmd("let b:lf_blame_date_format = '{}'".format(date_format))
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, cursor_line))
                 lfCmd("call win_execute({}, 'setlocal scrollbind')".format(winid))
                 lfCmd("setlocal scrollbind")
