@@ -297,7 +297,7 @@ function! leaderf#Git#ShowCommitMessage(message) abort
                     \ "border":          [1, 1, 1, 1],
                     \ "borderchars":     g:Lf_PopupBorders,
                     \ "borderhighlight": ["Lf_hl_popupBorder"],
-                    \ "filter":          "leaderf#Git#PreviewFilter",
+                    \ "filter":          "leaderf#Git#ShowMsgFilter",
                     \ "mapping":         0,
                     \}
 
@@ -336,6 +336,39 @@ function leaderf#Git#PreviewFilter(winid, key) abort
         let manager_id = getbufvar(winbufnr(a:winid), 'lf_blame_manager_id')
         exec g:Lf_py "import ctypes"
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.blameNext()", manager_id)
+        return 1
+    elseif a:key == "\<C-J>"
+        call win_execute(a:winid, "norm! j")
+        return 1
+    elseif a:key == "\<C-K>"
+        call win_execute(a:winid, "norm! k")
+        return 1
+    else
+        return leaderf#popupModePreviewFilter(a:winid, a:key)
+    endif
+
+    return 1
+endfunction
+
+function leaderf#Git#ShowMsgFilter(winid, key) abort
+    if a:key == "\<LeftMouse>"
+        if exists("*getmousepos")
+            let pos = getmousepos()
+            if pos.winid != a:winid
+                call popup_close(a:winid)
+            endif
+        endif
+    endif
+
+    if a:key == "\<ESC>"
+        call popup_close(a:winid)
+        return 1
+    elseif a:key == "j" || a:key == "k"
+        call popup_close(a:winid)
+        return 0
+    elseif a:key == "\<CR>"
+        call popup_close(a:winid)
+        call feedkeys("\<CR>", 't')
         return 1
     elseif a:key == "\<C-J>"
         call win_execute(a:winid, "norm! j")
