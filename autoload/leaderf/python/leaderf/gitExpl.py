@@ -4046,6 +4046,13 @@ class GitBlameExplManager(GitExplManager):
             lfCmd("vertical resize {}".format(blame_win_width))
             lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, line_num))
 
+        if lfEval("exists('b:lf_preview_winid') && winbufnr(b:lf_preview_winid) != -1") == '1':
+            if lfEval("has('nvim')") == '1':
+                lfCmd("call nvim_win_close(b:lf_preview_winid, 1)")
+            else:
+                lfCmd("call popup_close(b:lf_preview_winid)")
+            self.preview()
+
     def blameNext(self):
         project_root = lfEval("b:lf_blame_project_root")
         blame_panel = self._blame_panels[project_root]
@@ -4059,6 +4066,7 @@ class GitBlameExplManager(GitExplManager):
 
         lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
         lfCmd("buffer {}".format(alternate_buffer_num))
+        lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, cursor_line))
 
         lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
         lfCmd("setlocal modifiable")
@@ -4066,6 +4074,13 @@ class GitBlameExplManager(GitExplManager):
         lfCmd("setlocal nomodifiable")
         lfCmd("vertical resize {}".format(blame_win_width))
         lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, cursor_line))
+
+        if lfEval("exists('b:lf_preview_winid') && winbufnr(b:lf_preview_winid) != -1") == '1':
+            if lfEval("has('nvim')") == '1':
+                lfCmd("call nvim_win_close(b:lf_preview_winid, 1)")
+            else:
+                lfCmd("call popup_close(b:lf_preview_winid)")
+            self.preview()
 
     def showCommitMessage(self):
         if vim.current.line == "":
@@ -4197,11 +4212,13 @@ class GitBlameExplManager(GitExplManager):
         self._preview_panel.create(cmd, self.generateConfig(project_root), outputs[0])
         preview_winid = self._preview_panel.getPreviewWinId()
         self._setWinOptions(preview_winid)
+        lfCmd("let b:lf_preview_winid = {}".format(preview_winid))
         if lfEval("has('nvim')") == '1':
-            lfCmd("let b:lf_preview_winid = {}".format(preview_winid))
             lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % preview_winid)
         else:
             lfCmd("call win_execute({}, 'setlocal nonumber')".format(preview_winid))
+            lfCmd("call win_execute({}, 'let b:lf_blame_manager_id = {}')".format(preview_winid,
+                                                                                  id(self)))
 
         self.gotoLine(preview_winid, line_num)
         lfCmd("call win_execute({}, 'setlocal filetype=diff')".format(preview_winid))

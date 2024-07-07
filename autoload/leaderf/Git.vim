@@ -327,6 +327,16 @@ function leaderf#Git#PreviewFilter(winid, key) abort
         call popup_close(a:winid)
         call feedkeys("\<CR>", 't')
         return 1
+    elseif a:key == "h"
+        let manager_id = getbufvar(winbufnr(a:winid), 'lf_blame_manager_id')
+        exec g:Lf_py "import ctypes"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.blamePrevious()", manager_id)
+        return 1
+    elseif a:key == "l"
+        let manager_id = getbufvar(winbufnr(a:winid), 'lf_blame_manager_id')
+        exec g:Lf_py "import ctypes"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.blameNext()", manager_id)
+        return 1
     elseif a:key == "\<C-J>"
         call win_execute(a:winid, "norm! j")
         return 1
