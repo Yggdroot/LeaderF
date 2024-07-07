@@ -4223,6 +4223,13 @@ class GitBlameExplManager(GitExplManager):
         self.gotoLine(preview_winid, line_num)
         lfCmd("call win_execute({}, 'setlocal filetype=diff')".format(preview_winid))
 
+    def quit(self):
+        if lfEval("has('nvim')") == '1':
+            if lfEval("exists('b:lf_preview_winid') && winbufnr(b:lf_preview_winid) != -1") == '1':
+                lfCmd("call nvim_win_close(b:lf_preview_winid, 1)")
+
+        lfCmd("bwipe")
+
     def gotoLine(self, winid, line_num):
         found = False
         current_line = 0

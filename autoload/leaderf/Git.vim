@@ -327,6 +327,10 @@ function leaderf#Git#PreviewFilter(winid, key) abort
         call popup_close(a:winid)
         call feedkeys("\<CR>", 't')
         return 1
+    elseif a:key == "q"
+        call popup_close(a:winid)
+        call feedkeys("q", 't')
+        return 1
     elseif a:key == "h"
         let manager_id = getbufvar(winbufnr(a:winid), 'lf_blame_manager_id')
         exec g:Lf_py "import ctypes"
@@ -440,6 +444,7 @@ function! leaderf#Git#BlameMaps(id) abort
     exec printf('nnoremap <buffer> <silent> l             :exec g:Lf_py "%s.blameNext()"<CR>', blame_manager)
     exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', blame_manager)
     exec printf('nnoremap <buffer> <silent> p             :exec g:Lf_py "%s.preview()"<CR>', blame_manager)
+    exec printf('nnoremap <buffer> <silent> q             :exec g:Lf_py "%s.quit()"<CR>', blame_manager)
     if has("nvim")
         nnoremap <buffer> <silent> j         :call leaderf#Git#CloseFloatWin()<CR>j
         nnoremap <buffer> <silent> k         :call leaderf#Git#CloseFloatWin()<CR>k
@@ -447,7 +452,6 @@ function! leaderf#Git#BlameMaps(id) abort
         nnoremap <buffer> <silent> <LeftMouse>     :call leaderf#Git#CloseFloatWinMouse()<CR><LeftMouse>
     endif
     nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("blame")<CR>
-    nnoremap <buffer> <silent> q             :bwipe<CR>
 endfunction
 
 function! leaderf#Git#TimerCallback(manager_id, id) abort
