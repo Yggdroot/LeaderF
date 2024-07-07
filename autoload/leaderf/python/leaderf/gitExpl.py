@@ -2280,7 +2280,10 @@ class UnifiedDiffViewPanel(Panel):
             del self._hidden_views[name]
 
     def bufHidden(self, view):
-        lfCmd("silent! call leaderf#Git#ClearMatches()")
+        # window is closed if not equal
+        if int(lfEval("win_getid()")) == view.getWindowId():
+            lfCmd("silent! call leaderf#Git#ClearMatches()")
+
         name = view.getBufferName()
         if name in self._views:
             del self._views[name]
