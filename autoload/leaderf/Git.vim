@@ -675,6 +675,11 @@ function! leaderf#Git#PreviousChange(tag) abort
             exec printf("norm! %dG0", b:lf_change_start_lines[low - 1])
         endif
     else
+        call s:PreviousChange()
+    endif
+endfunction
+
+function! s:PreviousChange() abort
 exec g:Lf_py "<< EOF"
 cur_line = vim.current.window.cursor[0]
 flag = False
@@ -687,7 +692,6 @@ for i, line in enumerate(reversed(vim.current.buffer[:cur_line])):
         flag = True
 
 EOF
-    endif
 endfunction
 
 function! leaderf#Git#NextChange(tag) abort
@@ -709,6 +713,11 @@ function! leaderf#Git#NextChange(tag) abort
             exec printf("norm! %dG0", b:lf_change_start_lines[high])
         endif
     else
+        call s:NextChange()
+    endif
+endfunction
+
+function! s:NextChange() abort
 exec g:Lf_py "<< EOF"
 cur_line = vim.current.window.cursor[0] - 1
 flag = False
@@ -721,7 +730,6 @@ for i, line in enumerate(vim.current.buffer[cur_line:], cur_line):
         flag = True
 
 EOF
-    endif
 endfunction
 
 function! s:GoToFile(file_name) abort
