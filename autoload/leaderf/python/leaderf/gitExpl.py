@@ -468,7 +468,7 @@ class GitShowCommand(GitCommand):
         super(GitShowCommand, self).__init__(arguments_dict, None)
 
     def buildCommandAndBufferName(self):
-        self._cmd = "git show {} -- {}".format(self._commit_id, self._file_name)
+        self._cmd = "git log -1 -p --follow {} -- {}".format(self._commit_id, self._file_name)
         self._file_type = "git"
         self._file_type_cmd = "setlocal filetype=git"
 
@@ -3844,7 +3844,7 @@ class GitBlameExplManager(GitExplManager):
         lfCmd("call win_execute({}, 'setlocal nospell')".format(winid))
 
     def getLineNumber(self, commit_id, file_name, line_num, text, project_root):
-        cmd = 'git show --pretty= -U0 {} -- {}'.format(commit_id, file_name)
+        cmd = 'git log -1 -p --pretty= -U0 --follow {} -- {}'.format(commit_id, file_name)
         outputs = ParallelExecutor.run(cmd, directory=project_root)
         found = False
         for i, line in enumerate(outputs[0]):
