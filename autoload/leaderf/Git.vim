@@ -557,6 +557,8 @@ function! leaderf#Git#Commands() abort
                     \ {"Leaderf git log --explorer --navigation-position bottom": "specify the position of navigation panel in explorer tabpage"},
                     \ {"Leaderf git log --current-file":           "fuzzy search and view the log of current file"},
                     \ {"Leaderf git log --current-file --explorer":"fuzzy search and view the log of current file in explorer tabpage"},
+                    \ {"Leaderf git log --current-line":           "fuzzy search and view the log of current line"},
+                    \ {"Leaderf git log --current-line --explorer":"fuzzy search and view the log of current line in explorer tabpage"},
                     \ {"Leaderf git blame":                        "git blame current file"},
                     \ {"Leaderf git blame -w":                     "ignore whitespace when git blame current file"},
                     \ {"Leaderf git blame --date relative":        "show relative date when git blame current file"},

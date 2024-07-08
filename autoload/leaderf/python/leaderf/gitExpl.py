@@ -143,6 +143,7 @@ class GitLogExplorer(GitExplorer):
     def __init__(self):
         super(GitLogExplorer, self).__init__()
         self.orig_name = {}
+        self.patches = {}
 
     def generateContent(self, content):
         for line1, line2, _ in itertools.zip_longest(content, content, content):
@@ -150,8 +151,22 @@ class GitLogExplorer(GitExplorer):
             self.orig_name[commit_id] = line2
             yield line1
 
+    def generateContentPatches(self, content):
+        result = []
+        commit = None
+        for line in content:
+            if line.startswith("$"):
+                result.append(line[1:])
+                commit = line.split(None, 1)[0].lstrip("$")
+                self.patches[commit] = []
+            else:
+                self.patches[commit].append(line)
+
+        return result
+
     def getContent(self, *args, **kwargs):
         self.orig_name.clear()
+        self.patches = {}
 
         arguments_dict = kwargs.get("arguments", {})
 
@@ -162,9 +177,17 @@ class GitLogExplorer(GitExplorer):
         cmd = 'git log {} --pretty=format:"%h%d %s"'.format(options)
         if "--current-file" in arguments_dict and "current_file" in arguments_dict:
             cmd += " --name-only --follow -- {}".format(arguments_dict["current_file"])
+        elif "--current-line" in arguments_dict and "current_file" in arguments_dict:
+            cmd = 'git log {} --pretty=format:"$%h%d %s"'.format(options)
+            cmd += " -L{},{}:{}".format(arguments_dict["current_line_num"],
+                                        arguments_dict["current_line_num"],
+                                        arguments_dict["current_file"])
+            content = executor.execute(cmd, encoding=lfEval("&encoding"))
+            return self.generateContentPatches(content)
 
         if "extra" in arguments_dict:
             cmd += " " + " ".join(arguments_dict["extra"])
+
         content = executor.execute(cmd, encoding=lfEval("&encoding"))
 
         if "--current-file" in arguments_dict and "current_file" in arguments_dict:
@@ -355,6 +378,8 @@ class GitLogCommand(GitCommand):
                 self._cmd += " --follow -- {}".format(self._arguments["current_file"])
 
             self._buffer_name = "LeaderF://" + self._cmd
+        elif "--current-line" in self._arguments and "current_file" in self._arguments:
+            self._buffer_name = "LeaderF://" + self._source
         else:
             sep = ' ' if os.name == 'nt' else ''
             if "--find-copies-harder" in self._arguments:
@@ -2690,13 +2715,13 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("let b:lf_explorer_page_id = {}".format(kwargs.get("explorer_page_id", 0)))
                 lfCmd("let b:lf_diff_view_mode = 'unified'")
                 lfCmd("let b:lf_diff_view_source = {}".format(str(list(source))))
-                blame_map = lfEval("g:Lf_GitKeyMap")
+                key_map = lfEval("g:Lf_GitKeyMap")
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#PreviousChange(0)<CR>"
-                      .format(blame_map["previous_change"]))
+                      .format(key_map["previous_change"]))
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange(0)<CR>"
-                      .format(blame_map["next_change"]))
+                      .format(key_map["next_change"]))
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(0)<CR>"
-                      .format(blame_map["edit_file"]))
+                      .format(key_map["edit_file"]))
             else:
                 lfCmd("call win_gotoid({})".format(winid))
                 if not vim.current.buffer.name: # buffer name is empty
@@ -3658,9 +3683,15 @@ class GitLogExplManager(GitExplManager):
         if source is None:
             return
 
-        self._preview_panel.create(self.createGitCommand(self._arguments, source),
-                                   config,
-                                   project_root=self._project_root)
+        if "--current-line" in self._arguments and len(self._getExplorer().patches) > 0:
+            self._preview_panel.create(self.createGitCommand(self._arguments, source),
+                                       config,
+                                       buf_content=self._getExplorer().patches[source],
+                                       project_root=self._project_root)
+        else:
+            self._preview_panel.create(self.createGitCommand(self._arguments, source),
+                                       config,
+                                       project_root=self._project_root)
         self._preview_winid = self._preview_panel.getPreviewWinId()
         self._setWinOptions(self._preview_winid)
 
@@ -3678,7 +3709,10 @@ class GitLogExplManager(GitExplManager):
 
         content = self._preview_panel.getContent(source)
         if content is None:
-            self._preview_panel.createView(self.createGitCommand(self._arguments, source))
+            if "--current-line" in self._arguments and len(self._getExplorer().patches) > 0:
+                self._preview_panel.setContent(self._getExplorer().patches[source])
+            else:
+                self._preview_panel.createView(self.createGitCommand(self._arguments, source))
         else:
             self._preview_panel.setContent(content)
 
@@ -3698,6 +3732,15 @@ class GitLogExplManager(GitExplManager):
                     file_name = file_name.replace(' ', r'\ ')
                 self._arguments["current_file"] = lfRelpath(file_name)
                 self._arguments["orig_name"] = self._getExplorer().orig_name
+            elif ("--current-line" in arguments_dict
+                and vim.current.buffer.name
+                and not vim.current.buffer.options['bt']
+               ):
+                file_name = vim.current.buffer.name
+                if " " in file_name:
+                    file_name = file_name.replace(' ', r'\ ')
+                self._arguments["current_file"] = lfRelpath(file_name)
+                self._arguments["current_line_num"] = vim.current.window.cursor[0]
 
         if "--recall" in arguments_dict:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
@@ -3751,14 +3794,32 @@ class GitLogExplManager(GitExplManager):
     def _accept(self, file, mode, *args, **kwargs):
         super(GitExplManager, self)._accept(file, mode, *args, **kwargs)
 
-    def _createExplorerPage(self, commit_id, target_path=None):
+    def _createExplorerPage(self, commit_id, target_path=None, line_num=None):
         if commit_id in self._pages:
             vim.current.tabpage = self._pages[commit_id].tabpage
         else:
             self._pages[commit_id] = ExplorerPage(self._project_root, commit_id, self)
             self._pages[commit_id].create(self._arguments,
                                           GitLogExplCommand(self._arguments, commit_id),
-                                          target_path=target_path)
+                                          target_path=target_path,
+                                          line_num=line_num)
+
+    def _getPathAndLineNum(self, commit_id):
+        patch = self._getExplorer().patches[commit_id]
+        file_path = patch[0].rsplit(None, 1)[1][2:]
+        line_num = 1
+        for line in patch:
+            if line.startswith("@@"):
+                line_numbers = line.split("+", 1)[1].split(None, 1)[0]
+                if "," in line_numbers:
+                    line_num, count = line_numbers.split(",")
+                    line_num = int(line_num)
+                else:
+                    # @@ -1886 +1893 @@
+                    line_num = int(line_numbers)
+                break
+
+        return (file_path, line_num)
 
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
@@ -3784,6 +3845,22 @@ class GitLogExplManager(GitExplManager):
                 if len(outputs[0]) > 0:
                     _, source = TreeView.generateSource(outputs[0][0])
                     self._diff_view_panel.create(self._arguments, source, **kwargs)
+        elif "--current-line" in self._arguments and len(self._getExplorer().patches) > 0:
+            if "--explorer" in self._arguments:
+                file_path, line_num = self._getPathAndLineNum(commit_id)
+                self._createExplorerPage(commit_id, file_path, line_num)
+            else:
+                if kwargs.get("mode", '') == 't' and commit_id not in self._result_panel.getSources():
+                    self._arguments["mode"] = 't'
+                    lfCmd("tabnew")
+
+                tabpage_count = len(vim.tabpages)
+
+                self._result_panel.create(self.createGitCommand(self._arguments, commit_id),
+                                          self._getExplorer().patches[commit_id])
+
+                if kwargs.get("mode", '') == 't' and len(vim.tabpages) > tabpage_count:
+                    tabmove()
         elif "--explorer" in self._arguments:
             self._createExplorerPage(commit_id)
         else:
