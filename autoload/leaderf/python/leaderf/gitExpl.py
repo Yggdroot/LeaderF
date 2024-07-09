@@ -2943,6 +2943,7 @@ class BlamePanel(Panel):
                 self._owner.defineMaps(blame_winid)
                 lfCmd("let b:lf_blame_project_root = '{}'".format(self._project_root))
                 lfCmd("let b:lf_blame_date_format = '{}'".format(date_format))
+                lfCmd("let b:lf_blame_file_name = '{}'".format(escQuote(arguments_dict["blamed_file_name"])))
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, cursor_line))
                 lfCmd("call win_execute({}, 'setlocal scrollbind')".format(winid))
                 lfCmd("setlocal scrollbind")
@@ -4572,11 +4573,19 @@ class GitBlameExplManager(GitExplManager):
         arguments_dict = kwargs.get("arguments", {})
         self.setArguments(arguments_dict)
 
+        if lfEval("exists('b:lf_blame_file_name')") == "1":
+            buf_winid = int(lfEval("bufwinid(b:lf_blame_file_name)"))
+            if buf_winid != -1:
+                lfCmd("call win_gotoid({})".format(buf_winid))
+            else:
+                lfCmd("bel vsp {}".format(lfEval("b:lf_blame_file_name")))
+
         if vim.current.buffer.name and not vim.current.buffer.options['bt']:
             if not vim.current.buffer.name.startswith(self._project_root):
                 lfPrintError("fatal: '{}' is outside repository at '{}'"
                              .format(lfRelpath(vim.current.buffer.name), self._project_root))
             else:
+                self._arguments["blamed_file_name"] = vim.current.buffer.name
                 tmp_file_name = None
                 if vim.current.buffer.options["modified"]:
                     if sys.version_info >= (3, 0):
