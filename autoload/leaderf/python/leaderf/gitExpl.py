@@ -3808,16 +3808,26 @@ class GitLogExplManager(GitExplManager):
         patch = self._getExplorer().patches[commit_id]
         file_path = patch[0].rsplit(None, 1)[1][2:]
         line_num = 1
+        count = 0
+        found = False
         for line in patch:
             if line.startswith("@@"):
+                found = True
                 line_numbers = line.split("+", 1)[1].split(None, 1)[0]
                 if "," in line_numbers:
-                    line_num, count = line_numbers.split(",")
+                    line_num, _ = line_numbers.split(",")
                     line_num = int(line_num)
                 else:
                     # @@ -1886 +1893 @@
                     line_num = int(line_numbers)
-                break
+            elif found:
+                if line.startswith("-"):
+                    pass
+                elif line.startswith("+"):
+                    line_num += count
+                    break
+                else:
+                    count += 1
 
         return (file_path, line_num)
 
