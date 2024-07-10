@@ -771,7 +771,11 @@ function! leaderf#Git#EditFile(tag) abort
             exec "tabedit " . b:lf_git_buffer_name
         else
             let buf_ids = win_findbuf(buffer_num)
-            call win_gotoid(buf_ids[0])
+            if len(buf_ids) == 0
+                exec "tabedit " . b:lf_git_buffer_name
+            else
+                call win_gotoid(buf_ids[0])
+            endif
         endif
 
         let i = start_line_num - 1
