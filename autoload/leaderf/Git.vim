@@ -736,6 +736,9 @@ endfunction
 
 function! s:GoToFile(file_name) abort
     if !filereadable(a:file_name)
+        echohl WarningMsg
+        echo a:file_name .. " does not exist."
+        echohl None
         return
     endif
 
@@ -744,13 +747,20 @@ function! s:GoToFile(file_name) abort
         exec "tabedit " . a:file_name
     else
         let buf_ids = win_findbuf(buffer_num)
-        call win_gotoid(buf_ids[0])
+        if len(buf_ids) == 0
+            exec "tabedit " . a:file_name
+        else
+            call win_gotoid(buf_ids[0])
+        endif
     endif
 endfunction
 
 function! leaderf#Git#EditFile(tag) abort
     if a:tag == 0
         if !filereadable(b:lf_git_buffer_name)
+            echohl WarningMsg
+            echo b:lf_git_buffer_name .. " does not exist."
+            echohl None
             return
         endif
 
