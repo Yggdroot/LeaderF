@@ -663,6 +663,7 @@ class LfCli(object):
             start = time.time()
             update = False
             prefix = ""
+            block = "1"
 
             while 1:
                 if len(self._instance._manager._content) < 60000:
@@ -675,11 +676,9 @@ class LfCli(object):
 
                 if lfEval("has('nvim') && exists('g:GuiLoaded')") == '1':
                     time.sleep(0.005) # this is to solve issue 375 leaderF hangs in nvim-qt
-                else:
-                    time.sleep(0.001)
 
                 if lfEval("get(g:, 'Lf_NoAsync', 0)") == '0':
-                    lfCmd("let nr = getchar(1)")
+                    lfCmd("let nr = getchar({})".format(block))
                     if lfEval("!type(nr) && nr == 0") == '1':
                         self._idle = True
                         if lfEval("has('nvim') && exists('g:GuiLoaded')") == '1':
@@ -695,40 +694,18 @@ class LfCli(object):
                                 start = time.time()
                         else:
                             try:
-                                callback()
-                            except Exception:
-                                lfPrintTraceback()
-                                break
-
-                        continue
-                    # https://groups.google.com/forum/#!topic/vim_dev/gg-l-kaCz_M
-                    # '<80><fc>^B' is <Shift>, '<80><fc>^D' is <Ctrl>,
-                    # '<80><fc>^H' is <Alt>, '<80><fc>^L' is <Ctrl + Alt>
-                    elif lfEval("type(nr) != 0") == '1':
-                        lfCmd("call getchar(0)")
-                        lfCmd("call feedkeys('a') | call getchar()")
-                        self._idle = True
-                        if lfEval("has('nvim') && exists('g:GuiLoaded')") == '1':
-                            time.sleep(0.009) # this is to solve issue 375 leaderF hangs in nvim-qt
-
-                        if update == True:
-                            if time.time() - start >= threshold:
-                                update = False
-                                if ''.join(self._cmdline).startswith(prefix):
-                                    yield '<Update>'
-                                else:
-                                    yield '<Shorten>'
-                                start = time.time()
-                        else:
-                            try:
-                                callback()
+                                ret = callback()
+                                if ret == 100:
+                                    block = ""
                             except Exception:
                                 lfPrintTraceback()
                                 break
 
                         continue
                     else:
-                        lfCmd("let nr = getchar()")
+                        if block == "1":
+                            lfCmd("let nr = getchar()")
+                        block = "1"
                         lfCmd("let ch = !type(nr) ? nr2char(nr) : nr")
                         self._blinkon = True
                 else:

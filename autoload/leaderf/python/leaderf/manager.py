@@ -67,7 +67,7 @@ def catchException(func):
     @wraps(func)
     def deco(self, *args, **kwargs):
         try:
-            func(self, *args, **kwargs)
+            return func(self, *args, **kwargs)
         except vim.error as e: # for neovim
             if str(e) != "b'Keyboard interrupt'" and str(e) != 'Keyboard interrupt':
                 raise e
@@ -2931,7 +2931,7 @@ class Manager(object):
                     self._timer_id = None
 
                 lfPrintError(self._read_content_exception[1])
-                return
+                return None
             else:
                 raise self._read_content_exception[1]
 
@@ -2944,7 +2944,9 @@ class Manager(object):
                 else:
                     step = 2000
                 self._search(self._content, True, step)
-            return
+                return None
+            else:
+                return 100
 
         if content:
             i = -1
@@ -3021,6 +3023,10 @@ class Manager(object):
 
                     if bang:
                         self._getInstance().appendBuffer(self._result_content[self._initial_count:])
+                else:
+                    return 100
+            else:
+                return 100
         else:
             cur_len = len(self._content)
             if time.time() - self._start_time > 0.1:
@@ -3067,6 +3073,8 @@ class Manager(object):
 
                 if not self.isPreviewWindowOpen():
                     self._previewResult(False)
+
+        return None
 
 
     @modifiableController
