@@ -676,6 +676,8 @@ class LfCli(object):
 
                 if lfEval("has('nvim') && exists('g:GuiLoaded')") == '1':
                     time.sleep(0.005) # this is to solve issue 375 leaderF hangs in nvim-qt
+                else:
+                    time.sleep(0)
 
                 if lfEval("get(g:, 'Lf_NoAsync', 0)") == '0':
                     lfCmd("let nr = getchar({})".format(block))
@@ -697,6 +699,8 @@ class LfCli(object):
                                 ret = callback()
                                 if ret == 100:
                                     block = ""
+                                    if self._instance.getWinPos() in ('popup', 'floatwin'):
+                                        self.buildPopupPrompt()
                             except Exception:
                                 lfPrintTraceback()
                                 break
