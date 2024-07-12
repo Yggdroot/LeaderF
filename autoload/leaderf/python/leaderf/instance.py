@@ -278,6 +278,7 @@ class LfInstance(object):
         self._popup_cursor_line = 1
         self._auto_adjust_height = lfEval("get(g:, 'Lf_PopupAutoAdjustHeight', 1)") == '1'
         self._preview_position = None
+        self._initial_maxwidth = 0
 
     def _initStlVar(self):
         if int(lfEval("!exists('g:Lf_{}_StlCategory')".format(self._category))):
@@ -397,6 +398,83 @@ class LfInstance(object):
             lfCmd("call win_execute(%d, 'setlocal cursorlineopt=both')" % winid)
         lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % winid)
 
+    def enlargePopupWindow(self):
+        if self._win_pos not in ('popup', 'floatwin'):
+            return
+
+        preview_pos = self._arguments.get("--preview-position", [""])[0]
+        if preview_pos == "":
+            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
+
+        if preview_pos.lower() == 'right':
+            if self._popup_instance.input_win.width > self._initial_maxwidth * 2:
+                return
+
+            if lfEval("has('nvim')") == '1':
+                width = self._initial_maxwidth * 2 + 2
+
+                lfCmd("call leaderf#ResetFloatwinOptions({}, 'width', {})"
+                      .format(self._popup_winid, width))
+                lfCmd("call leaderf#ResetFloatwinOptions({}, 'width', {})"
+                      .format(self._popup_instance.input_win.id, width))
+                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+                    lfCmd("call leaderf#ResetFloatwinOptions({}, 'width', {})"
+                          .format(self._popup_instance.statusline_win.id, width))
+            else:
+                width = self._initial_maxwidth * 2 + 2
+
+                lfCmd("call leaderf#ResetPopupOptions({}, 'maxwidth', {})"
+                      .format(self._popup_winid, width))
+                lfCmd("call leaderf#ResetPopupOptions({}, 'minwidth', {})"
+                      .format(self._popup_winid, width))
+
+                lfCmd("call leaderf#ResetPopupOptions({}, 'maxwidth', {})"
+                      .format(self._popup_instance.input_win.id, width))
+                lfCmd("call leaderf#ResetPopupOptions({}, 'minwidth', {})"
+                      .format(self._popup_instance.input_win.id, width))
+
+                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+                    lfCmd("call leaderf#ResetPopupOptions({}, 'maxwidth', {})"
+                          .format(self._popup_instance.statusline_win.id, width))
+                    lfCmd("call leaderf#ResetPopupOptions({}, 'minwidth', {})"
+                          .format(self._popup_instance.statusline_win.id, width))
+
+            self._cli.buildPopupPrompt()
+
+    def shrinkPopupWindow(self):
+        preview_pos = self._arguments.get("--preview-position", [""])[0]
+        if preview_pos == "":
+            preview_pos = lfEval("get(g:, 'Lf_PopupPreviewPosition', 'right')")
+
+        if preview_pos.lower() == 'right':
+            if lfEval("has('nvim')") == '1':
+                lfCmd("call leaderf#ResetFloatwinOptions({}, 'width', {})"
+                      .format(self._popup_winid, self._initial_maxwidth))
+                lfCmd("call leaderf#ResetFloatwinOptions({}, 'width', {})"
+                      .format(self._popup_instance.input_win.id, self._initial_maxwidth))
+
+                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+                    lfCmd("call leaderf#ResetFloatwinOptions({}, 'width', {})"
+                          .format(self._popup_instance.statusline_win.id, self._initial_maxwidth))
+            else:
+                lfCmd("call leaderf#ResetPopupOptions({}, 'maxwidth', {})"
+                      .format(self._popup_winid, self._initial_maxwidth))
+                lfCmd("call leaderf#ResetPopupOptions({}, 'minwidth', {})"
+                      .format(self._popup_winid, self._initial_maxwidth))
+
+                lfCmd("call leaderf#ResetPopupOptions({}, 'maxwidth', {})"
+                      .format(self._popup_instance.input_win.id, self._initial_maxwidth))
+                lfCmd("call leaderf#ResetPopupOptions({}, 'minwidth', {})"
+                      .format(self._popup_instance.input_win.id, self._initial_maxwidth))
+
+                if lfEval("get(g:, 'Lf_PopupShowStatusline', 1)") == '1':
+                    lfCmd("call leaderf#ResetPopupOptions({}, 'maxwidth', {})"
+                          .format(self._popup_instance.statusline_win.id, self._initial_maxwidth))
+                    lfCmd("call leaderf#ResetPopupOptions({}, 'minwidth', {})"
+                          .format(self._popup_instance.statusline_win.id, self._initial_maxwidth))
+
+            self._cli.buildPopupPrompt()
+
     def _createPopupWindow(self):
         preview_pos = self._arguments.get("--preview-position", [""])[0]
         if preview_pos == "":
@@ -438,6 +516,8 @@ class LfInstance(object):
             width = int(width)
             maxwidth = min(width, int(lfEval("&columns")))
             maxwidth = max(20, maxwidth)
+
+        self._initial_maxwidth = maxwidth
 
         show_borders = lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1'
         height = lfEval("get(g:, 'Lf_PopupHeight', 0)")

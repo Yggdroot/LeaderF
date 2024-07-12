@@ -433,6 +433,7 @@ class Manager(object):
         if not self._needPreview(preview, preview_in_popup):
             if preview_in_popup:
                 self._closePreviewPopup()
+                self._getInstance().enlargePopupWindow()
             return
 
         line_num = self._getInstance().window.cursor[0]
@@ -440,6 +441,10 @@ class Manager(object):
 
         if preview_in_popup:
             self._previewInPopup(line, self._getInstance().buffer, line_num)
+
+            if not self.isPreviewWindowOpen():
+                self._getInstance().enlargePopupWindow()
+
             return
 
         orig_pos = self._getInstance().getOriginalPos()
@@ -635,6 +640,8 @@ class Manager(object):
                 if the type is str, it is a file name
 
         """
+        self._getInstance().shrinkPopupWindow()
+
         self._is_previewed = True
 
         show_borders = lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1'
