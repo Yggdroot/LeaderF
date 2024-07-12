@@ -2022,7 +2022,7 @@ class Manager(object):
                 if return_index == True:
                     step = 30000 * cpu_count
                 else:
-                    step = 60000 * cpu_count
+                    step = 50000 * cpu_count
 
             _, self._result_content = self._filter(step, filter_method, content, is_continue, True, return_index)
         else:
@@ -2048,9 +2048,6 @@ class Manager(object):
         else:
             self._highlight_method = highlight_method
             self._highlight_method()
-
-        if len(self._cli.pattern) > 1 and not is_continue:
-            lfCmd("silent! redraw")
 
     def _guessFilter(self, filename, suffix, dirname, icon, iterable):
         """

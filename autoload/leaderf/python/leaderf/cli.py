@@ -701,6 +701,8 @@ class LfCli(object):
                                     block = ""
                                     if self._instance.getWinPos() in ('popup', 'floatwin'):
                                         self.buildPopupPrompt()
+                                    else:
+                                        lfCmd("redraw")
                             except Exception:
                                 lfPrintTraceback()
                                 break
