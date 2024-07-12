@@ -6,7 +6,7 @@ then
     rm -rf build
     rm -f ../python/*.so ../python/*.dll
     echo ========================================
-    echo ^_^ C extension uninstalled sucessfully!
+    echo ^_^ C extension uninstalled successfully!
     echo ========================================
     exit 0
 fi
@@ -23,7 +23,7 @@ if command -v python2 > /dev/null 2>&1; then
     then
         echo
         echo =================================================
-        echo ^_^ C extension of Python2 installed sucessfully!
+        echo ^_^ C extension of Python2 installed successfully!
         echo =================================================
     fi
 fi
@@ -38,7 +38,7 @@ if command -v python3 > /dev/null 2>&1; then
     then
         echo
         echo =================================================
-        echo ^_^ C extension of Python3 installed sucessfully!
+        echo ^_^ C extension of Python3 installed successfully!
         echo =================================================
     fi
 fi
