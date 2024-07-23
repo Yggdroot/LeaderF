@@ -519,6 +519,7 @@ class Manager(object):
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
         self._preview_config = config
+        self._orig_source = source
 
         if lfEval("has('nvim')") == '1':
             if isinstance(source, int):
@@ -1201,8 +1202,6 @@ class Manager(object):
 
             self._updateOptions(preview_pos, show_borders, options)
             self._createPreviewWindow(options, source, line_num, jump_cmd)
-
-        self._orig_source = source
 
         return True
 
