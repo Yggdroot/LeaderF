@@ -52,6 +52,9 @@ class BufferExplorer(Explorer):
                 buffers = {w.buffer.number: w.buffer for w in vim.current.tabpage.windows
                            if os.path.basename(w.buffer.name) != "LeaderF"}
 
+        if lfEval("has('nvim')") == '0':
+            buffers = {number : buffer for number, buffer in buffers.items()
+                       if buffer.options["buftype"] != b"terminal"}
 
         # e.g., 12 u %a+-  aaa.txt
         bufnr_len = len(lfEval("bufnr('$')"))
