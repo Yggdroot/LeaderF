@@ -550,7 +550,8 @@ class Manager(object):
                 if file_type is None:
                     lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % source)
                 else:
-                    lfCmd("setf %s" % getExtension(source))
+                    lfCmd("noautocmd set ft=%s" % getExtension(source))
+                    lfCmd("set syntax=%s" % getExtension(source))
             lfCmd("noautocmd call win_gotoid(%s)" % cur_winid)
 
             self._setWinOptions(self._preview_winid)
@@ -950,7 +951,8 @@ class Manager(object):
                             lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')"
                                   % (self._preview_winid, escQuote(source)))
                         else:
-                            lfCmd("call win_execute(%d, 'setf %s')" % (self._preview_winid, cur_filetype))
+                            lfCmd("call win_execute(%d, 'noautocmd set ft=%s')" % (self._preview_winid, cur_filetype))
+                            lfCmd("call win_execute(%d, 'set syntax=%s')" % (self._preview_winid, cur_filetype))
                         self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
             elif lfEval("exists('*popup_setbuf')") == "1":
                 if isinstance(source, int):
