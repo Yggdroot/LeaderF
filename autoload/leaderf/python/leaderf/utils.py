@@ -1346,6 +1346,8 @@ name_ft = {
     "trustees.conf"      : "trustees",
     "Vagrantfile"        : "ruby",
     ".vimrc"             : "vim",
+    "vimrc"              : "vim",
+    "gvimrc"             : "vim",
     "_vimrc"             : "vim",
     ".exrc"              : "vim",
     "_exrc"              : "vim",
