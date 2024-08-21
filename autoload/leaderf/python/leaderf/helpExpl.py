@@ -146,7 +146,7 @@ class HelpExplManager(Manager):
         line = args[0]
         tagname, tagfile, file_id = line.split(None, 2)
         tagfile = os.path.join(self._getExplorer()._file_ids[int(file_id)], tagfile)
-        jump_cmd = r"call search('\m\*%s\*', 'w')" % escQuote(tagname)
+        jump_cmd = r"let pos = search('\m\*%s\*', 'w') | exec 'norm! '.pos.'G'" % escQuote(tagname)
         self._createPopupPreview("", tagfile, 0, jump_cmd)
 
 

@@ -530,7 +530,7 @@ class Manager(object):
                     if self._isBinaryFile(source):
                         lfCmd("""let content = map(range(128), '"^@"')""")
                     else:
-                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
+                        lfCmd("let content = readfile('%s', '', 20480)" % escQuote(source))
                 except vim.error as e:
                     lfPrintError(e)
                     return
@@ -574,7 +574,7 @@ class Manager(object):
                     if self._isBinaryFile(filename):
                         lfCmd("""let content = map(range(128), '"^@"')""")
                     else:
-                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
+                        lfCmd("let content = readfile('%s', '', 20480)" % escQuote(filename))
                 except vim.error as e:
                     lfPrintError(e)
                     return
@@ -612,7 +612,7 @@ class Manager(object):
                     if self._isBinaryFile(filename):
                         lfCmd("""let content = map(range(128), '"^@"')""")
                     else:
-                        lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
+                        lfCmd("let content = readfile('%s', '', 20480)" % escQuote(filename))
                 except vim.error as e:
                     lfPrintError(e)
                     return
@@ -934,7 +934,7 @@ class Manager(object):
                         if self._isBinaryFile(source):
                             lfCmd("""let content = map(range(128), '"^@"')""")
                         else:
-                            lfCmd("let content = readfile('%s', '', 4096)" % escQuote(source))
+                            lfCmd("let content = readfile('%s', '', 20480)" % escQuote(source))
                     except vim.error as e:
                         lfPrintError(e)
                         return
@@ -964,7 +964,7 @@ class Manager(object):
                         if self._isBinaryFile(filename):
                             lfCmd("""let content = map(range(128), '"^@"')""")
                         else:
-                            lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
+                            lfCmd("let content = readfile('%s', '', 20480)" % escQuote(filename))
                     except vim.error as e:
                         lfPrintError(e)
                         return
@@ -978,7 +978,7 @@ class Manager(object):
                         self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
             else:
                 if isinstance(source, int):
-                    lfCmd("noautocmd call popup_settext(%d, getbufline(%d, 1, 4096))" % (self._preview_winid, source))
+                    lfCmd("noautocmd call popup_settext(%d, getbufline(%d, 1, 20480))" % (self._preview_winid, source))
                     filename = vim.buffers[source].name
                 else:
                     filename = source
@@ -986,7 +986,7 @@ class Manager(object):
                         if self._isBinaryFile(filename):
                             lfCmd("""let content = map(range(128), '"^@"')""")
                         else:
-                            lfCmd("let content = readfile('%s', '', 4096)" % escQuote(filename))
+                            lfCmd("let content = readfile('%s', '', 20480)" % escQuote(filename))
                     except vim.error as e:
                         lfPrintError(e)
                         return
