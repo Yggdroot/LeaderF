@@ -55,6 +55,20 @@ function! s:HighlightGroup(category, name) abort
     endif
 endfunction
 
+function! s:SynIDattr(synID, what, ...) abort
+    if a:0 == 0
+        let result = synIDattr(a:synID, a:what)
+    else
+        let result = synIDattr(a:synID, a:what, a:1)
+    endif
+
+    if result == -1
+        return ''
+    else
+        return result
+    endif
+endfunction
+
 function! s:HighlightSeperator(category) abort
     exec printf("highlight link Lf_hl_popup_%s_mode Lf_hl_popup_inputMode", a:category)
     exec printf("highlight link Lf_hl_popup_%s_matchMode %s", a:category, s:matchModeMap[g:Lf_DefaultMode])
@@ -65,10 +79,10 @@ function! s:HighlightSeperator(category) abort
     for [sep, dict] in items(s:leftSep)
         let sid_left = synIDtrans(hlID(s:HighlightGroup(a:category, dict.left)))
         let sid_right = synIDtrans(hlID(s:HighlightGroup(a:category, dict.right)))
-        let left_guibg = synIDattr(sid_left, "bg", "gui")
-        let left_ctermbg = synIDattr(sid_left, "bg", "cterm")
-        let right_guibg = synIDattr(sid_right, "bg", "gui")
-        let right_ctermbg = synIDattr(sid_right, "bg", "cterm")
+        let left_guibg = s:SynIDattr(sid_left, "bg", "gui")
+        let left_ctermbg = s:SynIDattr(sid_left, "bg", "cterm")
+        let right_guibg = s:SynIDattr(sid_right, "bg", "gui")
+        let right_ctermbg = s:SynIDattr(sid_right, "bg", "cterm")
         let hiCmd = printf("hi Lf_hl_popup_%s_%s", a:category, sep)
         let hiCmd .= printf(" guifg=%s guibg=%s", left_guibg == '' ? 'NONE': left_guibg, right_guibg == '' ? 'NONE': right_guibg)
         let hiCmd .= printf(" ctermfg=%s ctermbg=%s", left_ctermbg == '' ? 'NONE': left_ctermbg, right_ctermbg == '' ? 'NONE': right_ctermbg)
@@ -83,10 +97,10 @@ function! s:HighlightSeperator(category) abort
     for [sep, dict] in items(s:rightSep)
         let sid_left = synIDtrans(hlID(s:HighlightGroup(a:category, dict.left)))
         let sid_right = synIDtrans(hlID(s:HighlightGroup(a:category, dict.right)))
-        let left_guibg = synIDattr(sid_left, "bg", "gui")
-        let left_ctermbg = synIDattr(sid_left, "bg", "cterm")
-        let right_guibg = synIDattr(sid_right, "bg", "gui")
-        let right_ctermbg = synIDattr(sid_right, "bg", "cterm")
+        let left_guibg = s:SynIDattr(sid_left, "bg", "gui")
+        let left_ctermbg = s:SynIDattr(sid_left, "bg", "cterm")
+        let right_guibg = s:SynIDattr(sid_right, "bg", "gui")
+        let right_ctermbg = s:SynIDattr(sid_right, "bg", "cterm")
         let hiCmd = printf("hi Lf_hl_popup_%s_%s", a:category, sep)
         let hiCmd .= printf(" guifg=%s guibg=%s", right_guibg == '' ? 'NONE': right_guibg, left_guibg == '' ? 'NONE': left_guibg)
         let hiCmd .= printf(" ctermfg=%s ctermbg=%s", right_ctermbg == '' ? 'NONE': right_ctermbg, left_ctermbg == '' ? 'NONE': left_ctermbg)
@@ -101,45 +115,45 @@ endfunction
 
 function! s:getSynAttr(sid) abort
     let attr = ""
-    if synIDattr(a:sid, "bold")
+    if s:SynIDattr(a:sid, "bold")
         let attr = "bold"
     endif
-    if synIDattr(a:sid, "italic")
+    if s:SynIDattr(a:sid, "italic")
         if attr == ""
             let attr = "italic"
         else
             let attr = attr . ",italic"
         endif
     endif
-    if synIDattr(a:sid, "standout")
+    if s:SynIDattr(a:sid, "standout")
         if attr == ""
             let attr = "standout"
         else
             let attr = attr . ",standout"
         endif
     endif
-    if synIDattr(a:sid, "underline")
+    if s:SynIDattr(a:sid, "underline")
         if attr == ""
             let attr = "underline"
         else
             let attr = attr . ",underline"
         endif
     endif
-    if synIDattr(a:sid, "undercurl")
+    if s:SynIDattr(a:sid, "undercurl")
         if attr == ""
             let attr = "undercurl"
         else
             let attr = attr . ",undercurl"
         endif
     endif
-    if synIDattr(a:sid, "strike")
+    if s:SynIDattr(a:sid, "strike")
         if attr == ""
             let attr = "strike"
         else
             let attr = attr . ",strike"
         endif
     endif
-    if synIDattr(a:sid, "nocombine")
+    if s:SynIDattr(a:sid, "nocombine")
         if attr == ""
             let attr = "nocombine"
         else
@@ -153,16 +167,16 @@ endfunction
 " same as `hi link` but filter out the `reverse` attribute
 function! leaderf#colorscheme#popup#link_no_reverse(from, to) abort
     let sid = synIDtrans(hlID(a:to))
-    if synIDattr(sid, "reverse") || synIDattr(sid, "inverse")
-        let guibg = synIDattr(sid, "fg", "gui")
-        let guifg = synIDattr(sid, "bg", "gui")
-        let ctermbg = synIDattr(sid, "fg", "cterm")
-        let ctermfg = synIDattr(sid, "bg", "cterm")
+    if s:SynIDattr(sid, "reverse") || s:SynIDattr(sid, "inverse")
+        let guibg = s:SynIDattr(sid, "fg", "gui")
+        let guifg = s:SynIDattr(sid, "bg", "gui")
+        let ctermbg = s:SynIDattr(sid, "fg", "cterm")
+        let ctermfg = s:SynIDattr(sid, "bg", "cterm")
     else
-        let guibg = synIDattr(sid, "bg", "gui")
-        let guifg = synIDattr(sid, "fg", "gui")
-        let ctermbg = synIDattr(sid, "bg", "cterm")
-        let ctermfg = synIDattr(sid, "fg", "cterm")
+        let guibg = s:SynIDattr(sid, "bg", "gui")
+        let guifg = s:SynIDattr(sid, "fg", "gui")
+        let ctermbg = s:SynIDattr(sid, "bg", "cterm")
+        let ctermfg = s:SynIDattr(sid, "fg", "cterm")
     endif
 
     let attr = s:getSynAttr(sid)
@@ -180,32 +194,32 @@ endfunction
 " link to bg's background color and fg's foreground color
 function! leaderf#colorscheme#popup#link_two(from, bg, fg, no_attr) abort
     let bg_sid = synIDtrans(hlID(a:bg))
-    if synIDattr(bg_sid, "reverse") || synIDattr(bg_sid, "inverse")
-        let guibg = synIDattr(bg_sid, "fg", "gui")
-        let ctermbg = synIDattr(bg_sid, "fg", "cterm")
+    if s:SynIDattr(bg_sid, "reverse") || s:SynIDattr(bg_sid, "inverse")
+        let guibg = s:SynIDattr(bg_sid, "fg", "gui")
+        let ctermbg = s:SynIDattr(bg_sid, "fg", "cterm")
     else
-        let guibg = synIDattr(bg_sid, "bg", "gui")
-        let ctermbg = synIDattr(bg_sid, "bg", "cterm")
+        let guibg = s:SynIDattr(bg_sid, "bg", "gui")
+        let ctermbg = s:SynIDattr(bg_sid, "bg", "cterm")
     endif
 
     let fg_sid = synIDtrans(hlID(a:fg))
-    if synIDattr(fg_sid, "reverse") || synIDattr(fg_sid, "inverse")
-        let guifg = synIDattr(fg_sid, "bg", "gui")
+    if s:SynIDattr(fg_sid, "reverse") || s:SynIDattr(fg_sid, "inverse")
+        let guifg = s:SynIDattr(fg_sid, "bg", "gui")
         if guifg == guibg
-            let guifg = synIDattr(fg_sid, "fg", "gui")
+            let guifg = s:SynIDattr(fg_sid, "fg", "gui")
         endif
-        let ctermfg = synIDattr(fg_sid, "bg", "cterm")
+        let ctermfg = s:SynIDattr(fg_sid, "bg", "cterm")
         if ctermfg == ctermbg
-            let ctermfg = synIDattr(fg_sid, "fg", "cterm")
+            let ctermfg = s:SynIDattr(fg_sid, "fg", "cterm")
         endif
     else
-        let guifg = synIDattr(fg_sid, "fg", "gui")
+        let guifg = s:SynIDattr(fg_sid, "fg", "gui")
         if guifg == guibg
-            let guifg = synIDattr(fg_sid, "bg", "gui")
+            let guifg = s:SynIDattr(fg_sid, "bg", "gui")
         endif
-        let ctermfg = synIDattr(fg_sid, "fg", "cterm")
+        let ctermfg = s:SynIDattr(fg_sid, "fg", "cterm")
         if ctermfg == ctermbg
-            let ctermfg = synIDattr(fg_sid, "bg", "cterm")
+            let ctermfg = s:SynIDattr(fg_sid, "bg", "cterm")
         endif
     endif
 
@@ -229,7 +243,7 @@ endfunction
 " and `hi def link Lf_hl_popup_cursor Cursor`, the bug occurs.
 function! leaderf#colorscheme#popup#link_cursor(from) abort
     let sid = synIDtrans(hlID("Cursor"))
-    if synIDattr(sid, "bg") == '' || synIDattr(sid, "fg") == ''
+    if s:SynIDattr(sid, "bg") == '' || s:SynIDattr(sid, "fg") == ''
         exec printf("hi def %s gui=reverse guifg=NONE guibg=NONE cterm=reverse ctermfg=NONE ctermbg=NONE", a:from)
     else
         exec printf("hi def link %s Cursor", a:from)
@@ -246,8 +260,8 @@ function! leaderf#colorscheme#popup#hiMode(category, mode) abort
         exec printf("hi link Lf_hl_popup_%s_mode Lf_hl_popup_inputMode", a:category)
     endif
     let sid = synIDtrans(hlID(printf("Lf_hl_popup_%s_mode", a:category)))
-    let guibg = synIDattr(sid, "bg", "gui")
-    let ctermbg = synIDattr(sid, "bg", "cterm")
+    let guibg = s:SynIDattr(sid, "bg", "gui")
+    let ctermbg = s:SynIDattr(sid, "bg", "cterm")
     exec printf("hi Lf_hl_popup_%s_sep0 guifg=%s", a:category, guibg == '' ? 'NONE': guibg)
     exec printf("hi Lf_hl_popup_%s_sep0 ctermfg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
 endfunction
@@ -259,8 +273,8 @@ endfunction
 " 4. Regex mode
 function! leaderf#colorscheme#popup#hiMatchMode(category, mode) abort
     let sid = synIDtrans(hlID(s:matchModeMap[a:mode]))
-    let guibg = synIDattr(sid, "bg", "gui")
-    let ctermbg = synIDattr(sid, "bg", "cterm")
+    let guibg = s:SynIDattr(sid, "bg", "gui")
+    let ctermbg = s:SynIDattr(sid, "bg", "cterm")
     exec printf("hi link Lf_hl_popup_%s_matchMode %s", a:category, s:matchModeMap[a:mode])
     exec printf("hi Lf_hl_popup_%s_sep1 guibg=%s", a:category, guibg == '' ? 'NONE': guibg)
     exec printf("hi Lf_hl_popup_%s_sep1 ctermbg=%s", a:category, ctermbg == '' ? 'NONE': ctermbg)
@@ -272,7 +286,7 @@ endfunction
 function! s:hiDefineLineNr() abort
     call leaderf#colorscheme#popup#link_no_reverse("Lf_hl_LineNr", "LineNr")
     let sid = synIDtrans(hlID("Lf_hl_LineNr"))
-    if synIDattr(sid, "nocombine") == ""
+    if s:SynIDattr(sid, "nocombine") == ""
         let attr = s:getSynAttr(sid)
         if attr == ""
             let attr = "nocombine"
@@ -280,16 +294,16 @@ function! s:hiDefineLineNr() abort
             let attr = attr . ",nocombine"
         endif
 
-        let guibg = synIDattr(sid, "bg", "gui")
-        let ctermbg = synIDattr(sid, "bg", "cterm")
+        let guibg = s:SynIDattr(sid, "bg", "gui")
+        let ctermbg = s:SynIDattr(sid, "bg", "cterm")
         if guibg == ""
-            let guibg = synIDattr(synIDtrans(hlID("Normal")), "bg", "gui")
+            let guibg = s:SynIDattr(synIDtrans(hlID("Normal")), "bg", "gui")
             if guibg == ""
                 let guibg = "NONE"
             endif
         endif
         if ctermbg == ""
-            let ctermbg = synIDattr(synIDtrans(hlID("Normal")), "bg", "cterm")
+            let ctermbg = s:SynIDattr(synIDtrans(hlID("Normal")), "bg", "cterm")
             if ctermbg == ""
                 let ctermbg = "NONE"
             endif
