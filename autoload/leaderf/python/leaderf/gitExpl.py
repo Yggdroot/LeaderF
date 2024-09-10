@@ -79,12 +79,6 @@ class GitExplorer(Explorer):
             exe.killProcess()
         self._executor = []
 
-    def getPatternRegex(self):
-        return self._pattern_regex
-
-    def getContextSeparator(self):
-        return self._context_separator
-
 
 class GitDiffExplorer(GitExplorer):
     def __init__(self):
@@ -1083,6 +1077,7 @@ class LfOrderedDict(OrderedDict):
     def first_key_value(self):
         return next(iter(self.items()))
 
+
 class FolderStatus(Enum):
     CLOSED = 0
     OPEN = 1
@@ -2070,6 +2065,7 @@ class PreviewPanel(Panel):
             return self._view.getContent()
 
         return []
+
 
 class DiffViewPanel(Panel):
     def __init__(self, bufhidden_callback=None, commit_id=""):
