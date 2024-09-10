@@ -956,6 +956,14 @@ class GtagsExplManager(Manager):
         self._arguments = arguments
         self._match_path = "--match-path" in arguments
 
+    def autoJump(self, content):
+        if "--auto-jump" in self._arguments and isinstance(content, list) and len(content) == 1:
+            mode = self._arguments["--auto-jump"][0] if len(self._arguments["--auto-jump"]) else ""
+            self._accept(content[0], mode)
+            return True
+
+        return False
+
     def _getDigest(self, line, mode):
         """
         specify what part in the line to be processed and highlighted

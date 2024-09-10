@@ -210,6 +210,9 @@ class Manager(object):
     def _acceptSelection(self, *args, **kwargs):
         pass
 
+    def autoJump(self, content):
+        return False
+
     def _getDigest(self, line, mode):
         """
         this function can be overridden
@@ -2751,10 +2754,7 @@ class Manager(object):
         else:
             content = self._getExplorer().getContent(*args, **kwargs)
             self._getInstance().setCwd(lfGetCwd())
-            if self._getExplorer().getStlCategory() in ["Gtags"] and "--auto-jump" in self._arguments \
-                    and isinstance(content, list) and len(content) == 1:
-                mode = self._arguments["--auto-jump"][0] if len(self._arguments["--auto-jump"]) else ""
-                self._accept(content[0], mode)
+            if self.autoJump(content) == True:
                 return
 
             self._index = 0
