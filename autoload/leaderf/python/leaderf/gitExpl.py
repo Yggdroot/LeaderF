@@ -624,7 +624,7 @@ class GitCommandView(object):
         lfCmd("call win_execute({}, 'setlocal nospell')".format(winid))
         lfCmd("call win_execute({}, 'setlocal nomodifiable')".format(winid))
         if lfEval("getbufvar(winbufnr(%d), '&ft')" % winid) != self._cmd.getFileType():
-            lfCmd("call win_execute({}, '{}')".format(winid, self._cmd.getFileTypeCommand()))
+            lfCmd("silent! call win_execute({}, '{}')".format(winid, self._cmd.getFileTypeCommand()))
 
     def initBuffer(self):
         pass
