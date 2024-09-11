@@ -281,7 +281,9 @@ class GtagsExplorer(Explorer):
 
         if auto_jump:
             first_two = list(itertools.islice(content, 2))
-            if len(first_two) == 1:
+            if len(first_two) == 0:
+                return []
+            elif len(first_two) == 1:
                 return first_two
             else:
                 return content.join_left(first_two)
