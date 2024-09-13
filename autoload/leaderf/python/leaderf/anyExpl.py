@@ -72,7 +72,7 @@ class AnyExplorer(Explorer):
     def getContent(self, *args, **kwargs):
         source = self._config.get("source")
         if not source:
-            return None
+            return []
 
         if isinstance(source, list):
             result = source
@@ -722,6 +722,9 @@ class AnyHub(object):
             elif category == "git":
                 from .gitExpl import gitExplManager
                 manager = gitExplManager
+            elif category == "coc":
+                from .cocExpl import cocExplManager
+                manager = cocExplManager
             else:
                 import ctypes
                 manager_id = lfFunction(lfEval("g:Lf_PythonExtensions['%s'].manager_id" % category))()

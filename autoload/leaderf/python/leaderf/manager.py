@@ -2766,6 +2766,9 @@ class Manager(object):
             self._result_content = []
             self._cb_content = []
 
+        if content is None:
+            return
+
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return

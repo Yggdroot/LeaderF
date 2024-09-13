@@ -69,6 +69,7 @@ let g:Lf_Helps = {
             \ "git-log":        "show the commit logs",
             \ "git-diff":       "show changes between commits, commit and working tree, etc",
             \ "git-blame":      "show what revision and author last modified each line of a file",
+            \ "coc":            "execute coc's commands",
             \ }
 
 let g:Lf_Arguments = {
@@ -268,6 +269,24 @@ let g:Lf_Arguments = {
             \           {"name": ["--date"], "nargs": 1, "choices": ["relative", "local", "iso", "iso-strict", "rfc", "short", "default"],
             \               "metavar": "<format>", "help": "Specifies the format used to output dates. .i.e, git blame --date=<format>. <format> can be one of ['relative', 'local', 'iso', 'iso-strict', 'rfc', 'short', 'default']"},
             \           {"name": ["--inline"], "nargs": 0, "help": "Display inline git blame information."},
+            \       ],
+            \   },
+            \ "coc":{
+            \       "definitions": [
+            \           {"name": ["--auto-jump"], "nargs": "?", "metavar": "<TYPE>", "help": "Jump to the target directly when there is only one match. <TYPE> can be 'h', 'v' or 't', which mean jump to a horizontally, vertically split window, or a new tabpage respectively. If <TYPE> is omitted, jump to a position in current window."},
+            \       ],
+            \       "declarations": [
+            \           {"name": ["--auto-jump"], "nargs": "?", "metavar": "<TYPE>", "help": "Jump to the target directly when there is only one match. <TYPE> can be 'h', 'v' or 't', which mean jump to a horizontally, vertically split window, or a new tabpage respectively. If <TYPE> is omitted, jump to a position in current window."},
+            \       ],
+            \       "implementations": [
+            \           {"name": ["--auto-jump"], "nargs": "?", "metavar": "<TYPE>", "help": "Jump to the target directly when there is only one match. <TYPE> can be 'h', 'v' or 't', which mean jump to a horizontally, vertically split window, or a new tabpage respectively. If <TYPE> is omitted, jump to a position in current window."},
+            \       ],
+            \       "typeDefinitions": [
+            \           {"name": ["--auto-jump"], "nargs": "?", "metavar": "<TYPE>", "help": "Jump to the target directly when there is only one match. <TYPE> can be 'h', 'v' or 't', which mean jump to a horizontally, vertically split window, or a new tabpage respectively. If <TYPE> is omitted, jump to a position in current window."},
+            \       ],
+            \       "references": [
+            \           {"name": ["--auto-jump"], "nargs": "?", "metavar": "<TYPE>", "help": "Jump to the target directly when there is only one match. <TYPE> can be 'h', 'v' or 't', which mean jump to a horizontally, vertically split window, or a new tabpage respectively. If <TYPE> is omitted, jump to a position in current window."},
+            \           {"name": ["--exclude-declaration"], "nargs": 0, "help": "Exclude declaration locations."},
             \       ],
             \   },
             \}

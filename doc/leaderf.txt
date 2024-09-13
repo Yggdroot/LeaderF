@@ -1218,6 +1218,20 @@ g:Lf_GitBlameTimeFormat                       *g:Lf_GitBlameTimeFormat*
 
     Default value is "".
 
+g:Lf_CocCommands                              *g:Lf_CocCommands*
+    Define a list of commands you may want to use frequently.
+    The list is as follows: >
+    let g:Lf_CocCommands = [
+                \ {"Leaderf! coc definitions --auto-jump": "run CocAction('jumpDefinition')"},
+                \ {"Leaderf! coc references --auto-jump": "run CocAction('jumpReferences')"},
+                \ {"Leaderf! coc references --auto-jump --exclude-declaration": "run CocAction('jumpUsed')"},
+                \ {"Leaderf! coc declarations --auto-jump": "run CocAction('jumpDeclaration')"},
+                \ {"Leaderf! coc implementations --auto-jump": "run CocAction('jumpImplementation')"},
+                \ {"Leaderf! coc typeDefinitions --auto-jump": "run CocAction('jumpTypeDefinition')"},
+                \ ]
+<
+    Open the commands panel using `:Leaderf coc` .
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

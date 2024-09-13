@@ -323,7 +323,10 @@ class LfInstance(object):
         lfCmd("setlocal nofoldenable")
         lfCmd("setlocal foldmethod=manual")
         lfCmd("setlocal shiftwidth=4")
-        lfCmd("setlocal cursorline")
+        if lfEval("has('nvim')") == '1':
+            lfCmd("call nvim_win_set_option(win_getid(), 'cursorline', v:true)")
+        else:
+            lfCmd("setlocal cursorline")
         if lfEval("exists('+cursorlineopt')") == '1':
             lfCmd("setlocal cursorlineopt=both")
         lfCmd("silent! setlocal signcolumn=no")   # make vim flicker
