@@ -398,31 +398,37 @@ class CommonExplManager(CocExplManager):
         if file is None:
             return
 
-        if isinstance(file, int):
-            buf_number = file
-        else:
-            buf_number = -1
-
         try:
-            if buf_number == -1:
-                if kwargs.get("mode", '') == 't':
-                    if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' \
-                            and lfEval("bufloaded('%s')" % escQuote(file)) == '1':
-                        lfDrop('tab', file, line_num)
-                    else:
-                        lfCmd("tabe %s | %s" % (escSpecial(file), line_num))
+            is_shown = False
+            if kwargs.get("mode", '') == 't':
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' \
+                        and lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+                    winid = int(lfEval("bufwinid('%s')" % escQuote(file)))
+                    start_line = int(lfEval("line('w0', %d)" % winid))
+                    end_line = int(lfEval("line('w$', %d)" % winid))
+                    lfDrop('tab', file, line_num)
+                    if start_line <= int(line_num) <= end_line:
+                        is_shown = True
                 else:
-                    if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' \
-                            and lfEval("bufloaded('%s')" % escQuote(file)) == '1':
-                        lfDrop('', file, line_num)
-                    else:
-                        lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
+                    lfCmd("tabe %s | %s" % (escSpecial(file), line_num))
             else:
-                lfCmd("hide buffer +%s %s" % (line_num, buf_number))
+                if lfEval("get(g:, 'Lf_JumpToExistingWindow', 1)") == '1' \
+                        and lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+                    winid = int(lfEval("bufwinid('%s')" % escQuote(file)))
+                    start_line = int(lfEval("line('w0', %d)" % winid))
+                    end_line = int(lfEval("line('w$', %d)" % winid))
+                    lfDrop('', file, line_num)
+                    if start_line <= int(line_num) <= end_line:
+                        is_shown = True
+                else:
+                    lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
+
             lfCmd("norm! ^zv")
             if self._getExplorer().getPatternRegex():
                 lfCmd(r"call search('\V%s', 'zW', line('.'))" % escQuote(self._getExplorer().getPatternRegex()[0]))
-            lfCmd("norm! zz")
+
+            if is_shown == False:
+                lfCmd("norm! zz")
 
             if "preview" not in kwargs:
                 lfCmd("setlocal cursorline! | redraw | sleep 150m | setlocal cursorline!")
@@ -465,13 +471,10 @@ class CommonExplManager(CocExplManager):
         if file is None:
             return
 
-        if isinstance(file, int):
-            source = file
+        if lfEval("bufloaded('%s')" % escQuote(file)) == '1':
+            source = int(lfEval("bufadd('%s')" % escQuote(file)))
         else:
-            if lfEval("bufloaded('%s')" % escQuote(file)) == '1':
-                source = int(lfEval("bufadd('%s')" % escQuote(file)))
-            else:
-                source = file
+            source = file
 
         self._createPopupPreview("", source, line_num)
         self._highlightInPreview()
