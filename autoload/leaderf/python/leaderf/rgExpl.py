@@ -1549,7 +1549,7 @@ class RgExplManager(Manager):
 
     def _writeBuffer(self):
         if not self._cli.pattern:   # e.g., when <BS> or <Del> is typed
-            return
+            return 100
 
         if self._read_content_exception is not None:
             raise self._read_content_exception[1]
@@ -1568,6 +1568,8 @@ class RgExplManager(Manager):
 
                 if self._getInstance().getWinPos() not in ('popup', 'floatwin'):
                     lfCmd("redrawstatus")
+
+            return 100
         else:
             cur_len = len(self._content)
             if time.time() - self._start_time > 0.1:
