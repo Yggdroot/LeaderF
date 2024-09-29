@@ -329,7 +329,8 @@ class LfInstance(object):
             lfCmd("setlocal cursorline")
         if lfEval("exists('+cursorlineopt')") == '1':
             lfCmd("setlocal cursorlineopt=both")
-        lfCmd("silent! setlocal signcolumn=no")   # make vim flicker
+        if lfEval("has('nvim')") == '1':
+            lfCmd("silent! setlocal signcolumn=no")   # make vim flicker
         lfCmd("setlocal colorcolumn=")
         if self._reverse_order:
             lfCmd("setlocal nonumber")
@@ -396,7 +397,7 @@ class LfInstance(object):
         lfCmd("call win_execute(%d, 'setlocal shiftwidth=4')" % winid)
         lfCmd("call win_execute(%d, 'setlocal nocursorline')" % winid)
         lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % winid)
-        lfCmd("call win_execute(%d, 'silent! setlocal signcolumn=no')" % winid)
+        # lfCmd("call win_execute(%d, 'silent! setlocal signcolumn=no')" % winid)
         if lfEval("exists('+cursorlineopt')") == '1':
             lfCmd("call win_execute(%d, 'setlocal cursorlineopt=both')" % winid)
         lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % winid)
