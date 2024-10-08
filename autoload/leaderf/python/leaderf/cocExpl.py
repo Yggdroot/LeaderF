@@ -5,6 +5,7 @@ import vim
 import re
 import os
 import os.path
+import urllib.parse
 from functools import wraps
 from .utils import *
 from .explorer import *
@@ -71,7 +72,7 @@ class CocExplorer(Explorer):
         content = []
         file_contents = {}
         for item in items:
-            file_path = lfRelpath(item["uri"][7:])
+            file_path = lfRelpath(urllib.parse.unquote(item["uri"][7:]))
             line_num = int(item["range"]["start"]["line"])
             col_num = int(item["range"]["start"]["character"])
             line = self.getFileLine(file_path, line_num + 1, file_contents)
