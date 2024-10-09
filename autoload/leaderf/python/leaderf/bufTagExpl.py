@@ -535,6 +535,8 @@ class BufTagExplManager(Manager):
                 lfCmd(str(index))
                 lfCmd("norm! zz")
 
+            self._previewResult(False)
+
     def _previewInPopup(self, *args, **kwargs):
         if len(args) == 0 or args[0] == '':
             return
