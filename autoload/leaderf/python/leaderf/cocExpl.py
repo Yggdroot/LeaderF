@@ -340,6 +340,7 @@ class CommonExplManager(CocExplManager):
             self._match_ids.append(id)
             try:
                 for i in self._getExplorer().getPatternRegex():
+                    i = r'\<{}\>'.format(i)
                     lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_rgHighlight', '%s', 9)")"""
                             % (self._getInstance().getPopupWinId(), re.sub(r'\\(?!")', r'\\\\', escQuote(i))))
                     id = int(lfEval("matchid"))
@@ -356,6 +357,7 @@ class CommonExplManager(CocExplManager):
 
             try:
                 for i in self._getExplorer().getPatternRegex():
+                    i = r'\<{}\>'.format(i)
                     id = int(lfEval("matchadd('Lf_hl_rgHighlight', '%s', 9)" % escQuote(i)))
                     self._match_ids.append(id)
             except vim.error:
@@ -371,31 +373,31 @@ class CommonExplManager(CocExplManager):
     def _getFileInfo(self, args):
         line = args[0]
 
-        m = re.match(r'^(.+?):(\d+):', line)
+        m = re.match(r'^(.+?):(\d+):(\d+):', line)
         if m is None:
-            return (None, None)
+            return (None, None, None)
 
-        file, line_num = m.group(1, 2)
+        file, line_num, col_num = m.group(1, 2, 3)
         if not os.path.isabs(file):
             file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
         i = 1
         while not os.path.exists(lfDecode(file)):
-            m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):' % i, line)
+            m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):(\d+):' % i, line)
             i += 1
-            file, line_num = m.group(1, 2)
+            file, line_num, col_num = m.group(1, 2, 3)
             if not os.path.isabs(file):
                 file = os.path.join(self._getInstance().getCwd(), lfDecode(file))
 
         file = os.path.normpath(lfEncode(file))
 
-        return (file, line_num)
+        return (file, line_num, col_num)
 
     @workingDirectory
     def _acceptSelection(self, *args, **kwargs):
         if len(args) == 0:
             return
 
-        file, line_num = self._getFileInfo(args)
+        file, line_num, col_num = self._getFileInfo(args)
         if file is None:
             return
 
@@ -425,8 +427,7 @@ class CommonExplManager(CocExplManager):
                     lfCmd("hide edit +%s %s" % (line_num, escSpecial(file)))
 
             lfCmd("norm! ^zv")
-            if self._getExplorer().getPatternRegex():
-                lfCmd(r"call search('\V%s', 'zW', line('.'))" % escQuote(self._getExplorer().getPatternRegex()[0]))
+            lfCmd("norm! {}|".format(col_num))
 
             if is_shown == False:
                 lfCmd("norm! zz")
@@ -446,6 +447,7 @@ class CommonExplManager(CocExplManager):
         if lfEval("has('nvim')") != '1':
             try:
                 for i in self._getExplorer().getPatternRegex():
+                    i = r'\<{}\>'.format(i)
                     lfCmd("""call win_execute(%d, "let matchid = matchadd('Lf_hl_rgHighlight', '%s', 9)")"""
                             % (self._preview_winid, re.sub(r'\\(?!")', r'\\\\', escQuote(i))))
                     id = int(lfEval("matchid"))
@@ -458,6 +460,7 @@ class CommonExplManager(CocExplManager):
             if lfEval("win_getid()") != cur_winid:
                 try:
                     for i in self._getExplorer().getPatternRegex():
+                        i = r'\<{}\>'.format(i)
                         id = int(lfEval("matchadd('Lf_hl_rgHighlight', '%s', 9)" % escQuote(i)))
                         self._match_ids.append(id)
                 except vim.error:
@@ -468,7 +471,7 @@ class CommonExplManager(CocExplManager):
         if len(args) == 0 or args[0] == '':
             return
 
-        file, line_num = self._getFileInfo(args)
+        file, line_num, col_num = self._getFileInfo(args)
         if file is None:
             return
 
