@@ -842,7 +842,9 @@ class FileExplManager(Manager):
             source = int(lfEval("bufadd('%s')" % escQuote(line)))
         else:
             source = line
-        self._createPopupPreview(line, source, 0)
+
+        jump_cmd = 'normal! g`"'
+        self._createPopupPreview(line, source, 0, jump_cmd)
 
     @removeDevIcons
     def _acceptSelection(self, *args, **kwargs):

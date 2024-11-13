@@ -387,7 +387,9 @@ class MruExplManager(Manager):
             source = int(lfEval("bufadd('%s')" % escQuote(file)))
         else:
             source = file
-        self._createPopupPreview(file, source, 0)
+
+        jump_cmd = 'normal! g`"'
+        self._createPopupPreview(file, source, 0, jump_cmd)
 
 
 #*****************************************************
