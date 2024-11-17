@@ -19,7 +19,7 @@ function! leaderf#Command#Maps()
     nnoremap <buffer> <silent> o             :exec g:Lf_py "commandExplManager.accept()"<CR>
     nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "commandExplManager.accept()"<CR>
     nnoremap <buffer> <silent> q             :exec g:Lf_py "commandExplManager.quit()"<CR>
-    nnoremap <buffer> <silent> <C-I>         :exec g:Lf_pI "commandExplManager.input()"<CR>
+    nnoremap <buffer> <silent> <C-I>         :exec g:Lf_py "commandExplManager.input()"<CR>
     nnoremap <buffer> <silent> e             :exec g:Lf_py "commandExplManager.editCommand()"<CR>
     nnoremap <buffer> <silent> <F1>          :exec g:Lf_py "commandExplManager.toggleHelp()"<CR>
     if has_key(g:Lf_NormalMap, "Command")
