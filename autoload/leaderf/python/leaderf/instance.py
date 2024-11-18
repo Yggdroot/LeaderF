@@ -444,6 +444,7 @@ class LfInstance(object):
                           .format(self._popup_instance.statusline_win.id, width))
 
             self._cli.buildPopupPrompt()
+            self.refreshPopupStatusline()
 
     def shrinkPopupWindow(self):
         preview_pos = self._arguments.get("--preview-position", [""])[0]
@@ -478,6 +479,7 @@ class LfInstance(object):
                           .format(self._popup_instance.statusline_win.id, self._initial_maxwidth))
 
             self._cli.buildPopupPrompt()
+            self.refreshPopupStatusline()
 
     def _createPopupWindow(self):
         preview_pos = self._arguments.get("--preview-position", [""])[0]
