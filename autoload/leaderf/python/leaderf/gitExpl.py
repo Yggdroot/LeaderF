@@ -1187,7 +1187,7 @@ class TreeView(GitCommandView):
                 ' Ignore Whitespace 🗷 ',
                 ' Myers ◉ Minimal ○ Patience ○ Histogram ○',
                 '',
-                self._project_root + "/",
+                self._project_root + os.sep,
                 ]
         self._match_ids = []
 
