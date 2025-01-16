@@ -3659,10 +3659,10 @@ class GitLogExplManager(GitExplManager):
         return self._explorer
 
     def _getDigest(self, line, mode):
-        return line.lstrip(r"*\|/ ")
+        return line.lstrip(r"*\|_/ ")
 
     def _getDigestStartPos(self, line, mode):
-        return len(line) - len(line.lstrip(r"*\|/ "))
+        return len(line) - len(line.lstrip(r"*\|_/ "))
 
     def afterBufhidden(self):
         if self._diff_view_panel.isAllHidden():
@@ -3672,7 +3672,7 @@ class GitLogExplManager(GitExplManager):
         """
         return the hash
         """
-        line = line.lstrip(r"*\|/ ")
+        line = line.lstrip(r"*\|_/ ")
         if line == '':
             return None
 
@@ -3756,38 +3756,38 @@ class GitLogExplManager(GitExplManager):
             lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph1'', ''^|'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
-            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph2'', ''^[*\|/ ]\{2}\zs|'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph2'', ''^[*\|_/ ]\{2}\zs|'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
-            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph3'', ''^[*\|/ ]\{4}\zs|'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph3'', ''^[*\|_/ ]\{4}\zs|'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
-            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph4'', ''\(^[*\|/ ]\{6,}\)\@<=|'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraph4'', ''\(^[*\|_/ ]\{6,}\)\@<=|'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
-            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraphSlash'', ''\(^[*\|/ ]\{-}\)\@<=[\/]'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitGraphSlash'', ''\(^[*\|_/ ]\{-}\)\@<=[\/]'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
-            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitHash'', ''\(^[*\|/ ]*\)\@<=[0-9A-Fa-f]\+'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitHash'', ''\(^[*\|_/ ]*\)\@<=[0-9A-Fa-f]\+'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
-            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitRefNames'', ''^[*\|/ ]*[0-9A-Fa-f]\+\s*\zs(.\{-})'')')"""
+            lfCmd(r"""call win_execute(%d, 'let matchid = matchadd(''Lf_hl_gitRefNames'', ''^[*\|_/ ]*[0-9A-Fa-f]\+\s*\zs(.\{-})'')')"""
                     % self._getInstance().getPopupWinId())
             id = int(lfEval("matchid"))
         else:
             id = int(lfEval(r'''matchadd('Lf_hl_gitGraph1', '^|')'''))
             self._match_ids.append(id)
-            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph2', '^[*\|/ ]\{2}\zs|')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph2', '^[*\|_/ ]\{2}\zs|')'''))
             self._match_ids.append(id)
-            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph3', '^[*\|/ ]\{4}\zs|')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph3', '^[*\|_/ ]\{4}\zs|')'''))
             self._match_ids.append(id)
-            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph4', '\(^[*\|/ ]\{6,}\)\@<=|')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitGraph4', '\(^[*\|_/ ]\{6,}\)\@<=|')'''))
             self._match_ids.append(id)
-            id = int(lfEval(r'''matchadd('Lf_hl_gitGraphSlash', '\(^[*\|/ ]\{-}\)\@<=[\/]')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitGraphSlash', '\(^[*\|_/ ]\{-}\)\@<=[\/]')'''))
             self._match_ids.append(id)
-            id = int(lfEval(r'''matchadd('Lf_hl_gitHash', '\(^[*\|/ ]*\)\@<=[0-9A-Fa-f]\+')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitHash', '\(^[*\|_/ ]*\)\@<=[0-9A-Fa-f]\+')'''))
             self._match_ids.append(id)
-            id = int(lfEval(r'''matchadd('Lf_hl_gitRefNames', '^[*\|/ ]*[0-9A-Fa-f]\+\s*\zs(.\{-})')'''))
+            id = int(lfEval(r'''matchadd('Lf_hl_gitRefNames', '^[*\|_/ ]*[0-9A-Fa-f]\+\s*\zs(.\{-})')'''))
             self._match_ids.append(id)
 
     def _accept(self, file, mode, *args, **kwargs):
