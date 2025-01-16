@@ -10,6 +10,7 @@ import json
 import bisect
 import tempfile
 import itertools
+from pathlib import PurePath
 from difflib import SequenceMatcher
 from itertools import islice
 from functools import partial
@@ -1686,7 +1687,8 @@ class TreeView(GitCommandView):
 
     def locateFile(self, path):
         with self._lock:
-            self._locateFile(lfRelpath(path))
+            path = PurePath(lfRelpath(path))
+            self._locateFile(path.as_posix())
 
     @staticmethod
     def getDirName(path):

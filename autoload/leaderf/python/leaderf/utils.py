@@ -166,7 +166,7 @@ def lfWinId(winnr, tab=None):
 
 def lfPrintError(error):
     if lfEval("get(g:, 'Lf_Exception', 0)") == '1':
-        raise error
+        raise Exception(error)
     else:
         error = lfEncode(str(repr(error)))
         lfCmd("echohl Error | redraw | echo '%s' | echohl None" % escQuote(error))
