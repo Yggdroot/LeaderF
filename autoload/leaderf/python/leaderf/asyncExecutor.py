@@ -118,6 +118,8 @@ class AsyncExecutor(object):
                             self._process.poll()
                     except IOError:
                         pass
+                    except AttributeError:
+                        pass
 
                     if cleanup:
                         cleanup()
@@ -165,6 +167,8 @@ class AsyncExecutor(object):
                             self._process.stderr.close()
                             self._process.poll()
                     except IOError:
+                        pass
+                    except AttributeError:
                         pass
 
                     if cleanup:
