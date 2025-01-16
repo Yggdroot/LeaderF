@@ -343,7 +343,7 @@ class GitCatFileCommand(GitCommand):
         if self._source[0].startswith("0000000"):
             if self._source[1] == "M":
                 if os.name == 'nt':
-                    self._cmd = "type {}".format(self._source[2])
+                    self._cmd = "type {}".format(os.path.normpath(self._source[2]))
                 else:
                     self._cmd = "cat {}".format(self._source[2])
             else:
@@ -1246,7 +1246,7 @@ class TreeView(GitCommandView):
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFolder'', ''\S*/'', -100)')"""
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFolder'', ''\S*[/\\]'', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
