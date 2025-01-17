@@ -3553,7 +3553,7 @@ class GitDiffExplManager(GitExplManager):
                 file_name = vim.current.buffer.name
                 if " " in file_name:
                     file_name = file_name.replace(' ', r'\ ')
-                self._arguments["current_file"] = lfRelpath(file_name)
+                self._arguments["current_file"] = PurePath(lfRelpath(file_name)).as_posix()
                 if "-s" in self._arguments:
                     self.vsplitDiff()
                 else:
