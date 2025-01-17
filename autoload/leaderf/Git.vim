@@ -617,7 +617,7 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
     let line = a:line_num_content[0]
     let line_len = strlen(line)
 
-    let hi_line_num = get(g:, 'Lf_GitHightlightLineNumber', 0)
+    let hi_line_num = get(g:, 'Lf_GitHightlightLineNumber', 1)
     let delimiter = get(g:, 'Lf_GitDelimiter', '│')
     let delimiter_len = len(delimiter)
     let ns_id = nvim_create_namespace('LeaderF')

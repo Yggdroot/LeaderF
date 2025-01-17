@@ -1183,7 +1183,7 @@ g:Lf_GitHightlightLineNumber                  *g:Lf_GitHightlightLineNumber*
     Specify whether to highlight the line number when diff view is in
     'unified' mode. If enabled, the line numbers of changed lines are also
     highlighted with 'DiffAdd' or 'DiffDelete'.
-    Default value is 0.
+    Default value is 1.
 
 g:Lf_GitWorkingDirectoryMode                  *g:Lf_GitWorkingDirectoryMode*
     Specify the working directory when launch Leaderf git command. The value

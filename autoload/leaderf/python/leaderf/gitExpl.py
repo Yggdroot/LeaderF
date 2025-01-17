@@ -2339,7 +2339,7 @@ class UnifiedDiffViewPanel(Panel):
             self.nvim_setLineNumberWin(line_num_content, buffer_num)
             return
 
-        hi_line_num = int(lfEval("get(g:, 'Lf_GitHightlightLineNumber', 0)"))
+        hi_line_num = int(lfEval("get(g:, 'Lf_GitHightlightLineNumber', 1)"))
         for i, line in enumerate(line_num_content, 1):
             if line[-2] == '-':
                 if hi_line_num == 1:
