@@ -3039,7 +3039,7 @@ class ExplorerPage(object):
         elif "-s" in arguments_dict:
             self._diff_view_mode = "side-by-side"
         else:
-            self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'side-by-side')")
+            self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'unified')")
 
         callback = partial(self.getDiffViewPanel().create,
                            arguments_dict,
