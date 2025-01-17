@@ -473,7 +473,7 @@ class GitBlameCommand(GitCommand):
         file_name = vim.current.buffer.name
         if " " in file_name:
             file_name = file_name.replace(' ', r'\ ')
-        file_name = lfRelpath(file_name)
+        file_name = PurePath(lfRelpath(file_name)).as_posix()
 
         self._cmd = GitBlameCommand.buildCommand(self._arguments, commit_id, file_name, True)
         self._buffer_name = "LeaderF://git blame {} {}".format(commit_id, file_name)
@@ -1687,8 +1687,7 @@ class TreeView(GitCommandView):
 
     def locateFile(self, path):
         with self._lock:
-            path = PurePath(lfRelpath(path))
-            self._locateFile(path.as_posix())
+            self._locateFile(PurePath(lfRelpath(path)).as_posix())
 
     @staticmethod
     def getDirName(path):
@@ -1769,8 +1768,8 @@ class TreeView(GitCommandView):
 
             orig_name = ""
             if meta_info.info[2][0] in ("R", "C"):
-                orig_name = "{} => ".format(lfRelpath(meta_info.info[3],
-                                                      os.path.dirname(meta_info.info[4])))
+                orig_name = "{} => ".format(PurePath(lfRelpath(meta_info.info[3],
+                                                               os.path.dirname(meta_info.info[4]))).as_posix())
 
             return "{}{} {}{}\t{}".format("  " * meta_info.level,
                                           icon,
@@ -3729,7 +3728,7 @@ class GitLogExplManager(GitExplManager):
                 file_name = vim.current.buffer.name
                 if " " in file_name:
                     file_name = file_name.replace(' ', r'\ ')
-                self._arguments["current_file"] = lfRelpath(file_name)
+                self._arguments["current_file"] = PurePath(lfRelpath(file_name)).as_posix()
                 self._arguments["orig_name"] = self._getExplorer().orig_name
             elif ("--current-line" in arguments_dict
                 and vim.current.buffer.name
@@ -3738,7 +3737,7 @@ class GitLogExplManager(GitExplManager):
                 file_name = vim.current.buffer.name
                 if " " in file_name:
                     file_name = file_name.replace(' ', r'\ ')
-                self._arguments["current_file"] = lfRelpath(file_name)
+                self._arguments["current_file"] = PurePath(lfRelpath(file_name)).as_posix()
                 self._arguments["current_line_num"] = vim.current.window.cursor[0]
 
         if "--recall" in arguments_dict:
