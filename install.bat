@@ -1,4 +1,9 @@
 @echo off
+set pyFlag=0
+where /Q py
+if %ERRORLEVEL% NEQ 0 set pyFlag=1
+echo pyFlag=%pyFlag%
+
 if /i "%1" equ "--reverse" (
     cd autoload\leaderf\fuzzyMatch_C
     rd /s /q build
@@ -11,7 +16,12 @@ if /i "%1" equ "--reverse" (
 )
 echo Begin to compile C extension of Python2 ...
 cd autoload\leaderf\fuzzyMatch_C
-py -2 setup.py build --build-lib ..\python
+
+if %pyFlag% EQU 0 (
+	py -2 setup.py build --build-lib ..\python
+) else (
+	python2 setup.py build --build-lib ..\python
+)
 if %errorlevel% equ 0 (
     echo=
     echo ===============================================
@@ -21,7 +31,11 @@ if %errorlevel% equ 0 (
 
 echo=
 echo Begin to compile C extension of Python3 ...
-py -3 setup.py build --build-lib ..\python
+if %pyFlag% EQU 0 (
+	py -3 setup.py build --build-lib ..\python
+) else (
+	python3 setup.py build --build-lib ..\python
+)
 if %errorlevel% equ 0 (
     echo=
     echo ===============================================

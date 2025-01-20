@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+import platform
 
 try:
     from setuptools import setup
@@ -8,7 +9,7 @@ except ImportError:
     from distutils.core import setup
     from distutils.extension import Extension
 
-if os.name == 'nt':
+if os.name == 'nt' and ("MSC" in platform.python_compiler()):
     from distutils.msvccompiler import get_build_version
 
     if get_build_version() < 14.0: # Visual Studio 2015
