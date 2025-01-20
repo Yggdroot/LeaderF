@@ -1,42 +1,37 @@
 # -*- coding: utf-8 -*-
 import os
 import platform
+from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
 
-try:
-    from setuptools import setup
-    from setuptools import Extension
-except ImportError:
-    from distutils.core import setup
-    from distutils.extension import Extension
+class BuildExt(build_ext):
+    def build_extensions(self):
+        if os.name == 'nt' and "MSC" in platform.python_compiler():
+            for ext in self.extensions:
+                ext.extra_compile_args = ['/TP']
+        elif os.name == 'posix':
+            for ext in self.extensions:
+                ext.extra_compile_args = ['-std=c99', '-O2']
+        build_ext.build_extensions(self)
 
-if os.name == 'nt' and ("MSC" in platform.python_compiler()):
-    from distutils.msvccompiler import get_build_version
+module1 = Extension(
+    "fuzzyMatchC",
+    sources=["fuzzyMatch.c"],
+)
 
-    if get_build_version() < 14.0: # Visual Studio 2015
-        if get_build_version() >= 8.0:
-            from distutils.msvc9compiler import MSVCCompiler
-        else:
-            from distutils.msvccompiler import MSVCCompiler
+module2 = Extension(
+    "fuzzyEngine",
+    sources=["fuzzyMatch.c", "fuzzyEngine.c"],
+)
 
-        # Because the msvc compiler does not support c99,
-        # treat .c files as .cpp files
-        MSVCCompiler._c_extensions = []
-        MSVCCompiler._cpp_extensions = ['.c', '.cc', '.cpp', '.cxx']
-
-
-module1 = Extension("fuzzyMatchC",
-                    sources = ["fuzzyMatch.c"])
-
-module2 = Extension("fuzzyEngine",
-                    sources = ["fuzzyMatch.c", "fuzzyEngine.c"])
-
-
-setup(name = "fuzzyEngine",
-      version = "2.0",
-      description = "fuzzy match algorithm written in C.",
-      author = "Yggdroot",
-      author_email = "archofortune@gmail.com",
-      url = "https://github.com/Yggdroot/LeaderF",
-      license = "Apache License 2.0",
-      ext_modules = [module1, module2]
-      )
+setup(
+    name="fuzzyEngine",
+    version="2.0",
+    description="Fuzzy match algorithm written in C.",
+    author="Yggdroot",
+    author_email="archofortune@gmail.com",
+    url="https://github.com/Yggdroot/LeaderF",
+    license="Apache License 2.0",
+    ext_modules=[module1, module2],
+    cmdclass={"build_ext": BuildExt},
+)
