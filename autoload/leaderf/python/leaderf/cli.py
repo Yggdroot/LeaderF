@@ -344,7 +344,7 @@ class LfCli(object):
             else:
                 lfCmd("hi! default link Lf_hl_cursor NONE")
 
-            if lfEval("g:Lf_CursorBlink") == '1':
+            if lfEval("g:Lf_CursorBlink") == '1' and 0:
                 self._blinkon = not self._blinkon
             elif self._idle:
                 lfCmd("silent! redraw")
