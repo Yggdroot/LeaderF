@@ -610,6 +610,7 @@ function! leaderf#PopupClosed(id_list, manager_id, winid, result) abort
     " result is -1 if CTRL-C was pressed,
     if a:result == -1
         exec g:Lf_py "import ctypes"
+        exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.is_ctrl_c = True", a:manager_id)
         exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:manager_id)
         for id in a:id_list
             if id != a:winid
@@ -620,10 +621,15 @@ function! leaderf#PopupClosed(id_list, manager_id, winid, result) abort
 endfunction
 
 function! leaderf#Quit(manager_id) abort
-    exec g:Lf_py "import ctypes"
-    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.is_autocmd = True", a:manager_id)
-    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.quit()", a:manager_id)
-    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.is_autocmd = False", a:manager_id)
+exec g:Lf_py "<< EOF"
+import ctypes
+manager = ctypes.cast(int(vim.eval("a:manager_id")), ctypes.py_object).value
+if manager.is_ctrl_c == False:
+    manager.is_autocmd = True
+    manager.quit()
+    manager.is_autocmd = False
+manager.is_ctrl_c = False
+EOF
 endfunction
 
 function! leaderf#ResetPopupOptions(winid, option, value) abort
