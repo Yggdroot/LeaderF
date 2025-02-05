@@ -60,7 +60,10 @@ def modifiableController(func):
     def deco(self, *args, **kwargs):
         self._getInstance().buffer.options['modifiable'] = True
         func(self, *args, **kwargs)
-        self._getInstance().buffer.options['modifiable'] = False
+        try:
+            self._getInstance().buffer.options['modifiable'] = False
+        except:
+            pass
     return deco
 
 def catchException(func):
