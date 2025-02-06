@@ -3017,8 +3017,8 @@ class Manager(object):
 
                     self._getInstance().setStlResultsCount(len(self._content))
 
-                    if not self.isPreviewWindowOpen():
-                        self._previewResult(False)
+                if not self.isPreviewWindowOpen():
+                    self._previewResult(False)
 
                 if self._getInstance().getWinPos() not in ('popup', 'floatwin'):
                     lfCmd("redrawstatus")
