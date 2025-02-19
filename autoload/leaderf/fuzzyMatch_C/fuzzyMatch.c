@@ -37,6 +37,7 @@
     #if defined(_M_AMD64) || defined(_M_X64)
         #define FM_BITSCAN_WINDOWS64
         #pragma intrinsic(_BitScanReverse64)
+        #pragma intrinsic(_BitScanForward64)
     #endif
 
 #endif
@@ -47,10 +48,10 @@
     {
         unsigned long index;
         #if defined(FM_BITSCAN_WINDOWS64)
-        if ( !_BitScanReverse64(&index, x) )
-            return 0;
-        else
+        if ( _BitScanReverse64(&index, x) )
             return index + 1;
+        else
+            return 0;
         #else
         if ( (x & 0xFFFFFFFF00000000) == 0 )
         {
@@ -69,14 +70,28 @@
 
     #define FM_BIT_LENGTH(x) FM_BitLength(x)
 
+    #if defined(FM_BITSCAN_WINDOWS64)
+
+    uint16_t FM_ctz(uint64_t x) {
+        unsigned long index;
+        if (_BitScanForward64(&index, x)) {
+            return (uint16_t)index;
+        }
+        return 64;
+    }
+    #define FM_CTZ(x) FM_ctz(x)
+
+    #endif
 #elif defined(__GNUC__)
 
     #define FM_BIT_LENGTH(x) ((uint32_t)(8 * sizeof(unsigned long long) - __builtin_clzll(x)))
+    #define FM_CTZ(x) __builtin_ctzll(x)
 
 #elif defined(__clang__)
 
     #if __has_builtin(__builtin_clzll)
         #define FM_BIT_LENGTH(x) ((uint32_t)(8 * sizeof(unsigned long long) - __builtin_clzll(x)))
+        #define FM_CTZ(x) __builtin_ctzll(x)
     #endif
 
 #endif
@@ -116,21 +131,25 @@
 
 #endif
 
-static uint64_t deBruijn = 0x022FDD63CC95386D;
+#if !defined(FM_CTZ)
 
-static uint8_t MultiplyDeBruijnBitPosition[64] =
-{
-    0,  1,  2,  53, 3,  7,  54, 27,
-    4,  38, 41, 8,  34, 55, 48, 28,
-    62, 5,  39, 46, 44, 42, 22, 9,
-    24, 35, 59, 56, 49, 18, 29, 11,
-    63, 52, 6,  26, 37, 40, 33, 47,
-    61, 45, 43, 21, 23, 58, 17, 10,
-    51, 25, 36, 32, 60, 20, 57, 16,
-    50, 31, 19, 15, 30, 14, 13, 12,
-};
+    static uint64_t deBruijn = 0x022FDD63CC95386D;
 
-#define FM_CTZ(x) MultiplyDeBruijnBitPosition[((uint64_t)((x) & -(int64_t)(x)) * deBruijn) >> 58]
+    static uint8_t MultiplyDeBruijnBitPosition[64] =
+    {
+        0,  1,  2,  53, 3,  7,  54, 27,
+        4,  38, 41, 8,  34, 55, 48, 28,
+        62, 5,  39, 46, 44, 42, 22, 9,
+        24, 35, 59, 56, 49, 18, 29, 11,
+        63, 52, 6,  26, 37, 40, 33, 47,
+        61, 45, 43, 21, 23, 58, 17, 10,
+        51, 25, 36, 32, 60, 20, 57, 16,
+        50, 31, 19, 15, 30, 14, 13, 12,
+    };
+
+    #define FM_CTZ(x) MultiplyDeBruijnBitPosition[((uint64_t)((x) & -(int64_t)(x)) * deBruijn) >> 58]
+
+#endif
 
 static uint16_t valTable[64] =
 {
