@@ -18,9 +18,11 @@ echo Begin to compile C extension of Python2 ...
 cd autoload\leaderf\fuzzyMatch_C
 
 if %pyFlag% EQU 0 (
-	py -2 setup.py build --build-lib ..\python
+    py -2 -m pip install setuptools
+    py -2 setup.py build --build-lib ..\python
 ) else (
-	python2 setup.py build --build-lib ..\python
+    python2 -m pip install setuptools
+    python2 setup.py build --build-lib ..\python
 )
 if %errorlevel% equ 0 (
     echo=
@@ -32,9 +34,11 @@ if %errorlevel% equ 0 (
 echo=
 echo Begin to compile C extension of Python3 ...
 if %pyFlag% EQU 0 (
-	py -3 setup.py build --build-lib ..\python
+    py -3 -m pip install setuptools
+    py -3 setup.py build --build-lib ..\python
 ) else (
-	python3 setup.py build --build-lib ..\python
+    python3 -m pip install setuptools
+    python3 setup.py build --build-lib ..\python
 )
 if %errorlevel% equ 0 (
     echo=
