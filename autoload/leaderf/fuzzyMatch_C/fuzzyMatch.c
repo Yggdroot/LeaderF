@@ -72,14 +72,14 @@
 
     #if defined(FM_BITSCAN_WINDOWS64)
 
-    uint16_t FM_ctz(uint64_t x) {
-        unsigned long index;
-        if (_BitScanForward64(&index, x)) {
-            return (uint16_t)index;
+        uint16_t FM_ctz(uint64_t x) {
+            unsigned long index;
+            if (_BitScanForward64(&index, x)) {
+                return (uint16_t)index;
+            }
+            return 64;
         }
-        return 64;
-    }
-    #define FM_CTZ(x) FM_ctz(x)
+        #define FM_CTZ(x) FM_ctz(x)
 
     #endif
 #elif defined(__GNUC__)
