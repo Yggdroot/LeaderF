@@ -15,6 +15,12 @@ no_python=true
 
 cd autoload/leaderf/fuzzyMatch_C
 
+if command -v gcc > /dev/null 2>&1; then
+    export CC=gcc
+elif command -v clang > /dev/null 2>&1; then
+    export CC=clang
+fi
+
 if command -v python2 > /dev/null 2>&1; then
     no_python=false
     echo "Begin to compile C extension of Python2 ..."
