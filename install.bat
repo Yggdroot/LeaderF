@@ -2,7 +2,6 @@
 set pyFlag=0
 where /Q py
 if %ERRORLEVEL% NEQ 0 set pyFlag=1
-echo pyFlag=%pyFlag%
 
 if /i "%1" equ "--reverse" (
     cd autoload\leaderf\fuzzyMatch_C
