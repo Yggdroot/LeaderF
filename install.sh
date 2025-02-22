@@ -23,7 +23,7 @@ fi
 
 if command -v python2 > /dev/null 2>&1; then
     no_python=false
-    echo "Begin to compile C extension of Python2 ..."
+    echo "Beginning to compile C extension of Python2 ..."
     python2 setup.py build --build-lib ../python
     if [ $? -eq 0 ]
     then
@@ -38,7 +38,7 @@ if command -v python3 > /dev/null 2>&1; then
     $no_python || echo
     no_python=false
 
-    echo "Begin to compile C extension of Python3 ..."
+    echo "Beginning to compile C extension of Python3 ..."
     python3 setup.py build --build-lib ../python
     if [ $? -eq 0 ]
     then

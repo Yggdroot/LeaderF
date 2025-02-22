@@ -1,8 +1,23 @@
 # -*- coding: utf-8 -*-
 import os
 import platform
-from setuptools import setup, Extension
-from setuptools.command.build_ext import build_ext
+import subprocess
+import sys
+
+try:
+    from setuptools import setup, Extension
+    from setuptools.command.build_ext import build_ext
+except ImportError:
+    print("\nsetuptools is not installed. Attempting to install...")
+    print(" ".join([sys.executable, "-m", "pip", "install", "setuptools"]))
+    try:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "setuptools"])
+        from setuptools import setup, Extension
+        from setuptools.command.build_ext import build_ext
+    except Exception as e:
+        print("\nFailed to install setuptools: {}".format(e))
+        print("Please turn to https://stackoverflow.com/questions/69919970/no-module-named-distutils-util-but-distutils-is-installed/76691103#76691103 for help")
+        sys.exit(1)
 
 class BuildExt(build_ext):
     def build_extensions(self):
@@ -11,7 +26,7 @@ class BuildExt(build_ext):
                 ext.extra_compile_args = ['/TP']
         elif os.name == 'posix':
             for ext in self.extensions:
-                ext.extra_compile_args = ['-std=c99', '-O2']
+                ext.extra_compile_args = ['-std=c99', '-O3']
         build_ext.build_extensions(self)
 
 module1 = Extension(
