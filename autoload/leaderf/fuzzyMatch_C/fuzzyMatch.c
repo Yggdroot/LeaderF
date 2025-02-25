@@ -721,7 +721,7 @@ float getWeight(const char* text, uint16_t text_len,
     }
 
     int16_t first_char_pos = -1;
-    uint16_t better_text_len = text_len;
+    uint16_t short_text_len = text_len;
     if ( pPattern_ctxt->is_lower )
     {
         int16_t i;
@@ -748,8 +748,8 @@ float getWeight(const char* text, uint16_t text_len,
         if ( last_char_pos == -1 )
             return MIN_WEIGHT;
 
-        better_text_len = last_char_pos + 1;
-        col_num = (better_text_len + 63) >> 6;     /* (better_text_len + 63)/64 */
+        short_text_len = last_char_pos + 1;
+        col_num = (short_text_len + 63) >> 6;     /* (short_text_len + 63)/64 */
         if (col_num <= 2)
         {
             memset(TEXT_MASK, 0, sizeof(TEXT_MASK));
@@ -835,8 +835,8 @@ float getWeight(const char* text, uint16_t text_len,
         if ( last_char_pos == -1 )
             return MIN_WEIGHT;
 
-        better_text_len = last_char_pos + 1;
-        col_num = (better_text_len + 63) >> 6;
+        short_text_len = last_char_pos + 1;
+        col_num = (short_text_len + 63) >> 6;
         if (col_num <= 2)
         {
             memset(TEXT_MASK, 0, sizeof(TEXT_MASK));
@@ -893,7 +893,7 @@ float getWeight(const char* text, uint16_t text_len,
     {
         int16_t i;
         j = 0;
-        for ( i = first_char_pos; i < better_text_len; ++i )
+        for ( i = first_char_pos; i < short_text_len; ++i )
         {
             if ( j < pPattern_ctxt->actual_pattern_len )
             {
@@ -919,10 +919,10 @@ float getWeight(const char* text, uint16_t text_len,
 
     TextContext text_ctxt;
     text_ctxt.text = text;
-    text_ctxt.text_len = better_text_len;
+    text_ctxt.text_len = short_text_len;
     text_ctxt.text_mask = text_mask;
     text_ctxt.col_num = col_num;
-    text_ctxt.offset = 0;
+    text_ctxt.offset = first_char_pos;
 
     ValueElements val[64];
     memset(val, 0, sizeof(val));
@@ -1514,9 +1514,10 @@ HighlightGroup* getHighlights(const char* text,
         }
     }
 
+    int16_t first_char_pos = -1;
+    uint16_t short_text_len = text_len;
     if ( pPattern_ctxt->is_lower )
     {
-        int16_t first_char_pos = -1;
         int16_t i;
         for ( i = 0; i < text_len; ++i )
         {
@@ -1537,7 +1538,8 @@ HighlightGroup* getHighlights(const char* text,
             }
         }
 
-        col_num = (text_len + 63) >> 6;     /* (text_len + 63)/64 */
+        short_text_len = last_char_pos + 1;
+        col_num = (short_text_len + 63) >> 6;     /* (short_text_len + 63)/64 */
         if (col_num <= 2)
         {
             memset(TEXT_MASK, 0, sizeof(TEXT_MASK));
@@ -1564,7 +1566,6 @@ HighlightGroup* getHighlights(const char* text,
     }
     else
     {
-        int16_t first_char_pos = -1;
         if ( isupper(first_char) )
         {
             int16_t i;
@@ -1616,7 +1617,8 @@ HighlightGroup* getHighlights(const char* text,
             }
         }
 
-        col_num = (text_len + 63) >> 6;
+        short_text_len = last_char_pos + 1;
+        col_num = (short_text_len + 63) >> 6;
         if (col_num <= 2)
         {
             memset(TEXT_MASK, 0, sizeof(TEXT_MASK));
@@ -1657,10 +1659,10 @@ HighlightGroup* getHighlights(const char* text,
 
     TextContext text_ctxt;
     text_ctxt.text = text;
-    text_ctxt.text_len = text_len;
+    text_ctxt.text_len = short_text_len;
     text_ctxt.text_mask = text_mask;
     text_ctxt.col_num = col_num;
-    text_ctxt.offset = 0;
+    text_ctxt.offset = first_char_pos;
 
     /* HighlightGroup* groups[pattern_len] */
     HighlightGroup** groups = (HighlightGroup**)calloc(pattern_len, sizeof(HighlightGroup*));
