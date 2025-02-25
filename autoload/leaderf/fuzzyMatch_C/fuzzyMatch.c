@@ -721,6 +721,7 @@ float getWeight(const char* text, uint16_t text_len,
     }
 
     int16_t first_char_pos = -1;
+    uint16_t better_text_len = text_len;
     if ( pPattern_ctxt->is_lower )
     {
         int16_t i;
@@ -747,7 +748,8 @@ float getWeight(const char* text, uint16_t text_len,
         if ( last_char_pos == -1 )
             return MIN_WEIGHT;
 
-        col_num = (text_len + 63) >> 6;     /* (text_len + 63)/64 */
+        better_text_len = last_char_pos + 1;
+        col_num = (better_text_len + 63) >> 6;     /* (better_text_len + 63)/64 */
         if (col_num <= 2)
         {
             memset(TEXT_MASK, 0, sizeof(TEXT_MASK));
@@ -833,7 +835,8 @@ float getWeight(const char* text, uint16_t text_len,
         if ( last_char_pos == -1 )
             return MIN_WEIGHT;
 
-        col_num = (text_len + 63) >> 6;
+        better_text_len = last_char_pos + 1;
+        col_num = (better_text_len + 63) >> 6;
         if (col_num <= 2)
         {
             memset(TEXT_MASK, 0, sizeof(TEXT_MASK));
@@ -890,7 +893,7 @@ float getWeight(const char* text, uint16_t text_len,
     {
         int16_t i;
         j = 0;
-        for ( i = first_char_pos; i < text_len; ++i )
+        for ( i = first_char_pos; i < better_text_len; ++i )
         {
             if ( j < pPattern_ctxt->actual_pattern_len )
             {
@@ -916,7 +919,7 @@ float getWeight(const char* text, uint16_t text_len,
 
     TextContext text_ctxt;
     text_ctxt.text = text;
-    text_ctxt.text_len = text_len;
+    text_ctxt.text_len = better_text_len;
     text_ctxt.text_mask = text_mask;
     text_ctxt.col_num = col_num;
     text_ctxt.offset = 0;
