@@ -78,7 +78,8 @@ class BufTagExplorer(Explorer):
                 yield itertools.chain(tag_list, itertools.chain.from_iterable(exe_taglist))
 
     def _getTagResult(self, buffer):
-        if not buffer.name or lfEval("bufloaded(%d)" % buffer.number) == '0':
+        if (not buffer.name or lfEval("bufloaded(%d)" % buffer.number) == '0'
+            or lfEval("&bt") != ''):
             return []
         changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % buffer.number))
         # there is no change since last call
