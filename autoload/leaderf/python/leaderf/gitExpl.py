@@ -3232,6 +3232,7 @@ class GitExplManager(Manager):
         self._git_diff_manager = None
         self._git_log_manager = None
         self._git_blame_manager = None
+        self._git_status_manager = None
         self._selected_content = None
         self._project_root = None
 
@@ -3279,6 +3280,10 @@ class GitExplManager(Manager):
             if self._git_blame_manager is None:
                 self._git_blame_manager = GitBlameExplManager()
             return self._git_blame_manager
+        elif subcommand == "status":
+            if self._git_status_manager is None:
+                self._git_status_manager = GitStatusExplManager()
+            return self._git_status_manager
         else:
             return super(GitExplManager, self)
 
@@ -4614,6 +4619,32 @@ class GitBlameExplManager(GitExplManager):
             lfPrintError("fatal: no such path '{}' in HEAD".format(vim.current.buffer.name))
 
         self._restoreOrigCwd()
+
+    def cleanupExplorerPage(self, page):
+        del self._pages[page.commit_id]
+
+
+class GitStatusExplManager(GitExplManager):
+    def __init__(self):
+        super(GitStatusExplManager, self).__init__()
+        self._pages = set()
+
+    def startExplorer(self, win_pos, *args, **kwargs):
+        arguments_dict = kwargs.get("arguments", {})
+        if "--recall" not in arguments_dict and self.checkWorkingDirectory() == False:
+            return
+
+        if "--recall" not in arguments_dict:
+            self.setArguments(arguments_dict)
+
+            uid = str(int(time.time()))[-7:]
+            page = ExplorerPage(self._project_root, uid, self)
+            page.create(arguments_dict, GitDiffExplCommand(arguments_dict, uid))
+            self._pages.add(page)
+
+    def cleanup(self):
+        if self._diff_view_panel is not None:
+            self._diff_view_panel.cleanup()
 
     def cleanupExplorerPage(self, page):
         del self._pages[page.commit_id]
