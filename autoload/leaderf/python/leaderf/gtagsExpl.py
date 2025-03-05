@@ -623,6 +623,22 @@ class GtagsExplorer(Explorer):
 
         return False
 
+    def _gtagsFilesExists(self, path):
+        """
+        return True if `gtags.files` exists in project root
+        otherwise return False
+        """
+        root_markers = lfEval("g:Lf_RootMarkers")
+        project_root = nearestAncestor(root_markers, path)
+        if project_root == "":
+            return False
+
+        cur_path = os.path.join(path, "gtags.files")
+        if os.path.exists(cur_path):
+            return True
+
+        return False
+
     def _buildCmd(self, dir, **kwargs):
         """
         this function comes from FileExplorer
@@ -633,6 +649,13 @@ class GtagsExplorer(Explorer):
 
         if self._Lf_ExternalCommand:
             return self._Lf_ExternalCommand.replace('"%s"', '%s') % dir.join('""')
+
+        if self._gtagsFilesExists(dir):
+            if os.name == 'nt':
+                cmd = 'type gtags.files'
+            else:
+                cmd = 'cat gtags.files'
+            return cmd
 
         arguments_dict = kwargs.get("arguments", {})
         if self._Lf_UseVersionControlTool:
