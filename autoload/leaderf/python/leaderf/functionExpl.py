@@ -104,7 +104,8 @@ class FunctionExplorer(Explorer):
                 yield itertools.chain(func_list, itertools.chain.from_iterable(exe_taglist))
 
     def _getFunctionResult(self, buffer):
-        if not buffer.name or lfEval("bufloaded(%d)" % buffer.number) == '0':
+        if (not buffer.name or lfEval("bufloaded(%d)" % buffer.number) == '0'
+            or lfEval("&bt") != ''):
             return []
         changedtick = int(lfEval("getbufvar(%d, 'changedtick')" % buffer.number))
         # there is no change since last call
