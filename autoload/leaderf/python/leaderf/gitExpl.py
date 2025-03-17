@@ -2800,11 +2800,6 @@ class NavigationPanel(Panel):
         self._is_hidden = False
         self.tree_view.locateFile(current_file_path)
 
-    def writeBuffer(self):
-        # called in idle
-        if self.tree_view is not None:
-            self.tree_view.writeBuffer()
-
     def getWindowId(self):
         return self.tree_view.getWindowId()
 
