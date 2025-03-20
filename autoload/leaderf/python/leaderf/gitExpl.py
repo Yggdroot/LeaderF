@@ -2680,8 +2680,11 @@ class UnifiedDiffViewPanel(Panel):
 
 
 class NavigationPanel(Panel):
-    def __init__(self, bufhidden_callback=None):
+    def __init__(self, owner, project_root, commit_id, bufhidden_callback=None):
         super(NavigationPanel, self).__init__()
+        self._owner = owner
+        self._project_root = project_root
+        self._commit_id = commit_id
         self.tree_view = None
         self._bufhidden_cb = bufhidden_callback
         self._is_hidden = False
@@ -2689,6 +2692,7 @@ class NavigationPanel(Panel):
         self._diff_view_mode = None
         self._ignore_whitespace = False
         self._diff_algorithm = 'myers'
+        self._git_diff_manager = None
         self._winid = None
         self._buffer = None
         self._head = [
@@ -2740,6 +2744,12 @@ class NavigationPanel(Panel):
         self._arguments = cmd.getArguments()
         TreeView(self, cmd, project_root, target_path, callback).create(winid, bufhidden="hide")
         lfCmd("call win_execute({}, 'let b:lf_navigation_matches = getmatches()')".format(winid))
+
+        self.defineMaps(winid)
+
+    def defineMaps(self, winid):
+        lfCmd("call win_execute({}, 'call leaderf#Git#NavigationPanelMaps({})')"
+              .format(winid, id(self)))
 
     def setDiffViewMode(self, mode):
         self._buffer.options['modifiable'] = True
@@ -2799,10 +2809,10 @@ class NavigationPanel(Panel):
                 mode = None
 
             if mode is not None and mode != self._diff_view_mode:
-                return self.toggleDiffViewMode()
+                self.toggleDiffViewMode()
         elif mouse_pos["line"] == '3':
             if column >= 5 and column <= 23:
-                return self.toggleIgnoreWhitespace()
+                self.toggleIgnoreWhitespace()
         elif mouse_pos["line"] == '4':
             if column >= 5 and column <= 11:
                 diff_algorithm = 'myers'
@@ -2817,7 +2827,7 @@ class NavigationPanel(Panel):
 
             if self._diff_algorithm != diff_algorithm:
                 self._diff_algorithm = diff_algorithm
-                return self.selectDiffAlgorithm()
+                self.selectDiffAlgorithm()
 
     def selectDiffAlgorithm(self):
         self.setDiffAlgorithm(self._diff_algorithm)
@@ -2829,9 +2839,8 @@ class NavigationPanel(Panel):
                 lfCmd("let &diffopt = '{}'".format(diffopt))
             else:
                 lfCmd("set diffopt+=algorithm:{}".format(self._diff_algorithm))
-            return False
         else:
-            return True
+            self.openDiffView(False, preview=True, diff_view_source=True)
 
     def toggleDiffViewMode(self):
         if self._diff_view_mode == 'side-by-side':
@@ -2854,7 +2863,7 @@ class NavigationPanel(Panel):
             else:
                 self._diff_algorithm = "myers"
 
-        return True
+        self.openDiffView(False, preview=True, diff_view_source=True)
 
     def toggleIgnoreWhitespace(self):
         if self._diff_view_mode == 'side-by-side':
@@ -2863,11 +2872,13 @@ class NavigationPanel(Panel):
             else:
                 lfCmd("set diffopt+=iwhiteall")
             self.setIgnoreWhitespace(self._diff_view_mode, self._ignore_whitespace)
-            return False
         else:
             self._ignore_whitespace = not self._ignore_whitespace
             self.setIgnoreWhitespace(self._diff_view_mode, self._ignore_whitespace)
-            return True
+            self.openDiffView(False, preview=True, diff_view_source=True)
+
+    def openDiffView(self, recursive, **kwargs):
+        return self._owner.openDiffView(recursive, **kwargs)
 
     def open(self):
         buffer_name = self.tree_view.getBufferName()
@@ -2901,6 +2912,34 @@ class NavigationPanel(Panel):
 
     def getWindowId(self):
         return self.tree_view.getWindowId()
+
+    def locateFile(self, path, line_num=None, preview=True):
+        self.tree_view.locateFile(path)
+        self.openDiffView(False, line_num=line_num, preview=preview)
+
+    @ensureWorkingDirectory
+    def fuzzySearch(self, recall=False):
+        if self._git_diff_manager is None:
+            self._git_diff_manager = GitDiffExplManager()
+
+        kwargs = {}
+        kwargs["arguments"] = {
+                "owner": self._owner._owner,
+                "commit_id": self._commit_id,
+                "parent": self.tree_view.getCurrentParent(),
+                "content": self.tree_view.getFileList(),
+                "accept": self.locateFile
+                }
+
+        if recall == True:
+            kwargs["arguments"]["--recall"] = []
+
+        self._git_diff_manager.startExplorer("popup", **kwargs)
+
+    @ensureWorkingDirectory
+    def showCommitMessage(self):
+        cmd = "git show {} -s --decorate --pretty=fuller".format(self._commit_id)
+        lfCmd("""call leaderf#Git#ShowCommitMessage(systemlist('{}'))""".format(cmd))
 
 
 class BlamePanel(Panel):
@@ -3047,15 +3086,11 @@ class BlamePanel(Panel):
 class ExplorerPage(object):
     def __init__(self, project_root, commit_id, owner):
         self._project_root = project_root
-        self._navigation_panel = NavigationPanel(self.afterBufhidden)
-        self._navigation_buffer_name = None
+        self._navigation_panel = NavigationPanel(self, project_root, commit_id, self.afterBufhidden)
         self._diff_view_panel = DiffViewPanel(self.afterBufhidden, commit_id)
         self._unified_diff_view_panel = UnifiedDiffViewPanel(self.afterBufhidden, commit_id)
-        self.commit_id = commit_id
         self._owner = owner
         self._arguments = {}
-        self.tabpage = None
-        self._git_diff_manager = None
 
     def openNavigationPanel(self):
         self._navigation_panel.open()
@@ -3103,10 +3138,6 @@ class ExplorerPage(object):
 
         return int(lfEval("win_getid()"))
 
-    def defineMaps(self, winid):
-        lfCmd("call win_execute({}, 'call leaderf#Git#ExplorerMaps({})')"
-              .format(winid, id(self)))
-
     def getDiffViewPanel(self):
         if self._navigation_panel.getDiffViewMode() == "side-by-side":
             return self._diff_view_panel
@@ -3117,12 +3148,10 @@ class ExplorerPage(object):
         self._arguments = arguments_dict
         lfCmd("noautocmd tabnew")
 
-        self.tabpage = vim.current.tabpage
         diff_view_winid = int(lfEval("win_getid()"))
 
         win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
-        self._navigation_buffer_name = cmd.getBufferName()
-        winid = self._createWindow(win_pos, self._navigation_buffer_name)
+        winid = self._createWindow(win_pos, cmd.getBufferName())
 
         callback = partial(self.getDiffViewPanel().create,
                            arguments_dict,
@@ -3136,7 +3165,6 @@ class ExplorerPage(object):
                                       self._project_root,
                                       target_path,
                                       callback)
-        self.defineMaps(winid)
 
     def afterBufhidden(self):
         if (self._navigation_panel.isHidden() and self._diff_view_panel.isAllHidden()
@@ -3148,11 +3176,6 @@ class ExplorerPage(object):
         self._diff_view_panel.cleanup()
         self._unified_diff_view_panel.cleanup()
         self._owner.cleanupExplorerPage(self)
-
-    def selectOption(self):
-        if self._navigation_panel.selectOption() == True:
-            source = self.getExistingSource()
-            self.open(False, preview=True, diff_view_source=source)
 
     def getExistingSource(self):
         for w in vim.current.tabpage.windows:
@@ -3171,13 +3194,13 @@ class ExplorerPage(object):
                 lfCmd("only")
                 break
 
-    def open(self, recursive, **kwargs):
+    def openDiffView(self, recursive, **kwargs):
         kwargs["project_root"] = self._project_root
         kwargs["explorer_page_id"] = id(self)
         kwargs["ignore_whitespace"] = self._navigation_panel.getIgnoreWhitespace()
         kwargs["diff_algorithm"] = self._navigation_panel.getDiffAlgorithm()
         if "diff_view_source" in kwargs:
-            source = kwargs["diff_view_source"]
+            source = self.getExistingSource()
         else:
             source = self._navigation_panel.tree_view.expandOrCollapseFolder(recursive)
 
@@ -3199,34 +3222,6 @@ class ExplorerPage(object):
 
             if kwargs.get("preview", False) == True:
                 lfCmd("call win_gotoid({})".format(self._navigation_panel.getWindowId()))
-
-    def locateFile(self, path, line_num=None, preview=True):
-        self._navigation_panel.tree_view.locateFile(path)
-        self.open(False, line_num=line_num, preview=preview)
-
-    @ensureWorkingDirectory
-    def fuzzySearch(self, recall=False):
-        if self._git_diff_manager is None:
-            self._git_diff_manager = GitDiffExplManager()
-
-        kwargs = {}
-        kwargs["arguments"] = {
-                "owner": self._owner,
-                "commit_id": self.commit_id,
-                "parent": self._navigation_panel.tree_view.getCurrentParent(),
-                "content": self._navigation_panel.tree_view.getFileList(),
-                "accept": self.locateFile
-                }
-
-        if recall == True:
-            kwargs["arguments"]["--recall"] = []
-
-        self._git_diff_manager.startExplorer("popup", **kwargs)
-
-    @ensureWorkingDirectory
-    def showCommitMessage(self):
-        cmd = "git show {} -s --decorate --pretty=fuller".format(self.commit_id)
-        lfCmd("""call leaderf#Git#ShowCommitMessage(systemlist('{}'))""".format(cmd))
 
 
 #*****************************************************
