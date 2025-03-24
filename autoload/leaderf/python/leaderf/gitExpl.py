@@ -423,6 +423,40 @@ class GitDiffExplCommand(GitCommand):
         self._file_type_cmd = ""
 
 
+class GitStagedCommand(GitCommand):
+    def __init__(self, arguments_dict, source):
+        super(GitStagedCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferName(self):
+        self._cmd = 'git diff --cached --raw -C --numstat --shortstat --no-abbrev'
+        extra_options = ""
+
+        if "extra" in self._arguments:
+            extra_options += " " + " ".join(self._arguments["extra"])
+
+        self._cmd += extra_options
+
+        self._buffer_name = "LeaderF://navigation/" + self._source
+        self._file_type_cmd = ""
+
+
+class GitUnstagedCommand(GitCommand):
+    def __init__(self, arguments_dict, source):
+        super(GitUnstagedCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferName(self):
+        self._cmd = 'git diff --raw -C --numstat --shortstat --no-abbrev'
+        extra_options = ""
+
+        if "extra" in self._arguments:
+            extra_options += " " + " ".join(self._arguments["extra"])
+
+        self._cmd += extra_options
+
+        self._buffer_name = "LeaderF://navigation/" + self._source
+        self._file_type_cmd = ""
+
+
 class GitLogExplCommand(GitCommand):
     def __init__(self, arguments_dict, source):
         """
@@ -3158,14 +3192,12 @@ class ExplorerPage(object):
         else:
             return self._unified_diff_view_panel
 
-    def create(self, arguments_dict, cmd, target_path=None, line_num=None):
+    def create(self, arguments_dict, command, target_path=None, line_num=None):
         self._arguments = arguments_dict
         lfCmd("noautocmd tabnew")
 
         diff_view_winid = int(lfEval("win_getid()"))
-
         win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
-        winid = self._createWindow(win_pos, cmd.getBufferName())
 
         callback = partial(self.getDiffViewPanel().create,
                            arguments_dict,
@@ -3173,12 +3205,26 @@ class ExplorerPage(object):
                            line_num=line_num,
                            project_root=self._project_root,
                            explorer_page_id=id(self))
-        self._navigation_panel.create(arguments_dict,
-                                      cmd,
-                                      winid,
-                                      self._project_root,
-                                      target_path,
-                                      callback)
+
+        if isinstance(command, list):
+            buffer_name = command[0].getBufferName()
+            winid = self._createWindow(win_pos, buffer_name)
+            for title, cmd in command:
+                self._navigation_panel.create(arguments_dict,
+                                              cmd,
+                                              winid,
+                                              self._project_root,
+                                              target_path,
+                                              callback)
+        else:
+            buffer_name = command.getBufferName()
+            winid = self._createWindow(win_pos, buffer_name)
+            self._navigation_panel.create(arguments_dict,
+                                          command,
+                                          winid,
+                                          self._project_root,
+                                          target_path,
+                                          callback)
 
     def afterBufhidden(self):
         if (self._navigation_panel.isHidden() and self._diff_view_panel.isAllHidden()
@@ -4652,12 +4698,18 @@ class GitStatusExplManager(GitExplManager):
         if "--recall" not in arguments_dict and self.checkWorkingDirectory() == False:
             return
 
-        if "--recall" not in arguments_dict:
+        if "--recall" in arguments_dict:
+            super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
+        else:
             self.setArguments(arguments_dict)
 
             uid = str(int(time.time()))[-7:]
             page = ExplorerPage(self._project_root, uid, self)
-            page.create(arguments_dict, GitDiffExplCommand(arguments_dict, uid))
+            command = [
+                    ("Staged Changes:", GitStagedCommand(arguments_dict, uid)),
+                    ("Unstaged Changes:", GitUnstagedCommand(arguments_dict, uid)),
+                    ]
+            page.create(arguments_dict, command)
             self._pages.add(page)
 
     def cleanup(self):
