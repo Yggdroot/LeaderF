@@ -400,28 +400,28 @@ function! leaderf#Git#TreeViewMaps(id) abort
     nnoremap <buffer> <silent> )             :call leaderf#Git#OuterBlock(1)<CR>
 endfunction
 
-function! leaderf#Git#CollapseParent(explorer_page) abort
+function! leaderf#Git#CollapseParent(navigation_panel) abort
     if leaderf#Git#OuterIndent(0) != 0
-        exec g:Lf_py printf("%s.open(False)", a:explorer_page)
+        exec g:Lf_py printf("%s.openDiffView(False)", a:navigation_panel)
     endif
 endfunction
 
-function! leaderf#Git#ExplorerMaps(id) abort
+function! leaderf#Git#NavigationPanelMaps(id) abort
     exec g:Lf_py "import ctypes"
-    let explorer_page = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
-    exec printf('nnoremap <buffer> <silent> o             :exec g:Lf_py "%s.open(False)"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "%s.open(False)"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.open(False)"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> O             :exec g:Lf_py "%s.open(True)"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> t             :exec g:Lf_py "%s.open(False, mode=''t'')"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.toggleDiffViewMode()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> i             :exec g:Lf_py "%s.toggleIgnoreWhitespace()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> p             :exec g:Lf_py "%s.open(False, preview=True)"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> x             :call leaderf#Git#CollapseParent("%s")<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> f             :exec g:Lf_py "%s.fuzzySearch()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> F             :exec g:Lf_py "%s.fuzzySearch(True)"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', explorer_page)
-    exec printf('nnoremap <buffer> <silent> <LeftRelease> <LeftRelease>:exec g:Lf_py "%s.selectOption()"<CR>', explorer_page)
+    let navigation_panel = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
+    exec printf('nnoremap <buffer> <silent> o             :exec g:Lf_py "%s.openDiffView(False)"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> <2-LeftMouse> :exec g:Lf_py "%s.openDiffView(False)"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.openDiffView(False)"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> O             :exec g:Lf_py "%s.openDiffView(True)"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> t             :exec g:Lf_py "%s.openDiffView(False, mode=''t'')"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.toggleDiffViewMode()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> i             :exec g:Lf_py "%s.toggleIgnoreWhitespace()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> p             :exec g:Lf_py "%s.openDiffView(False, preview=True)"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> x             :call leaderf#Git#CollapseParent("%s")<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> f             :exec g:Lf_py "%s.fuzzySearch()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> F             :exec g:Lf_py "%s.fuzzySearch(True)"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> <LeftRelease> <LeftRelease>:exec g:Lf_py "%s.selectOption()"<CR>', navigation_panel)
     nnoremap <buffer> <silent> q             :q<CR>
 endfunction
 
