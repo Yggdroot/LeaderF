@@ -621,6 +621,9 @@ class GitCommandView(object):
         if lfEval("getbufvar(winbufnr(%d), '&ft')" % winid) != self._cmd.getFileType():
             lfCmd("silent! call win_execute({}, '{}')".format(winid, self._cmd.getFileTypeCommand()))
 
+    def initBuffer(self):
+        pass
+
     def defineMaps(self, winid):
         pass
 
@@ -671,6 +674,7 @@ class GitCommandView(object):
             self._owner.writeFinished(self.getWindowId())
             return
 
+        self.initBuffer()
         self.start()
 
     def writeBuffer(self):
@@ -1505,7 +1509,7 @@ class TreeView(GitCommandView):
     def expandOrCollapseFolder(self, recursive=False):
         with self._lock:
             line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
-            index = line_num - len(self._head) - 1
+            index = line_num - self._owner.startLine()
             # the root
             if index == -1 and recursive == True:
                 self.expandRoot(line_num)
@@ -1531,7 +1535,7 @@ class TreeView(GitCommandView):
     def collapseChildren(self):
         with self._lock:
             line_num = vim.current.window.cursor[0]
-            index = line_num - len(self._head) - 1
+            index = line_num - self._owner.startLine()
             structure = self._file_structures[self._cur_parent]
             if index < -1 or index >= len(structure):
                 return
@@ -1666,10 +1670,8 @@ class TreeView(GitCommandView):
         structure = self._file_structures[self._cur_parent]
         index = Bisect.bisect_left(structure, 0, key=getKey)
         if index < len(structure) and structure[index].path == path:
-            # lfCmd("call win_gotoid({})" .format(self.getWindowId()))
-            # lfCmd("{} | norm! 0zz" .format(index + 1 + len(self._head)))
             lfCmd("call win_execute({}, 'norm! {}G0zz')"
-                  .format(self.getWindowId(), index + 1 + len(self._head)))
+                  .format(self.getWindowId(), index + self._owner.startLine()))
         else:
             if not self.inFileStructure(path):
                 lfPrintError("File can't be found!")
@@ -1685,15 +1687,13 @@ class TreeView(GitCommandView):
                 node = node.dirs[d]
                 node.status = FolderStatus.OPEN
 
-            line_num = index + len(self._head)
+            line_num = index + self._owner.startLine() - 1
             increment = self.expandFolder(line_num, index - 1, meta_info, False)
 
             index = Bisect.bisect_left(structure, 0, index, index + increment, key=getKey)
             if index < len(structure) and structure[index].path == path:
                 lfCmd("call win_execute({}, 'norm! {}G0zz')"
-                      .format(self.getWindowId(), index + 1 + len(self._head)))
-                # lfCmd("call win_gotoid({})" .format(self.getWindowId()))
-                # lfCmd("{} | norm! 0zz" .format(index + 1 + len(self._head)))
+                      .format(self.getWindowId(), index + self._owner.startLine()))
             else:
                 lfPrintError("BUG: File can't be found!")
 
@@ -1749,10 +1749,17 @@ class TreeView(GitCommandView):
         lfCmd("autocmd Lf_Git_Colorscheme ColorScheme * call leaderf#colorscheme#popup#load('Git', '{}')"
               .format(lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
+    def initBuffer(self):
+        self._buffer.options['modifiable'] = True
+        try:
+            self._buffer.append(self._head)
+        finally:
+            self._buffer.options['modifiable'] = False
+
     def refreshNumStat(self):
         self._buffer.options['modifiable'] = True
         try:
-            init_line = len(self._head)
+            init_line = self._owner.startLine() - 1
             structure = self._file_structures[self._cur_parent]
             for i, info in enumerate(structure, init_line):
                 if info.has_num_stat == True:
@@ -1780,7 +1787,7 @@ class TreeView(GitCommandView):
                 cur_len = len(structure)
                 if cur_len > self._offset_in_content:
                     cursor_line = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
-                    init_line = len(self._head)
+                    init_line = self._owner.startLine() - 1
 
                     if cursor_line <= init_line:
                         lfCmd("call win_execute({}, 'norm! {}G')"
@@ -2703,6 +2710,9 @@ class NavigationPanel(Panel):
                 '',
                 ]
 
+    def startLine(self):
+        return len(self._head) + 1 + 1
+
     def getDiffViewMode(self):
         return self._diff_view_mode
 
@@ -3089,6 +3099,7 @@ class ExplorerPage(object):
         self._navigation_panel = NavigationPanel(self, project_root, commit_id, self.afterBufhidden)
         self._diff_view_panel = DiffViewPanel(self.afterBufhidden, commit_id)
         self._unified_diff_view_panel = UnifiedDiffViewPanel(self.afterBufhidden, commit_id)
+        self.commit_id = commit_id
         self._owner = owner
         self._arguments = {}
 

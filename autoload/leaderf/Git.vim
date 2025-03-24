@@ -400,9 +400,9 @@ function! leaderf#Git#TreeViewMaps(id) abort
     nnoremap <buffer> <silent> )             :call leaderf#Git#OuterBlock(1)<CR>
 endfunction
 
-function! leaderf#Git#CollapseParent(explorer_page) abort
+function! leaderf#Git#CollapseParent(navigation_panel) abort
     if leaderf#Git#OuterIndent(0) != 0
-        exec g:Lf_py printf("%s.open(False)", a:explorer_page)
+        exec g:Lf_py printf("%s.openDiffView(False)", a:navigation_panel)
     endif
 endfunction
 
