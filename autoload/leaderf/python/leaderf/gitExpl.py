@@ -1187,6 +1187,9 @@ class TreeView(GitCommandView):
                 ]
         self._match_ids = []
 
+    def startLine(self):
+        return self._owner.startLine()
+
     def enableColor(self, winid):
         if lfEval("hlexists('Lf_hl_help')") == '0':
             lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
@@ -1509,7 +1512,7 @@ class TreeView(GitCommandView):
     def expandOrCollapseFolder(self, recursive=False):
         with self._lock:
             line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
-            index = line_num - self._owner.startLine()
+            index = line_num - self.startLine()
             # the root
             if index == -1 and recursive == True:
                 self.expandRoot(line_num)
@@ -1535,7 +1538,7 @@ class TreeView(GitCommandView):
     def collapseChildren(self):
         with self._lock:
             line_num = vim.current.window.cursor[0]
-            index = line_num - self._owner.startLine()
+            index = line_num - self.startLine()
             structure = self._file_structures[self._cur_parent]
             if index < -1 or index >= len(structure):
                 return
@@ -1671,7 +1674,7 @@ class TreeView(GitCommandView):
         index = Bisect.bisect_left(structure, 0, key=getKey)
         if index < len(structure) and structure[index].path == path:
             lfCmd("call win_execute({}, 'norm! {}G0zz')"
-                  .format(self.getWindowId(), index + self._owner.startLine()))
+                  .format(self.getWindowId(), index + self.startLine()))
         else:
             if not self.inFileStructure(path):
                 lfPrintError("File can't be found!")
@@ -1687,13 +1690,13 @@ class TreeView(GitCommandView):
                 node = node.dirs[d]
                 node.status = FolderStatus.OPEN
 
-            line_num = index + self._owner.startLine() - 1
+            line_num = index + self.startLine() - 1
             increment = self.expandFolder(line_num, index - 1, meta_info, False)
 
             index = Bisect.bisect_left(structure, 0, index, index + increment, key=getKey)
             if index < len(structure) and structure[index].path == path:
                 lfCmd("call win_execute({}, 'norm! {}G0zz')"
-                      .format(self.getWindowId(), index + self._owner.startLine()))
+                      .format(self.getWindowId(), index + self.startLine()))
             else:
                 lfPrintError("BUG: File can't be found!")
 
@@ -1759,7 +1762,7 @@ class TreeView(GitCommandView):
     def refreshNumStat(self):
         self._buffer.options['modifiable'] = True
         try:
-            init_line = self._owner.startLine() - 1
+            init_line = self.startLine() - 1
             structure = self._file_structures[self._cur_parent]
             for i, info in enumerate(structure, init_line):
                 if info.has_num_stat == True:
@@ -1787,7 +1790,7 @@ class TreeView(GitCommandView):
                 cur_len = len(structure)
                 if cur_len > self._offset_in_content:
                     cursor_line = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
-                    init_line = self._owner.startLine() - 1
+                    init_line = self.startLine() - 1
 
                     if cursor_line <= init_line:
                         lfCmd("call win_execute({}, 'norm! {}G')"
