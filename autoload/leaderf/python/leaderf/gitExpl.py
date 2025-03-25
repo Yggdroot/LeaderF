@@ -260,6 +260,9 @@ class GitCommand(object):
     def getSource(self):
         return self._source
 
+    def getTitle(self):
+        return None
+
 
 class GitDiffCommand(GitCommand):
     def __init__(self, arguments_dict, source):
@@ -439,6 +442,9 @@ class GitStagedCommand(GitCommand):
         self._buffer_name = "LeaderF://navigation/" + self._source
         self._file_type_cmd = ""
 
+    def getTitle(self):
+        return "Staged Changes:"
+
 
 class GitUnstagedCommand(GitCommand):
     def __init__(self, arguments_dict, source):
@@ -455,6 +461,9 @@ class GitUnstagedCommand(GitCommand):
 
         self._buffer_name = "LeaderF://navigation/" + self._source
         self._file_type_cmd = ""
+
+    def getTitle(self):
+        return "Unstaged Changes:"
 
 
 class GitLogExplCommand(GitCommand):
@@ -1181,13 +1190,14 @@ class Bisect(object):
 
 
 class TreeView(GitCommandView):
-    def __init__(self, owner, cmd, project_root, target_path, callback):
+    def __init__(self, owner, cmd, project_root, target_path, callback, next_tree_view=None):
         super(TreeView, self).__init__(owner, cmd)
         self._project_root = project_root
         self._target_path = target_path
         # the argument is source, source is a tuple like
         # (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         self._callback = callback
+        self._next_tree_view = next_tree_view
         # key is the parent hash, value is a TreeNode
         self._trees = LfOrderedDict()
         # key is the parent hash, value is a list of MetaInfo
@@ -1216,9 +1226,6 @@ class TreeView(GitCommandView):
                 "M": self._modification_icon,
                 "R": self._rename_icon,
                 }
-        self._head = [
-                self._project_root + os.sep,
-                ]
         self._match_ids = []
 
     def startLine(self):
@@ -1789,7 +1796,12 @@ class TreeView(GitCommandView):
     def initBuffer(self):
         self._buffer.options['modifiable'] = True
         try:
-            self._buffer.append(self._head)
+            self._buffer.append('')
+            title = self._cmd.getTitle()
+            if title is not None:
+                self._buffer.append(title)
+
+            self._buffer.append(self._project_root + os.sep)
         finally:
             self._buffer.options['modifiable'] = False
 
@@ -1870,6 +1882,8 @@ class TreeView(GitCommandView):
             self._read_finished = 2
             self._owner.writeFinished(self.getWindowId())
             self.stopTimer()
+            if self._next_tree_view is not None:
+                self._next_tree_view()
 
     def _readContent(self, encoding):
         try:
@@ -2744,7 +2758,6 @@ class NavigationPanel(Panel):
                 ' Side-by-side ◉ Unified ○',
                 ' Ignore Whitespace 🗷 ',
                 ' Myers ◉ Minimal ○ Patience ○ Histogram ○',
-                '',
                 ]
 
     def startLine(self):
@@ -2775,7 +2788,7 @@ class NavigationPanel(Panel):
             self.tree_view.cleanup()
             self.tree_view = None
 
-    def create(self, arguments_dict, cmd, winid, project_root, target_path, callback):
+    def create(self, arguments_dict, command, winid, project_root, target_path, callback):
         if "-u" in arguments_dict:
             self._diff_view_mode = "unified"
         elif "-s" in arguments_dict:
@@ -2788,8 +2801,26 @@ class NavigationPanel(Panel):
         self._buffer[:] = self._head
         self.setDiffViewMode(self._diff_view_mode)
 
-        self._arguments = cmd.getArguments()
-        TreeView(self, cmd, project_root, target_path, callback).create(winid, bufhidden="hide")
+        if isinstance(command, list):
+            def createTreeView(cmds):
+                if len(cmds) > 0:
+                    TreeView(self, cmds[0],
+                             project_root,
+                             target_path,
+                             callback,
+                             partial(createTreeView, cmds[1:])
+                             ).create(winid, bufhidden="hide")
+
+            self._arguments = command[0].getArguments()
+            createTreeView(command[1:])
+        else:
+            self._arguments = command.getArguments()
+            TreeView(self, command,
+                     project_root,
+                     target_path,
+                     callback
+                     ).create(winid, bufhidden="hide")
+
         lfCmd("call win_execute({}, 'let b:lf_navigation_matches = getmatches()')".format(winid))
 
         self.defineMaps(winid)
@@ -3199,6 +3230,13 @@ class ExplorerPage(object):
         diff_view_winid = int(lfEval("win_getid()"))
         win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
 
+        if isinstance(command, list):
+            buffer_name = command[0].getBufferName()
+            winid = self._createWindow(win_pos, buffer_name)
+        else:
+            buffer_name = command.getBufferName()
+            winid = self._createWindow(win_pos, buffer_name)
+
         callback = partial(self.getDiffViewPanel().create,
                            arguments_dict,
                            winid=diff_view_winid,
@@ -3206,25 +3244,12 @@ class ExplorerPage(object):
                            project_root=self._project_root,
                            explorer_page_id=id(self))
 
-        if isinstance(command, list):
-            buffer_name = command[0].getBufferName()
-            winid = self._createWindow(win_pos, buffer_name)
-            for title, cmd in command:
-                self._navigation_panel.create(arguments_dict,
-                                              cmd,
-                                              winid,
-                                              self._project_root,
-                                              target_path,
-                                              callback)
-        else:
-            buffer_name = command.getBufferName()
-            winid = self._createWindow(win_pos, buffer_name)
-            self._navigation_panel.create(arguments_dict,
-                                          command,
-                                          winid,
-                                          self._project_root,
-                                          target_path,
-                                          callback)
+        self._navigation_panel.create(arguments_dict,
+                                      command,
+                                      winid,
+                                      self._project_root,
+                                      target_path,
+                                      callback)
 
     def afterBufhidden(self):
         if (self._navigation_panel.isHidden() and self._diff_view_panel.isAllHidden()
@@ -4706,8 +4731,8 @@ class GitStatusExplManager(GitExplManager):
             uid = str(int(time.time()))[-7:]
             page = ExplorerPage(self._project_root, uid, self)
             command = [
-                    ("Staged Changes:", GitStagedCommand(arguments_dict, uid)),
-                    ("Unstaged Changes:", GitUnstagedCommand(arguments_dict, uid)),
+                    GitStagedCommand(arguments_dict, uid),
+                    GitUnstagedCommand(arguments_dict, uid),
                     ]
             page.create(arguments_dict, command)
             self._pages.add(page)
