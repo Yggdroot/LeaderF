@@ -1231,6 +1231,9 @@ class TreeView(GitCommandView):
     def startLine(self):
         return self._owner.startLine()
 
+    def getTitle(self):
+        return self._cmd.getTitle()
+
     def enableColor(self, winid):
         if lfEval("hlexists('Lf_hl_help')") == '0':
             lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
@@ -2743,7 +2746,7 @@ class NavigationPanel(Panel):
         self._owner = owner
         self._project_root = project_root
         self._commit_id = commit_id
-        self.tree_view = None
+        self.tree_view = {}
         self._bufhidden_cb = bufhidden_callback
         self._is_hidden = False
         self._arguments = {}
@@ -2751,7 +2754,6 @@ class NavigationPanel(Panel):
         self._ignore_whitespace = False
         self._diff_algorithm = 'myers'
         self._git_diff_manager = None
-        self._winid = None
         self._buffer = None
         self._head = [
                 '" Press <F1> for help',
@@ -2773,7 +2775,7 @@ class NavigationPanel(Panel):
         return self._diff_algorithm
 
     def register(self, view):
-        self.tree_view = view
+        self.tree_view[view.getTitle()] = view
 
     def bufHidden(self, view):
         self._is_hidden = True
@@ -2784,9 +2786,10 @@ class NavigationPanel(Panel):
         return self._is_hidden
 
     def cleanup(self):
-        if self.tree_view is not None:
-            self.tree_view.cleanup()
-            self.tree_view = None
+        for view in self.tree_view.values():
+            if view is not None:
+                view.cleanup()
+        self.tree_view = {}
 
     def create(self, arguments_dict, command, winid, project_root, target_path, callback):
         if "-u" in arguments_dict:
@@ -2796,7 +2799,6 @@ class NavigationPanel(Panel):
         else:
             self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'unified')")
 
-        self._winid = winid
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(winid)))]
         self._buffer[:] = self._head
         self.setDiffViewMode(self._diff_view_mode)
@@ -2959,7 +2961,7 @@ class NavigationPanel(Panel):
         return self._owner.openDiffView(recursive, **kwargs)
 
     def open(self):
-        buffer_name = self.tree_view.getBufferName()
+        buffer_name = self._buffer.name
         navigation_winid = int(lfEval("bufwinid('{}')".format(escQuote(buffer_name))))
         if navigation_winid != -1:
             lfCmd("call win_gotoid({})".format(navigation_winid))
