@@ -2961,8 +2961,7 @@ class NavigationPanel(Panel):
         return self._owner.openDiffView(recursive, **kwargs)
 
     def open(self):
-        buffer_name = self._buffer.name
-        navigation_winid = int(lfEval("bufwinid('{}')".format(escQuote(buffer_name))))
+        navigation_winid = self.getWindowId()
         if navigation_winid != -1:
             lfCmd("call win_gotoid({})".format(navigation_winid))
             return
@@ -2991,7 +2990,7 @@ class NavigationPanel(Panel):
         self.tree_view.locateFile(current_file_path)
 
     def getWindowId(self):
-        return self.tree_view.getWindowId()
+        return int(lfEval("bufwinid('{}')".format(escQuote(self._buffer.name))))
 
     def locateFile(self, path, line_num=None, preview=True):
         self.tree_view.locateFile(path)
