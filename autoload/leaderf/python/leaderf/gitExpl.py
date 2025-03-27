@@ -3171,6 +3171,7 @@ class ExplorerPage(object):
         self.commit_id = commit_id
         self._owner = owner
         self._arguments = {}
+        self.tabpage = None
 
     def openNavigationPanel(self):
         self._navigation_panel.open()
@@ -3228,6 +3229,7 @@ class ExplorerPage(object):
         self._arguments = arguments_dict
         lfCmd("noautocmd tabnew")
 
+        self.tabpage = vim.current.tabpage
         diff_view_winid = int(lfEval("win_getid()"))
         win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
 
@@ -3308,6 +3310,9 @@ class ExplorerPage(object):
 
             if kwargs.get("preview", False) == True:
                 lfCmd("call win_gotoid({})".format(self._navigation_panel.getWindowId()))
+
+    def locateFile(self, path, line_num=None, preview=True):
+        self._navigation_panel.locateFile(path, line_num, preview)
 
 
 #*****************************************************
