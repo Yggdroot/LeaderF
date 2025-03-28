@@ -1229,10 +1229,7 @@ class TreeView(GitCommandView):
         self._match_ids = []
 
     def startLine(self):
-        return self._owner.startLine()
-
-    def getTitle(self):
-        return self._cmd.getTitle()
+        return self._owner.startLine(self)
 
     def enableColor(self, winid):
         if lfEval("hlexists('Lf_hl_help')") == '0':
@@ -1807,6 +1804,12 @@ class TreeView(GitCommandView):
             self._buffer.append(self._project_root + os.sep)
         finally:
             self._buffer.options['modifiable'] = False
+
+    def getHeight(self):
+        if self._cmd.getTitle() is None:
+            return len(self._file_structures[self._cur_parent]) + 1
+        else:
+            return len(self._file_structures[self._cur_parent]) + 2
 
     def refreshNumStat(self):
         self._buffer.options['modifiable'] = True
@@ -2746,7 +2749,7 @@ class NavigationPanel(Panel):
         self._owner = owner
         self._project_root = project_root
         self._commit_id = commit_id
-        self.tree_view = {}
+        self.tree_view = []
         self._bufhidden_cb = bufhidden_callback
         self._is_hidden = False
         self._arguments = {}
@@ -2762,8 +2765,23 @@ class NavigationPanel(Panel):
                 ' Myers ◉ Minimal ○ Patience ○ Histogram ○',
                 ]
 
-    def startLine(self):
-        return len(self._head) + 1 + 1
+    def startLine(self, tree_view):
+        n = len(self._head) + 2
+        for view in self.tree_view:
+            if tree_view is view:
+                return n
+            else:
+                n += view.getHeight() + 1
+
+        return n
+
+    def getTreeView(self):
+        line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
+        n = len(self._head) + 2
+        for view in self.tree_view:
+            n += view.getHeight() + 1
+            if line_num < n:
+                return view
 
     def getDiffViewMode(self):
         return self._diff_view_mode
@@ -2775,7 +2793,7 @@ class NavigationPanel(Panel):
         return self._diff_algorithm
 
     def register(self, view):
-        self.tree_view[view.getTitle()] = view
+        self.tree_view.append(view)
 
     def bufHidden(self, view):
         self._is_hidden = True
@@ -2786,10 +2804,10 @@ class NavigationPanel(Panel):
         return self._is_hidden
 
     def cleanup(self):
-        for view in self.tree_view.values():
+        for view in self.tree_view:
             if view is not None:
                 view.cleanup()
-        self.tree_view = {}
+        self.tree_view = []
 
     def create(self, arguments_dict, command, winid, project_root, target_path, callback):
         if "-u" in arguments_dict:
@@ -2814,7 +2832,7 @@ class NavigationPanel(Panel):
                              ).create(winid, bufhidden="hide")
 
             self._arguments = command[0].getArguments()
-            createTreeView(command[1:])
+            createTreeView(command)
         else:
             self._arguments = command.getArguments()
             TreeView(self, command,
@@ -2987,13 +3005,13 @@ class NavigationPanel(Panel):
         lfCmd("call setmatches(b:lf_navigation_matches)")
         lfCmd("setlocal winfixwidth | wincmd =")
         self._is_hidden = False
-        self.tree_view.locateFile(current_file_path)
+        self.getTreeView().locateFile(current_file_path)
 
     def getWindowId(self):
         return int(lfEval("bufwinid('{}')".format(escQuote(self._buffer.name))))
 
     def locateFile(self, path, line_num=None, preview=True):
-        self.tree_view.locateFile(path)
+        self.getTreeView().locateFile(path)
         self.openDiffView(False, line_num=line_num, preview=preview)
 
     @ensureWorkingDirectory
@@ -3005,8 +3023,8 @@ class NavigationPanel(Panel):
         kwargs["arguments"] = {
                 "owner": self._owner._owner,
                 "commit_id": self._commit_id,
-                "parent": self.tree_view.getCurrentParent(),
-                "content": self.tree_view.getFileList(),
+                "parent": self.getTreeView().getCurrentParent(),
+                "content": self.getTreeView().getFileList(),
                 "accept": self.locateFile
                 }
 
@@ -3290,7 +3308,7 @@ class ExplorerPage(object):
         if "diff_view_source" in kwargs:
             source = self.getExistingSource()
         else:
-            source = self._navigation_panel.tree_view.expandOrCollapseFolder(recursive)
+            source = self._navigation_panel.getTreeView().expandOrCollapseFolder(recursive)
 
         if source is not None:
             self.makeOnly()
