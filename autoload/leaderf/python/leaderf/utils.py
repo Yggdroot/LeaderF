@@ -141,7 +141,7 @@ def escQuote(str):
     return "" if str is None else str.replace("'","''")
 
 def escSpecial(str):
-    return re.sub('([%#$" ])', r"\\\1", str)
+    return re.sub('([()%#$" ])', r"\\\1", str)
 
 def equal(str1, str2, ignorecase=True):
     if ignorecase:
