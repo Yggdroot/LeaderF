@@ -1805,11 +1805,14 @@ class TreeView(GitCommandView):
         finally:
             self._buffer.options['modifiable'] = False
 
-    def getHeight(self):
+    def getTitleHeight(self):
         if self._cmd.getTitle() is None:
-            return len(self._file_structures[self._cur_parent]) + 1
+            return 0
         else:
-            return len(self._file_structures[self._cur_parent]) + 2
+            return 1
+
+    def getHeight(self):
+        return len(self._file_structures[self._cur_parent])
 
     def refreshNumStat(self):
         self._buffer.options['modifiable'] = True
@@ -2766,20 +2769,21 @@ class NavigationPanel(Panel):
                 ]
 
     def startLine(self, tree_view):
-        n = len(self._head) + 2
+        n = len(self._head) + 1
         for view in self.tree_view:
+            n += view.getTitleHeight() + 2
             if tree_view is view:
                 return n
             else:
-                n += view.getHeight() + 1
+                n += view.getHeight()
 
         return n
 
     def getTreeView(self):
         line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
-        n = len(self._head) + 2
+        n = len(self._head) + 1
         for view in self.tree_view:
-            n += view.getHeight() + 1
+            n += view.getTitleHeight() + view.getHeight() + 2
             if line_num < n:
                 return view
 
