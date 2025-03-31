@@ -782,7 +782,7 @@ class GitCommandView(object):
         # must do this at last
         self._executor.killProcess()
 
-        if self._bufhidden == "hide" and wipe == True:
+        if self._bufhidden == "hide" and wipe == True and self._buffer.valid:
             lfCmd("noautocmd bwipe! {}".format(self._buffer.number))
 
     def suicide(self):
@@ -4780,7 +4780,7 @@ class GitStatusExplManager(GitExplManager):
             self._diff_view_panel.cleanup()
 
     def cleanupExplorerPage(self, page):
-        del self._pages[page.commit_id]
+        self._pages.discard(page)
 
 
 #*****************************************************
