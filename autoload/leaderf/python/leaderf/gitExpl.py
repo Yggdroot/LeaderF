@@ -1805,6 +1805,9 @@ class TreeView(GitCommandView):
         finally:
             self._buffer.options['modifiable'] = False
 
+    def getCommand(self):
+        return self._cmd
+
     def getTitleHeight(self):
         if self._cmd.getTitle() is None:
             return 0
@@ -3027,6 +3030,7 @@ class NavigationPanel(Panel):
         kwargs["arguments"] = {
                 "owner": self._owner._owner,
                 "commit_id": self._commit_id,
+                "command": self.getTreeView().getCommand(),
                 "parent": self.getTreeView().getCurrentParent(),
                 "content": self.getTreeView().getFileList(),
                 "accept": self.locateFile
@@ -4764,6 +4768,12 @@ class GitStatusExplManager(GitExplManager):
                     ]
             page.create(arguments_dict, command)
             self._pages.add(page)
+
+    def getPreviewCommand(self, arguments_dict, source):
+        arguments_dict.update(self._arguments)
+        if isinstance(arguments_dict["command"], GitStagedCommand):
+            arguments_dict["--cached"] = []
+        return GitDiffCommand(arguments_dict, source)
 
     def cleanup(self):
         if self._diff_view_panel is not None:
