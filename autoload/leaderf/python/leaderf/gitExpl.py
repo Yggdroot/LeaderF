@@ -1552,6 +1552,9 @@ class TreeView(GitCommandView):
 
     def expandOrCollapseFolder(self, recursive=False):
         with self._lock:
+            if len(self._file_structures) == 0:
+                return None
+
             line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
             index = line_num - self.startLine()
             # the root
@@ -1815,6 +1818,9 @@ class TreeView(GitCommandView):
             return 1
 
     def getHeight(self):
+        if len(self._file_structures) == 0:
+            return 0
+
         return len(self._file_structures[self._cur_parent])
 
     def refreshNumStat(self):
@@ -4774,10 +4780,6 @@ class GitStatusExplManager(GitExplManager):
         if isinstance(arguments_dict["command"], GitStagedCommand):
             arguments_dict["--cached"] = []
         return GitDiffCommand(arguments_dict, source)
-
-    def cleanup(self):
-        if self._diff_view_panel is not None:
-            self._diff_view_panel.cleanup()
 
     def cleanupExplorerPage(self, page):
         self._pages.discard(page)
