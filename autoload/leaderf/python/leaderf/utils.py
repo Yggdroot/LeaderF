@@ -230,6 +230,13 @@ def lfDrop(type, file_name, line_num=None):
                 else:
                     lfCmd("hide edit %s" % escSpecial(file_name))
 
+
+def shrinkUser(path):
+    home = os.path.expanduser("~")
+    if path.lower().startswith(home):
+        return path.replace(home, "~", 1)
+    return path
+
 def nearestAncestor(markers, path):
     """
     return the nearest ancestor path(including itself) of `path` that contains

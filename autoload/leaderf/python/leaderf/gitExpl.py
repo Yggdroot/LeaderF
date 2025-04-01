@@ -1804,7 +1804,7 @@ class TreeView(GitCommandView):
             if title is not None:
                 self._buffer.append(title)
 
-            self._buffer.append(self._project_root + os.sep)
+            self._buffer.append(shrinkUser(self._project_root) + os.sep)
         finally:
             self._buffer.options['modifiable'] = False
 
