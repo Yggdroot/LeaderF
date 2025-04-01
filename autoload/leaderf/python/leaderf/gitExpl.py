@@ -1607,12 +1607,13 @@ class TreeView(GitCommandView):
 
     def expandRoot(self, line_num):
         meta_info = MetaInfo(-1, True, "", self._trees[self._cur_parent], "")
+        orig_len = len(self._file_structures[self._cur_parent])
         self._file_structures[self._cur_parent] = list(self.metaInfoGenerator(meta_info, True, -1))
         self._buffer.options['modifiable'] = True
         structure = self._file_structures[self._cur_parent]
         try:
             increment = len(structure)
-            self._buffer[line_num:] = [self.buildLine(info) for info in structure]
+            self._buffer[line_num : line_num+orig_len] = [self.buildLine(info) for info in structure]
             self._offset_in_content = increment
         finally:
             self._buffer.options['modifiable'] = False
@@ -3022,6 +3023,9 @@ class NavigationPanel(Panel):
 
     def getWindowId(self):
         return int(lfEval("bufwinid('{}')".format(escQuote(self._buffer.name))))
+
+    def collapseChildren(self):
+        self.getTreeView().collapseChildren()
 
     def locateFile(self, path, line_num=None, preview=True):
         self.getTreeView().locateFile(path)
