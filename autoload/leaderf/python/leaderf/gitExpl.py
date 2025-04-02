@@ -3703,7 +3703,7 @@ class GitDiffExplManager(GitExplManager):
             self._result_panel.create(self.createGitCommand(self._arguments, None))
             self._restoreOrigCwd()
         elif "--explorer" in self._arguments:
-            uid = str(int(time.time()))[-7:]
+            uid = str(hex(int(time.time())))[-7:]
             page = ExplorerPage(self._project_root, uid, self)
             page.create(arguments_dict, GitDiffExplCommand(arguments_dict, uid))
             self._pages.add(page)
@@ -4770,7 +4770,7 @@ class GitStatusExplManager(GitExplManager):
         else:
             self.setArguments(arguments_dict)
 
-            uid = str(int(time.time()))[-7:]
+            uid = str(hex(int(time.time())))[-7:]
             page = ExplorerPage(self._project_root, uid, self)
             command = [
                     GitStagedCommand(arguments_dict, uid),
