@@ -1329,7 +1329,7 @@ class TreeView(GitCommandView):
         return self._cur_parent
 
     def getFileList(self):
-        return self._file_list[self._cur_parent]
+        return self._file_list.get(self._cur_parent, [])
 
     @staticmethod
     def generateSource(line):
