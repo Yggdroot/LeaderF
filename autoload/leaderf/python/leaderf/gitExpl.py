@@ -1839,6 +1839,9 @@ class TreeView(GitCommandView):
 
     def writeBuffer(self):
         if self._cur_parent is None:
+            self.stopTimer()
+            if self._next_tree_view is not None:
+                self._next_tree_view()
             return
 
         if self._read_finished == 2:
