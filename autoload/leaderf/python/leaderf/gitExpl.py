@@ -2509,8 +2509,12 @@ class UnifiedDiffViewPanel(Panel):
             "patience": 4,
             "histogram": 6
         }
+        if source[1].startswith("0000000"):
+            commit_id = hex(int(self._commit_id, 16) + 1)[2:]
+        else:
+            commit_id = self._commit_id
         uid = algo_dict[diff_algorithm] + int(ignore_whitespace)
-        buf_name = "LeaderF://{}:{}:{}".format(self._commit_id,
+        buf_name = "LeaderF://{}:{}:{}".format(commit_id,
                                                uid,
                                                lfGetFilePath(source))
         if buf_name in self._views:
