@@ -664,9 +664,6 @@ class GitCommandView(object):
         if lfEval("getbufvar(winbufnr(%d), '&ft')" % winid) != self._cmd.getFileType():
             lfCmd("silent! call win_execute({}, '{}')".format(winid, self._cmd.getFileTypeCommand()))
 
-    def initBuffer(self):
-        pass
-
     def defineMaps(self, winid):
         pass
 
@@ -717,7 +714,6 @@ class GitCommandView(object):
             self._owner.writeFinished(self.getWindowId())
             return
 
-        self.initBuffer()
         self.start()
 
     def writeBuffer(self):
@@ -1227,6 +1223,7 @@ class TreeView(GitCommandView):
                 "R": self._rename_icon,
                 }
         self._match_ids = []
+        self._init = False
 
     def startLine(self):
         return self._owner.startLine(self)
@@ -1798,6 +1795,10 @@ class TreeView(GitCommandView):
               .format(lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
     def initBuffer(self):
+        if self._init == True:
+            return
+
+        self._init = True
         self._buffer.options['modifiable'] = True
         try:
             self._buffer.append('')
@@ -1843,6 +1844,8 @@ class TreeView(GitCommandView):
             if self._next_tree_view is not None:
                 self._next_tree_view()
             return
+
+        self.initBuffer()
 
         if self._read_finished == 2:
             return
@@ -2788,7 +2791,9 @@ class NavigationPanel(Panel):
     def startLine(self, tree_view):
         n = len(self._head) + 1
         for view in self.tree_view:
-            n += view.getTitleHeight() + 2
+            if view.getHeight() > 0:
+                n += view.getTitleHeight() + 2
+
             if tree_view is view:
                 return n
             else:
@@ -2800,9 +2805,10 @@ class NavigationPanel(Panel):
         line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
         n = len(self._head) + 1
         for view in self.tree_view:
-            n += view.getTitleHeight() + view.getHeight() + 2
-            if line_num < n:
-                return view
+            if view.getHeight() > 0:
+                n += view.getTitleHeight() + view.getHeight() + 2
+                if line_num < n:
+                    return view
 
     def getDiffViewMode(self):
         return self._diff_view_mode
