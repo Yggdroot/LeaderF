@@ -1773,10 +1773,8 @@ class TreeView(GitCommandView):
         lfCmd(r"""call win_execute({}, 'let &l:stl="%#Lf_hl_gitStlChangedNum# 0 %#Lf_hl_gitStlFileChanged#file changed, %#Lf_hl_gitStlAdd#0 (+), %#Lf_hl_gitStlDel#0 (-)"')"""
               .format(winid))
         if lfEval("has('nvim')") == '1':
-            lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % winid)
         else:
-            lfCmd("call win_execute({}, 'setlocal nocursorline')".format(winid))
             lfCmd("call win_execute({}, 'setlocal nonumber')".format(winid))
         lfCmd("call win_execute({}, 'noautocmd setlocal sw=2 tabstop=4')".format(winid))
         lfCmd("call win_execute({}, 'setlocal signcolumn=no')".format(winid))
@@ -1860,13 +1858,8 @@ class TreeView(GitCommandView):
                 structure = self._file_structures[self._cur_parent]
                 cur_len = len(structure)
                 if cur_len > self._offset_in_content:
-                    cursor_line = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
                     init_line = self.startLine() - 1
-
-                    if cursor_line <= init_line:
-                        lfCmd("call win_execute({}, 'norm! {}G')"
-                              .format(self.getWindowId(), init_line))
-                        cursor_line = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
+                    cursor_line = init_line
 
                     source = None
                     for info in structure[self._offset_in_content:cur_len]:
@@ -1876,8 +1869,7 @@ class TreeView(GitCommandView):
                                 cursor_line = len(self._buffer)
                                 source = info.info
 
-                    if source is not None:
-                        self._callback(source)
+                    if source is not None and self._callback(source) == True:
                         if lfEval("has('nvim')") == '1':
                             lfCmd("call nvim_win_set_option({}, 'cursorline', v:true)"
                                   .format(self.getWindowId()))
@@ -2848,13 +2840,22 @@ class NavigationPanel(Panel):
         self._buffer[:] = self._head
         self.setDiffViewMode(self._diff_view_mode)
 
+        flag = [False]
+        def wrapper(cb, flag, *args, **kwargs):
+            if flag[0] == False:
+                flag[0] = True
+                cb(*args, **kwargs)
+                return True
+            else:
+                return False
+
         if isinstance(command, list):
             def createTreeView(cmds):
                 if len(cmds) > 0:
                     TreeView(self, cmds[0],
                              project_root,
                              target_path,
-                             callback,
+                             partial(wrapper, callback, flag),
                              partial(createTreeView, cmds[1:])
                              ).create(winid, bufhidden="hide")
 
@@ -2865,7 +2866,7 @@ class NavigationPanel(Panel):
             TreeView(self, command,
                      project_root,
                      target_path,
-                     callback
+                     partial(wrapper, callback, flag),
                      ).create(winid, bufhidden="hide")
 
         lfCmd("call win_execute({}, 'let b:lf_navigation_matches = getmatches()')".format(winid))
