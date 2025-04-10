@@ -3314,7 +3314,7 @@ class ExplorerPage(object):
 
     def create(self, arguments_dict, command, target_path=None, line_num=None):
         self._arguments = arguments_dict
-        lfCmd("noautocmd tabnew")
+        lfCmd("noautocmd tabnew | setlocal bufhidden=wipe")
 
         self.tabpage = vim.current.tabpage
         diff_view_winid = int(lfEval("win_getid()"))
