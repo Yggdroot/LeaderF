@@ -390,7 +390,6 @@ endfunction
 function! leaderf#Git#TreeViewMaps(id) abort
     exec g:Lf_py "import ctypes"
     let tree_view = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
-    exec printf('nnoremap <silent> X         :exec g:Lf_py "%s.collapseChildren()"<CR>', tree_view)
     nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("tree")<CR>
     nnoremap <buffer> <silent> -             :call leaderf#Git#OuterIndent(0)<CR>
     nnoremap <buffer> <silent> +             :call leaderf#Git#OuterIndent(1)<CR>
@@ -418,6 +417,7 @@ function! leaderf#Git#NavigationPanelMaps(id) abort
     exec printf('nnoremap <buffer> <silent> i             :exec g:Lf_py "%s.toggleIgnoreWhitespace()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> p             :exec g:Lf_py "%s.openDiffView(False, preview=True)"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> x             :call leaderf#Git#CollapseParent("%s")<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> X             :exec g:Lf_py "%s.collapseChildren()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> f             :exec g:Lf_py "%s.fuzzySearch()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> F             :exec g:Lf_py "%s.fuzzySearch(True)"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', navigation_panel)
@@ -533,6 +533,7 @@ endfunction
 function! leaderf#Git#Commands() abort
     if !exists("g:Lf_GitCommands")
         let g:Lf_GitCommands = [
+                    \ {"Leaderf git status":                       "show git status"},
                     \ {"Leaderf git diff":                         "fuzzy search and view the diffs"},
                     \ {"Leaderf git diff --side-by-side":          "fuzzy search and view the side-by-side diffs"},
                     \ {"Leaderf git diff --side-by-side --current-file":"view the side-by-side diffs of the current file"},

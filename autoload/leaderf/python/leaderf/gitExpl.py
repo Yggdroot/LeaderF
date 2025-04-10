@@ -8,6 +8,7 @@ import sys
 import os.path
 import json
 import bisect
+import ctypes
 import tempfile
 import itertools
 from pathlib import PurePath
@@ -260,6 +261,9 @@ class GitCommand(object):
     def getSource(self):
         return self._source
 
+    def getTitle(self):
+        return None
+
 
 class GitDiffCommand(GitCommand):
     def __init__(self, arguments_dict, source):
@@ -421,6 +425,46 @@ class GitDiffExplCommand(GitCommand):
 
         self._buffer_name = "LeaderF://navigation/" + self._source
         self._file_type_cmd = ""
+
+
+class GitStagedCommand(GitCommand):
+    def __init__(self, arguments_dict, source):
+        super(GitStagedCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferName(self):
+        self._cmd = 'git diff --cached --raw -C --numstat --shortstat --no-abbrev'
+        extra_options = ""
+
+        if "extra" in self._arguments:
+            extra_options += " " + " ".join(self._arguments["extra"])
+
+        self._cmd += extra_options
+
+        self._buffer_name = "LeaderF://navigation/" + self._source
+        self._file_type_cmd = ""
+
+    def getTitle(self):
+        return "Staged Changes:"
+
+
+class GitUnstagedCommand(GitCommand):
+    def __init__(self, arguments_dict, source):
+        super(GitUnstagedCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferName(self):
+        self._cmd = 'git diff --raw -C --numstat --shortstat --no-abbrev'
+        extra_options = ""
+
+        if "extra" in self._arguments:
+            extra_options += " " + " ".join(self._arguments["extra"])
+
+        self._cmd += extra_options
+
+        self._buffer_name = "LeaderF://navigation/" + self._source
+        self._file_type_cmd = ""
+
+    def getTitle(self):
+        return "Unstaged Changes:"
 
 
 class GitLogExplCommand(GitCommand):
@@ -621,9 +665,6 @@ class GitCommandView(object):
         if lfEval("getbufvar(winbufnr(%d), '&ft')" % winid) != self._cmd.getFileType():
             lfCmd("silent! call win_execute({}, '{}')".format(winid, self._cmd.getFileTypeCommand()))
 
-    def initBuffer(self):
-        pass
-
     def defineMaps(self, winid):
         pass
 
@@ -674,7 +715,6 @@ class GitCommandView(object):
             self._owner.writeFinished(self.getWindowId())
             return
 
-        self.initBuffer()
         self.start()
 
     def writeBuffer(self):
@@ -739,7 +779,7 @@ class GitCommandView(object):
         # must do this at last
         self._executor.killProcess()
 
-        if self._bufhidden == "hide" and wipe == True:
+        if self._bufhidden == "hide" and wipe == True and self._buffer.valid:
             lfCmd("noautocmd bwipe! {}".format(self._buffer.number))
 
     def suicide(self):
@@ -1147,13 +1187,14 @@ class Bisect(object):
 
 
 class TreeView(GitCommandView):
-    def __init__(self, owner, cmd, project_root, target_path, callback):
+    def __init__(self, owner, cmd, project_root, target_path, callback, next_tree_view=None):
         super(TreeView, self).__init__(owner, cmd)
         self._project_root = project_root
         self._target_path = target_path
         # the argument is source, source is a tuple like
         # (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         self._callback = callback
+        self._next_tree_view = next_tree_view
         # key is the parent hash, value is a TreeNode
         self._trees = LfOrderedDict()
         # key is the parent hash, value is a list of MetaInfo
@@ -1182,13 +1223,11 @@ class TreeView(GitCommandView):
                 "M": self._modification_icon,
                 "R": self._rename_icon,
                 }
-        self._head = [
-                self._project_root + os.sep,
-                ]
         self._match_ids = []
+        self._init = False
 
     def startLine(self):
-        return self._owner.startLine()
+        return self._owner.startLine(self)
 
     def enableColor(self, winid):
         if lfEval("hlexists('Lf_hl_help')") == '0':
@@ -1200,6 +1239,14 @@ class TreeView(GitCommandView):
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
         lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFolder'', ''\S*[/\\]'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitTitle'', ''.*:'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFilesNum'', ''(\d\+)'', -100)')"""
               .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
@@ -1288,7 +1335,7 @@ class TreeView(GitCommandView):
         return self._cur_parent
 
     def getFileList(self):
-        return self._file_list[self._cur_parent]
+        return self._file_list.get(self._cur_parent, [])
 
     @staticmethod
     def generateSource(line):
@@ -1404,6 +1451,8 @@ class TreeView(GitCommandView):
             parent, tree_node = self._trees.last_key_value()
             root_node = tree_node
             mode, source = TreeView.generateSource(line)
+            if source[2] == "U":
+                return
             file_path = lfGetFilePath(source)
             icon = webDevIconsGetFileTypeSymbol(file_path) if self._show_icon else ""
             self._file_list[parent].append("{:<4} {}{}{}"
@@ -1511,6 +1560,9 @@ class TreeView(GitCommandView):
 
     def expandOrCollapseFolder(self, recursive=False):
         with self._lock:
+            if len(self._file_structures) == 0:
+                return None
+
             line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
             index = line_num - self.startLine()
             # the root
@@ -1563,12 +1615,13 @@ class TreeView(GitCommandView):
 
     def expandRoot(self, line_num):
         meta_info = MetaInfo(-1, True, "", self._trees[self._cur_parent], "")
+        orig_len = len(self._file_structures[self._cur_parent])
         self._file_structures[self._cur_parent] = list(self.metaInfoGenerator(meta_info, True, -1))
         self._buffer.options['modifiable'] = True
         structure = self._file_structures[self._cur_parent]
         try:
             increment = len(structure)
-            self._buffer[line_num:] = [self.buildLine(info) for info in structure]
+            self._buffer[line_num : line_num+orig_len] = [self.buildLine(info) for info in structure]
             self._offset_in_content = increment
         finally:
             self._buffer.options['modifiable'] = False
@@ -1728,13 +1781,12 @@ class TreeView(GitCommandView):
 
     def setOptions(self, winid, bufhidden):
         super(TreeView, self).setOptions(winid, bufhidden)
-        lfCmd(r"""call win_execute({}, 'let &l:stl="%#Lf_hl_gitStlChangedNum# 0 %#Lf_hl_gitStlFileChanged#file changed, %#Lf_hl_gitStlAdd#0 (+), %#Lf_hl_gitStlDel#0 (-)"')"""
-              .format(winid))
+        if self._cmd.getTitle() is None:
+            lfCmd(r"""call win_execute({}, 'let &l:stl="%#Lf_hl_gitStlChangedNum# 0 %#Lf_hl_gitStlFileChanged#file changed, %#Lf_hl_gitStlAdd#0 (+), %#Lf_hl_gitStlDel#0 (-)"')"""
+                  .format(winid))
         if lfEval("has('nvim')") == '1':
-            lfCmd("call nvim_win_set_option(%d, 'cursorline', v:false)" % winid)
             lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % winid)
         else:
-            lfCmd("call win_execute({}, 'setlocal nocursorline')".format(winid))
             lfCmd("call win_execute({}, 'setlocal nonumber')".format(winid))
         lfCmd("call win_execute({}, 'noautocmd setlocal sw=2 tabstop=4')".format(winid))
         lfCmd("call win_execute({}, 'setlocal signcolumn=no')".format(winid))
@@ -1753,11 +1805,32 @@ class TreeView(GitCommandView):
               .format(lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
     def initBuffer(self):
-        self._buffer.options['modifiable'] = True
-        try:
-            self._buffer.append(self._head)
-        finally:
-            self._buffer.options['modifiable'] = False
+        if self._init == True:
+            return
+
+        self._init = True
+
+        self._buffer.append('')
+        title = self._cmd.getTitle()
+        if title is not None:
+            self._buffer.append(title)
+
+        self._buffer.append(shrinkUser(self._project_root) + os.sep)
+
+    def getCommand(self):
+        return self._cmd
+
+    def getTitleHeight(self):
+        if self._cmd.getTitle() is None:
+            return 0
+        else:
+            return 1
+
+    def getHeight(self):
+        if len(self._file_structures) == 0:
+            return 0
+
+        return len(self._file_structures[self._cur_parent])
 
     def refreshNumStat(self):
         self._buffer.options['modifiable'] = True
@@ -1774,6 +1847,10 @@ class TreeView(GitCommandView):
 
     def writeBuffer(self):
         if self._cur_parent is None:
+            if self._read_finished == 1:
+                self.stopTimer()
+                if self._next_tree_view is not None:
+                    self._next_tree_view()
             return
 
         if self._read_finished == 2:
@@ -1788,14 +1865,12 @@ class TreeView(GitCommandView):
             try:
                 structure = self._file_structures[self._cur_parent]
                 cur_len = len(structure)
-                if cur_len > self._offset_in_content:
-                    cursor_line = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
-                    init_line = self.startLine() - 1
+                if cur_len > 0:
+                    self.initBuffer()
 
-                    if cursor_line <= init_line:
-                        lfCmd("call win_execute({}, 'norm! {}G')"
-                              .format(self.getWindowId(), init_line))
-                        cursor_line = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
+                if cur_len > self._offset_in_content:
+                    init_line = self.startLine() - 1
+                    cursor_line = init_line
 
                     source = None
                     for info in structure[self._offset_in_content:cur_len]:
@@ -1805,8 +1880,7 @@ class TreeView(GitCommandView):
                                 cursor_line = len(self._buffer)
                                 source = info.info
 
-                    if source is not None:
-                        self._callback(source)
+                    if source is not None and self._callback(source, tree_view_id=id(self)) == True:
                         if lfEval("has('nvim')") == '1':
                             lfCmd("call nvim_win_set_option({}, 'cursorline', v:true)"
                                   .format(self.getWindowId()))
@@ -1826,16 +1900,30 @@ class TreeView(GitCommandView):
 
         if self._read_finished == 1 and self._offset_in_content == len(structure):
             self.refreshNumStat()
-            shortstat = re.sub(r"( \d+)( files? changed)",
-                               r"%#Lf_hl_gitStlChangedNum#\1%#Lf_hl_gitStlFileChanged#\2",
-                               self._short_stat[self._cur_parent])
-            shortstat = re.sub(r"(\d+) insertions?", r"%#Lf_hl_gitStlAdd#\1 ",shortstat)
-            shortstat = re.sub(r"(\d+) deletions?", r"%#Lf_hl_gitStlDel#\1 ", shortstat)
-            lfCmd(r"""call win_execute({}, 'let &l:stl="{}"')"""
-                  .format(self.getWindowId(), shortstat))
+            if self._cmd.getTitle() is None:
+                shortstat = re.sub(r"( \d+)( files? changed)",
+                                   r"%#Lf_hl_gitStlChangedNum#\1%#Lf_hl_gitStlFileChanged#\2",
+                                   self._short_stat[self._cur_parent])
+                shortstat = re.sub(r"(\d+) insertions?", r"%#Lf_hl_gitStlAdd#\1 ",shortstat)
+                shortstat = re.sub(r"(\d+) deletions?", r"%#Lf_hl_gitStlDel#\1 ", shortstat)
+                lfCmd(r"""call win_execute({}, 'let &l:stl="{}"')"""
+                      .format(self.getWindowId(), shortstat))
+            else:
+                num = self._short_stat[self._cur_parent].split(None, 1)[0]
+                self._setChangedFilesNum(num)
             self._read_finished = 2
             self._owner.writeFinished(self.getWindowId())
             self.stopTimer()
+            if self._next_tree_view is not None:
+                self._next_tree_view()
+
+    def _setChangedFilesNum(self, num):
+        self._buffer.options['modifiable'] = True
+        try:
+            title = self._buffer[self.startLine() - 3]
+            self._buffer[self.startLine() - 3] = title.replace(':', ' ({}):'.format(num))
+        finally:
+            self._buffer.options['modifiable'] = False
 
     def _readContent(self, encoding):
         try:
@@ -2181,6 +2269,8 @@ class DiffViewPanel(Panel):
                 lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
                 lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
                       .format(winid, kwargs.get("explorer_page_id", 0)))
+                lfCmd("call win_execute({}, 'let b:lf_tree_view_id = {}')"
+                      .format(winid, kwargs.get("tree_view_id", 0)))
                 lfCmd("call win_execute({}, 'let b:lf_git_diff_win_pos = {}')".format(winid, i))
                 lfCmd("call win_execute({}, 'let b:lf_git_diff_win_id = {}')".format(winid, win_ids[1]))
                 lfCmd("""call win_execute(%d, "let b:lf_git_buffer_name = '%s'")"""
@@ -2442,8 +2532,12 @@ class UnifiedDiffViewPanel(Panel):
             "patience": 4,
             "histogram": 6
         }
+        if source[1].startswith("0000000"):
+            commit_id = hex(int(self._commit_id, 16) + int(source[0][-7:], 16))[2:]
+        else:
+            commit_id = self._commit_id
         uid = algo_dict[diff_algorithm] + int(ignore_whitespace)
-        buf_name = "LeaderF://{}:{}:{}".format(self._commit_id,
+        buf_name = "LeaderF://{}:{}:{}".format(commit_id,
                                                uid,
                                                lfGetFilePath(source))
         if buf_name in self._views:
@@ -2658,6 +2752,7 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("let b:Leaderf_matches = getmatches()")
                 lfCmd("let b:lf_change_start_lines = {}".format(str(change_start_lines)))
                 lfCmd("let b:lf_explorer_page_id = {}".format(kwargs.get("explorer_page_id", 0)))
+                lfCmd("let b:lf_tree_view_id = {}".format(kwargs.get("tree_view_id", 0)))
                 lfCmd("let b:lf_diff_view_mode = 'unified'")
                 lfCmd("let b:lf_diff_view_source = {}".format(str(list(source))))
                 key_map = lfEval("g:Lf_GitKeyMap")
@@ -2695,7 +2790,7 @@ class NavigationPanel(Panel):
         self._owner = owner
         self._project_root = project_root
         self._commit_id = commit_id
-        self.tree_view = None
+        self._tree_view = []
         self._bufhidden_cb = bufhidden_callback
         self._is_hidden = False
         self._arguments = {}
@@ -2703,18 +2798,35 @@ class NavigationPanel(Panel):
         self._ignore_whitespace = False
         self._diff_algorithm = 'myers'
         self._git_diff_manager = None
-        self._winid = None
         self._buffer = None
         self._head = [
                 '" Press <F1> for help',
                 ' Side-by-side ◉ Unified ○',
                 ' Ignore Whitespace 🗷 ',
                 ' Myers ◉ Minimal ○ Patience ○ Histogram ○',
-                '',
                 ]
 
-    def startLine(self):
-        return len(self._head) + 1 + 1
+    def startLine(self, tree_view):
+        n = len(self._head) + 1
+        for view in self._tree_view:
+            if view.getHeight() > 0:
+                n += view.getTitleHeight() + 2
+
+            if tree_view is view:
+                return n
+            else:
+                n += view.getHeight()
+
+        return n
+
+    def getTreeView(self):
+        line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
+        n = len(self._head) + 1
+        for view in self._tree_view:
+            if view.getHeight() > 0:
+                n += view.getTitleHeight() + view.getHeight() + 2
+                if line_num < n:
+                    return view
 
     def getDiffViewMode(self):
         return self._diff_view_mode
@@ -2726,7 +2838,7 @@ class NavigationPanel(Panel):
         return self._diff_algorithm
 
     def register(self, view):
-        self.tree_view = view
+        self._tree_view.append(view)
 
     def bufHidden(self, view):
         self._is_hidden = True
@@ -2737,11 +2849,12 @@ class NavigationPanel(Panel):
         return self._is_hidden
 
     def cleanup(self):
-        if self.tree_view is not None:
-            self.tree_view.cleanup()
-            self.tree_view = None
+        for view in self._tree_view:
+            if view is not None:
+                view.cleanup()
+        self._tree_view = []
 
-    def create(self, arguments_dict, cmd, winid, project_root, target_path, callback):
+    def create(self, arguments_dict, command, winid, project_root, target_path, callback):
         if "-u" in arguments_dict:
             self._diff_view_mode = "unified"
         elif "-s" in arguments_dict:
@@ -2749,13 +2862,39 @@ class NavigationPanel(Panel):
         else:
             self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'unified')")
 
-        self._winid = winid
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(winid)))]
         self._buffer[:] = self._head
         self.setDiffViewMode(self._diff_view_mode)
 
-        self._arguments = cmd.getArguments()
-        TreeView(self, cmd, project_root, target_path, callback).create(winid, bufhidden="hide")
+        flag = [False]
+        def wrapper(cb, flag, *args, **kwargs):
+            if flag[0] == False:
+                flag[0] = True
+                cb(*args, **kwargs)
+                return True
+            else:
+                return False
+
+        if isinstance(command, list):
+            def createTreeView(cmds):
+                if len(cmds) > 0:
+                    TreeView(self, cmds[0],
+                             project_root,
+                             target_path,
+                             partial(wrapper, callback, flag),
+                             partial(createTreeView, cmds[1:])
+                             ).create(winid, bufhidden="hide")
+
+            self._arguments = command[0].getArguments()
+            createTreeView(command)
+        else:
+            self._arguments = command.getArguments()
+            TreeView(self, command,
+                     project_root,
+                     target_path,
+                     partial(wrapper, callback, flag),
+                     ).create(winid, bufhidden="hide")
+
         lfCmd("call win_execute({}, 'let b:lf_navigation_matches = getmatches()')".format(winid))
 
         self.defineMaps(winid)
@@ -2894,12 +3033,13 @@ class NavigationPanel(Panel):
         return self._owner.openDiffView(recursive, **kwargs)
 
     def open(self):
-        buffer_name = self.tree_view.getBufferName()
-        navigation_winid = int(lfEval("bufwinid('{}')".format(escQuote(buffer_name))))
+        navigation_winid = self.getWindowId()
         if navigation_winid != -1:
             lfCmd("call win_gotoid({})".format(navigation_winid))
             return
 
+        tree_view_id = int(lfEval("b:lf_tree_view_id"))
+        buffer_name = self._buffer.name
         current_file_path = vim.current.buffer.name.rsplit(':', 1)[1]
         win_pos = self._arguments.get("--navigation-position", ["left"])[0]
         if win_pos == 'top':
@@ -2921,13 +3061,21 @@ class NavigationPanel(Panel):
         lfCmd("call setmatches(b:lf_navigation_matches)")
         lfCmd("setlocal winfixwidth | wincmd =")
         self._is_hidden = False
-        self.tree_view.locateFile(current_file_path)
+        if len(self._tree_view) == 1:
+            self.getTreeView().locateFile(current_file_path)
+        else:
+            ctypes.cast(tree_view_id, ctypes.py_object).value.locateFile(current_file_path)
 
     def getWindowId(self):
-        return self.tree_view.getWindowId()
+        return int(lfEval("bufwinid('{}')".format(escQuote(self._buffer.name))))
+
+    def collapseChildren(self):
+        tree_view = self.getTreeView()
+        if tree_view is not None:
+            tree_view.collapseChildren()
 
     def locateFile(self, path, line_num=None, preview=True):
-        self.tree_view.locateFile(path)
+        self.getTreeView().locateFile(path)
         self.openDiffView(False, line_num=line_num, preview=preview)
 
     @ensureWorkingDirectory
@@ -2935,12 +3083,17 @@ class NavigationPanel(Panel):
         if self._git_diff_manager is None:
             self._git_diff_manager = GitDiffExplManager()
 
+        tree_view = self.getTreeView()
+        if tree_view is None:
+            return
+
         kwargs = {}
         kwargs["arguments"] = {
                 "owner": self._owner._owner,
                 "commit_id": self._commit_id,
-                "parent": self.tree_view.getCurrentParent(),
-                "content": self.tree_view.getFileList(),
+                "command": tree_view.getCommand(),
+                "parent": tree_view.getCurrentParent(),
+                "content": tree_view.getFileList(),
                 "accept": self.locateFile
                 }
 
@@ -3159,15 +3312,20 @@ class ExplorerPage(object):
         else:
             return self._unified_diff_view_panel
 
-    def create(self, arguments_dict, cmd, target_path=None, line_num=None):
+    def create(self, arguments_dict, command, target_path=None, line_num=None):
         self._arguments = arguments_dict
         lfCmd("noautocmd tabnew")
 
         self.tabpage = vim.current.tabpage
         diff_view_winid = int(lfEval("win_getid()"))
-
         win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
-        winid = self._createWindow(win_pos, cmd.getBufferName())
+
+        if isinstance(command, list):
+            buffer_name = command[0].getBufferName()
+            winid = self._createWindow(win_pos, buffer_name)
+        else:
+            buffer_name = command.getBufferName()
+            winid = self._createWindow(win_pos, buffer_name)
 
         callback = partial(self.getDiffViewPanel().create,
                            arguments_dict,
@@ -3175,8 +3333,9 @@ class ExplorerPage(object):
                            line_num=line_num,
                            project_root=self._project_root,
                            explorer_page_id=id(self))
+
         self._navigation_panel.create(arguments_dict,
-                                      cmd,
+                                      command,
                                       winid,
                                       self._project_root,
                                       target_path,
@@ -3218,7 +3377,11 @@ class ExplorerPage(object):
         if "diff_view_source" in kwargs:
             source = self.getExistingSource()
         else:
-            source = self._navigation_panel.tree_view.expandOrCollapseFolder(recursive)
+            tree_view = self._navigation_panel.getTreeView()
+            if tree_view is None:
+                return
+            source = tree_view.expandOrCollapseFolder(recursive)
+            kwargs["tree_view_id"] = id(tree_view)
 
         if source is not None:
             self.makeOnly()
@@ -3255,6 +3418,7 @@ class GitExplManager(Manager):
         self._git_diff_manager = None
         self._git_log_manager = None
         self._git_blame_manager = None
+        self._git_status_manager = None
         self._selected_content = None
         self._project_root = None
 
@@ -3302,6 +3466,10 @@ class GitExplManager(Manager):
             if self._git_blame_manager is None:
                 self._git_blame_manager = GitBlameExplManager()
             return self._git_blame_manager
+        elif subcommand == "status":
+            if self._git_status_manager is None:
+                self._git_status_manager = GitStatusExplManager()
+            return self._git_status_manager
         else:
             return super(GitExplManager, self)
 
@@ -3590,7 +3758,7 @@ class GitDiffExplManager(GitExplManager):
             self._result_panel.create(self.createGitCommand(self._arguments, None))
             self._restoreOrigCwd()
         elif "--explorer" in self._arguments:
-            uid = str(int(time.time()))[-7:]
+            uid = str(hex(int(time.time())))[-7:]
             page = ExplorerPage(self._project_root, uid, self)
             page.create(arguments_dict, GitDiffExplCommand(arguments_dict, uid))
             self._pages.add(page)
@@ -4640,6 +4808,40 @@ class GitBlameExplManager(GitExplManager):
 
     def cleanupExplorerPage(self, page):
         del self._pages[page.commit_id]
+
+
+class GitStatusExplManager(GitExplManager):
+    def __init__(self):
+        super(GitStatusExplManager, self).__init__()
+        self._pages = set()
+
+    def startExplorer(self, win_pos, *args, **kwargs):
+        arguments_dict = kwargs.get("arguments", {})
+        if "--recall" not in arguments_dict and self.checkWorkingDirectory() == False:
+            return
+
+        if "--recall" in arguments_dict:
+            super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
+        else:
+            self.setArguments(arguments_dict)
+
+            uid = str(hex(int(time.time())))[-7:]
+            page = ExplorerPage(self._project_root, uid, self)
+            command = [
+                    GitStagedCommand(arguments_dict, uid),
+                    GitUnstagedCommand(arguments_dict, uid),
+                    ]
+            page.create(arguments_dict, command)
+            self._pages.add(page)
+
+    def getPreviewCommand(self, arguments_dict, source):
+        arguments_dict.update(self._arguments)
+        if isinstance(arguments_dict["command"], GitStagedCommand):
+            arguments_dict["--cached"] = []
+        return GitDiffCommand(arguments_dict, source)
+
+    def cleanupExplorerPage(self, page):
+        self._pages.discard(page)
 
 
 #*****************************************************

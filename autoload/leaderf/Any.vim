@@ -66,6 +66,7 @@ let g:Lf_Helps = {
             \ "loclist":        "navigate location list",
             \ "jumps":          "navigate jumps list",
             \ "git":            "use git",
+            \ "git-status":     "show git status",
             \ "git-log":        "show the commit logs",
             \ "git-diff":       "show changes between commits, commit and working tree, etc",
             \ "git-blame":      "show what revision and author last modified each line of a file",
@@ -269,6 +270,14 @@ let g:Lf_Arguments = {
             \           {"name": ["--date"], "nargs": 1, "choices": ["relative", "local", "iso", "iso-strict", "rfc", "short", "default"],
             \               "metavar": "<format>", "help": "Specifies the format used to output dates. .i.e, git blame --date=<format>. <format> can be one of ['relative', 'local', 'iso', 'iso-strict', 'rfc', 'short', 'default']"},
             \           {"name": ["--inline"], "nargs": 0, "help": "Display inline git blame information."},
+            \       ],
+            \       "status": [
+            \           {"name": ["--navigation-position"], "nargs": 1, "choices": ["top", "right", "bottom", "left"], "metavar": "<POSITION>",
+            \               "help": "specifies the position of the navigation panel"},
+            \           [
+            \               {"name": ["-s", "--side-by-side"], "nargs": 0, "help": "show diffs in a side-by-side view"},
+            \               {"name": ["-u", "--unified"], "nargs": 0, "help": "show diffs in a unified view"},
+            \           ],
             \       ],
             \   },
             \ "coc":{

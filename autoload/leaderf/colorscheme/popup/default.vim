@@ -144,6 +144,8 @@ if &background ==? 'dark'
     highlight def link Lf_hl_gitHash            Identifier
     highlight def link Lf_hl_gitRefNames        Special
     highlight def link Lf_hl_gitFolder          Directory
+    highlight def link Lf_hl_gitTitle           Label
+    highlight def link Lf_hl_gitFilesNum        Number
     highlight def link Lf_hl_gitFolderIcon      Special
     highlight def link Lf_hl_gitAddIcon         Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitCopyIcon        Number
@@ -306,6 +308,8 @@ else
     highlight def link Lf_hl_gitHash            Identifier
     highlight def link Lf_hl_gitRefNames        Special
     highlight def link Lf_hl_gitFolder          Directory
+    highlight def link Lf_hl_gitTitle           Label
+    highlight def link Lf_hl_gitFilesNum        Number
     highlight def link Lf_hl_gitFolderIcon      Special
     highlight def link Lf_hl_gitAddIcon         Lf_hl_gitDiffAddition
     highlight def link Lf_hl_gitCopyIcon        Number
