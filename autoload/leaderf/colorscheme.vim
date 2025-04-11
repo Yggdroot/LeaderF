@@ -111,8 +111,8 @@ function! leaderf#colorscheme#highlight(category, bufnr)
         let right_guibg = synIDattr(sid_right, "bg", "gui")
         let right_ctermbg = synIDattr(sid_right, "bg", "cterm")
         let hiCmd = printf("hi Lf_hl_%s_%s", a:category, sep)
-        let hiCmd .= printf(" guifg=%s guibg=%s", left_guibg == '' ? 'NONE': left_guibg, right_guibg == '' ? 'NONE': right_guibg)
-        let hiCmd .= printf(" ctermfg=%s ctermbg=%s", left_ctermbg == '' ? 'NONE': left_ctermbg, right_ctermbg == '' ? 'NONE': right_ctermbg)
+        let hiCmd .= printf(" gui=nocombine guifg=%s guibg=%s", left_guibg == '' ? 'NONE': left_guibg, right_guibg == '' ? 'NONE': right_guibg)
+        let hiCmd .= printf(" cterm=nocombine ctermfg=%s ctermbg=%s", left_ctermbg == '' ? 'NONE': left_ctermbg, right_ctermbg == '' ? 'NONE': right_ctermbg)
         if get(g:Lf_StlSeparator, "font", "") != ""
             let hiCmd .= printf(" font='%s'", g:Lf_StlSeparator["font"])
         endif
@@ -127,8 +127,8 @@ function! leaderf#colorscheme#highlight(category, bufnr)
         let right_guibg = synIDattr(sid_right, "bg", "gui")
         let right_ctermbg = synIDattr(sid_right, "bg", "cterm")
         let hiCmd = printf("hi Lf_hl_%s_%s", a:category, sep)
-        let hiCmd .= printf(" guifg=%s guibg=%s", right_guibg == '' ? 'NONE': right_guibg, left_guibg == '' ? 'NONE': left_guibg)
-        let hiCmd .= printf(" ctermfg=%s ctermbg=%s", right_ctermbg == '' ? 'NONE': right_ctermbg, left_ctermbg == '' ? 'NONE': left_ctermbg)
+        let hiCmd .= printf(" gui=nocombine guifg=%s guibg=%s", right_guibg == '' ? 'NONE': right_guibg, left_guibg == '' ? 'NONE': left_guibg)
+        let hiCmd .= printf(" cterm=nocombine ctermfg=%s ctermbg=%s", right_ctermbg == '' ? 'NONE': right_ctermbg, left_ctermbg == '' ? 'NONE': left_ctermbg)
         if get(g:Lf_StlSeparator, "font", "") != ""
             let hiCmd .= printf(" font='%s'", g:Lf_StlSeparator["font"])
         endif

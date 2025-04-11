@@ -10,101 +10,101 @@
 
 let s:palette = {
             \   'stlName': {
-            \       'gui': 'bold',
+            \       'gui': 'bold,nocombine',
             \       'font': 'NONE',
             \       'guifg': '#3E4452',
             \       'guibg': '#98C379',
-            \       'cterm': 'bold',
+            \       'cterm': 'bold,nocombine',
             \       'ctermfg': '16',
             \       'ctermbg': '76'
             \   },
             \   'stlCategory': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#3E4452',
             \       'guibg': '#E06C75',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '16',
             \       'ctermbg': '168'
             \   },
             \   'stlNameOnlyMode': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#3E4452',
             \       'guibg': '#61AFEF',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '16',
             \       'ctermbg': '75'
             \   },
             \   'stlFullPathMode': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#3E4452',
             \       'guibg': '#61AFEF',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '16',
             \       'ctermbg': '147'
             \   },
             \   'stlFuzzyMode': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#3E4452',
             \       'guibg': '#E5C07B',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '16',
             \       'ctermbg': '180'
             \   },
             \   'stlRegexMode': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#3E4452',
             \       'guibg': '#98C379',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '16',
             \       'ctermbg': '76'
             \   },
             \   'stlCwd': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#ABB2BF',
             \       'guibg': '#475265',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '145',
             \       'ctermbg': '236'
             \   },
             \   'stlBlank': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#ABB2BF',
             \       'guibg': '#3E4452',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '145',
             \       'ctermbg': '235'
             \   },
             \   'stlSpin': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#E6E666',
             \       'guibg': '#3E4452',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '185',
             \       'ctermbg': '235'
             \   },
             \   'stlLineInfo': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#3E4452',
             \       'guibg': '#98C379',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '16',
             \       'ctermbg': '76'
             \   },
             \   'stlTotal': {
-            \       'gui': 'NONE',
+            \       'gui': 'nocombine',
             \       'font': 'NONE',
             \       'guifg': '#3E4452',
             \       'guibg': '#98C379',
-            \       'cterm': 'NONE',
+            \       'cterm': 'nocombine',
             \       'ctermfg': '16',
             \       'ctermbg': '76'
             \   }
