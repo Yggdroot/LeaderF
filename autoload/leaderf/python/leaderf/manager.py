@@ -964,7 +964,6 @@ class Manager(object):
             elif lfEval("exists('*popup_setbuf')") == "1":
                 if isinstance(source, int):
                     lfCmd("call popup_setbuf(%d, %d)" % (self._preview_winid, source))
-                    self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
                 else:
                     filename = source
                     try:
@@ -975,14 +974,13 @@ class Manager(object):
                     except vim.error as e:
                         lfPrintError(e)
                         return
-                    lfCmd("call popup_setbuf(%d, bufadd('/Lf_preview_%d'))" % (self._preview_winid, id(self)))
+                    lfCmd("silent call popup_setbuf(%d, bufadd('/Lf_preview_%d'))" % (self._preview_winid, id(self)))
                     lfCmd("noautocmd call popup_settext(%d, content)" % self._preview_winid)
+                    cur_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
 
-                    cur_filetype = getExtension(filename)
-                    if cur_filetype != self._preview_filetype:
+                    if cur_filetype != getExtension(filename):
                         lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')"
                               % (self._preview_winid, escQuote(filename)))
-                        self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
             else:
                 if isinstance(source, int):
                     lfCmd("noautocmd call popup_settext(%d, getbufline(%d, 1, 20480))" % (self._preview_winid, source))
