@@ -425,6 +425,7 @@ class Manager(object):
             if self._preview_winid:
                 lfCmd("call popup_close(%d)" % self._preview_winid)
                 self._preview_winid = 0
+                lfCmd("silent! noautocmd bwipe /Lf_preview_{}".format(id(self)))
 
         self._preview_filetype = None
 
