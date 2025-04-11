@@ -383,6 +383,8 @@ class CommonExplManager(CocExplManager):
         i = 1
         while not os.path.exists(lfDecode(file)):
             m = re.match(r'^(.+?(?::\d+.*?){%d}):(\d+):(\d+):' % i, line)
+            if m is None:
+                return (None, None, None)
             i += 1
             file, line_num, col_num = m.group(1, 2, 3)
             if not os.path.isabs(file):
