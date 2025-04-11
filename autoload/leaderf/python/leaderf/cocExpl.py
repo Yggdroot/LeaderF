@@ -72,17 +72,20 @@ class CocExplorer(Explorer):
         content = []
         file_contents = {}
         for item in items:
-            file_path = lfRelpath(urllib.parse.unquote(item["uri"][7:]))
-            line_num = int(item["range"]["start"]["line"])
-            col_num = int(item["range"]["start"]["character"])
-            line = self.getFileLine(file_path, line_num + 1, file_contents)
-            if len(self._pattern_regex) == 0:
-                end_line_num = int(item["range"]["end"]["line"])
-                end_col_num = int(item["range"]["end"]["character"])
-                if end_line_num == line_num:
-                    self._pattern_regex.append(line[col_num: end_col_num])
+            try:
+                file_path = lfRelpath(urllib.parse.unquote(item["uri"][7:]))
+                line_num = int(item["range"]["start"]["line"])
+                col_num = int(item["range"]["start"]["character"])
+                line = self.getFileLine(file_path, line_num + 1, file_contents)
+                if len(self._pattern_regex) == 0:
+                    end_line_num = int(item["range"]["end"]["line"])
+                    end_col_num = int(item["range"]["end"]["character"])
+                    if end_line_num == line_num:
+                        self._pattern_regex.append(line[col_num: end_col_num])
 
-            content.append("{}:{}:{}:{}".format(file_path, line_num+1, col_num+1, line))
+                content.append("{}:{}:{}:{}".format(file_path, line_num+1, col_num+1, line))
+            except:
+                pass
 
         return content
 

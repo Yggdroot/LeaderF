@@ -975,6 +975,12 @@ class Manager(object):
                         lfPrintError(e)
                         return
                     lfCmd("silent call popup_setbuf(%d, bufadd('/Lf_preview_%d'))" % (self._preview_winid, id(self)))
+                    lfCmd("call win_execute(%d, 'setlocal modeline')" % self._preview_winid)
+                    lfCmd("call win_execute(%d, 'setlocal undolevels=-1')" % self._preview_winid)
+                    lfCmd("call win_execute(%d, 'setlocal noswapfile')" % self._preview_winid)
+                    lfCmd("call win_execute(%d, 'setlocal nobuflisted')" % self._preview_winid)
+                    lfCmd("call win_execute(%d, 'setlocal bufhidden=hide')" % self._preview_winid)
+                    lfCmd("call win_execute(%d, 'setlocal buftype=nofile')" % self._preview_winid)
                     lfCmd("noautocmd call popup_settext(%d, content)" % self._preview_winid)
                     cur_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
 
