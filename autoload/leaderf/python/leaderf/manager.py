@@ -933,9 +933,8 @@ class Manager(object):
 
             if lfEval("has('nvim')") == '1':
                 if isinstance(source, int):
-                    lfCmd("noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
+                    lfCmd("silent noautocmd call nvim_win_set_buf(%d, %d)" % (self._preview_winid, source))
                     self._setWinOptions(self._preview_winid)
-                    self._preview_filetype = ''
                 else:
                     try:
                         if self._isBinaryFile(source):
@@ -950,17 +949,17 @@ class Manager(object):
                     lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'undolevels', -1)")
                     lfCmd("noautocmd call nvim_buf_set_option(g:Lf_preview_scratch_buffer, 'modeline', v:true)")
                     lfCmd("noautocmd call nvim_buf_set_lines(g:Lf_preview_scratch_buffer, 0, -1, v:false, content)")
-                    lfCmd("noautocmd call nvim_win_set_buf(%d, g:Lf_preview_scratch_buffer)" % self._preview_winid)
+                    lfCmd("silent noautocmd call nvim_win_set_buf(%d, g:Lf_preview_scratch_buffer)" % self._preview_winid)
+                    preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
 
                     cur_filetype = getExtension(source)
-                    if cur_filetype != self._preview_filetype:
+                    if cur_filetype != preview_filetype:
                         if cur_filetype is None:
                             lfCmd("call win_execute(%d, 'silent! doautocmd filetypedetect BufNewFile %s')"
                                   % (self._preview_winid, escQuote(source)))
                         else:
                             lfCmd("call win_execute(%d, 'noautocmd set ft=%s')" % (self._preview_winid, cur_filetype))
                             lfCmd("call win_execute(%d, 'set syntax=%s')" % (self._preview_winid, cur_filetype))
-                        self._preview_filetype = lfEval("getbufvar(winbufnr(%d), '&ft')" % self._preview_winid)
             elif lfEval("exists('*popup_setbuf')") == "1":
                 if isinstance(source, int):
                     lfCmd("call popup_setbuf(%d, %d)" % (self._preview_winid, source))
