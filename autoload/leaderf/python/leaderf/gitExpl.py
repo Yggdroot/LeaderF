@@ -4046,6 +4046,7 @@ class GitLogExplManager(GitExplManager):
                 outputs = ParallelExecutor.run(cmd, directory=self._project_root)
                 if len(outputs[0]) > 0:
                     _, source = TreeView.generateSource(outputs[0][0])
+                    kwargs["project_root"] = self._project_root
                     self._diff_view_panel.create(self._arguments, source, **kwargs)
         elif "--current-line" in self._arguments and len(self._getExplorer().patches) > 0:
             if "--explorer" in self._arguments:
