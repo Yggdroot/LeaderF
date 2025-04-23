@@ -2273,8 +2273,9 @@ class DiffViewPanel(Panel):
                       .format(winid, kwargs.get("tree_view_id", 0)))
                 lfCmd("call win_execute({}, 'let b:lf_git_diff_win_pos = {}')".format(winid, i))
                 lfCmd("call win_execute({}, 'let b:lf_git_diff_win_id = {}')".format(winid, win_ids[1]))
+                abs_file_path = os.path.join(self._project_root, lfGetFilePath(source))
                 lfCmd("""call win_execute(%d, "let b:lf_git_buffer_name = '%s'")"""
-                      % (winid, escQuote(os.path.abspath(lfGetFilePath(source)))))
+                      % (winid, escQuote(abs_file_path)))
                 lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side-by-side"')"""
                       .format(winid))
                 lfCmd("""call win_execute({}, "let b:lf_diff_view_source = {}")"""
@@ -2728,7 +2729,8 @@ class UnifiedDiffViewPanel(Panel):
                 if not vim.current.buffer.name: # buffer name is empty
                     lfCmd("setlocal bufhidden=wipe")
                 lfCmd("silent hide edit {}".format(buf_name))
-                lfCmd("let b:lf_git_buffer_name = '%s'" % escQuote(os.path.abspath(lfGetFilePath(source))))
+                abs_file_path = os.path.join(self._project_root, lfGetFilePath(source))
+                lfCmd("let b:lf_git_buffer_name = '%s'" % escQuote(abs_file_path))
                 lfCmd("let b:lf_git_line_num_content = {}".format(str(line_num_content)))
                 lfCmd("augroup Lf_Git_Log | augroup END")
                 lfCmd("autocmd! Lf_Git_Log BufWinEnter <buffer> call leaderf#Git#SetMatches()")
