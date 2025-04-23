@@ -4806,7 +4806,8 @@ class GitBlameExplManager(GitExplManager):
                 if tmp_file_name is not None:
                     os.remove(tmp_file_name)
         else:
-            lfPrintError("fatal: no such path '{}' in HEAD".format(vim.current.buffer.name))
+            if arguments_dict.get('autocmd', None) == None:
+                lfPrintError("fatal: no such path '{}' in HEAD".format(vim.current.buffer.name))
 
         self._restoreOrigCwd()
 

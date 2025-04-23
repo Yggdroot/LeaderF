@@ -484,8 +484,12 @@ function! leaderf#Git#UpdateInlineBlame(manager_id) abort
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.updateInlineBlame()", a:manager_id)
 endfunction
 
+function! leaderf#Git#StartInlineBlameImpl(timer) abort
+    call leaderf#LfPy("gitExplManager.startExplorer('--bottom', arguments={'arg_line': 'git blame', '--inline': [], 'autocmd': True})")
+endfunction
+
 function! leaderf#Git#StartInlineBlame() abort
-    Leaderf git blame --inline
+    call timer_start(0, 'leaderf#Git#StartInlineBlameImpl')
 endfunction
 
 function! leaderf#Git#DisableInlineBlame() abort
