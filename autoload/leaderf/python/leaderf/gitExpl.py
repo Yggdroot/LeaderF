@@ -3762,6 +3762,7 @@ class GitDiffExplManager(GitExplManager):
             page = ExplorerPage(self._project_root, uid, self)
             page.create(arguments_dict, GitDiffExplCommand(arguments_dict, uid))
             self._pages.add(page)
+            self._restoreOrigCwd()
         else:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
 
@@ -4833,6 +4834,7 @@ class GitStatusExplManager(GitExplManager):
                     ]
             page.create(arguments_dict, command)
             self._pages.add(page)
+            self._restoreOrigCwd()
 
     def getPreviewCommand(self, arguments_dict, source):
         arguments_dict.update(self._arguments)
