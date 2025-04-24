@@ -119,7 +119,6 @@ class GtagsExplorer(Explorer):
         else:
             path_style = ""
 
-        auto_jump = False
         self._last_result_format = self._result_format
         self._result_format = 'ctags-mod'
         if "--result" in arguments_dict:
@@ -128,13 +127,9 @@ class GtagsExplorer(Explorer):
         if "-d" in arguments_dict:
             pattern = arguments_dict["-d"][0]
             pattern_option = "-d -e %s " % pattern
-            if "--auto-jump" in arguments_dict:
-                auto_jump = True
         elif "-r" in arguments_dict:
             pattern = arguments_dict["-r"][0]
             pattern_option = "-r -e %s " % pattern
-            if "--auto-jump" in arguments_dict:
-                auto_jump = True
         elif "-s" in arguments_dict:
             pattern = arguments_dict["-s"][0]
             pattern_option = "-s -e %s " % pattern
@@ -144,8 +139,6 @@ class GtagsExplorer(Explorer):
         elif "--by-context" in arguments_dict:
             pattern = lfEval('expand("<cword>")')
             pattern_option = '--from-here "%d:%s" %s ' % (vim.current.window.cursor[0], vim.current.buffer.name, pattern)
-            if "--auto-jump" in arguments_dict:
-                auto_jump = True
         else:
             if "--current-buffer" in arguments_dict:
                 pattern_option = '-f "%s" -q' % vim.current.buffer.name
@@ -278,15 +271,6 @@ class GtagsExplorer(Explorer):
                     executor = AsyncExecutor()
                     self._executor.append(executor)
                     content += executor.execute(cmd, env=env)
-
-        if auto_jump:
-            first_two = list(itertools.islice(content, 2))
-            if len(first_two) == 0:
-                return []
-            elif len(first_two) == 1:
-                return first_two
-            else:
-                return content.join_left(first_two)
 
         return content
 
