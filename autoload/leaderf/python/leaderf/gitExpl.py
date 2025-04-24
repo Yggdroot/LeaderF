@@ -3521,7 +3521,7 @@ class GitExplManager(Manager):
         self._acceptSelection(file, *args, **kwargs)
 
     def _acceptSelection(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]
@@ -3804,7 +3804,7 @@ class GitDiffExplManager(GitExplManager):
             super(GitExplManager, self)._accept(file, mode, *args, **kwargs)
 
     def _acceptSelection(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]
@@ -4024,7 +4024,7 @@ class GitLogExplManager(GitExplManager):
         return (file_path, line_num)
 
     def _acceptSelection(self, *args, **kwargs):
-        if len(args) == 0:
+        if len(args) == 0 or args[0] == '':
             return
 
         line = args[0]
