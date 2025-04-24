@@ -3485,14 +3485,15 @@ class GitExplManager(Manager):
 
         return nearestAncestor([".git"], orig_cwd)
 
-    def checkWorkingDirectory(self):
+    def checkWorkingDirectory(self, *args, **kwargs):
         self._orig_cwd = lfGetCwd()
         self._project_root = self.getWorkingDirectory(self._orig_cwd)
 
         if self._project_root: # there exists a root marker in nearest ancestor path
             lfChdir(self._project_root)
         else:
-            lfPrintError("Not a git repository (or any of the parent directories): .git")
+            if kwargs.get('autocmd', None) == None:
+                lfPrintError("Not a git repository (or any of the parent directories): .git")
             return False
 
         return True
@@ -4765,10 +4766,10 @@ class GitBlameExplManager(GitExplManager):
         self._initial_changedtick = {}
 
     def startExplorer(self, win_pos, *args, **kwargs):
-        if self.checkWorkingDirectory() == False:
+        arguments_dict = kwargs.get("arguments", {})
+        if self.checkWorkingDirectory(**arguments_dict) == False:
             return
 
-        arguments_dict = kwargs.get("arguments", {})
         self.setArguments(arguments_dict)
 
         if lfEval("exists('b:lf_blame_file_name')") == "1":
