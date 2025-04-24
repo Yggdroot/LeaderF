@@ -3423,6 +3423,7 @@ class GitExplManager(Manager):
         self._git_status_manager = None
         self._selected_content = None
         self._project_root = None
+        self._subcommand = ""
 
     def _getExplClass(self):
         return GitExplorer
@@ -3500,15 +3501,19 @@ class GitExplManager(Manager):
         arguments_dict = kwargs.get("arguments", {})
         if "--recall" in arguments_dict:
             self._arguments.update(arguments_dict)
+            subcommand = self._subcommand
         else:
             self.setArguments(arguments_dict)
 
-        arg_list = self._arguments.get("arg_line", 'git').split()
-        arg_list = [item for item in arg_list if not item.startswith('-')]
-        if len(arg_list) == 1:
-            subcommand = ""
-        else:
-            subcommand = arg_list[1]
+            arg_list = self._arguments.get("arg_line", 'git').split()
+            arg_list = [item for item in arg_list if not item.startswith('-')]
+            if len(arg_list) == 1:
+                subcommand = ""
+            else:
+                subcommand = arg_list[1]
+            if "autocmd" not in arguments_dict:
+                self._subcommand = subcommand
+
         self.getExplManager(subcommand).startExplorer(win_pos, *args, **kwargs)
 
     def accept(self, mode=''):
