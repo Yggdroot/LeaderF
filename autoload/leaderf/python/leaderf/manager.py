@@ -2777,15 +2777,6 @@ class Manager(object):
         if content is None:
             return
 
-        if isinstance(content, AsyncExecutor.Result):
-            first_two = list(itertools.islice(content, 2))
-            if len(first_two) == 0:
-                content = []
-            elif len(first_two) == 1:
-                content = first_two
-            else:
-                content = content.join_left(first_two)
-
         if not content:
             lfCmd("echohl Error | redraw | echo ' No content!' | echohl NONE")
             return
