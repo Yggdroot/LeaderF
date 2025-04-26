@@ -4241,7 +4241,7 @@ class GitBlameExplManager(GitExplManager):
             lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
             if alternate_buffer_name in blame_buffer_dict:
                 blame_buffer, alternate_buffer_num = blame_buffer_dict[alternate_buffer_name]
-                lfCmd("buffer {}".format(alternate_buffer_num))
+                lfCmd("noautocmd buffer {}".format(alternate_buffer_num))
                 lfCmd("noautocmd norm! {}Gzt{}G0".format(line_num-top_line_delta, line_num))
                 top_line = lfEval("line('w0')")
 
@@ -4324,7 +4324,7 @@ class GitBlameExplManager(GitExplManager):
              blame_win_width
              ) = blame_panel.getBlameDict(blame_buffer_name)[commit_id]
             lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
-            lfCmd("buffer {}".format(alternate_buffer_num))
+            lfCmd("noautocmd buffer {}".format(alternate_buffer_num))
             lfCmd("noautocmd norm! {}Gzt{}G0".format(line_num-top_line_delta, line_num))
             top_line = lfEval("line('w0')")
 
@@ -4354,7 +4354,7 @@ class GitBlameExplManager(GitExplManager):
         alternate_winid = blame_panel.getAlternateWinid(vim.current.buffer.name)
 
         lfCmd("noautocmd call win_gotoid({})".format(alternate_winid))
-        lfCmd("buffer {}".format(alternate_buffer_num))
+        lfCmd("noautocmd buffer {}".format(alternate_buffer_num))
         lfCmd("noautocmd norm! {}Gzt{}G0".format(top_line, cursor_line))
 
         lfCmd("noautocmd call win_gotoid({})".format(blame_winid))
