@@ -3339,7 +3339,11 @@ class ExplorerPage(object):
             buffer_name = command.getBufferName()
             winid = self._createWindow(win_pos, buffer_name)
 
-        callback = partial(self.getDiffViewPanel().create,
+        def createDiffViewPanel(get_diff_view_panel, arguments_dict, source, **kwargs):
+            return get_diff_view_panel().create(arguments_dict, source, **kwargs)
+
+        callback = partial(createDiffViewPanel,
+                           self.getDiffViewPanel,
                            arguments_dict,
                            winid=diff_view_winid,
                            line_num=line_num,
