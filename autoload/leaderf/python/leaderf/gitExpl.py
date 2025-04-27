@@ -548,7 +548,7 @@ class GitCustomizeCommand(GitCommand):
 
 class ParallelExecutor(object):
     @staticmethod
-    def run(*cmds, format_line=None, directory=None, silent=False):
+    def run(*cmds, format_line=None, directory=None, silent=False, error=None):
         outputs = [[] for _ in range(len(cmds))]
         stop_thread = False
 
@@ -558,10 +558,12 @@ class ParallelExecutor(object):
                     output.append(line)
                     if stop_thread:
                         break
-            except Exception:
+            except Exception as e:
                 if silent == False:
                     traceback.print_exc()
                     traceback.print_stack()
+                elif isinstance(error, list):
+                    error.append(str(e))
 
 
         executors = [AsyncExecutor() for _ in range(len(cmds))]
@@ -3180,12 +3182,15 @@ class BlamePanel(Panel):
         line_num_width = len(str(len(vim.current.buffer))) + 1
 
         date_format = arguments_dict.get("--date", ["iso"])[0]
+        error = []
         if date_format in ["iso", "iso-strict", "short"]:
             outputs = ParallelExecutor.run(cmd.getCommand(),
                                            format_line=partial(BlamePanel.formatLine,
                                                                arguments_dict,
                                                                line_num_width),
-                                           directory=self._project_root)
+                                           directory=self._project_root,
+                                           silent=True,
+                                           error=error)
         else:
             arguments_dict2 = arguments_dict.copy()
             arguments_dict2["-c"] = []
@@ -3203,7 +3208,12 @@ class BlamePanel(Panel):
                                                                 line_num_width),
                                                         None,
                                                         None],
-                                           directory=self._project_root)
+                                           directory=self._project_root,
+                                           silent=True,
+                                           error=error)
+        if len(error) > 0:
+            lfPrintError(error[0])
+            return
 
         line_num_width = max(line_num_width, int(lfEval('&numberwidth')))
         if len(outputs[0]) > 0:
