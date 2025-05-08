@@ -4121,6 +4121,7 @@ class GitBlameExplManager(GitExplManager):
         if lfEval("hlexists('Lf_hl_gitInlineBlame')") == '0':
             lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
                   .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
+        self._blame_timer_id = None
 
     def discardPanel(self, project_root):
         del self._blame_panels[project_root]
@@ -4565,15 +4566,10 @@ class GitBlameExplManager(GitExplManager):
         if lfEval("exists('b:lf_blame_changedtick')") == "1":
             return
 
-        lfCmd("let g:Lf_git_inline_blame_enabled = 1")
-
-        lfCmd("augroup Lf_Git_Blame | augroup END")
-        lfCmd("autocmd! Lf_Git_Blame BufRead * silent call leaderf#Git#StartInlineBlame()")
-        lfCmd("autocmd! Lf_Git_Blame BufWinEnter * silent call leaderf#Git#StartInlineBlame()")
-
-        file_name = vim.current.buffer.name
+        lfCmd("let b:lf_blame_changedtick = b:changedtick")
         self._initial_changedtick[vim.current.buffer.number] = vim.current.buffer.vars["changedtick"]
 
+        file_name = vim.current.buffer.name
         if " " in file_name:
             file_name = file_name.replace(' ', r'\ ')
 
@@ -4584,13 +4580,51 @@ class GitBlameExplManager(GitExplManager):
             git_cmd = (r'git blame --line-porcelain --contents {} -- {} | grep "^author \|^author-time\|^summary"'
                        .format(tmp_file_name, file_name))
 
-        outputs = ParallelExecutor.run(git_cmd, directory=self._project_root, silent=True)
-        if len(outputs[0]) == 0:
+        self._blame_info_list = []
+        self._read_finished = 0
+
+        reader_thread = threading.Thread(target=self._readBlameInfo, args=(git_cmd, lfEval("&encoding")))
+        reader_thread.daemon = True
+        reader_thread.start()
+
+        if self._blame_timer_id is not None:
+            lfCmd("call timer_stop(%s)" % self._blame_timer_id)
+        self._blame_timer_id = lfEval("timer_start(50, function('leaderf#Git#InlineBlame', [%d]), {'repeat': -1})" % id(self))
+
+        lfCmd("let g:Lf_git_inline_blame_enabled = 1")
+
+    def _readBlameInfo(self, git_cmd, encoding):
+        try:
+            executor = AsyncExecutor()
+            content = executor.execute(git_cmd,
+                                       encoding=encoding,
+                                       cwd=self._project_root
+                                       )
+            self._blame_info_list = list(content)
+            self._read_finished = 1
+        except Exception:
+            # traceback.print_exc()
+            # traceback.print_stack()
+            self._read_finished = 1
+
+    def inlineBlame(self):
+        if self._read_finished == 0:
             return
 
+        if self._blame_timer_id is not None:
+            lfCmd("call timer_stop(%s)" % self._blame_timer_id)
+            self._blame_timer_id = None
+
+        lfCmd("augroup Lf_Git_Blame | augroup END")
+        lfCmd("autocmd! Lf_Git_Blame BufRead * silent call leaderf#Git#StartInlineBlame()")
+        lfCmd("autocmd! Lf_Git_Blame BufWinEnter * silent call leaderf#Git#StartInlineBlame()")
+
         lfCmd("let b:lf_blame_line_number = line('.')")
-        lfCmd("let b:lf_blame_changedtick = b:changedtick")
-        blame_list = iter(outputs[0])
+
+        if len(self._blame_info_list) == 0:
+            return
+
+        blame_list = iter(self._blame_info_list)
         i = 0
         self._blame_infos[vim.current.buffer.number] = {}
         blame_infos = self._blame_infos[vim.current.buffer.number]
