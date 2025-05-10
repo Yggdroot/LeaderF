@@ -15,6 +15,8 @@ else:
     lfDEVNULL = open(os.devnull)
 
 
+max_count = int(lfEval("g:Lf_MaxCount"))
+
 class AsyncExecutor(object):
     """
     A class to implement executing a command in subprocess, then
@@ -24,7 +26,7 @@ class AsyncExecutor(object):
         self._errQueue = None
         self._process = None
         self._finished = False
-        self._max_count = int(lfEval("g:Lf_MaxCount"))
+        self._max_count = max_count
 
     def _readerThread(self, fd, queue):
         try:
