@@ -843,7 +843,7 @@ class FileExplManager(Manager):
         else:
             source = line
 
-        jump_cmd = 'normal! g`"'
+        jump_cmd = 'silent! normal! g`"'
         self._createPopupPreview(line, source, 0, jump_cmd)
 
     @removeDevIcons

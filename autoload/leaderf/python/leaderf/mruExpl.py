@@ -388,7 +388,7 @@ class MruExplManager(Manager):
         else:
             source = file
 
-        jump_cmd = 'normal! g`"'
+        jump_cmd = 'silent! normal! g`"'
         self._createPopupPreview(file, source, 0, jump_cmd)
 
 

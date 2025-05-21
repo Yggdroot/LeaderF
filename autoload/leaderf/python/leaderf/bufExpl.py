@@ -300,7 +300,7 @@ class BufExplManager(Manager):
         if lfEval("bufloaded(%d)" % buf_number) == '0':
             lfCmd("silent call bufload(%d)" % buf_number)
 
-        jump_cmd = 'normal! g`"'
+        jump_cmd = 'silent! normal! g`"'
         self._createPopupPreview(vim.buffers[buf_number].name, buf_number, 0, jump_cmd)
 
 
