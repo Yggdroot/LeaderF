@@ -384,10 +384,11 @@ class AnyExplManager(Manager):
                     # for backward compatibility
                     if isinstance(filename, int): # it is a buffer number
                         lfCmd("silent call bufload(%d)" % filename)
-                    elif lfEval("bufloaded('%s')" % escQuote(filename)) == '1':
+                    else:
                         if not self._has_nvim:  # py3 in nvim return str, in vim return bytes
                             filename = lfBytes2Str(filename)
-                        filename = int(lfEval("bufnr('%s')" % escQuote(filename))) # actually, it's a buffer number
+                        if lfEval("bufloaded('%s')" % escQuote(filename)) == '1':
+                            filename = int(lfEval("bufnr('%s')" % escQuote(filename))) # actually, it's a buffer number
                     self._createPopupPreview("", filename, line_num, lfBytes2Str(jump_cmd) if not self._has_nvim else jump_cmd)
             except vim.error as err:
                 raise Exception("Error occurred in user defined %s: %s" % (str(preview), err))
