@@ -514,8 +514,8 @@ class Manager(object):
             lfCmd("call nvim_win_set_option(%d, 'colorcolumn', '')" % winid)
             lfCmd("call nvim_win_set_option(%d, 'winhighlight', 'Normal:Lf_hl_popup_window')" % winid)
         else:
-            lfCmd("call win_execute(%d, 'setlocal number norelativenumber cursorline')" % winid)
-            lfCmd("call win_execute(%d, 'setlocal nofoldenable foldmethod=manual')" % winid)
+            lfCmd("noautocmd call win_execute(%d, 'setlocal number norelativenumber cursorline')" % winid)
+            lfCmd("noautocmd call win_execute(%d, 'setlocal nofoldenable foldmethod=manual')" % winid)
             if lfEval("get(g:, 'Lf_PopupShowFoldcolumn', 1)") == '0' or lfEval("get(g:, 'Lf_PopupShowBorder', 1)") == '1':
                 lfCmd("call win_execute(%d, 'setlocal foldcolumn=0')" % winid)
             else:
