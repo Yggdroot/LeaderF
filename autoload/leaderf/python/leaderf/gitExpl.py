@@ -3438,6 +3438,7 @@ class GitExplManager(Manager):
         self._selected_content = None
         self._project_root = None
         self._subcommand = ""
+        self._alias_dict = {v: k for k, v in lfEval("g:Lf_GitAlias").items()}
 
     def _getExplClass(self):
         return GitExplorer
@@ -3471,6 +3472,7 @@ class GitExplManager(Manager):
         self._preview_panel.cleanup()
 
     def getExplManager(self, subcommand):
+        subcommand = self._alias_dict.get(subcommand, subcommand)
         if subcommand == "diff":
             if self._git_diff_manager is None:
                 self._git_diff_manager = GitDiffExplManager()

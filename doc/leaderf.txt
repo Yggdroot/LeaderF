@@ -1232,6 +1232,16 @@ g:Lf_CocCommands                              *g:Lf_CocCommands*
 <
     Open the commands panel using `:Leaderf coc` .
 
+g:Lf_GitAlias                                 *g:Lf_GitAlias*
+    Define the alias of git subcommand.
+
+    Default value is : >
+    let g:Lf_GitAlias = {
+            \ "status": "st",
+            \ "diff":   "df",
+            \ "blame":  "bl",
+            \}
+<
 ==============================================================================
 USAGE                                           *leaderf-usage*
 

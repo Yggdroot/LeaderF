@@ -783,6 +783,11 @@ class AnyHub(object):
                 else:
                     parser = subparsers.add_parser(category, help=help, formatter_class=LfHelpFormatter, epilog="If [!] is given, enter normal mode directly.")
 
+                if category == 'git':
+                    alias_dict = lfEval("g:Lf_GitAlias")
+                else:
+                    alias_dict = {}
+
                 if isinstance(arg_def, dict):
                     subsubparsers = parser.add_subparsers(title="subcommands", description="", help="")
                     group = parser.add_argument_group("common arguments")
@@ -795,6 +800,15 @@ class AnyHub(object):
 
                         group = subparser.add_argument_group("common arguments")
                         self._add_argument(group, lfEval("g:Lf_CommonArguments"), positional_args)
+
+                        alias = alias_dict.get(command, None)
+                        if alias is not None:
+                            subparser = subsubparsers.add_parser(alias, help=help, formatter_class=LfHelpFormatter)
+                            group = subparser.add_argument_group('specific arguments')
+                            self._add_argument(group, args, positional_args)
+
+                            group = subparser.add_argument_group("common arguments")
+                            self._add_argument(group, lfEval("g:Lf_CommonArguments"), positional_args)
                 else:
                     group = parser.add_argument_group('specific arguments')
                     self._add_argument(group, arg_def, positional_args)

@@ -153,6 +153,12 @@ call s:InitVar('g:Lf_GitKeyMap', {
             \ 'edit_file': '<CR>',
             \})
 
+call s:InitDict('g:Lf_GitAlias', {
+            \ "status": "st",
+            \ "diff":   "df",
+            \ "blame":  "bl",
+            \})
+
 let s:Lf_CommandMap = {
             \ '<C-A>':         ['<C-A>'],
             \ '<C-B>':         ['<C-B>'],
