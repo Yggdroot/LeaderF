@@ -110,6 +110,8 @@ class RgExplorer(Explorer):
             is_perl = True
         else:
             is_perl = False
+        if "-a" in arguments_dict:
+            zero_args_options += "-a "
         if "-v" in arguments_dict:
             zero_args_options += "-v "
         if "--binary" in arguments_dict:
