@@ -107,7 +107,7 @@ class AsyncExecutor(object):
                                     break
 
                     err = b"".join(iter(self._errQueue.get, None))
-                    if err and raise_except:
+                    if err and not err.startswith(b"warning") and raise_except:
                         raise Exception(cmd + "\n" + lfBytes2Str(err) + lfBytes2Str(err, encoding))
                 except ValueError:
                     pass
@@ -157,7 +157,7 @@ class AsyncExecutor(object):
                                     break
 
                     err = b"".join(iter(self._errQueue.get, None))
-                    if err and raise_except:
+                    if err and not err.startswith("warning") and raise_except:
                         raise Exception(lfEncode(err) + err)
                 except ValueError:
                     pass
