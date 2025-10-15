@@ -286,7 +286,8 @@ class GitDiffCommand(GitCommand):
                 file_name = lfGetFilePath(self._source)
                 if " " in file_name:
                     file_name = file_name.replace(' ', r'\ ')
-                extra_options += " -- {}".format(file_name)
+                if not extra_options.endswith(file_name):
+                    extra_options += " -- {}".format(file_name)
         elif "--current-file" in self._arguments and "current_file" in self._arguments:
             extra_options += " -- {}".format(self._arguments["current_file"])
 
