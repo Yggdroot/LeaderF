@@ -3761,24 +3761,36 @@ class GitDiffExplManager(GitExplManager):
 
         if "--recall" not in arguments_dict:
             self.setArguments(arguments_dict)
-            if ("--current-file" in arguments_dict
-                and vim.current.buffer.name
-                and not vim.current.buffer.options['bt']
-               ):
-                file_name = vim.current.buffer.name
-                if " " in file_name:
-                    file_name = file_name.replace(' ', r'\ ')
-                self._arguments["current_file"] = PurePath(lfRelpath(file_name)).as_posix()
-                if "-s" in self._arguments:
-                    self.vsplitDiff()
-                else:
-                    self._accept(self._arguments["current_file"], "")
-
-                self._restoreOrigCwd()
-                return
 
         if "--recall" in arguments_dict:
             super(GitExplManager, self).startExplorer(win_pos, *args, **kwargs)
+        elif "--with" in self._arguments:
+            if len(self._arguments["--with"]) > 0:
+                if "--current-file" in self._arguments:
+                    lfCmd("Leaderf git diff {} --explorer --current-file -s".format(self._arguments["--with"][0]))
+                else:
+                    lfCmd("Leaderf git diff {} --explorer".format(self._arguments["--with"][0]))
+            else:
+                if self._git_log_manager is None:
+                    self._git_log_manager = GitLogExplManager()
+                kw = {"arguments": {"GitDiffExplManager": self}}
+                if "--current-file" in arguments_dict:
+                    kw["arguments"]["--current-file"] = []
+                self._git_log_manager.startExplorer(win_pos, *args, **kw)
+        elif ("--current-file" in arguments_dict
+            and vim.current.buffer.name
+            and not vim.current.buffer.options['bt']
+           ):
+            file_name = vim.current.buffer.name
+            if " " in file_name:
+                file_name = file_name.replace(' ', r'\ ')
+            self._arguments["current_file"] = PurePath(lfRelpath(file_name)).as_posix()
+            if "-s" in self._arguments:
+                self.vsplitDiff()
+            else:
+                self._accept(self._arguments["current_file"], "")
+
+            self._restoreOrigCwd()
         elif "--directly" in self._arguments:
             self._result_panel.create(self.createGitCommand(self._arguments, None))
             self._restoreOrigCwd()
@@ -4055,7 +4067,12 @@ class GitLogExplManager(GitExplManager):
         if commit_id is None:
             return
 
-        if "--current-file" in self._arguments and "current_file" in self._arguments:
+        if "GitDiffExplManager" in self._arguments:
+            if "--current-file" in self._arguments:
+                lfCmd("Leaderf git diff {} --explorer --current-file -s".format(commit_id))
+            else:
+                lfCmd("Leaderf git diff {} --explorer".format(commit_id))
+        elif "--current-file" in self._arguments and "current_file" in self._arguments:
             file_name = self._getExplorer().orig_name[commit_id]
             if "--explorer" in self._arguments:
                 self._createExplorerPage(commit_id, file_name)

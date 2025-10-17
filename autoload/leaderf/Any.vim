@@ -263,6 +263,7 @@ let g:Lf_Arguments = {
             \               {"name": ["-s", "--side-by-side"], "nargs": 0, "help": "show diffs in a side-by-side view"},
             \               {"name": ["-u", "--unified"], "nargs": 0, "help": "show diffs in a unified view"},
             \           ],
+            \           {"name": ["--with"], "nargs": "?", "metavar": "<REVISION>", "help": "Compare the current working tree with <REVISION>. If <REVISION> is omitted, pop up the revisions to select one."},
             \           {"name": ["--current-file"], "nargs": 0, "help": "show diffs of current file"},
             \           {"name": ["extra"], "nargs": "*", "help": "extra arguments of git diff"},
             \       ],
