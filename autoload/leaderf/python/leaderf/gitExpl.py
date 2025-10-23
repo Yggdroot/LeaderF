@@ -96,7 +96,7 @@ class GitDiffExplorer(GitExplorer):
         if "content" in arguments_dict:
             return arguments_dict["content"]
 
-        executor = AsyncExecutor()
+        executor = AsyncExecutor(True)
         self._executor.append(executor)
 
         self._source_info = {}
@@ -166,7 +166,7 @@ class GitLogExplorer(GitExplorer):
 
         arguments_dict = kwargs.get("arguments", {})
 
-        executor = AsyncExecutor()
+        executor = AsyncExecutor(True)
         self._executor.append(executor)
 
         options = GitLogExplorer.generateOptions(arguments_dict)
@@ -567,7 +567,7 @@ class ParallelExecutor(object):
                     error.append(str(e))
 
 
-        executors = [AsyncExecutor() for _ in range(len(cmds))]
+        executors = [AsyncExecutor(True) for _ in range(len(cmds))]
         workers = []
         for i, (exe, cmd) in enumerate(zip(executors, cmds)):
             if isinstance(format_line, list):
@@ -598,7 +598,7 @@ class GitCommandView(object):
     def __init__(self, owner, cmd):
         self._owner = owner
         self._cmd = cmd
-        self._executor = AsyncExecutor()
+        self._executor = AsyncExecutor(True)
         self._buffer = None
         self._window_id = -1
         self._bufhidden = 'wipe'
@@ -4615,7 +4615,7 @@ class GitBlameExplManager(GitExplManager):
 
     def _readBlameInfo(self, git_cmd, encoding):
         try:
-            executor = AsyncExecutor()
+            executor = AsyncExecutor(True)
             content = executor.execute(git_cmd,
                                        encoding=encoding,
                                        cwd=self._project_root

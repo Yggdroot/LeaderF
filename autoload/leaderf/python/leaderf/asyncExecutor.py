@@ -22,11 +22,14 @@ class AsyncExecutor(object):
     A class to implement executing a command in subprocess, then
     read the output asynchronously.
     """
-    def __init__(self):
+    def __init__(self, no_limit=False):
         self._errQueue = None
         self._process = None
         self._finished = False
-        self._max_count = max_count
+        if no_limit == True:
+            self._max_count = 0
+        else:
+            self._max_count = max_count
 
     def _readerThread(self, fd, queue):
         try:
