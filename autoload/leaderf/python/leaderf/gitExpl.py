@@ -923,6 +923,8 @@ class GitBlameView(GitCommandView):
                       .format(i, self._color_table[cterm_color], cterm_color))
                 lfCmd("call leaderf#colorscheme#popup#link_two('Lf_hl_blame_stl_heat_{}', 'StatusLine', 'Lf_hl_blame_heat_{}', 1)"
                       .format(i, i))
+                if lfEval("has('nvim')") == '1':
+                    lfCmd("hi Lf_hl_blame_stl_heat_{} gui=nocombine cterm=nocombine".format(i))
                 stl = "%#Lf_hl_blame_stl_heat_{}#>".format(i) + stl
 
             lfCmd("let g:Lf_GitStlHeatLine = '{}'".format(stl))

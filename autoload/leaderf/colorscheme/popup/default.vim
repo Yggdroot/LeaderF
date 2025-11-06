@@ -160,6 +160,11 @@ if &background ==? 'dark'
     highlight def link Lf_hl_gitStlFileChanged  StatusLine
     call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlAdd", "StatusLine", "Lf_hl_gitDiffAddition", 1)
     call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlDel", "StatusLine", "Lf_hl_gitDiffDeletion", 1)
+    if has('nvim')
+        highlight Lf_hl_gitStlChangedNum gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlAdd gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlDel gui=nocombine cterm=nocombine
+    endif
     highlight def link Lf_hl_gitStatPath        Directory
     highlight def link Lf_hl_gitStatNumber      Number
     highlight def link Lf_hl_gitStatPlus        Lf_hl_gitNumStatAdd
@@ -324,6 +329,11 @@ else
     highlight def link Lf_hl_gitStlFileChanged  StatusLine
     call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlAdd", "StatusLine", "Lf_hl_gitDiffAddition", 1)
     call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlDel", "StatusLine", "Lf_hl_gitDiffDeletion", 1)
+    if has('nvim')
+        highlight Lf_hl_gitStlChangedNum gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlAdd gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlDel gui=nocombine cterm=nocombine
+    endif
     highlight def link Lf_hl_gitStatPath        Directory
     highlight def link Lf_hl_gitStatNumber      Number
     highlight def link Lf_hl_gitStatPlus        Lf_hl_gitNumStatAdd
