@@ -2832,7 +2832,7 @@ class NavigationPanel(Panel):
         for view in self._tree_view:
             if view.getHeight() > 0:
                 n += view.getTitleHeight() + view.getHeight() + 2
-                if line_num < n:
+                if line_num <= n:
                     return view
 
     def getDiffViewMode(self):
