@@ -421,7 +421,7 @@ function! leaderf#Git#NavigationPanelMaps(id) abort
     exec printf('nnoremap <buffer> <silent> f             :exec g:Lf_py "%s.fuzzySearch()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> F             :exec g:Lf_py "%s.fuzzySearch(True)"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', navigation_panel)
-    exec printf('nnoremap <buffer> <silent> <LeftRelease> <LeftRelease>:exec g:Lf_py "%s.selectOption()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> <LeftMouse> <LeftMouse>:exec g:Lf_py "%s.selectOption()"<CR>', navigation_panel)
     nnoremap <buffer> <silent> q             :q<CR>
 endfunction
 
