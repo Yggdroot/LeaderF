@@ -1192,7 +1192,9 @@ class Bisect(object):
 
 
 class TreeView(GitCommandView):
-    def __init__(self, owner, cmd, project_root, target_path, callback, next_tree_view=None):
+    def __init__(self, owner, cmd, project_root, target_path, callback,
+                 next_tree_view=None,
+                 content_buffer=None):
         super(TreeView, self).__init__(owner, cmd)
         self._project_root = project_root
         self._target_path = target_path
@@ -1200,6 +1202,7 @@ class TreeView(GitCommandView):
         # (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
         self._callback = callback
         self._next_tree_view = next_tree_view
+        self._content_buffer = content_buffer
         # key is the parent hash, value is a TreeNode
         self._trees = LfOrderedDict()
         # key is the parent hash, value is a list of MetaInfo
@@ -1333,8 +1336,12 @@ class TreeView(GitCommandView):
         self._match_ids.append(id)
 
     def defineMaps(self, winid):
-        lfCmd("call win_execute({}, 'call leaderf#Git#TreeViewMaps({})')"
-              .format(winid, id(self)))
+        if isinstance(self._owner._owner._owner, GitStatusExplManager):
+            status = 1
+        else:
+            status = 0
+        lfCmd("call win_execute({}, 'call leaderf#Git#TreeViewMaps({}, {})')"
+              .format(winid, id(self), status))
 
     def getCurrentParent(self):
         return self._cur_parent
@@ -1815,15 +1822,26 @@ class TreeView(GitCommandView):
 
         self._init = True
 
-        self._buffer.append('')
-        title = self._cmd.getTitle()
-        if title is not None:
-            self._buffer.append(title)
+        if self._content_buffer is not None:
+            self._content_buffer.append('')
+            title = self._cmd.getTitle()
+            if title is not None:
+                self._content_buffer.append(title)
 
-        self._buffer.append(shrinkUser(self._project_root) + os.sep)
+            self._content_buffer.append(shrinkUser(self._project_root) + os.sep)
+        else:
+            self._buffer.append('')
+            title = self._cmd.getTitle()
+            if title is not None:
+                self._buffer.append(title)
+
+            self._buffer.append(shrinkUser(self._project_root) + os.sep)
 
     def getCommand(self):
         return self._cmd
+
+    def getTitle(self):
+        return self._cmd.getTitle()
 
     def getTitleHeight(self):
         if self._cmd.getTitle() is None:
@@ -1846,7 +1864,10 @@ class TreeView(GitCommandView):
                 if info.has_num_stat == True:
                     return
                 if not info.is_dir:
-                    self._buffer[i] = self.buildLine(info)
+                    if self._content_buffer is not None:
+                        self._content_buffer[i] = self.buildLine(info)
+                    else:
+                        self._buffer[i] = self.buildLine(info)
         finally:
             self._buffer.options['modifiable'] = False
 
@@ -1879,10 +1900,16 @@ class TreeView(GitCommandView):
 
                     source = None
                     for info in structure[self._offset_in_content:cur_len]:
-                        self._buffer.append(self.buildLine(info))
+                        if self._content_buffer is not None:
+                            self._content_buffer.append(self.buildLine(info))
+                        else:
+                            self._buffer.append(self.buildLine(info))
                         if cursor_line == init_line and not info.is_dir:
                             if self._target_path is None or info.path == self._target_path:
-                                cursor_line = len(self._buffer)
+                                if self._content_buffer is not None:
+                                    cursor_line = len(self._content_buffer)
+                                else:
+                                    cursor_line = len(self._buffer)
                                 source = info.info
 
                     if source is not None and self._callback(source, tree_view_id=id(self)) == True:
@@ -1925,10 +1952,27 @@ class TreeView(GitCommandView):
     def _setChangedFilesNum(self, num):
         self._buffer.options['modifiable'] = True
         try:
-            title = self._buffer[self.startLine() - 3]
-            self._buffer[self.startLine() - 3] = title.replace(':', ' ({}):'.format(num))
+            if self._content_buffer is not None:
+                title = self._content_buffer[self.startLine() - 3]
+                self._content_buffer[self.startLine() - 3] = title.replace(':', ' ({}):'.format(num))
+            else:
+                title = self._buffer[self.startLine() - 3]
+                self._buffer[self.startLine() - 3] = title.replace(':', ' ({}):'.format(num))
         finally:
             self._buffer.options['modifiable'] = False
+
+    def getFilePath(self):
+        line_num = vim.current.window.cursor[0]
+        index = line_num - self.startLine()
+        structure = self._file_structures[self._cur_parent]
+        if index < -1 or index >= len(structure):
+            return None
+
+        # the root
+        if index == -1:
+            return "."
+        else:
+            return structure[index].path
 
     def _readContent(self, encoding):
         try:
@@ -1948,8 +1992,8 @@ class TreeView(GitCommandView):
             traceback.print_stack()
             self._read_finished = 1
 
-    def cleanup(self):
-        super(TreeView, self).cleanup()
+    def cleanup(self, wipe=True):
+        super(TreeView, self).cleanup(wipe)
         self._match_ids = []
 
 
@@ -2806,6 +2850,7 @@ class NavigationPanel(Panel):
         self._diff_algorithm = 'myers'
         self._git_diff_manager = None
         self._buffer = None
+        self._callback = None
         self._head = [
                 '" Press <F1> for help',
                 ' Side-by-side ◉ Unified ○',
@@ -2869,6 +2914,7 @@ class NavigationPanel(Panel):
         else:
             self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'unified')")
 
+        self._callback= callback
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(winid)))]
         self._buffer[:] = self._head
         self.setDiffViewMode(self._diff_view_mode)
@@ -2909,6 +2955,9 @@ class NavigationPanel(Panel):
     def defineMaps(self, winid):
         lfCmd("call win_execute({}, 'call leaderf#Git#NavigationPanelMaps({})')"
               .format(winid, id(self)))
+        if isinstance(self._owner._owner, GitStatusExplManager):
+            lfCmd("call win_execute({}, 'call leaderf#Git#NavigationPanelMapsForStatus({})')"
+                  .format(winid, id(self)))
 
     def setDiffViewMode(self, mode):
         self._buffer.options['modifiable'] = True
@@ -3113,6 +3162,62 @@ class NavigationPanel(Panel):
     def showCommitMessage(self):
         cmd = "git show {} -s --decorate --pretty=fuller".format(self._commit_id)
         lfCmd("""call leaderf#Git#ShowCommitMessage(systemlist('{}'))""".format(cmd))
+
+    def stageUnstage(self):
+        tree_view = self.getTreeView()
+        if tree_view is None:
+            return
+
+        path = tree_view.getFilePath()
+        if path is None:
+            return
+
+        if tree_view.getTitle() == "Staged Changes:":
+            cmd = "git reset -q HEAD -- {}".format(path)
+        elif tree_view.getTitle() ==  "Unstaged Changes:":
+            cmd = "git add -u {}".format(path)
+        ParallelExecutor.run(cmd, directory=self._project_root)
+
+        self.updateTreeview()
+
+    def updateTreeview(self):
+        for view in self._tree_view:
+            if view is not None:
+                view.cleanup(wipe=False)
+        self._tree_view = []
+
+        flag = [False]
+        def wrapper(cb, flag, *args, **kwargs):
+            if flag[0] == False:
+                flag[0] = True
+                cb(*args, **kwargs)
+                return True
+            else:
+                return False
+
+        content_buffer = self._buffer[:len(self._head)]
+        def createTreeView(cmds):
+            if len(cmds) > 0:
+                TreeView(self, cmds[0],
+                         self._project_root,
+                         None,
+                         partial(wrapper, self._callback, flag),
+                         next_tree_view=partial(createTreeView, cmds[1:]),
+                         content_buffer=content_buffer
+                         ).create(int(lfEval("win_getid()")), bufhidden="hide")
+            else:
+                cur_pos = vim.current.window.cursor
+                self._buffer.options['modifiable'] = True
+                self._buffer[:] = content_buffer
+                self._buffer.options['modifiable'] = False
+                vim.current.window.cursor = cur_pos
+
+        uid = str(hex(int(time.time())))[-7:]
+        command = [
+                GitStagedCommand(self._arguments, uid),
+                GitUnstagedCommand(self._arguments, uid),
+                ]
+        createTreeView(command)
 
 
 class BlamePanel(Panel):

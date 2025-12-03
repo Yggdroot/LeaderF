@@ -108,9 +108,34 @@ let s:help = {
             \   "<2-LeftMouse>: open the folder or open the diffs of current file",
             \   "O:             open the folder recursively",
             \   "t:             open the diffs in a new tabpage",
-            \   "s:             toggle between side by side diff view and unified diff view",
+            \   "v:             toggle between side by side diff view and unified diff view",
             \   "i:             toggle between ignoring whitespace and not ignoring whitespace",
             \   "p:             preview the diffs, i.e., like 'o', but leave the cursor in the current panel",
+            \   "x:             collapse the parent folder",
+            \   "X:             collapse all the children of the current folder",
+            \   "f:             fuzzy search files",
+            \   "F:             resume the previous fuzzy searching",
+            \   "m:             show the commit message",
+            \   "-:             go to the parent folder",
+            \   "+:             go to the next sibling of the parent folder",
+            \   "<C-J>:         go to the next sibling of the current folder",
+            \   "<C-K>:         go to the previous sibling of the current folder",
+            \   "(:             go to the start of the current indent level",
+            \   "):             go to the end of the current indent level",
+            \   "q:             quit the navigation window",
+            \   ":LeaderfGitNavigationOpen",
+            \   "               open the navigation window",
+            \ ],
+            \ "status": [
+            \   "o:             open the folder or open the diffs of current file",
+            \   "<CR>:          open the folder or open the diffs of current file",
+            \   "<2-LeftMouse>: open the folder or open the diffs of current file",
+            \   "O:             open the folder recursively",
+            \   "t:             open the diffs in a new tabpage",
+            \   "v:             toggle between side by side diff view and unified diff view",
+            \   "i:             toggle between ignoring whitespace and not ignoring whitespace",
+            \   "p:             preview the diffs, i.e., like 'o', but leave the cursor in the current panel",
+            \   "s:             stage or unstage the files",
             \   "x:             collapse the parent folder",
             \   "X:             collapse all the children of the current folder",
             \   "f:             fuzzy search files",
@@ -387,10 +412,14 @@ function leaderf#Git#ShowMsgFilter(winid, key) abort
     return 1
 endfunction
 
-function! leaderf#Git#TreeViewMaps(id) abort
+function! leaderf#Git#TreeViewMaps(id, status) abort
     exec g:Lf_py "import ctypes"
     let tree_view = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
-    nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("tree")<CR>
+    if a:status == 1
+        nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("status")<CR>
+    else
+        nnoremap <buffer> <silent> <F1>          :call leaderf#Git#ShowHelp("tree")<CR>
+    endif
     nnoremap <buffer> <silent> -             :call leaderf#Git#OuterIndent(0)<CR>
     nnoremap <buffer> <silent> +             :call leaderf#Git#OuterIndent(1)<CR>
     nnoremap <buffer> <silent> <C-K>         :call leaderf#Git#SameIndent(0)<CR>
@@ -413,7 +442,7 @@ function! leaderf#Git#NavigationPanelMaps(id) abort
     exec printf('nnoremap <buffer> <silent> <CR>          :exec g:Lf_py "%s.openDiffView(False)"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> O             :exec g:Lf_py "%s.openDiffView(True)"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> t             :exec g:Lf_py "%s.openDiffView(False, mode=''t'')"<CR>', navigation_panel)
-    exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.toggleDiffViewMode()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> v             :exec g:Lf_py "%s.toggleDiffViewMode()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> i             :exec g:Lf_py "%s.toggleIgnoreWhitespace()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> p             :exec g:Lf_py "%s.openDiffView(False, preview=True)"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> x             :call leaderf#Git#CollapseParent("%s")<CR>', navigation_panel)
@@ -423,6 +452,12 @@ function! leaderf#Git#NavigationPanelMaps(id) abort
     exec printf('nnoremap <buffer> <silent> m             :exec g:Lf_py "%s.showCommitMessage()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> <LeftMouse> <LeftMouse>:exec g:Lf_py "%s.selectOption()"<CR>', navigation_panel)
     nnoremap <buffer> <silent> q             :q<CR>
+endfunction
+
+function! leaderf#Git#NavigationPanelMapsForStatus(id) abort
+    exec g:Lf_py "import ctypes"
+    let navigation_panel = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
+    exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.stageUnstage()"<CR>', navigation_panel)
 endfunction
 
 function! leaderf#Git#CloseFloatWin() abort
