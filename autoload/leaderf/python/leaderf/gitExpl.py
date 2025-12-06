@@ -1981,9 +1981,9 @@ class TreeView(GitCommandView):
                                              cwd=self._project_root
                                              )
             for line in content:
-                self.buildTree(line)
                 if self._stop_reader_thread.is_set():
                     break
+                self.buildTree(line)
             else:
                 self._read_finished = 1
                 self._owner.readFinished(self)
