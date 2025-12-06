@@ -612,7 +612,7 @@ class GitCommandView(object):
         self._reader_thread = None
         self._offset_in_content = 0
         self._read_finished = 0
-        self._stop_reader_thread = False
+        self._stop_reader_thread = threading.Event()
 
     def getBufferName(self):
         return self._cmd.getBufferName()
@@ -756,7 +756,7 @@ class GitCommandView(object):
                                              )
             for line in content:
                 self._content.append(line)
-                if self._stop_reader_thread:
+                if self._stop_reader_thread.is_set():
                     break
             else:
                 self._read_finished = 1
@@ -768,7 +768,7 @@ class GitCommandView(object):
 
     def stopThread(self):
         if self._reader_thread and self._reader_thread.is_alive():
-            self._stop_reader_thread = True
+            self._stop_reader_thread.set()
             self._reader_thread.join(0.01)
 
     def stopTimer(self):
@@ -1982,7 +1982,7 @@ class TreeView(GitCommandView):
                                              )
             for line in content:
                 self.buildTree(line)
-                if self._stop_reader_thread:
+                if self._stop_reader_thread.is_set():
                     break
             else:
                 self._read_finished = 1

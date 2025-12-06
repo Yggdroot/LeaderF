@@ -350,7 +350,7 @@ class Manager(object):
             self._fuzzy_engine = None
 
         if self._reader_thread and self._reader_thread.is_alive():
-            self._stop_reader_thread = True
+            self._stop_reader_thread.set()
 
         self._closePreviewPopup()
 
@@ -2885,7 +2885,7 @@ class Manager(object):
 
                 self._read_finished = 0
 
-                self._stop_reader_thread = False
+                self._stop_reader_thread = threading.Event()
                 self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
                 self._reader_thread.daemon = True
                 self._reader_thread.start()
@@ -2924,7 +2924,7 @@ class Manager(object):
         try:
             for line in content:
                 self._content.append(line)
-                if self._stop_reader_thread:
+                if self._stop_reader_thread.is_set():
                     break
             else:
                 self._read_finished = 1

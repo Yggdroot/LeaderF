@@ -1114,7 +1114,7 @@ class RgExplManager(Manager):
 
         self._read_finished = 0
 
-        self._stop_reader_thread = False
+        self._stop_reader_thread = threading.Event()
         self._reader_thread = threading.Thread(target=self._readContent, args=(content,))
         self._reader_thread.daemon = True
         self._reader_thread.start()
@@ -1599,7 +1599,7 @@ class RgExplManager(Manager):
             return
 
         if self._reader_thread and self._reader_thread.is_alive():
-            self._stop_reader_thread = True
+            self._stop_reader_thread.set()
             self._reader_thread.join()
 
         # kill process in a thread
@@ -1619,7 +1619,7 @@ class RgExplManager(Manager):
             return
 
         self._clearPreviewHighlights()
-        self._stop_reader_thread = False
+        self._stop_reader_thread.clear()
         self._read_finished = 0
         self._content = []
         self._pattern_changed = True
