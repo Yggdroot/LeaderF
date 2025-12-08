@@ -627,15 +627,19 @@ function! leaderf#PopupClosed(id_list, manager_id, winid, result) abort
 endfunction
 
 function! leaderf#Quit(manager_id) abort
-exec g:Lf_py "<< EOF"
-import ctypes
-manager = ctypes.cast(int(vim.eval("a:manager_id")), ctypes.py_object).value
-if manager.is_ctrl_c == False:
-    manager.is_autocmd = True
-    manager.quit()
-    manager.is_autocmd = False
-manager.is_ctrl_c = False
-EOF
+let l:py_code = "
+    \import ctypes, sys
+    \try:
+    \    manager = ctypes.cast(" . a:manager_id . ",ctypes.py_object).value)
+    \    if manager.is_ctrl_c == False:
+    \        manager.is_autocmd = True
+    \        manager.quit()
+    \        manager.is_autocmd = False
+    \    manager.is_ctrl_c = False
+    \except Exception as e:
+    \    sys.stderr.write('Quit error: %s\\n' % e)
+    \"
+exec g:Lf_py . l:py_code
 endfunction
 
 function! leaderf#ResetPopupOptions(winid, option, value) abort
