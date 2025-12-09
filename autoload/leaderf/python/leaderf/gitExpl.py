@@ -551,14 +551,14 @@ class ParallelExecutor(object):
     @staticmethod
     def run(*cmds, format_line=None, directory=None, silent=False, error=None):
         outputs = [[] for _ in range(len(cmds))]
-        stop_thread = False
+        stop_thread = threading.Event()
 
         def readContent(content, output):
             try:
                 for line in content:
-                    output.append(line)
-                    if stop_thread:
+                    if stop_thread.is_set():
                         break
+                    output.append(line)
             except Exception as e:
                 if silent == False:
                     traceback.print_exc()
@@ -586,7 +586,7 @@ class ParallelExecutor(object):
         for w in workers:
             w.join(5) # I think 5s is enough for git cat-file
 
-        stop_thread = True
+        stop_thread.set()
 
         for e in executors:
             e.killProcess()
