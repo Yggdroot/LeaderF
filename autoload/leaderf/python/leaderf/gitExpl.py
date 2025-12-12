@@ -3217,6 +3217,9 @@ class NavigationPanel(Panel):
                 except:
                     pass
 
+                if len(self._buffer) == len(self._head):
+                    lfCmd("only")
+
         uid = str(hex(int(time.time())))[-7:]
         command = [
                 GitStagedCommand(self._arguments, uid),
