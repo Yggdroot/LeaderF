@@ -11,6 +11,7 @@ import bisect
 import ctypes
 import tempfile
 import itertools
+import subprocess
 from pathlib import PurePath
 from difflib import SequenceMatcher
 from itertools import islice
@@ -549,7 +550,7 @@ class GitCustomizeCommand(GitCommand):
 
 class ParallelExecutor(object):
     @staticmethod
-    def run(*cmds, format_line=None, directory=None, silent=False, error=None):
+    def run(*cmds, format_line=None, directory=None, silent=False, error=None, env=None):
         outputs = [[] for _ in range(len(cmds))]
         stop_thread = threading.Event()
 
@@ -576,6 +577,7 @@ class ParallelExecutor(object):
                 format_line_cb = format_line
             content = exe.execute(cmd,
                                   encoding=lfEval("&encoding"),
+                                  env=env,
                                   format_line=format_line_cb,
                                   cwd=directory)
             worker = threading.Thread(target=readContent, args=(content, outputs[i]))
@@ -3210,7 +3212,10 @@ class NavigationPanel(Panel):
                 self._buffer.options['modifiable'] = True
                 self._buffer[:] = content_buffer
                 self._buffer.options['modifiable'] = False
-                vim.current.window.cursor = cur_pos
+                try:
+                    vim.current.window.cursor = cur_pos
+                except:
+                    pass
 
         uid = str(hex(int(time.time())))[-7:]
         command = [
@@ -3218,6 +3223,59 @@ class NavigationPanel(Panel):
                 GitUnstagedCommand(self._arguments, uid),
                 ]
         createTreeView(command)
+
+    def commit(self):
+        env = os.environ
+        env["GIT_EDITOR"] = ':'
+        output = subprocess.run("git commit",
+                                 capture_output=True,
+                                 shell=True,
+                                 cwd=self._project_root,
+                                 text=True,
+                                 env=env)
+        if output.stdout != "":
+            lfCmd("echohl WarningMsg | redraw | echo '%s' | echohl NONE" % escQuote(output.stdout))
+        elif output.stderr != "":
+            if ("Aborting commit; you did not edit the message." not in output.stderr
+                and "Aborting commit due to empty commit message." not in output.stderr):
+                lfCmd("echohl WarningMsg | redraw | echo '%s' | echohl NONE" % escQuote(output.stderr))
+            else:
+                self.handleCommit()
+        else:
+            print("Unexpected behavior.")
+            
+    def handleCommit(self):
+        commit_file = os.path.join(
+                os.path.expanduser(self._project_root),
+                ".git",
+                "COMMIT_EDITMSG"
+                )
+        winids = lfEval("win_findbuf(bufnr('%s'))" % escQuote(commit_file))
+        if len(winids) != 0:
+            lfCmd("call win_gotoid({}) | edit! | norm! gg".format(winids[0]))
+        else:
+            lfCmd("silent keepa keepj topleft {}sp {} | silent edit! | norm! gg".format(lfEval("(&lines-3)/2"), commit_file))
+
+        lfCmd("setlocal nobuflisted bufhidden=wipe")
+        self._init_changedtick = vim.current.buffer.vars["changedtick"]
+        lfCmd("augroup Lf_Git_Commit | augroup END")
+        lfCmd("autocmd! Lf_Git_Commit BufWipeout <buffer> call leaderf#Git#CommitBufWipeout({})".format(id(self)))
+
+    def commitBufferWipeout(self):
+        if vim.current.buffer.vars["changedtick"] == self._init_changedtick:
+            err_msg = "Aborting commit; you did not edit the message."
+            lfCmd("echohl WarningMsg | redraw | echo '%s' | echohl NONE" % err_msg)
+        else:
+            output = subprocess.run("git commit --cleanup=strip -F .git/COMMIT_EDITMSG",
+                                    capture_output=True,
+                                    shell=True,
+                                    cwd=self._project_root,
+                                    text=True)
+            if output.stdout != "":
+                self.updateTreeview()
+                lfCmd("call timer_start(500, function('leaderf#Git#Echo', ['{}']))".format("Committed!"))
+            elif output.stderr != "":
+                lfCmd("call timer_start(1, function('leaderf#Git#Echo', ['{}']))".format(escQuote(output.stderr.strip())))
 
 
 class BlamePanel(Panel):

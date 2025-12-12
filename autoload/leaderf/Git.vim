@@ -136,6 +136,7 @@ let s:help = {
             \   "i:             toggle between ignoring whitespace and not ignoring whitespace",
             \   "p:             preview the diffs, i.e., like 'o', but leave the cursor in the current panel",
             \   "s:             stage or unstage the files",
+            \   "c:             commit the staged files",
             \   "x:             collapse the parent folder",
             \   "X:             collapse all the children of the current folder",
             \   "f:             fuzzy search files",
@@ -458,6 +459,7 @@ function! leaderf#Git#NavigationPanelMapsForStatus(id) abort
     exec g:Lf_py "import ctypes"
     let navigation_panel = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
     exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.stageUnstage()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> c             :exec g:Lf_py "%s.commit()"<CR>', navigation_panel)
 endfunction
 
 function! leaderf#Git#CloseFloatWin() abort
@@ -504,6 +506,13 @@ function! leaderf#Git#Cleanup(owner_id, id) abort
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.cleanup()", a:owner_id)
 endfunction
 
+function! leaderf#Git#Echo(msg, id) abort
+    echohl WarningMsg
+    redraw
+    echo a:msg
+    echohl NONE
+endfunction
+
 function! leaderf#Git#Suicide(view_id) abort
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.suicide()", a:view_id)
@@ -512,6 +521,11 @@ endfunction
 function! leaderf#Git#Bufhidden(view_id) abort
     exec g:Lf_py "import ctypes"
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.bufHidden()", a:view_id)
+endfunction
+
+function! leaderf#Git#CommitBufWipeout(view_id) abort
+    exec g:Lf_py "import ctypes"
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.commitBufferWipeout()", a:view_id)
 endfunction
 
 function! leaderf#Git#UpdateInlineBlame(manager_id) abort
