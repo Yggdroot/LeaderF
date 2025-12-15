@@ -399,8 +399,11 @@ class GtagsExplorer(Explorer):
             return False
 
     def _generateDbpath(self, path):
+        if sys.platform == "cygwin":
+            result = subprocess.run(["cygpath", "-m", path], capture_output=True, text=True)
+            path = result.stdout.strip() if result.returncode == 0 else path
         sep_char = '-' if self._with_gutentags else '_'
-        if os.name == 'nt':
+        if os.name == 'nt' or ("cygwin" in sys.platform):
             if self._with_gutentags:
                 db_folder = re.sub(r'[:\\/]', sep_char, path)
             else:
