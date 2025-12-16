@@ -355,6 +355,13 @@ class GitCatFileCommand(GitCommand):
                     self._cmd = "cat {}".format(self._source[2])
             else:
                 self._cmd = ""
+        elif self._source[0] == "???": # Untracked files
+            self._cmd = ""
+        elif self._source[0] == "xxx": # Untracked files
+            if os.name == 'nt':
+                self._cmd = "type {}".format(os.path.normpath(self._source[2]))
+            else:
+                self._cmd = "cat {}".format(self._source[2])
 
         self._buffer_name = GitCatFileCommand.buildBufferName(self._commit_id, self._source)
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(self._source[2])
@@ -467,6 +474,20 @@ class GitUnstagedCommand(GitCommand):
 
     def getTitle(self):
         return "Unstaged Changes:"
+
+
+class GitUntrackedCommand(GitCommand):
+    def __init__(self, arguments_dict, source):
+        super(GitUntrackedCommand, self).__init__(arguments_dict, source)
+
+    def buildCommandAndBufferName(self):
+        self._cmd = 'git ls-files --others --exclude-standard'
+
+        self._buffer_name = "LeaderF://navigation/" + self._source
+        self._file_type_cmd = ""
+
+    def getTitle(self):
+        return "Untracked files:"
 
 
 class GitLogExplCommand(GitCommand):
@@ -1226,12 +1247,14 @@ class TreeView(GitCommandView):
         self._del_icon = lfEval("get(g:, 'Lf_GitDelIcon', '')")    #  
         self._modification_icon = lfEval("get(g:, 'Lf_GitModifyIcon', '')")
         self._rename_icon = lfEval("get(g:, 'Lf_GitRenameIcon', '')")
+        self._untrack_icon = lfEval("get(g:, 'Lf_GitUntrackIcon', '')")
         self._status_icons = {
                 "A": self._add_icon,
                 "C": self._copy_icon,
                 "D": self._del_icon,
                 "M": self._modification_icon,
                 "R": self._rename_icon,
+                "?": self._untrack_icon,
                 }
         self._match_ids = []
         self._init = False
@@ -1278,6 +1301,10 @@ class TreeView(GitCommandView):
         self._match_ids.append(id)
         lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModifyIcon'', ''^\s*\zs{}'', -100)')"""
               .format(winid, self._modification_icon))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModifyIcon'', ''^\s*\zs{}'', -100)')"""
+              .format(winid, self._untrack_icon))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
         lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitRenameIcon'', ''^\s*\zs{}'', -100)')"""
@@ -1365,6 +1392,9 @@ class TreeView(GitCommandView):
         return a tuple like (100644, (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c))
                             (100644, (69671c59c, 084f8cdb4, M,    runtime/syntax/zsh.vim, ""))
         """
+        if not line.startswith(":"):    # Untracked files
+            return ("100644", ("???", "xxx", "?", line, ""))
+
         tmp = line.split(sep='\t')
         file_names = (tmp[1], tmp[2] if len(tmp) == 3 else "")
         blob_status = tmp[0].split()
@@ -1454,7 +1484,14 @@ class TreeView(GitCommandView):
             self._trees[parent] = TreeNode()
             self._file_structures[parent] = []
             self._file_list[parent] = []
-        elif line.startswith(":"):
+        elif line.startswith(" "):
+            parent, tree_node = self._trees.last_key_value()
+            self._short_stat[parent] = line
+            self.appendRemainingFiles(parent, tree_node)
+            self.appendFiles(parent, 0, tree_node)
+        elif line == "":
+            pass
+        elif line.startswith(":") or not re.match(r'^(\d+)\t(\d+)\t(.+)$', line):
             if self._cur_parent is None:
                 parent = "0000000"
                 self._cur_parent = parent
@@ -1519,13 +1556,6 @@ class TreeView(GitCommandView):
 
             if mode != "160000":
                 tree_node.files[file] = source
-        elif line.startswith(" "):
-            parent, tree_node = self._trees.last_key_value()
-            self._short_stat[parent] = line
-            self.appendRemainingFiles(parent, tree_node)
-            self.appendFiles(parent, 0, tree_node)
-        elif line == "":
-            pass
         else:
             parent = self._trees.last_key()
             if parent not in self._num_stat:
@@ -1943,15 +1973,15 @@ class TreeView(GitCommandView):
                 lfCmd(r"""call win_execute({}, 'let &l:stl="{}"')"""
                       .format(self.getWindowId(), shortstat))
             else:
-                num = self._short_stat[self._cur_parent].split(None, 1)[0]
-                self._setChangedFilesNum(num)
+                self._setChangedFilesNum()
             self._read_finished = 2
             self._owner.writeFinished(self.getWindowId())
             self.stopTimer()
             if self._next_tree_view is not None:
                 self._next_tree_view()
 
-    def _setChangedFilesNum(self, num):
+    def _setChangedFilesNum(self):
+        num = len(self.getFileList())
         self._buffer.options['modifiable'] = True
         try:
             if self._content_buffer is not None:
@@ -1972,7 +2002,7 @@ class TreeView(GitCommandView):
 
         # the root
         if index == -1:
-            return "."
+            return "./"
         else:
             return structure[index].path
 
@@ -1982,11 +2012,16 @@ class TreeView(GitCommandView):
                                              encoding=encoding,
                                              cwd=self._project_root
                                              )
+            count = 0
             for line in content:
+                count += 1
                 if self._stop_reader_thread.is_set():
                     break
                 self.buildTree(line)
             else:
+                if isinstance(self._cmd, GitUntrackedCommand) and count > 0:
+                    self.buildTree(" 1 file")
+
                 self._read_finished = 1
                 self._owner.readFinished(self)
         except Exception:
@@ -2634,6 +2669,17 @@ class UnifiedDiffViewPanel(Panel):
                                         for i in range(1, len(content) + 1)]
                     deleted_line_nums = range(1, len(outputs[0]) + 1)
                     added_line_nums = []
+                elif source[1] == "xxx": # Untracked files
+                    if os.name == 'nt':
+                        git_cmd = "type {}".format(os.path.normpath(source[3]))
+                    else:
+                        git_cmd = "cat {}".format(source[3])
+                    outputs = ParallelExecutor.run(git_cmd, directory=self._project_root)
+                    line_num_width = len(str(len(outputs[0])))
+                    content = outputs[0]
+                    line_num_content = []
+                    deleted_line_nums = []
+                    added_line_nums = []
                 else:
                     if source[1].startswith("0000000"):
                         extra_options = "--diff-algorithm=" + diff_algorithm
@@ -2790,6 +2836,10 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("let b:Leaderf_fold_ranges_dict = {}".format(str(fold_ranges_dict)))
                 lfCmd("silent! IndentLinesDisable")
                 self.setSomeOptions()
+                if source[1] == "xxx": # Untracked files
+                    lfCmd("setlocal number")
+                    lfCmd("setlocal foldmethod=indent")
+                    lfCmd("setlocal foldlevel=100")
 
                 cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
                 view = GitCommandView(self, cmd)
@@ -2813,8 +2863,13 @@ class UnifiedDiffViewPanel(Panel):
                       .format(key_map["previous_change"]))
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#NextChange(0)<CR>"
                       .format(key_map["next_change"]))
-                lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(0)<CR>"
-                      .format(key_map["edit_file"]))
+                if source[1] == "xxx": # Untracked files
+                    lfCmd("let b:lf_git_diff_win_pos = 1")
+                    lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(2)<CR>"
+                          .format(key_map["edit_file"]))
+                else:
+                    lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(0)<CR>"
+                          .format(key_map["edit_file"]))
             else:
                 lfCmd("call win_gotoid({})".format(winid))
                 if not vim.current.buffer.name: # buffer name is empty
@@ -2822,6 +2877,10 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("silent hide edit {}".format(buf_name))
                 self.bufShown(buf_name, winid)
                 self.setSomeOptions()
+                if source[1] == "xxx": # Untracked files
+                    lfCmd("setlocal number")
+                    lfCmd("setlocal foldmethod=indent")
+                    lfCmd("setlocal foldlevel=100")
 
         target_line_num = kwargs.get("line_num", None)
         if target_line_num is not None:
@@ -3178,6 +3237,11 @@ class NavigationPanel(Panel):
             cmd = "git reset -q HEAD -- {}".format(path)
         elif tree_view.getTitle() ==  "Unstaged Changes:":
             cmd = "git add -u {}".format(path)
+        elif tree_view.getTitle() ==  "Untracked files:":
+            if not path.endswith("/"):
+                cmd = "git add {}".format(path)
+            else:
+                cmd = "git ls-files --others --exclude-standard -z {} | xargs -0 git add".format(path)
         ParallelExecutor.run(cmd, directory=self._project_root)
 
         self.updateTreeview()
@@ -3224,6 +3288,7 @@ class NavigationPanel(Panel):
         command = [
                 GitStagedCommand(self._arguments, uid),
                 GitUnstagedCommand(self._arguments, uid),
+                GitUntrackedCommand(self._arguments, uid),
                 ]
         createTreeView(command)
 
@@ -3828,6 +3893,9 @@ class GitDiffExplManager(GitExplManager):
         if line == '':
             return None
 
+        if line.startswith("?"):
+            return ("???", "xxx", "?", line.split()[-1], "")
+
         file_name2 = ""
         if "\t=>\t" in line:
             # 'R050 hello world.txt\t=>\thello world2.txt'
@@ -3843,6 +3911,13 @@ class GitDiffExplManager(GitExplManager):
                                                        ("", "", "", file_name1, file_name2))
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
+        # source is ('???', 'xxx', '?', 'aaa.c', '')
+        if len(source) > 0 and source[1] == "xxx":
+            return super(GitExplManager, self)._createPreviewWindow(config,
+                                                                    source[3],
+                                                                    line_num,
+                                                                    jump_cmd)
+
         self._preview_panel.create(self.createGitCommand(self._arguments, source),
                                    config,
                                    project_root=self._project_root)
@@ -3860,6 +3935,12 @@ class GitDiffExplManager(GitExplManager):
             return GitDiffCommand(arguments_dict, source)
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
+        # source is ('???', 'xxx', '?', 'aaa.c', '')
+        if len(source) > 0 and source[1] == "xxx":
+            return super(GitExplManager, self)._useExistingWindow(title,
+                                                                  source[3],
+                                                                  line_num,
+                                                                  jump_cmd)
         self.setOptionsForCursor()
 
         content = self._preview_panel.getContent(source)
@@ -5077,6 +5158,7 @@ class GitStatusExplManager(GitExplManager):
             command = [
                     GitStagedCommand(arguments_dict, uid),
                     GitUnstagedCommand(arguments_dict, uid),
+                    GitUntrackedCommand(arguments_dict, uid),
                     ]
             page.create(arguments_dict, command)
             self._pages.add(page)
