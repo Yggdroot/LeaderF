@@ -1257,12 +1257,14 @@ class TreeView(GitCommandView):
                 "?": self._untrack_icon,
                 }
         self._match_ids = []
+        self._match_id_winid = -1
         self._init = False
 
     def startLine(self):
         return self._owner.startLine(self)
 
     def enableColor(self, winid):
+        self._match_id_winid = winid
         if lfEval("hlexists('Lf_hl_help')") == '0':
             lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
                   .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
@@ -2031,6 +2033,8 @@ class TreeView(GitCommandView):
 
     def cleanup(self, wipe=True):
         super(TreeView, self).cleanup(wipe)
+        for i in self._match_ids:
+            lfCmd("silent! call matchdelete({}, {})".format(i, self._match_id_winid))
         self._match_ids = []
 
 
@@ -3235,9 +3239,9 @@ class NavigationPanel(Panel):
 
         if tree_view.getTitle() == "Staged Changes:":
             cmd = "git reset -q HEAD -- {}".format(path)
-        elif tree_view.getTitle() ==  "Unstaged Changes:":
+        elif tree_view.getTitle() == "Unstaged Changes:":
             cmd = "git add -u {}".format(path)
-        elif tree_view.getTitle() ==  "Untracked files:":
+        elif tree_view.getTitle() == "Untracked files:":
             if not path.endswith("/"):
                 cmd = "git add {}".format(path)
             else:
