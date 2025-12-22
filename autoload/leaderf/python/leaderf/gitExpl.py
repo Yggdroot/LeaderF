@@ -2291,7 +2291,13 @@ class DiffViewPanel(Panel):
         elif buffer_names[0] in self._views:
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[0]].getWindowId()))
             cmd = GitCatFileCommand(arguments_dict, sources[1], self._commit_id)
-            lfCmd("rightbelow vsp {}".format(cmd.getBufferName()))
+            buf_name1 = self._buffer_names[vim.current.tabpage][1]
+            win_id1 = int(lfEval("bufwinid('{}')".format(escQuote(buf_name1))))
+            if  win_id1 == -1:
+                lfCmd("rightbelow vsp {}".format(cmd.getBufferName()))
+            else:
+                lfCmd("call win_gotoid({})".format(win_id1))
+
             if buffer_names[1] in self._hidden_views:
                 self.bufShown(buffer_names[1], int(lfEval("win_getid()")))
             else:
@@ -2302,7 +2308,13 @@ class DiffViewPanel(Panel):
         elif buffer_names[1] in self._views:
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
             cmd = GitCatFileCommand(arguments_dict, sources[0], self._commit_id)
-            lfCmd("leftabove vsp {}".format(cmd.getBufferName()))
+            buf_name0 = self._buffer_names[vim.current.tabpage][0]
+            win_id0 = int(lfEval("bufwinid('{}')".format(escQuote(buf_name0))))
+            if  win_id0 == -1:
+                lfCmd("leftabove vsp {}".format(cmd.getBufferName()))
+            else:
+                lfCmd("call win_gotoid({})".format(win_id0))
+
             if buffer_names[0] in self._hidden_views:
                 self.bufShown(buffer_names[0], int(lfEval("win_getid()")))
             else:
@@ -2915,7 +2927,6 @@ class NavigationPanel(Panel):
         self._diff_algorithm = 'myers'
         self._git_diff_manager = None
         self._buffer = None
-        self._callback = None
         self._head = [
                 '" Press <F1> for help',
                 ' Side-by-side ◉ Unified ○',
@@ -2979,7 +2990,6 @@ class NavigationPanel(Panel):
         else:
             self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'unified')")
 
-        self._callback= callback
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(winid)))]
         self._buffer[:] = self._head
         self.setDiffViewMode(self._diff_view_mode)
@@ -3265,13 +3275,17 @@ class NavigationPanel(Panel):
             else:
                 return False
 
+        def callback(source, **kwargs):
+            kwargs["source_to_open"] = source
+            self.openDiffView(False, **kwargs)
+
         content_buffer = self._buffer[:len(self._head)]
         def createTreeView(cmds):
             if len(cmds) > 0:
                 TreeView(self, cmds[0],
                          self._project_root,
                          None,
-                         partial(wrapper, self._callback, flag),
+                         partial(wrapper, callback, flag),
                          next_tree_view=partial(createTreeView, cmds[1:]),
                          content_buffer=content_buffer
                          ).create(int(lfEval("win_getid()")), bufhidden="hide")
@@ -3630,6 +3644,8 @@ class ExplorerPage(object):
         kwargs["diff_algorithm"] = self._navigation_panel.getDiffAlgorithm()
         if "diff_view_source" in kwargs:
             source = self.getExistingSource()
+        elif "source_to_open" in kwargs:
+            source = kwargs["source_to_open"]
         else:
             tree_view = self._navigation_panel.getTreeView()
             if tree_view is None:
