@@ -944,7 +944,7 @@ class LfInstance(object):
             lfCmd("autocmd ColorScheme <buffer> doautocmd syntax")
             lfCmd("autocmd CursorMoved <buffer> let g:Lf_{}_StlLineNumber = 1 + line('$') - line('.')".format(self._category))
             lfCmd("autocmd VimResized * let g:Lf_VimResized = 1")
-            lfCmd("autocmd BufHidden <buffer> call leaderf#Quit({})".format(id(self._manager)))
+            lfCmd("autocmd BufHidden <buffer> call leaderf#Quit('{}')".format(str(id(self._manager))))
             lfCmd("augroup END")
 
         saved_eventignore = vim.options['eventignore']
