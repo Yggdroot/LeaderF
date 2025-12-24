@@ -341,9 +341,9 @@ class GitCatFileCommand(GitCommand):
         source is a tuple like (b90f76fc1, R099, src/version.c)
         """
         if source[1].startswith("C"):
-            return "{}:{}:{}:{}".format(commit_id[:7], source[0][:9], "C", source[2])
+            return "{}:{}:{}:{}".format(commit_id[:8], source[0][:9], "C", source[2])
 
-        return "{}:{}:{}".format(commit_id[:7], source[0][:9], source[2])
+        return "{}:{}:{}".format(commit_id[:8], source[0][:9], source[2])
 
     def buildCommandAndBufferName(self):
         self._cmd = "git cat-file -p {}".format(self._source[0])
@@ -2280,8 +2280,12 @@ class DiffViewPanel(Panel):
         file_path = lfGetFilePath(source)
         sources = ((source[0], source[2], source[3]),
                    (source[1], source[2], file_path))
-        buffer_names = (GitCatFileCommand.buildBufferName(self._commit_id, sources[0]),
-                        GitCatFileCommand.buildBufferName(self._commit_id, sources[1]))
+        if source[1].startswith("0000000"): # for Unstaged changes
+            unique_id = "U" + self._commit_id
+        else:
+            unique_id = self._commit_id
+        buffer_names = (GitCatFileCommand.buildBufferName(unique_id, sources[0]),
+                        GitCatFileCommand.buildBufferName(unique_id, sources[1]))
         target_winid = None
         if buffer_names[0] in self._views and buffer_names[1] in self._views:
             win_ids = (self._views[buffer_names[0]].getWindowId(),
@@ -2290,7 +2294,7 @@ class DiffViewPanel(Panel):
             target_winid = win_ids[1]
         elif buffer_names[0] in self._views:
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[0]].getWindowId()))
-            cmd = GitCatFileCommand(arguments_dict, sources[1], self._commit_id)
+            cmd = GitCatFileCommand(arguments_dict, sources[1], unique_id)
             buf_name1 = self._buffer_names[vim.current.tabpage][1]
             win_id1 = int(lfEval("bufwinid('{}')".format(escQuote(buf_name1))))
             if  win_id1 == -1:
@@ -2307,7 +2311,7 @@ class DiffViewPanel(Panel):
             lfCmd("call win_execute({}, 'setlocal cursorline')".format(target_winid))
         elif buffer_names[1] in self._views:
             lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
-            cmd = GitCatFileCommand(arguments_dict, sources[0], self._commit_id)
+            cmd = GitCatFileCommand(arguments_dict, sources[0], unique_id)
             buf_name0 = self._buffer_names[vim.current.tabpage][0]
             win_id0 = int(lfEval("bufwinid('{}')".format(escQuote(buf_name0))))
             if  win_id0 == -1:
@@ -2349,7 +2353,7 @@ class DiffViewPanel(Panel):
                 win_ids = self.getValidWinIDs(win_ids, win_pos)
 
             target_winid = win_ids[1]
-            cat_file_cmds = [GitCatFileCommand(arguments_dict, s, self._commit_id) for s in sources]
+            cat_file_cmds = [GitCatFileCommand(arguments_dict, s, unique_id) for s in sources]
             outputs = [None, None]
             if (cat_file_cmds[0].getBufferName() not in self._hidden_views
                 and cat_file_cmds[1].getBufferName() not in self._hidden_views):
@@ -2635,14 +2639,12 @@ class UnifiedDiffViewPanel(Panel):
             "patience": 4,
             "histogram": 6
         }
-        if source[1].startswith("0000000"):
-            commit_id = hex(int(self._commit_id, 16) + int(source[0][-7:], 16))[2:]
-        else:
-            commit_id = self._commit_id
+        blob_id = source[1][:7]
         uid = algo_dict[diff_algorithm] + int(ignore_whitespace)
-        buf_name = "LeaderF://{}:{}:{}".format(commit_id,
-                                               uid,
-                                               lfGetFilePath(source))
+        buf_name = "LeaderF://{}:{}:{}:{}".format(self._commit_id,
+                                                  blob_id,
+                                                  uid,
+                                                  lfGetFilePath(source))
         if buf_name in self._views:
             winid = self._views[buf_name].getWindowId()
             lfCmd("call win_gotoid({})".format(winid))
