@@ -1493,7 +1493,7 @@ class TreeView(GitCommandView):
             self.appendFiles(parent, 0, tree_node)
         elif line == "":
             pass
-        elif line.startswith(":") or not re.match(r'^(\d+)\t(\d+)\t(.+)$', line):
+        elif line.startswith(":") or not re.match(r'^(\d+|-)\t(\d+|-)\t(.+)$', line):
             if self._cur_parent is None:
                 parent = "0000000"
                 self._cur_parent = parent
