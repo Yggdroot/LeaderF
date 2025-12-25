@@ -13,6 +13,7 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 from functools import wraps
+from pathlib import PurePath
 
 
 lfCmd = vim.command
@@ -234,8 +235,8 @@ def lfDrop(type, file_name, line_num=None):
 def shrinkUser(path):
     home = os.path.expanduser("~")
     if path.lower().startswith(home.lower()):
-        return "~" + path[len(home):]
-    return path
+        return PurePath("~" + path[len(home):]).as_posix() + "/"
+    return PurePath(path).as_posix() + "/"
 
 def nearestAncestor(markers, path):
     """

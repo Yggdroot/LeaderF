@@ -1862,14 +1862,14 @@ class TreeView(GitCommandView):
             if title is not None:
                 self._content_buffer.append(title)
 
-            self._content_buffer.append(shrinkUser(self._project_root) + "/")
+            self._content_buffer.append(shrinkUser(self._project_root))
         else:
             self._buffer.append('')
             title = self._cmd.getTitle()
             if title is not None:
                 self._buffer.append(title)
 
-            self._buffer.append(shrinkUser(self._project_root) + "/")
+            self._buffer.append(shrinkUser(self._project_root))
 
     def getCommand(self):
         return self._cmd
@@ -3342,7 +3342,7 @@ class NavigationPanel(Panel):
             return
         elif tree_view.getTitle() == "Unstaged Changes:":
             if path == "./":
-                path = shrinkUser(self._project_root) + "/"
+                path = shrinkUser(self._project_root)
             selection = self.confirm("Discard changes to `{}`?".format(path))
             if selection == False:
                 return
