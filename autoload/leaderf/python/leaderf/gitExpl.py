@@ -350,18 +350,18 @@ class GitCatFileCommand(GitCommand):
         if self._source[0].startswith("0000000"):
             if self._source[1] == "M":
                 if os.name == 'nt':
-                    self._cmd = "type {}".format(os.path.normpath(self._source[2]))
+                    self._cmd = 'type "{}"'.format(os.path.normpath(self._source[2]))
                 else:
-                    self._cmd = "cat {}".format(self._source[2])
+                    self._cmd = "cat {}".format(escSpecial(self._source[2]))
             else:
                 self._cmd = ""
-        elif self._source[0] == "???": # Untracked files
+        elif self._source[0] == "uuu": # Untracked files
             self._cmd = ""
         elif self._source[0] == "xxx": # Untracked files
             if os.name == 'nt':
-                self._cmd = "type {}".format(os.path.normpath(self._source[2]))
+                self._cmd = 'type "{}"'.format(os.path.normpath(self._source[2]))
             else:
-                self._cmd = "cat {}".format(self._source[2])
+                self._cmd = "cat {}".format(escSpecial(self._source[2]))
 
         self._buffer_name = GitCatFileCommand.buildBufferName(self._commit_id, self._source)
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(self._source[2])
@@ -1395,7 +1395,7 @@ class TreeView(GitCommandView):
                             (100644, (69671c59c, 084f8cdb4, M,    runtime/syntax/zsh.vim, ""))
         """
         if not line.startswith(":"):    # Untracked files
-            return ("100644", ("???", "xxx", "?", line, ""))
+            return ("100644", ("uuu", "xxx", "?", line, ""))
 
         tmp = line.split(sep='\t')
         file_names = (tmp[1], tmp[2] if len(tmp) == 3 else "")
@@ -2370,7 +2370,7 @@ class DiffViewPanel(Panel):
 
                 buffer_name = lfEval("bufname(winbufnr({}))".format(winid))
                 lfCmd("call win_execute({}, 'diffoff | hide edit {}')"
-                      .format(winid, cmd.getBufferName()))
+                      .format(winid, escQuote(escSpecial(cmd.getBufferName()))))
                 lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(winid))
                 lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
                 lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
@@ -2689,9 +2689,9 @@ class UnifiedDiffViewPanel(Panel):
                     added_line_nums = []
                 elif source[1] == "xxx": # Untracked files
                     if os.name == 'nt':
-                        git_cmd = "type {}".format(os.path.normpath(source[3]))
+                        git_cmd = 'type "{}"'.format(os.path.normpath(source[3]))
                     else:
-                        git_cmd = "cat {}".format(source[3])
+                        git_cmd = "cat {}".format(escSpecial(source[3]))
                     outputs = ParallelExecutor.run(git_cmd, directory=self._project_root)
                     line_num_width = len(str(len(outputs[0])))
                     content = outputs[0]
@@ -2843,7 +2843,7 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("call win_gotoid({})".format(winid))
                 if not vim.current.buffer.name: # buffer name is empty
                     lfCmd("setlocal bufhidden=wipe")
-                lfCmd("silent hide edit {}".format(buf_name))
+                lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
                 abs_file_path = os.path.join(self._project_root, lfGetFilePath(source))
                 lfCmd("let b:lf_git_buffer_name = '%s'" % escQuote(abs_file_path))
                 lfCmd("let b:lf_git_line_num_content = {}".format(str(line_num_content)))
@@ -2892,7 +2892,7 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("call win_gotoid({})".format(winid))
                 if not vim.current.buffer.name: # buffer name is empty
                     lfCmd("setlocal bufhidden=wipe")
-                lfCmd("silent hide edit {}".format(buf_name))
+                lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
                 self.bufShown(buf_name, winid)
                 self.setSomeOptions()
                 if source[1] == "xxx": # Untracked files
@@ -3250,14 +3250,26 @@ class NavigationPanel(Panel):
             return
 
         if tree_view.getTitle() == "Staged Changes:":
-            cmd = "git reset -q HEAD -- {}".format(path)
-        elif tree_view.getTitle() == "Unstaged Changes:":
-            cmd = "git add -u {}".format(path)
-        elif tree_view.getTitle() == "Untracked files:":
-            if not path.endswith("/"):
-                cmd = "git add {}".format(path)
+            if os.name == 'nt':
+                cmd = 'git reset -q HEAD -- "{}"'.format(path)
             else:
-                cmd = "git ls-files --others --exclude-standard -z {} | xargs -0 git add".format(path)
+                cmd = "git reset -q HEAD -- {}".format(escSpecial(path))
+        elif tree_view.getTitle() == "Unstaged Changes:":
+            if os.name == 'nt':
+                cmd = 'git add -u "{}"'.format(path)
+            else:
+                cmd = "git add -u {}".format(escSpecial(path))
+        elif tree_view.getTitle() == "Untracked files:":
+            if os.name == 'nt':
+                if not path.endswith("/"):
+                    cmd = 'git add "{}"'.format(path)
+                else:
+                    cmd = 'git ls-files --others --exclude-standard -z -- "{}" | xargs -0 git add'.format(path)
+            else:
+                if not path.endswith("/"):
+                    cmd = "git add {}".format(escSpecial(path))
+                else:
+                    cmd = "git ls-files --others --exclude-standard -z -- {} | xargs -0 git add".format(escSpecial(path))
         else:
             return
 
@@ -3347,7 +3359,10 @@ class NavigationPanel(Panel):
             if selection == False:
                 return
             else:
-                cmd = "git checkout -- {}".format(path)
+                if os.name == 'nt':
+                    cmd = 'git checkout -- "{}"'.format(path)
+                else:
+                    cmd = "git checkout -- {}".format(escSpecial(path))
         elif tree_view.getTitle() == "Untracked files:":
             path_type = "directory" if path.endswith("/") else "file"
             what = "Remove untracked {} `{}`?".format(path_type, path)
@@ -3357,7 +3372,10 @@ class NavigationPanel(Panel):
             if selection == False:
                 return
             else:
-                cmd = "git clean -fdq -- {}".format(path)
+                if os.name == 'nt':
+                    cmd = 'git clean -fdq -- "{}"'.format(path)
+                else:
+                    cmd = "git clean -fdq -- {}".format(escSpecial(path))
         else:
             return
 
@@ -3969,7 +3987,7 @@ class GitDiffExplManager(GitExplManager):
             return None
 
         if line.startswith("?"):
-            return ("???", "xxx", "?", line.split()[-1], "")
+            return ("uuu", "xxx", "?", line.split()[-1], "")
 
         file_name2 = ""
         if "\t=>\t" in line:
@@ -3986,7 +4004,7 @@ class GitDiffExplManager(GitExplManager):
                                                        ("", "", "", file_name1, file_name2))
 
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
-        # source is ('???', 'xxx', '?', 'aaa.c', '')
+        # source is ('uuu', 'xxx', '?', 'aaa.c', '')
         if len(source) > 0 and source[1] == "xxx":
             return super(GitExplManager, self)._createPreviewWindow(config,
                                                                     source[3],
@@ -4010,7 +4028,7 @@ class GitDiffExplManager(GitExplManager):
             return GitDiffCommand(arguments_dict, source)
 
     def _useExistingWindow(self, title, source, line_num, jump_cmd):
-        # source is ('???', 'xxx', '?', 'aaa.c', '')
+        # source is ('uuu', 'xxx', '?', 'aaa.c', '')
         if len(source) > 0 and source[1] == "xxx":
             return super(GitExplManager, self)._useExistingWindow(title,
                                                                   source[3],
