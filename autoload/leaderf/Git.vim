@@ -135,6 +135,7 @@ let s:help = {
             \   "v:             toggle between side by side diff view and unified diff view",
             \   "i:             toggle between ignoring whitespace and not ignoring whitespace",
             \   "p:             preview the diffs, i.e., like 'o', but leave the cursor in the current panel",
+            \   "r:             refresh the git status",
             \   "s:             stage or unstage the files",
             \   "c:             commit the staged files",
             \   "x:             collapse the parent folder",
@@ -460,6 +461,7 @@ function! leaderf#Git#NavigationPanelMapsForStatus(id) abort
     let navigation_panel = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
     exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.stageUnstage()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> c             :exec g:Lf_py "%s.commit()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> r             :exec g:Lf_py "%s.updateTreeview()"<CR>', navigation_panel)
 endfunction
 
 function! leaderf#Git#CloseFloatWin() abort
