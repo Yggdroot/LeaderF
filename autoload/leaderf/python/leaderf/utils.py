@@ -233,8 +233,8 @@ def lfDrop(type, file_name, line_num=None):
 
 def shrinkUser(path):
     home = os.path.expanduser("~")
-    if path.lower().startswith(home):
-        return path.replace(home, "~", 1)
+    if path.lower().startswith(home.lower()):
+        return "~" + path[len(home):]
     return path
 
 def nearestAncestor(markers, path):

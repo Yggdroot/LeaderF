@@ -138,6 +138,7 @@ let s:help = {
             \   "r:             refresh the git status",
             \   "s:             stage or unstage the files",
             \   "c:             commit the staged files",
+            \   "d:             discard unstaged changes or remove untracked files",
             \   "x:             collapse the parent folder",
             \   "X:             collapse all the children of the current folder",
             \   "f:             fuzzy search files",
@@ -462,6 +463,7 @@ function! leaderf#Git#NavigationPanelMapsForStatus(id) abort
     exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.stageUnstage()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> c             :exec g:Lf_py "%s.commit()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> r             :exec g:Lf_py "%s.updateTreeview()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> d             :exec g:Lf_py "%s.discard()"<CR>', navigation_panel)
 endfunction
 
 function! leaderf#Git#CloseFloatWin() abort

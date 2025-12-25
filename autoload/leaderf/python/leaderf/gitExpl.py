@@ -1862,14 +1862,14 @@ class TreeView(GitCommandView):
             if title is not None:
                 self._content_buffer.append(title)
 
-            self._content_buffer.append(shrinkUser(self._project_root) + os.sep)
+            self._content_buffer.append(shrinkUser(self._project_root) + "/")
         else:
             self._buffer.append('')
             title = self._cmd.getTitle()
             if title is not None:
                 self._buffer.append(title)
 
-            self._buffer.append(shrinkUser(self._project_root) + os.sep)
+            self._buffer.append(shrinkUser(self._project_root) + "/")
 
     def getCommand(self):
         return self._cmd
@@ -3258,6 +3258,9 @@ class NavigationPanel(Panel):
                 cmd = "git add {}".format(path)
             else:
                 cmd = "git ls-files --others --exclude-standard -z {} | xargs -0 git add".format(path)
+        else:
+            return
+
         ParallelExecutor.run(cmd, directory=self._project_root)
 
         self.updateTreeview()
@@ -3311,6 +3314,56 @@ class NavigationPanel(Panel):
                 GitUntrackedCommand(self._arguments, uid),
                 ]
         createTreeView(command)
+
+    def confirm(self, what):
+        try:
+            selection = int(lfEval("""confirm("{}", "&Yes\n&No")""".format(what)))
+            if selection == 1:
+                return True
+            else:
+                return False
+        except KeyboardInterrupt:
+            return False
+        except vim.error: # for neovim
+            return False
+
+    def discard(self):
+        tree_view = self.getTreeView()
+        if tree_view is None:
+            return
+
+        path = tree_view.getFilePath()
+        if path is None:
+            return
+
+        if tree_view.getTitle() == "Staged Changes:":
+            msg = 'Cannot discard staged changes directly. You can unstage them first.' 
+            lfCmd("echohl WarningMsg | redraw | echo '{}'| echohl NONE".format(msg))
+            return
+        elif tree_view.getTitle() == "Unstaged Changes:":
+            if path == "./":
+                path = shrinkUser(self._project_root) + "/"
+            selection = self.confirm("Discard changes to `{}`?".format(path))
+            if selection == False:
+                return
+            else:
+                cmd = "git checkout -- {}".format(path)
+        elif tree_view.getTitle() == "Untracked files:":
+            path_type = "directory" if path.endswith("/") else "file"
+            what = "Remove untracked {} `{}`?".format(path_type, path)
+            if path == "./":
+                what = "Remove all untracked files/directories?"
+            selection = self.confirm(what)
+            if selection == False:
+                return
+            else:
+                cmd = "git clean -fdq -- {}".format(path)
+        else:
+            return
+
+        ParallelExecutor.run(cmd, directory=self._project_root)
+
+        self.updateTreeview()
 
     def commit(self):
         env = os.environ
