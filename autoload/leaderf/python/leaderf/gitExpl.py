@@ -2894,6 +2894,7 @@ class UnifiedDiffViewPanel(Panel):
                     lfCmd("setlocal bufhidden=wipe")
                 lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
                 self.bufShown(buf_name, winid)
+                lfCmd("let b:lf_tree_view_id = {}".format(kwargs.get("tree_view_id", 0)))
                 self.setSomeOptions()
                 if source[1] == "xxx": # Untracked files
                     lfCmd("setlocal number")
