@@ -462,7 +462,7 @@ function! leaderf#Git#NavigationPanelMapsForStatus(id) abort
     let navigation_panel = printf("ctypes.cast(%d, ctypes.py_object).value", a:id)
     exec printf('nnoremap <buffer> <silent> s             :exec g:Lf_py "%s.stageUnstage()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> c             :exec g:Lf_py "%s.commit()"<CR>', navigation_panel)
-    exec printf('nnoremap <buffer> <silent> r             :exec g:Lf_py "%s.updateTreeview()"<CR>', navigation_panel)
+    exec printf('nnoremap <buffer> <silent> r             :exec g:Lf_py "%s.refresh()"<CR>', navigation_panel)
     exec printf('nnoremap <buffer> <silent> d             :exec g:Lf_py "%s.discard()"<CR>', navigation_panel)
 endfunction
 

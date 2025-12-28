@@ -3328,6 +3328,11 @@ class NavigationPanel(Panel):
                 ]
         createTreeView(command)
 
+    def refresh(self):
+        lfCmd("only")
+        self._owner.cleanupDiffViewPanel()
+        self.updateTreeview()
+
     def confirm(self, what):
         try:
             selection = int(lfEval("""confirm("{}", "&Yes\n&No")""".format(what)))
@@ -3693,6 +3698,10 @@ class ExplorerPage(object):
         self._diff_view_panel.cleanup()
         self._unified_diff_view_panel.cleanup()
         self._owner.cleanupExplorerPage(self)
+
+    def cleanupDiffViewPanel(self):
+        self._diff_view_panel.cleanup()
+        self._unified_diff_view_panel.cleanup()
 
     def getExistingSource(self):
         for w in vim.current.tabpage.windows:
