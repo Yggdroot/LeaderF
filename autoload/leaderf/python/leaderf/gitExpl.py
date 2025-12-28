@@ -3328,6 +3328,7 @@ class NavigationPanel(Panel):
                 GitUntrackedCommand(self._arguments, uid),
                 ]
         createTreeView(command)
+        lfCmd("let b:lf_navigation_matches = getmatches()")
 
     def refresh(self):
         lfCmd("only")
