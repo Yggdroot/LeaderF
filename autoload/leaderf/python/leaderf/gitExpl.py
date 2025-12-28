@@ -2648,6 +2648,7 @@ class UnifiedDiffViewPanel(Panel):
         if buf_name in self._views:
             winid = self._views[buf_name].getWindowId()
             lfCmd("call win_gotoid({})".format(winid))
+            lfCmd("let b:lf_tree_view_id = {}".format(kwargs.get("tree_view_id", 0)))
         else:
             if kwargs.get("mode", '') == 't':
                 lfCmd("noautocmd tabnew")
