@@ -2995,7 +2995,12 @@ class NavigationPanel(Panel):
             self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'unified')")
 
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(winid)))]
+
+        saved_eventignore = vim.options['eventignore']
+        vim.options['eventignore'] = 'all'
         self._buffer[:] = self._head
+        # https://github.com/vim/vim/issues/19039
+        vim.options['eventignore'] = saved_eventignore
         self.setDiffViewMode(self._diff_view_mode)
 
         flag = [False]
