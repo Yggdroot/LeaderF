@@ -2319,7 +2319,8 @@ class DiffViewPanel(Panel):
             lfCmd("call win_gotoid({})".format(win_ids[1]))
             target_winid = win_ids[1]
         elif buffer_names[0] in self._views:
-            lfCmd("call win_gotoid({})".format(self._views[buffer_names[0]].getWindowId()))
+            win_id0 = self._views[buffer_names[0]].getWindowId()
+            lfCmd("call win_gotoid({})".format(win_id0))
             cmd = GitCatFileCommand(arguments_dict, sources[1], unique_id)
             buf_name1 = self._buffer_names[vim.current.tabpage][1]
             win_id1 = int(lfEval("bufwinid('{}')".format(escQuote(buf_name1))))
@@ -2333,7 +2334,8 @@ class DiffViewPanel(Panel):
                 self.bufShown(buffer_names[1], win_id1)
             else:
                 GitCommandView(self, cmd).create(win_id1, bufhidden='hide')
-                self.configBuffer(win_id1, 1, source, win_id1, **kwargs)
+            self.configBuffer(win_id0, 0, source, win_id1, **kwargs)
+            self.configBuffer(win_id1, 1, source, win_id1, **kwargs)
             lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(win_id1))
             lfCmd("call win_execute({}, 'setlocal cursorline')".format(win_id1))
             target_winid = win_id1
@@ -2353,7 +2355,8 @@ class DiffViewPanel(Panel):
                 self.bufShown(buffer_names[0], win_id0)
             else:
                 GitCommandView(self, cmd).create(win_id0, bufhidden='hide')
-                self.configBuffer(win_id0, 0, source, win_id1, **kwargs)
+            self.configBuffer(win_id0, 0, source, win_id1, **kwargs)
+            self.configBuffer(win_id1, 1, source, win_id1, **kwargs)
             lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(win_id0))
             lfCmd("call win_execute({}, 'setlocal cursorline')".format(win_id0))
             lfCmd("call win_gotoid({})".format(win_id1))
