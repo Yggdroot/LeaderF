@@ -1206,6 +1206,7 @@ g:Lf_GitKeyMap                                *g:Lf_GitKeyMap*
             \ 'previous_change': '[c',
             \ 'next_change': ']c',
             \ 'edit_file': '<CR>',
+            \ 'open_navigation': '=',
             \ }
 <
     it means you can use [c to jump backwards to the previous start of a change

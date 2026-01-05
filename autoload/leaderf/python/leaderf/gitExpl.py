@@ -2393,6 +2393,8 @@ class DiffViewPanel(Panel):
                       .format(winid, key_map["next_change"]))
                 lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(2)<CR>')"""
                       .format(winid, key_map["edit_file"]))
+                lfCmd("call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>LeaderfGitNavigationOpen<CR>')"
+                      .format(winid, key_map["open_navigation"]))
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
@@ -2889,6 +2891,8 @@ class UnifiedDiffViewPanel(Panel):
                 else:
                     lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(0)<CR>"
                           .format(key_map["edit_file"]))
+                lfCmd("nnoremap <buffer> <silent> {} :<C-U>LeaderfGitNavigationOpen<CR>"
+                      .format(key_map["open_navigation"]))
             else:
                 lfCmd("call win_gotoid({})".format(winid))
                 if not vim.current.buffer.name: # buffer name is empty
@@ -3710,13 +3714,14 @@ class ExplorerPage(object):
         self._diff_view_panel.cleanup()
         self._unified_diff_view_panel.cleanup()
 
-    def getExistingSource(self):
+    def getExistingSourceAndTreeViewID(self):
         for w in vim.current.tabpage.windows:
             source = lfEval("getbufvar({}, 'lf_diff_view_source', 0)".format(w.buffer.number))
             if source != '0':
-                return source
+                tree_view_id = lfEval("getbufvar({}, 'lf_tree_view_id', 0)".format(w.buffer.number))
+                return (source, int(tree_view_id))
 
-        return None
+        return (None, None)
 
     def makeOnly(self):
         diff_view_mode = self._navigation_panel.getDiffViewMode()
@@ -3733,7 +3738,8 @@ class ExplorerPage(object):
         kwargs["ignore_whitespace"] = self._navigation_panel.getIgnoreWhitespace()
         kwargs["diff_algorithm"] = self._navigation_panel.getDiffAlgorithm()
         if "diff_view_source" in kwargs:
-            source = self.getExistingSource()
+            source, tree_view_id = self.getExistingSourceAndTreeViewID()
+            kwargs["tree_view_id"] = tree_view_id
         elif "source_to_open" in kwargs:
             source = kwargs["source_to_open"]
         else:
