@@ -2272,6 +2272,32 @@ class DiffViewPanel(Panel):
     def isAllHidden(self):
         return len(self._views) == 0
 
+    def configBuffer(self, win_id, k, source, right_winid, **kwargs):
+        lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(win_id))
+        lfCmd("call win_execute({}, 'setlocal cursorline')".format(win_id))
+        lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
+              .format(win_id, kwargs.get("explorer_page_id", 0)))
+        lfCmd("call win_execute({}, 'let b:lf_tree_view_id = {}')"
+              .format(win_id, kwargs.get("tree_view_id", 0)))
+        lfCmd("call win_execute({}, 'let b:lf_git_diff_win_pos = {}')".format(win_id, k))
+        lfCmd("call win_execute({}, 'let b:lf_git_diff_win_id = {}')".format(win_id, right_winid))
+        abs_file_path = os.path.join(self._project_root, lfGetFilePath(source))
+        lfCmd("""call win_execute(%d, "let b:lf_git_buffer_name = '%s'")"""
+              % (win_id, escQuote(abs_file_path)))
+        lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side-by-side"')"""
+              .format(win_id))
+        lfCmd("""call win_execute({}, "let b:lf_diff_view_source = {}")"""
+              .format(win_id, str(list(source))))
+        key_map = lfEval("g:Lf_GitKeyMap")
+        lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} [c')"""
+              .format(win_id, key_map["previous_change"]))
+        lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} ]c')"""
+              .format(win_id, key_map["next_change"]))
+        lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(2)<CR>')"""
+              .format(win_id, key_map["edit_file"]))
+        lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>LeaderfGitNavigationOpen<CR>')"""
+              .format(win_id, key_map["open_navigation"]))
+
     def create(self, arguments_dict, source, **kwargs):
         """
         source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
@@ -2299,35 +2325,39 @@ class DiffViewPanel(Panel):
             win_id1 = int(lfEval("bufwinid('{}')".format(escQuote(buf_name1))))
             if  win_id1 == -1:
                 lfCmd("rightbelow vsp {}".format(cmd.getBufferName()))
+                win_id1 = int(lfEval("win_getid()"))
             else:
                 lfCmd("call win_gotoid({})".format(win_id1))
 
             if buffer_names[1] in self._hidden_views:
-                self.bufShown(buffer_names[1], int(lfEval("win_getid()")))
+                self.bufShown(buffer_names[1], win_id1)
             else:
-                GitCommandView(self, cmd).create(int(lfEval("win_getid()")), bufhidden='hide')
-            target_winid = int(lfEval("win_getid()"))
-            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(target_winid))
-            lfCmd("call win_execute({}, 'setlocal cursorline')".format(target_winid))
+                GitCommandView(self, cmd).create(win_id1, bufhidden='hide')
+                self.configBuffer(win_id1, 1, source, win_id1, **kwargs)
+            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(win_id1))
+            lfCmd("call win_execute({}, 'setlocal cursorline')".format(win_id1))
+            target_winid = win_id1
         elif buffer_names[1] in self._views:
-            lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
+            win_id1 = self._views[buffer_names[1]].getWindowId()
+            lfCmd("call win_gotoid({})".format(win_id1))
             cmd = GitCatFileCommand(arguments_dict, sources[0], unique_id)
             buf_name0 = self._buffer_names[vim.current.tabpage][0]
             win_id0 = int(lfEval("bufwinid('{}')".format(escQuote(buf_name0))))
             if  win_id0 == -1:
                 lfCmd("leftabove vsp {}".format(cmd.getBufferName()))
+                win_id0 = int(lfEval("win_getid()"))
             else:
                 lfCmd("call win_gotoid({})".format(win_id0))
 
             if buffer_names[0] in self._hidden_views:
-                self.bufShown(buffer_names[0], int(lfEval("win_getid()")))
+                self.bufShown(buffer_names[0], win_id0)
             else:
-                GitCommandView(self, cmd).create(int(lfEval("win_getid()")), bufhidden='hide')
-            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')"
-                  .format(int(lfEval("win_getid()"))))
-            lfCmd("call win_execute({}, 'setlocal cursorline')".format(int(lfEval("win_getid()"))))
-            lfCmd("call win_gotoid({})".format(self._views[buffer_names[1]].getWindowId()))
-            target_winid = int(lfEval("win_getid()"))
+                GitCommandView(self, cmd).create(win_id0, bufhidden='hide')
+                self.configBuffer(win_id0, 0, source, win_id1, **kwargs)
+            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(win_id0))
+            lfCmd("call win_execute({}, 'setlocal cursorline')".format(win_id0))
+            lfCmd("call win_gotoid({})".format(win_id1))
+            target_winid = win_id1
         else:
             if kwargs.get("mode", '') == 't':
                 lfCmd("noautocmd tabnew | vsp")
@@ -2371,30 +2401,8 @@ class DiffViewPanel(Panel):
                 buffer_name = lfEval("bufname(winbufnr({}))".format(winid))
                 lfCmd("call win_execute({}, 'diffoff | hide edit {}')"
                       .format(winid, escQuote(escSpecial(cmd.getBufferName()))))
-                lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(winid))
-                lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
-                lfCmd("call win_execute({}, 'let b:lf_explorer_page_id = {}')"
-                      .format(winid, kwargs.get("explorer_page_id", 0)))
-                lfCmd("call win_execute({}, 'let b:lf_tree_view_id = {}')"
-                      .format(winid, kwargs.get("tree_view_id", 0)))
-                lfCmd("call win_execute({}, 'let b:lf_git_diff_win_pos = {}')".format(winid, i))
-                lfCmd("call win_execute({}, 'let b:lf_git_diff_win_id = {}')".format(winid, win_ids[1]))
-                abs_file_path = os.path.join(self._project_root, lfGetFilePath(source))
-                lfCmd("""call win_execute(%d, "let b:lf_git_buffer_name = '%s'")"""
-                      % (winid, escQuote(abs_file_path)))
-                lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side-by-side"')"""
-                      .format(winid))
-                lfCmd("""call win_execute({}, "let b:lf_diff_view_source = {}")"""
-                      .format(winid, str(list(source))))
-                key_map = lfEval("g:Lf_GitKeyMap")
-                lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} [c')"""
-                      .format(winid, key_map["previous_change"]))
-                lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} ]c')"""
-                      .format(winid, key_map["next_change"]))
-                lfCmd("""call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#EditFile(2)<CR>')"""
-                      .format(winid, key_map["edit_file"]))
-                lfCmd("call win_execute({}, 'nnoremap <buffer> <silent> {} :<C-U>LeaderfGitNavigationOpen<CR>')"
-                      .format(winid, key_map["open_navigation"]))
+
+                self.configBuffer(winid, i, source, win_ids[1], **kwargs)
 
                 # if the buffer also in another tabpage, BufHidden is not triggerd
                 # should run this code
