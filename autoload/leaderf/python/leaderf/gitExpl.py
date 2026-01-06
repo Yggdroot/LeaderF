@@ -2336,8 +2336,6 @@ class DiffViewPanel(Panel):
                 GitCommandView(self, cmd).create(win_id1, bufhidden='hide')
             self.configBuffer(win_id0, 0, source, win_id1, **kwargs)
             self.configBuffer(win_id1, 1, source, win_id1, **kwargs)
-            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(win_id1))
-            lfCmd("call win_execute({}, 'setlocal cursorline')".format(win_id1))
             target_winid = win_id1
         elif buffer_names[1] in self._views:
             win_id1 = self._views[buffer_names[1]].getWindowId()
@@ -2357,8 +2355,6 @@ class DiffViewPanel(Panel):
                 GitCommandView(self, cmd).create(win_id0, bufhidden='hide')
             self.configBuffer(win_id0, 0, source, win_id1, **kwargs)
             self.configBuffer(win_id1, 1, source, win_id1, **kwargs)
-            lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(win_id0))
-            lfCmd("call win_execute({}, 'setlocal cursorline')".format(win_id0))
             lfCmd("call win_gotoid({})".format(win_id1))
             target_winid = win_id1
         else:
