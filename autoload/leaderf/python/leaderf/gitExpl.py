@@ -1238,16 +1238,15 @@ class TreeView(GitCommandView):
         self._num_stat = {}
         self._first_source = {}
         self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
-        folder_icons = lfEval("g:Lf_GitFolderIcons")
-        self._closed_folder_icon = folder_icons["closed"]
-        self._open_folder_icon = folder_icons["open"]
+        self._closed_folder_icon = self._owner._closed_folder_icon
+        self._open_folder_icon = self._owner._open_folder_icon
         self._preopen_num = int(lfEval("get(g:, 'Lf_GitPreopenNum', 100)"))
-        self._add_icon = lfEval("get(g:, 'Lf_GitAddIcon', '')")    #  
-        self._copy_icon = lfEval("get(g:, 'Lf_GitCopyIcon', '')")
-        self._del_icon = lfEval("get(g:, 'Lf_GitDelIcon', '')")    #  
-        self._modification_icon = lfEval("get(g:, 'Lf_GitModifyIcon', '')")
-        self._rename_icon = lfEval("get(g:, 'Lf_GitRenameIcon', '')")
-        self._untrack_icon = lfEval("get(g:, 'Lf_GitUntrackIcon', '')")
+        self._add_icon = self._owner._add_icon
+        self._copy_icon = self._owner._copy_icon
+        self._del_icon = self._owner._del_icon
+        self._modification_icon = self._owner._modification_icon
+        self._rename_icon = self._owner._rename_icon
+        self._untrack_icon = self._owner._untrack_icon
         self._status_icons = {
                 "A": self._add_icon,
                 "C": self._copy_icon,
@@ -1262,109 +1261,6 @@ class TreeView(GitCommandView):
 
     def startLine(self):
         return self._owner.startLine(self)
-
-    def enableColor(self, winid):
-        self._match_id_winid = winid
-        if lfEval("hlexists('Lf_hl_help')") == '0':
-            lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
-                  .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
-
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitHelp'', ''^".*'', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFolder'', ''\S*[/\\]'', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitTitle'', ''.*:'', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFilesNum'', ''(\d\+)'', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFolderIcon'', ''^\s*\zs[{}{}]'', -100)')"""
-              .format(winid, self._closed_folder_icon, self._open_folder_icon))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitAddIcon'', ''^\s*\zs{}'', -100)')"""
-              .format(winid, self._add_icon))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitCopyIcon'', ''^\s*\zs{}'', -100)')"""
-              .format(winid, self._copy_icon))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDelIcon'', ''^\s*\zs{}'', -100)')"""
-              .format(winid, self._del_icon))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModifyIcon'', ''^\s*\zs{}'', -100)')"""
-              .format(winid, self._modification_icon))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModifyIcon'', ''^\s*\zs{}'', -100)')"""
-              .format(winid, self._untrack_icon))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitRenameIcon'', ''^\s*\zs{}'', -100)')"""
-              .format(winid, self._rename_icon))
-        id = int(lfEval("matchid"))
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitRenameIcon'', '' \zs=>\ze '', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNumStatAdd'', ''\t\zs+\d\+'', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNumStatDel'', ''\t+\d\+\s\+\zs-\d\+'', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNumStatBinary'', ''\t\zs(Bin)'', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Identifier'', '''', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\S\+ ◉\@='', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\(\S\+ \)\@<=◉'', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\S\+ ○\@='', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\(\S\+ \)\@<=○'', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\( \)\@<=Ignore Whitespace 🗹\@='', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\( Ignore Whitespace \)\@<=🗹 '', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\( \)\@<=Ignore Whitespace 🗷\@='', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
-        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\( Ignore Whitespace \)\@<=🗷 '', -100)')"""
-              .format(winid))
-        id = int(lfEval("matchid"))
-        self._match_ids.append(id)
 
     def defineMaps(self, winid):
         if isinstance(self._owner._owner._owner, GitStatusExplManager):
@@ -2952,6 +2848,16 @@ class NavigationPanel(Panel):
         self._diff_algorithm = 'myers'
         self._git_diff_manager = None
         self._buffer = None
+        self._match_ids = []
+        folder_icons = lfEval("g:Lf_GitFolderIcons")
+        self._closed_folder_icon = folder_icons["closed"]
+        self._open_folder_icon = folder_icons["open"]
+        self._add_icon = lfEval("get(g:, 'Lf_GitAddIcon', '')")    #  
+        self._copy_icon = lfEval("get(g:, 'Lf_GitCopyIcon', '')")
+        self._del_icon = lfEval("get(g:, 'Lf_GitDelIcon', '')")    #  
+        self._modification_icon = lfEval("get(g:, 'Lf_GitModifyIcon', '')")
+        self._rename_icon = lfEval("get(g:, 'Lf_GitRenameIcon', '')")
+        self._untrack_icon = lfEval("get(g:, 'Lf_GitUntrackIcon', '')")
         self._head = [
                 '" Press <F1> for help',
                 ' Side-by-side ◉ Unified ○',
@@ -3007,6 +2913,109 @@ class NavigationPanel(Panel):
                 view.cleanup()
         self._tree_view = []
 
+    def enableColor(self, winid):
+        self._match_id_winid = winid
+        if lfEval("hlexists('Lf_hl_help')") == '0':
+            lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
+                  .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
+
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitHelp'', ''^".*'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFolder'', ''\S*[/\\]'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitTitle'', ''.*:'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFilesNum'', ''(\d\+)'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitFolderIcon'', ''^\s*\zs[{}{}]'', -100)')"""
+              .format(winid, self._closed_folder_icon, self._open_folder_icon))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitAddIcon'', ''^\s*\zs{}'', -100)')"""
+              .format(winid, self._add_icon))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitCopyIcon'', ''^\s*\zs{}'', -100)')"""
+              .format(winid, self._copy_icon))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDelIcon'', ''^\s*\zs{}'', -100)')"""
+              .format(winid, self._del_icon))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModifyIcon'', ''^\s*\zs{}'', -100)')"""
+              .format(winid, self._modification_icon))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModifyIcon'', ''^\s*\zs{}'', -100)')"""
+              .format(winid, self._untrack_icon))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitRenameIcon'', ''^\s*\zs{}'', -100)')"""
+              .format(winid, self._rename_icon))
+        id = int(lfEval("matchid"))
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitRenameIcon'', '' \zs=>\ze '', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNumStatAdd'', ''\t\zs+\d\+'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNumStatDel'', ''\t+\d\+\s\+\zs-\d\+'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNumStatBinary'', ''\t\zs(Bin)'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Identifier'', '''', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\S\+ ◉\@='', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\(\S\+ \)\@<=◉'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\S\+ ○\@='', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\(\S\+ \)\@<=○'', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitSelectedOption'', ''\( \)\@<=Ignore Whitespace 🗹\@='', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffAddition'', ''\( Ignore Whitespace \)\@<=🗹 '', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitNonSelectedOption'', ''\( \)\@<=Ignore Whitespace 🗷\@='', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitDiffDeletion'', ''\( Ignore Whitespace \)\@<=🗷 '', -100)')"""
+              .format(winid))
+        id = int(lfEval("matchid"))
+        self._match_ids.append(id)
+
     def create(self, arguments_dict, command, winid, project_root, target_path, callback):
         if "-u" in arguments_dict:
             self._diff_view_mode = "unified"
@@ -3053,6 +3062,7 @@ class NavigationPanel(Panel):
                      partial(wrapper, callback, flag),
                      ).create(winid, bufhidden="hide")
 
+        self.enableColor(winid)
         lfCmd("call win_execute({}, 'let b:lf_navigation_matches = getmatches()')".format(winid))
 
         self.defineMaps(winid)
