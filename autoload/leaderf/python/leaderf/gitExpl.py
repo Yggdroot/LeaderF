@@ -2321,11 +2321,15 @@ class DiffViewPanel(Panel):
         elif buffer_names[0] in self._views:
             win_id0 = self._views[buffer_names[0]].getWindowId()
             lfCmd("call win_gotoid({})".format(win_id0))
-            cmd = GitCatFileCommand(arguments_dict, sources[1], unique_id)
             buf_name1 = self._buffer_names[vim.current.tabpage][1]
-            win_id1 = int(lfEval("bufwinid('{}')".format(escQuote(buf_name1))))
+            win_id1 = int(lfEval("bufwinid('{}')".format(escQuote(escSpecial(buf_name1)))))
             if  win_id1 == -1:
-                lfCmd("rightbelow vsp {}".format(cmd.getBufferName()))
+                # :bd
+                if lfEval("bufloaded('{}')".format(escQuote(escSpecial(buffer_names[1])))) == '0':
+                    if buffer_names[1] in self._hidden_views:
+                        del self._hidden_views[buffer_names[1]]
+
+                lfCmd("rightbelow vsp {}".format(buffer_names[1]))
                 win_id1 = int(lfEval("win_getid()"))
             else:
                 lfCmd("call win_gotoid({})".format(win_id1))
@@ -2333,6 +2337,7 @@ class DiffViewPanel(Panel):
             if buffer_names[1] in self._hidden_views:
                 self.bufShown(buffer_names[1], win_id1)
             else:
+                cmd = GitCatFileCommand(arguments_dict, sources[1], unique_id)
                 GitCommandView(self, cmd).create(win_id1, bufhidden='hide')
             self.configBuffer(win_id0, 0, source, win_id1, **kwargs)
             self.configBuffer(win_id1, 1, source, win_id1, **kwargs)
@@ -2340,11 +2345,15 @@ class DiffViewPanel(Panel):
         elif buffer_names[1] in self._views:
             win_id1 = self._views[buffer_names[1]].getWindowId()
             lfCmd("call win_gotoid({})".format(win_id1))
-            cmd = GitCatFileCommand(arguments_dict, sources[0], unique_id)
             buf_name0 = self._buffer_names[vim.current.tabpage][0]
-            win_id0 = int(lfEval("bufwinid('{}')".format(escQuote(buf_name0))))
+            win_id0 = int(lfEval("bufwinid('{}')".format(escQuote(escSpecial(buf_name0)))))
             if  win_id0 == -1:
-                lfCmd("leftabove vsp {}".format(cmd.getBufferName()))
+                # :bd
+                if lfEval("bufloaded('{}')".format(escQuote(escSpecial(buffer_names[0])))) == '0':
+                    if buffer_names[0] in self._hidden_views:
+                        del self._hidden_views[buffer_names[0]]
+
+                lfCmd("leftabove vsp {}".format(buffer_names[0]))
                 win_id0 = int(lfEval("win_getid()"))
             else:
                 lfCmd("call win_gotoid({})".format(win_id0))
@@ -2352,6 +2361,7 @@ class DiffViewPanel(Panel):
             if buffer_names[0] in self._hidden_views:
                 self.bufShown(buffer_names[0], win_id0)
             else:
+                cmd = GitCatFileCommand(arguments_dict, sources[0], unique_id)
                 GitCommandView(self, cmd).create(win_id0, bufhidden='hide')
             self.configBuffer(win_id0, 0, source, win_id1, **kwargs)
             self.configBuffer(win_id1, 1, source, win_id1, **kwargs)
@@ -2376,7 +2386,7 @@ class DiffViewPanel(Panel):
                            for w in vim.current.tabpage.windows]
             else: # open
                 buffer_names = self._buffer_names[vim.current.tabpage]
-                win_ids = [int(lfEval("bufwinid('{}')".format(escQuote(name))))
+                win_ids = [int(lfEval("bufwinid('{}')".format(escQuote(escSpecial(name)))))
                            for name in buffer_names]
                 win_pos = arguments_dict.get("--navigation-position", ["left"])[0]
                 win_ids = self.getValidWinIDs(win_ids, win_pos)
@@ -2394,7 +2404,7 @@ class DiffViewPanel(Panel):
 
             for i, (cmd, winid) in enumerate(zip(cat_file_cmds, win_ids)):
                 if (lfEval("bufname(winbufnr({}))".format(winid)) == ""
-                    and int(lfEval("bufnr('{}')".format(escQuote(cmd.getBufferName())))) != -1):
+                    and int(lfEval("bufnr('{}')".format(escQuote(escSpecial(cmd.getBufferName()))))) != -1):
                     lfCmd("call win_execute({}, 'setlocal bufhidden=wipe')".format(winid))
 
                 buffer_name = lfEval("bufname(winbufnr({}))".format(winid))
