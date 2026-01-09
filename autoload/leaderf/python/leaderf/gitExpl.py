@@ -2864,6 +2864,13 @@ class NavigationPanel(Panel):
                 ' Ignore Whitespace 🗷 ',
                 ' Myers ◉ Minimal ○ Patience ○ Histogram ○',
                 ]
+        self.initDiffopt()
+
+    def initDiffopt(self):
+        if lfEval('has("patch-9.1.1243")') == '1':
+            diffopt = lfEval("&diffopt")
+            if "inline:" not in diffopt:
+                lfCmd("set diffopt+=inline:char")
 
     def startLine(self, tree_view):
         n = len(self._head) + 1
