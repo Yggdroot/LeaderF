@@ -263,7 +263,7 @@ class GitCommand(object):
         return self._source
 
     def getTitle(self):
-        return None
+        return "Changes:"
 
 
 class GitDiffCommand(GitCommand):
@@ -1723,9 +1723,6 @@ class TreeView(GitCommandView):
 
     def setOptions(self, winid, bufhidden):
         super(TreeView, self).setOptions(winid, bufhidden)
-        if self._cmd.getTitle() is None:
-            lfCmd(r"""call win_execute({}, 'let &l:stl="%#Lf_hl_gitStlChangedNum# 0 %#Lf_hl_gitStlFileChanged#file changed, %#Lf_hl_gitStlAdd#0 (+), %#Lf_hl_gitStlDel#0 (-)"')"""
-                  .format(winid))
         if lfEval("has('nvim')") == '1':
             lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % winid)
         else:
@@ -1862,16 +1859,7 @@ class TreeView(GitCommandView):
 
         if self._read_finished == 1 and self._offset_in_content == len(structure):
             self.refreshNumStat()
-            if self._cmd.getTitle() is None:
-                shortstat = re.sub(r"( \d+)( files? changed)",
-                                   r"%#Lf_hl_gitStlChangedNum#\1%#Lf_hl_gitStlFileChanged#\2",
-                                   self._short_stat[self._cur_parent])
-                shortstat = re.sub(r"(\d+) insertions?", r"%#Lf_hl_gitStlAdd#\1 ",shortstat)
-                shortstat = re.sub(r"(\d+) deletions?", r"%#Lf_hl_gitStlDel#\1 ", shortstat)
-                lfCmd(r"""call win_execute({}, 'let &l:stl="{}"')"""
-                      .format(self.getWindowId(), shortstat))
-            else:
-                self._setChangedFilesNum()
+            self._setChangedFilesNum()
             self._read_finished = 2
             self._owner.writeFinished(self.getWindowId())
             self.stopTimer()
@@ -3061,6 +3049,7 @@ class NavigationPanel(Panel):
 
             self._arguments = command[0].getArguments()
             createTreeView(command)
+            git_cmd = "git log -1 --pretty=format:'%h %d' HEAD"
         else:
             self._arguments = command.getArguments()
             TreeView(self, command,
@@ -3068,11 +3057,60 @@ class NavigationPanel(Panel):
                      target_path,
                      partial(wrapper, callback, flag),
                      ).create(winid, bufhidden="hide")
+            if isinstance(command, GitDiffExplCommand):
+                git_cmd = "git log -1 --pretty=format:'%h %d' HEAD"
+            else:
+                git_cmd = "git log -1 --pretty=format:'%h %d' {}".format(self._commit_id)
 
         self.enableColor(winid)
         lfCmd("call win_execute({}, 'let b:lf_navigation_matches = getmatches()')".format(winid))
 
         self.defineMaps(winid)
+        self.setStatusline(git_cmd, winid)
+
+    def setStatusline(self, git_cmd, winid):
+        output = subprocess.run(git_cmd,
+                                capture_output=True,
+                                shell=True,
+                                cwd=self._project_root,
+                                text=True)
+        if output.stdout != "":
+            info = self.getGitInfo(output.stdout)
+            info = re.sub(r"^.*?:", r"%#Lf_hl_gitStlIdentity#\g<0>%#Lf_hl_gitStlHash#", info)
+            info = re.sub(r"\(.*?\)", r"%#Lf_hl_gitStlTag#\g<0>", info)
+            lfCmd(r"""call win_execute({}, 'let &l:stl=" {}"')""".format(winid, info))
+
+    def getGitInfo(self, output):
+        """
+        9994a4213 (HEAD, tag: v3.11.0-0)           => detached HEAD: 9994a4213(tag: v3.11.0-0)
+        0eb959069 (HEAD)                           => detached HEAD: 0eb959069
+        1e8d34661 (HEAD -> main)                   => HEAD: 1e8d34661(main)
+        83fc7c4d8 (HEAD -> master, tag: v9.1.2032) => HEAD: 83fc7c4d8(master, tag: v9.1.2032)
+        eb3007b41 (tag: v9.1.2018)                 => commit: eb3007b41(tag: v9.1.2018)
+        7982966f3                                  => commit: 7982966f3
+        """
+        output = output.strip()
+        parts = output.split(None, 1)
+        if len(parts) == 1:
+            return "commit: " + parts[0]
+        else:
+            commit_id = parts[0]
+            if "HEAD" not in output: # eb3007b41 (tag: v9.1.2018)
+                return "commit: {}{}".format(commit_id, parts[1])
+            else:
+                refs = parts[1].strip('()').split(', ', 1)
+                tag = "" if len(refs) == 1 else refs[1]
+                if "->" in refs[0]:
+                    branch = refs[0].rsplit(None, 1)[1]
+                    if tag == "":
+                        return "HEAD: {}({})".format(commit_id, branch)
+                    else:
+                        return "HEAD: {}({}, {})".format(commit_id, branch, tag.split(', ')[0])
+                else:
+                    if tag == "":
+                        return "detached HEAD: {}".format(commit_id)
+                    else:
+                        return "detached HEAD: {}({})".format(commit_id, tag.split(', ')[0])
 
     def defineMaps(self, winid):
         lfCmd("call win_execute({}, 'call leaderf#Git#NavigationPanelMaps({})')"

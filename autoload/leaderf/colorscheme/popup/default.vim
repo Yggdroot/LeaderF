@@ -156,14 +156,13 @@ if &background ==? 'dark'
     highlight def link Lf_hl_gitNumStatDel      Lf_hl_gitDiffDeletion
     highlight def link Lf_hl_gitNumStatBinary   Constant
     highlight def link Lf_hl_gitHelp            Comment
-    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlChangedNum", "StatusLine", "Number", 1)
-    highlight def link Lf_hl_gitStlFileChanged  StatusLine
-    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlAdd", "StatusLine", "Lf_hl_gitDiffAddition", 1)
-    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlDel", "StatusLine", "Lf_hl_gitDiffDeletion", 1)
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlIdentity", "StatusLine", "Label", 1)
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlHash", "StatusLine", "Identifier", 1)
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlTag", "StatusLine", "Tag", 1)
     if has('nvim')
-        highlight Lf_hl_gitStlChangedNum gui=nocombine cterm=nocombine
-        highlight Lf_hl_gitStlAdd gui=nocombine cterm=nocombine
-        highlight Lf_hl_gitStlDel gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlIdentity gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlHash gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlTag gui=nocombine cterm=nocombine
     endif
     highlight def link Lf_hl_gitStatPath        Directory
     highlight def link Lf_hl_gitStatNumber      Number
@@ -325,14 +324,13 @@ else
     highlight def link Lf_hl_gitNumStatDel      Lf_hl_gitDiffDeletion
     highlight def link Lf_hl_gitNumStatBinary   Constant
     highlight def link Lf_hl_gitHelp            Comment
-    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlChangedNum", "StatusLine", "Number", 1)
-    highlight def link Lf_hl_gitStlFileChanged  StatusLine
-    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlAdd", "StatusLine", "Lf_hl_gitDiffAddition", 1)
-    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlDel", "StatusLine", "Lf_hl_gitDiffDeletion", 1)
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlIdentity", "StatusLine", "Label", 1)
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlHash", "StatusLine", "Identifier", 1)
+    call leaderf#colorscheme#popup#link_two("Lf_hl_gitStlTag", "StatusLine", "Tag", 1)
     if has('nvim')
-        highlight Lf_hl_gitStlChangedNum gui=nocombine cterm=nocombine
-        highlight Lf_hl_gitStlAdd gui=nocombine cterm=nocombine
-        highlight Lf_hl_gitStlDel gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlIdentity gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlHash gui=nocombine cterm=nocombine
+        highlight Lf_hl_gitStlTag gui=nocombine cterm=nocombine
     endif
     highlight def link Lf_hl_gitStatPath        Directory
     highlight def link Lf_hl_gitStatNumber      Number
