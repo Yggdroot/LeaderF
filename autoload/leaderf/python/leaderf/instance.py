@@ -402,7 +402,23 @@ class LfInstance(object):
             lfCmd("call win_execute(%d, 'setlocal cursorlineopt=both')" % winid)
         lfCmd("call win_execute(%d, 'setlocal colorcolumn=')" % winid)
 
+    def isAutoPreview(self):
+        if "--auto-preview" in self._arguments:
+            return True
+
+        if "--no-auto-preview" in self._arguments:
+            return False
+
+        preview_dict = {k.lower(): v for k, v in lfEval("g:Lf_PreviewResult").items()}
+        if int(preview_dict.get(self._category.lower(), 1)) == 0:
+            return False
+
+        return True
+
     def enlargePopupWindow(self):
+        if self.isAutoPreview():
+            return
+
         if self._win_pos not in ('popup', 'floatwin'):
             return
 
