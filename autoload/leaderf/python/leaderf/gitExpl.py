@@ -2771,7 +2771,7 @@ class UnifiedDiffViewPanel(Panel):
                             # for highlight
                             if plus_beg != 0:
                                 plus_end = i - 1
-                                change_block_ranges.append((minus_beg, minus_end, plus_beg, plus_end))
+                                change_block_ranges.append([minus_beg, minus_end, plus_beg, plus_end])
                                 minus_beg = 0
                                 minus_end = 0
                                 plus_beg = 0
@@ -2823,14 +2823,14 @@ class UnifiedDiffViewPanel(Panel):
                             # for highlight
                             if plus_beg != 0:
                                 plus_end = i - 1
-                                change_block_ranges.append((minus_beg, minus_end, plus_beg, plus_end))
+                                change_block_ranges.append([minus_beg, minus_end, plus_beg, plus_end])
                                 minus_beg = 0
                                 minus_end = 0
                                 plus_beg = 0
                                 plus_end = 0
                             elif minus_beg != 0:
                                 minus_end = i - 1
-                                change_block_ranges.append((minus_beg, minus_end, plus_beg, plus_end))
+                                change_block_ranges.append([minus_beg, minus_end, plus_beg, plus_end])
                                 minus_beg = 0
                                 minus_end = 0
 
@@ -2855,10 +2855,10 @@ class UnifiedDiffViewPanel(Panel):
                         # for highlight
                         if plus_beg != 0:
                             plus_end = end
-                            change_block_ranges.append((minus_beg, minus_end, plus_beg, plus_end))
+                            change_block_ranges.append([minus_beg, minus_end, plus_beg, plus_end])
                         elif minus_beg != 0:
                             minus_end = end
-                            change_block_ranges.append((minus_beg, minus_end, plus_beg, plus_end))
+                            change_block_ranges.append([minus_beg, minus_end, plus_beg, plus_end])
 
                         if change_start != 0:
                             change_start_lines.append(change_start)
