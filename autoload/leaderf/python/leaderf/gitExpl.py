@@ -3695,7 +3695,9 @@ class NavigationPanel(Panel):
             target_path = file_info[3]
 
         if tree_view.getTitle() == "Staged Changes:":
-            if change_type == "A":
+            if change_type is None:
+                title = None
+            elif change_type == "A":
                 title =  "Untracked files:"
             elif change_type.startswith("R"):
                 title = "Staged Changes:"
