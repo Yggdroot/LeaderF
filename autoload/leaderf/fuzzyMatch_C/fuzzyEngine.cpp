@@ -2133,6 +2133,17 @@ static void line_getDigest(char** str, uint32_t* length, Parameter* param)
 
 static void gitdiff_getDigest(char** str, uint32_t* length, Parameter* param)
 {
+    char* s = *str;
+    char *p = s + *length - 1;
+    if ( *p == ']' ) {
+        for ( ; p >= s; --p ) {
+            if ( *p == '\t' ) {
+                *length = (uint32_t)(p - s);
+                break;
+            }
+        }
+    }
+
     if ( param->mode == 0 ) {
         uint32_t len = 5;
         *str += len;
