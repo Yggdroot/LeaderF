@@ -385,6 +385,7 @@ class GitCatFileCommand(GitCommand):
                 self._cmd = "cat {}".format(escSpecial(self._source[2]))
 
         self._buffer_name = GitCatFileCommand.buildBufferName(self._commit_id, self._source)
+        self._file_type = "invalid"
         self._file_type_cmd = "silent! doautocmd filetypedetect BufNewFile {}".format(self._source[2])
 
 
@@ -4497,13 +4498,16 @@ class GitDiffExplManager(GitExplManager):
     def _createPreviewWindow(self, config, source, line_num, jump_cmd):
         # source is ('uuu', 'xxx', '?', 'aaa.c', '')
         if len(source) > 0 and source[1] == "xxx":
-            return self._preview_panel.createView(GitCatFileCommand({},
-                                                                    source[1:4],
-                                                                    "000000000"))
+            self._preview_panel.create(GitCatFileCommand({},
+                                                         source[1:4],
+                                                         "000000000"),
+                                       config,
+                                       project_root=self._project_root)
 
-        self._preview_panel.create(self.createGitCommand(self._arguments, source),
-                                   config,
-                                   project_root=self._project_root)
+        else:
+            self._preview_panel.create(self.createGitCommand(self._arguments, source),
+                                       config,
+                                       project_root=self._project_root)
         self._preview_winid = self._preview_panel.getPreviewWinId()
         self._setWinOptions(self._preview_winid)
 
