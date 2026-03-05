@@ -2471,39 +2471,12 @@ class UnifiedDiffViewPanel(Panel):
 
     def setLineNumberWin(self, line_num_content, buffer_num):
         if lfEval("has('nvim')") == '1':
-            self.nvim_setLineNumberWin(line_num_content, buffer_num)
-            return
+            lfCmd("call leaderf#Git#NvimSetLineNumberWin({}, {})"
+                  .format(str(line_num_content), buffer_num))
+        else:
+            lfCmd("call leaderf#Git#SetLineNumberWin({}, {})"
+                  .format(str(line_num_content), buffer_num))
 
-        hi_line_num = int(lfEval("get(g:, 'Lf_GitHightlightLineNumber', 1)"))
-        for i, line in enumerate(line_num_content, 1):
-            if line[-2] == '-':
-                if hi_line_num == 1:
-                    property_type = "Lf_hl_gitDiffDelete"
-                else:
-                    property_type = "Lf_hl_LineNr"
-                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
-                      % (i, property_type, line[:-2], buffer_num))
-                property_type = "Lf_hl_gitDiffDelete"
-                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
-                      % (i, property_type, line[-2:], buffer_num))
-            elif line[-2] == '+':
-                if hi_line_num == 1:
-                    property_type = "Lf_hl_gitDiffAdd"
-                else:
-                    property_type = "Lf_hl_LineNr"
-                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
-                      % (i, property_type, line[:-2], buffer_num))
-                property_type = "Lf_hl_gitDiffAdd"
-                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
-                      % (i, property_type, line[-2:], buffer_num))
-            else:
-                property_type = "Lf_hl_LineNr"
-                lfCmd("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})"
-                      % (i, property_type, line, buffer_num))
-
-    def nvim_setLineNumberWin(self, line_num_content, buffer_num):
-        lfCmd("call leaderf#Git#SetLineNumberWin({}, {})".format(str(line_num_content),
-                                                                 buffer_num))
 
     def highlight(self, winid, status, content, line_num, line):
         i = 0
@@ -2885,6 +2858,12 @@ class UnifiedDiffViewPanel(Panel):
                     vim.current.buffer.options['modifiable'] = False
                     self._views[buf_name].line_num_dict = line_num_dict
                     self._views[buf_name].change_start_lines = change_start_lines
+
+                    if lfEval("has('nvim')") == '1':
+                        self.setLineNumberWin(line_num_content, vim.current.buffer.number)
+                    else:
+                        lfCmd("call timer_start(0, {-> leaderf#Git#SetLineNumberWin(%s, %d)})"
+                              % (str(line_num_content), vim.current.buffer.number))
                 else:
                     lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
                     cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
@@ -2893,12 +2872,12 @@ class UnifiedDiffViewPanel(Panel):
                     view.change_start_lines = change_start_lines
                     view.create(winid, bufhidden='hide', buf_content=content)
 
+                    self.setLineNumberWin(line_num_content, vim.current.buffer.number)
+
                 buffer_num = int(lfEval("winbufnr({})".format(winid)))
                 self.clear(buffer_num)
-
                 self.signPlace(added_line_nums, deleted_line_nums, buffer_num)
                 self.highlightDiff(winid, content, change_block_ranges)
-                self.setLineNumberWin(line_num_content, buffer_num)
 
                 abs_file_path = os.path.join(self._project_root, lfGetFilePath(source))
                 lfCmd("let b:lf_git_file_name = '%s'" % escQuote(abs_file_path))
@@ -3169,11 +3148,6 @@ class UnifiedDiffViewPanel(Panel):
     def clear(self, buffer_num):
         lfCmd("silent! call sign_unplace('LeaderF', {'buffer': %d})" % buffer_num)
         lfCmd("silent! call leaderf#Git#ClearMatches()")
-        if lfEval("has('nvim')") != '1':
-            lfCmd("call prop_remove({'types': %s, 'bufnr': %d, 'all': 1})"
-                  % (str(["Lf_hl_gitDiffDelete", "Lf_hl_gitDiffAdd", "Lf_hl_LineNr"]), buffer_num))
-        else:
-            lfCmd("call leaderf#Git#ClearLineNumberWin({})".format(buffer_num))
 
     def discardHunk(self, prompt):
         self.processHunk(how="discard", prompt=prompt)

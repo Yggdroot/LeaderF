@@ -674,10 +674,13 @@ function! leaderf#Git#FoldExpr() abort
     return has_key(b:Leaderf_fold_ranges_dict, v:lnum)
 endfunction
 
-function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
+function! leaderf#Git#NvimSetLineNumberWin(line_num_content, buffer_num) abort
     if len(a:line_num_content) == 0
         return
     endif
+
+    let ns_id = nvim_create_namespace('LeaderF_Git_Line_Number')
+    call nvim_buf_clear_namespace(a:buffer_num, ns_id, 0, -1)
 
     let line = a:line_num_content[0]
     let line_len = strlen(line)
@@ -685,7 +688,6 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
     let hi_line_num = get(g:, 'Lf_GitHightlightLineNumber', 1)
     let delimiter = get(g:, 'Lf_GitDelimiter', '│')
     let delimiter_len = len(delimiter)
-    let ns_id = nvim_create_namespace('LeaderF_Git_Line_Number')
 
     for i in range(len(a:line_num_content))
         let line = a:line_num_content[i]
@@ -716,9 +718,43 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
     endfor
 endfunction
 
-function! leaderf#Git#ClearLineNumberWin(buffer_num) abort
-    let ns_id = nvim_create_namespace('LeaderF_Git_Line_Number')
-    call nvim_buf_clear_namespace(a:buffer_num, ns_id, 0, -1)
+function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
+    call prop_remove({'types': ["Lf_hl_gitDiffDelete", "Lf_hl_gitDiffAdd", "Lf_hl_LineNr"], 'bufnr': a:buffer_num, 'all': 1})
+
+    let hi_line_num = get(g:, 'Lf_GitHightlightLineNumber', 1)
+    
+    for i in range(len(a:line_num_content))
+        let line = a:line_num_content[i]
+        
+        if line =~ '-'
+            if hi_line_num == 1
+                let property_type = "Lf_hl_gitDiffDelete"
+            else
+                let property_type = "Lf_hl_LineNr"
+            endif
+            
+            let index = stridx(line, '-')
+            execute printf("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})", 
+                \ i+1, property_type, line[:index-1], a:buffer_num)
+            execute printf("call prop_add(%d, 1, {'type': 'Lf_hl_gitDiffDelete', 'text': '%s', 'bufnr': %d})", 
+                \ i+1, line[index:], a:buffer_num)
+        elseif line =~ '+'
+            if hi_line_num == 1
+                let property_type = "Lf_hl_gitDiffAdd"
+            else
+                let property_type = "Lf_hl_LineNr"
+            endif
+            
+            let index = stridx(line, '+')
+            execute printf("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})", 
+                \ i+1, property_type, line[:index-1], a:buffer_num)
+            execute printf("call prop_add(%d, 1, {'type': 'Lf_hl_gitDiffAdd', 'text': '%s', 'bufnr': %d})", 
+                \ i+1, line[index:], a:buffer_num)
+        else
+            execute printf("call prop_add(%d, 1, {'type': 'Lf_hl_LineNr', 'text': '%s', 'bufnr': %d})", 
+                \ i+1, line, a:buffer_num)
+        endif
+    endfor
 endfunction
 
 function! leaderf#Git#SignPlace(added_line_nums, deleted_line_nums, buf_number) abort
