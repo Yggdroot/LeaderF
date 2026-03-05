@@ -2862,8 +2862,9 @@ class UnifiedDiffViewPanel(Panel):
                     if lfEval("has('nvim')") == '1':
                         self.setLineNumberWin(line_num_content, vim.current.buffer.number)
                     else:
-                        lfCmd("call timer_start(0, {-> leaderf#Git#SetLineNumberWin(%s, %d)})"
-                              % (str(line_num_content), vim.current.buffer.number))
+                        self.setLineNumberWin(line_num_content, vim.current.buffer.number)
+                        # lfCmd("call timer_start(0, {-> leaderf#Git#SetLineNumberWin(%s, %d)})"
+                        #       % (str(line_num_content), vim.current.buffer.number))
                 else:
                     lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
                     cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
