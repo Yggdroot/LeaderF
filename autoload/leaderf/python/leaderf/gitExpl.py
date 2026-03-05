@@ -2641,7 +2641,7 @@ class UnifiedDiffViewPanel(Panel):
                                                   blob_id,
                                                   uid,
                                                   lfGetFilePath(source))
-        if buf_name in self._views:
+        if buf_name in self._views and kwargs.get("handle_hunk", None) == None:
             winid = self._views[buf_name].getWindowId()
             lfCmd("noautocmd call win_gotoid({})".format(winid))
             lfCmd("let b:lf_tree_view_id = {}".format(kwargs.get("tree_view_id", 0)))
@@ -2872,9 +2872,34 @@ class UnifiedDiffViewPanel(Panel):
                         int(i) for i in vim.current.buffer.vars.get("lf_change_start_lines", [])
                         ]
                 index = Bisect.bisect_right(orig_change_start_lines, vim.current.window.cursor[0])
-                lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
                 if buf_name == orig_buf_name:
-                    lfCmd("setlocal syntax=ON")
+                    orig_change_block_ranges = vim.current.buffer.vars.get("lf_change_block_ranges", [])
+                    change_block = orig_change_block_ranges[index-1]
+                    vim.current.buffer.options['modifiable'] = True
+                    if kwargs.get("handle_hunk", None) == "stage":
+                        if change_block[0] > 0:
+                            del vim.current.buffer[change_block[0]-1 : change_block[1]]
+                    else:
+                        if change_block[2] > 0:
+                            del vim.current.buffer[change_block[2]-1 : change_block[3]]
+                    vim.current.buffer.options['modifiable'] = False
+                    self._views[buf_name].line_num_dict = line_num_dict
+                    self._views[buf_name].change_start_lines = change_start_lines
+                else:
+                    lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
+                    cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
+                    view = GitCommandView(self, cmd)
+                    view.line_num_dict = line_num_dict
+                    view.change_start_lines = change_start_lines
+                    view.create(winid, bufhidden='hide', buf_content=content)
+
+                buffer_num = int(lfEval("winbufnr({})".format(winid)))
+                self.clear(buffer_num)
+
+                self.signPlace(added_line_nums, deleted_line_nums, buffer_num)
+                self.highlightDiff(winid, content, change_block_ranges)
+                self.setLineNumberWin(line_num_content, buffer_num)
+
                 abs_file_path = os.path.join(self._project_root, lfGetFilePath(source))
                 lfCmd("let b:lf_git_file_name = '%s'" % escQuote(abs_file_path))
                 abs_orig_file_path = lfGetOrigFilePath(source)
@@ -2895,24 +2920,13 @@ class UnifiedDiffViewPanel(Panel):
                     lfCmd("setlocal foldmethod=indent")
                     lfCmd("setlocal foldlevel=100")
 
-                cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
-                view = GitCommandView(self, cmd)
-                view.line_num_dict = line_num_dict
-                view.change_start_lines = change_start_lines
-                view.create(winid, bufhidden='hide', buf_content=content)
-
-                buffer_num = int(lfEval("winbufnr({})".format(winid)))
-                self.clear(buffer_num)
-                self.signPlace(added_line_nums, deleted_line_nums, buffer_num)
-
-                self.setLineNumberWin(line_num_content, buffer_num)
-                self.highlightDiff(winid, content, change_block_ranges)
                 lfCmd("let b:Leaderf_matches = getmatches()")
                 lfCmd("let b:lf_change_start_lines = {}".format(str(change_start_lines)))
                 lfCmd("let b:lf_explorer_page_id = {}".format(explorer_page_id))
                 lfCmd("let b:lf_tree_view_id = {}".format(kwargs.get("tree_view_id", 0)))
                 lfCmd("let b:lf_diff_view_mode = 'unified'")
                 lfCmd("let b:lf_diff_view_source = {}".format(str(list(source))))
+
                 key_map = lfEval("g:Lf_GitKeyMap")
                 lfCmd("nnoremap <buffer> <silent> {} :<C-U>call leaderf#Git#PreviousChange(0)<CR>"
                       .format(key_map["previous_change"]))
@@ -3018,8 +3032,6 @@ class UnifiedDiffViewPanel(Panel):
                     git_apply_cmd = "git apply -R --whitespace=nowarn"
                 else:
                     git_apply_cmd = "git apply --cached --whitespace=nowarn"
-
-                self.removeView(vim.current.buffer.name)
             else:
                 if how == "discard":
                     msg = 'Cannot discard staged hunk directly. You should unstage it first.' 
@@ -3066,7 +3078,11 @@ class UnifiedDiffViewPanel(Panel):
             else:
                 target_path = os.path.relpath(file_name, self._project_root)
             lfCmd("noautocmd LeaderfGitNavigationOpen")
-            navigation_panel.updateTreeview(title, target_path, focus=False, sync=True)
+            navigation_panel.updateTreeview(title,
+                                            target_path,
+                                            focus=False,
+                                            sync=True,
+                                            handle_hunk=how)
 
     def extractHunk(self, diff, line_num, add_del_flag):
         lines = diff.splitlines(keepends=True)
@@ -3154,9 +3170,10 @@ class UnifiedDiffViewPanel(Panel):
         lfCmd("silent! call sign_unplace('LeaderF', {'buffer': %d})" % buffer_num)
         lfCmd("silent! call leaderf#Git#ClearMatches()")
         if lfEval("has('nvim')") != '1':
-            for property_type in ("Lf_hl_gitDiffDelete", "Lf_hl_gitDiffAdd", "Lf_hl_LineNr"):
-                lfCmd("call prop_remove({'type': '%s', 'bufnr': %d, 'all': 1})"
-                      % (property_type, buffer_num))
+            lfCmd("call prop_remove({'types': %s, 'bufnr': %d, 'all': 1})"
+                  % (str(["Lf_hl_gitDiffDelete", "Lf_hl_gitDiffAdd", "Lf_hl_LineNr"]), buffer_num))
+        else:
+            lfCmd("call leaderf#Git#ClearLineNumberWin({})".format(buffer_num))
 
     def discardHunk(self, prompt):
         self.processHunk(how="discard", prompt=prompt)
@@ -3734,7 +3751,13 @@ class NavigationPanel(Panel):
 
         self.updateTreeview(title, target_path, focus, sync=True, stage=True)
 
-    def updateTreeview(self, title=None, target_path=None, focus=True, sync=False, stage=False):
+    def updateTreeview(self,
+                       title=None,
+                       target_path=None,
+                       focus=True,
+                       sync=False,
+                       stage=False,
+                       handle_hunk=None):
         if target_path is None:
             title = None
 
@@ -3759,6 +3782,7 @@ class NavigationPanel(Panel):
                 kwargs["source_to_open"] = source
                 kwargs["preview"] = focus
                 kwargs["stage"] = stage
+                kwargs["handle_hunk"] = handle_hunk
                 self.openDiffView(False, **kwargs)
                 return True
             else:

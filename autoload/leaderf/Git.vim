@@ -685,7 +685,7 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
     let hi_line_num = get(g:, 'Lf_GitHightlightLineNumber', 1)
     let delimiter = get(g:, 'Lf_GitDelimiter', '│')
     let delimiter_len = len(delimiter)
-    let ns_id = nvim_create_namespace('LeaderF')
+    let ns_id = nvim_create_namespace('LeaderF_Git_Line_Number')
 
     for i in range(len(a:line_num_content))
         let line = a:line_num_content[i]
@@ -714,6 +714,11 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
             call nvim_buf_set_extmark(a:buffer_num, ns_id, i, 0, {'virt_text': [[line, hl_group]], 'virt_text_pos': 'inline'})
         endif
     endfor
+endfunction
+
+function! leaderf#Git#ClearLineNumberWin(buffer_num) abort
+    let ns_id = nvim_create_namespace('LeaderF_Git_Line_Number')
+    call nvim_buf_clear_namespace(a:buffer_num, ns_id, 0, -1)
 endfunction
 
 function! leaderf#Git#SignPlace(added_line_nums, deleted_line_nums, buf_number) abort
