@@ -746,6 +746,12 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
     call setbufvar(a:buffer_num, "lf_git_updating_line_num_win", 0)
 endfunction
 
+function! leaderf#Git#CreateBuffer(buffer_name) abort
+    let n = bufadd(a:buffer_name)
+    silent noautocmd call bufload(n)
+    return n
+endfunction
+
 function! leaderf#Git#SignPlace(added_line_nums, deleted_line_nums, buf_number) abort
     for i in a:added_line_nums
         call sign_place(0, "LeaderF", "Leaderf_diff_add", a:buf_number, {'lnum': i})

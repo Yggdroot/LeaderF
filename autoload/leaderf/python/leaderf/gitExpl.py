@@ -2866,13 +2866,23 @@ class UnifiedDiffViewPanel(Panel):
                         lfCmd("call timer_start(0, {-> leaderf#Git#SetLineNumberWin(%s, %d)})"
                               % (str(line_num_content), vim.current.buffer.number))
                 else:
-                    lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
+                    buffer_num = int(lfEval("leaderf#Git#CreateBuffer('{}')".format(escSpecial(buf_name))))
+                    vim.buffers[buffer_num].options['modifiable'] = True
+                    vim.buffers[buffer_num][:] = content
+                    vim.buffers[buffer_num].options['modifiable'] = False
+                    vim.current.buffer = vim.buffers[buffer_num]
+                    # lfCmd("silent! doautocmd filetypedetect BufNewFile %s" % buf_name)
+                    # lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
                     cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
                     view = GitCommandView(self, cmd)
                     view.line_num_dict = line_num_dict
                     view.change_start_lines = change_start_lines
-                    view.create(winid, bufhidden='hide', buf_content=content)
+                    view.create(winid, bufhidden='hide', buf_content=None)
+                    # vim.current.buffer.options['modifiable'] = True
+                    # vim.current.buffer[:] = content
+                    # vim.current.buffer.options['modifiable'] = False
 
+                    lfCmd("call timer_start(0, {-> setbufvar(%d, '&filetype', 'python')})" % vim.current.buffer.number)
                     self.setLineNumberWin(line_num_content, vim.current.buffer.number)
 
                 buffer_num = int(lfEval("winbufnr({})".format(winid)))
