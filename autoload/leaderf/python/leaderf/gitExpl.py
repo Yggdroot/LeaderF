@@ -2862,9 +2862,9 @@ class UnifiedDiffViewPanel(Panel):
                     if lfEval("has('nvim')") == '1':
                         self.setLineNumberWin(line_num_content, vim.current.buffer.number)
                     else:
-                        self.setLineNumberWin(line_num_content, vim.current.buffer.number)
-                        # lfCmd("call timer_start(0, {-> leaderf#Git#SetLineNumberWin(%s, %d)})"
-                        #       % (str(line_num_content), vim.current.buffer.number))
+                        lfCmd("let b:lf_git_updating_line_num_win = 1")
+                        lfCmd("call timer_start(0, {-> leaderf#Git#SetLineNumberWin(%s, %d)})"
+                              % (str(line_num_content), vim.current.buffer.number))
                 else:
                     lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
                     cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
@@ -2971,6 +2971,9 @@ class UnifiedDiffViewPanel(Panel):
             self.processHunk(how="stage", prompt=False)
 
     def processHunk(self, how, prompt):
+        if vim.current.buffer.vars.get("lf_git_updating_line_num_win", 0) == 1:
+            return
+
         line_num_content = lfEval("b:lf_git_line_num_content")
         if len(line_num_content) == 0:
             lfCmd("echohl WarningMsg | redraw | echo 'No hunk under cursor!' | echohl None")

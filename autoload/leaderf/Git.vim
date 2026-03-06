@@ -727,34 +727,23 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
         let line = a:line_num_content[i]
         
         if line =~ '-'
-            if hi_line_num == 1
-                let property_type = "Lf_hl_gitDiffDelete"
-            else
-                let property_type = "Lf_hl_LineNr"
-            endif
-            
+            let property_type = hi_line_num ? "Lf_hl_gitDiffDelete" : "Lf_hl_LineNr"
             let index = stridx(line, '-')
-            execute printf("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})", 
-                \ i+1, property_type, line[:index-1], a:buffer_num)
-            execute printf("call prop_add(%d, 1, {'type': 'Lf_hl_gitDiffDelete', 'text': '%s', 'bufnr': %d})", 
-                \ i+1, line[index:], a:buffer_num)
+
+            call prop_add(i+1, 1, {'type': property_type, 'text': line[:index-1], 'bufnr': a:buffer_num})
+            call prop_add(i+1, 1, {'type': "Lf_hl_gitDiffDelete", 'text': line[index:], 'bufnr': a:buffer_num})
         elseif line =~ '+'
-            if hi_line_num == 1
-                let property_type = "Lf_hl_gitDiffAdd"
-            else
-                let property_type = "Lf_hl_LineNr"
-            endif
-            
+            let property_type = hi_line_num ? "Lf_hl_gitDiffAdd" : "Lf_hl_LineNr"
             let index = stridx(line, '+')
-            execute printf("call prop_add(%d, 1, {'type': '%s', 'text': '%s', 'bufnr': %d})", 
-                \ i+1, property_type, line[:index-1], a:buffer_num)
-            execute printf("call prop_add(%d, 1, {'type': 'Lf_hl_gitDiffAdd', 'text': '%s', 'bufnr': %d})", 
-                \ i+1, line[index:], a:buffer_num)
+
+            call prop_add(i+1, 1, {'type': property_type, 'text': line[:index-1], 'bufnr': a:buffer_num})
+            call prop_add(i+1, 1, {'type': "Lf_hl_gitDiffAdd", 'text': line[index:], 'bufnr': a:buffer_num})
         else
-            execute printf("call prop_add(%d, 1, {'type': 'Lf_hl_LineNr', 'text': '%s', 'bufnr': %d})", 
-                \ i+1, line, a:buffer_num)
+            call prop_add(i+1, 1, {'type': "Lf_hl_LineNr", 'text': line, 'bufnr': a:buffer_num})
         endif
     endfor
+
+    call setbufvar(a:buffer_num, "lf_git_updating_line_num_win", 0)
 endfunction
 
 function! leaderf#Git#SignPlace(added_line_nums, deleted_line_nums, buf_number) abort
