@@ -2882,7 +2882,8 @@ class UnifiedDiffViewPanel(Panel):
                     # vim.current.buffer[:] = content
                     # vim.current.buffer.options['modifiable'] = False
 
-                    lfCmd("call timer_start(0, {-> setbufvar(%d, '&filetype', 'python')})" % vim.current.buffer.number)
+                    # lfCmd("call timer_start(0, {-> setbufvar(%d, '&filetype', 'python')})" % vim.current.buffer.number)
+                    lfCmd("call timer_start(0, {-> win_execute(%d, 'filetype detect')})" % winid)
                     self.setLineNumberWin(line_num_content, vim.current.buffer.number)
 
                 buffer_num = int(lfEval("winbufnr({})".format(winid)))
