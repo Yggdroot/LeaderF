@@ -2859,21 +2859,28 @@ class UnifiedDiffViewPanel(Panel):
                     self._views[buf_name].line_num_dict = line_num_dict
                     self._views[buf_name].change_start_lines = change_start_lines
 
-                    if lfEval("has('nvim')") == '1':
+                    if lfEval("has('nvim')") == '1' or lfEval("get(g:, 'Lf_GitRenderSync', 0)") == '1':
                         self.setLineNumberWin(line_num_content, vim.current.buffer.number)
                     else:
                         lfCmd("let b:lf_git_updating_line_num_win = 1")
                         lfCmd("call timer_start(0, {-> leaderf#Git#SetLineNumberWin(%s, %d)})"
                               % (str(line_num_content), vim.current.buffer.number))
                 else:
-                    lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
+                    buffer_num = int(lfEval("leaderf#Git#CreateBuffer('{}')".format(escSpecial(buf_name))))
+                    vim.current.buffer = vim.buffers[buffer_num]
+
                     cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
                     view = GitCommandView(self, cmd)
                     view.line_num_dict = line_num_dict
                     view.change_start_lines = change_start_lines
                     view.create(winid, bufhidden='hide', buf_content=content)
 
-                    self.setLineNumberWin(line_num_content, vim.current.buffer.number)
+                    self.setLineNumberWin(line_num_content, buffer_num)
+
+                    if lfEval("has('nvim')") == '1' or lfEval("get(g:, 'Lf_GitRenderSync', 0)") == '1':
+                        lfCmd("filetype detect")
+                    else:
+                        lfCmd("call timer_start(0, {-> win_execute(%d, 'filetype detect')})" % winid)
 
                 buffer_num = int(lfEval("winbufnr({})".format(winid)))
                 self.clear(buffer_num)

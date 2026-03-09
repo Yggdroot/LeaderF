@@ -1251,6 +1251,12 @@ g:Lf_GitAlias                                 *g:Lf_GitAlias*
             \ "blame":  "bl",
             \}
 <
+g:Lf_GitRenderSync                            *g:Lf_GitRenderSync*
+    Sometimes the screen may flicker when staging a hunk, setting this value
+    to 0 enables asynchronous rendering, which eliminates screen flicker.
+
+    Default value is 0.
+
 ==============================================================================
 USAGE                                           *leaderf-usage*
 
