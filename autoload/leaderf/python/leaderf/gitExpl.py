@@ -3024,7 +3024,7 @@ class UnifiedDiffViewPanel(Panel):
                     git_apply_cmd = "git apply --cached --whitespace=nowarn"
             else:
                 if how == "discard":
-                    msg = 'Cannot discard staged hunk directly. You should unstage it first.' 
+                    msg = 'Cannot discard staged hunk directly. You should unstage it first.'
                     lfCmd("echohl WarningMsg | redraw | echo '{}'| echohl NONE".format(msg))
                     return
 
@@ -3067,6 +3067,7 @@ class UnifiedDiffViewPanel(Panel):
                 target_path = os.path.relpath(orig_file_name, self._project_root)
             else:
                 target_path = os.path.relpath(file_name, self._project_root)
+            target_path = target_path.replace('\\', '/')
             lfCmd("noautocmd LeaderfGitNavigationOpen")
             navigation_panel.updateTreeview(title,
                                             target_path,
@@ -3827,7 +3828,7 @@ class NavigationPanel(Panel):
             return
 
         if tree_view.getTitle() == "Staged Changes:":
-            msg = 'Cannot discard staged changes directly. You should unstage them first.' 
+            msg = 'Cannot discard staged changes directly. You should unstage them first.'
             lfCmd("echohl WarningMsg | redraw | echo '{}'| echohl NONE".format(msg))
             return
         elif tree_view.getTitle() == "Unstaged Changes:":
@@ -3882,7 +3883,7 @@ class NavigationPanel(Panel):
                 self.handleCommit()
         else:
             print("Unexpected behavior.")
-            
+
     def handleCommit(self):
         commit_file = os.path.join(
                 os.path.expanduser(self._project_root),
