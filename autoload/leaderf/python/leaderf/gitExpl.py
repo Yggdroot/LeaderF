@@ -1655,7 +1655,7 @@ class TreeView(GitCommandView):
         finally:
             self._buffer.options['modifiable'] = False
 
-    def inFileStructure(self, path):
+    def inTree(self, path):
         *directories, file = path.split("/")
         tree_node = self._trees[self._cur_parent]
         for d in directories:
@@ -1704,7 +1704,7 @@ class TreeView(GitCommandView):
             lfCmd("call win_execute({}, 'norm! {}G0zz')"
                   .format(self.getWindowId(), index + self.startLine()))
         else:
-            if not self.inFileStructure(path):
+            if not self.inTree(path):
                 lfPrintError("File can't be found!")
                 return
 
