@@ -1823,7 +1823,7 @@ class TreeView(GitCommandView):
             structure = self._file_structures[self._cur_parent]
             for i, info in enumerate(structure, init_line):
                 if info.has_num_stat == True:
-                    return
+                    continue
                 if not info.is_dir:
                     if self._content_buffer is not None:
                         self._content_buffer[i] = self.buildLine(info)
