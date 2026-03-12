@@ -742,8 +742,6 @@ function! leaderf#Git#SetLineNumberWin(line_num_content, buffer_num) abort
             call prop_add(i+1, 1, {'type': "Lf_hl_LineNr", 'text': line, 'bufnr': a:buffer_num})
         endif
     endfor
-
-    call setbufvar(a:buffer_num, "lf_git_updating_line_num_win", 0)
 endfunction
 
 function! leaderf#Git#CreateBuffer(buffer_name) abort

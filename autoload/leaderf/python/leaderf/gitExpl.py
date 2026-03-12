@@ -2614,7 +2614,7 @@ class UnifiedDiffViewPanel(Panel):
                                                   blob_id,
                                                   uid,
                                                   lfGetFilePath(source))
-        if buf_name in self._views and kwargs.get("handle_hunk", None) == None:
+        if buf_name in self._views and "stage" not in kwargs:
             winid = self._views[buf_name].getWindowId()
             lfCmd("noautocmd call win_gotoid({})".format(winid))
             lfCmd("let b:lf_tree_view_id = {}".format(kwargs.get("tree_view_id", 0)))
@@ -2845,38 +2845,18 @@ class UnifiedDiffViewPanel(Panel):
                         int(i) for i in vim.current.buffer.vars.get("lf_change_start_lines", [])
                         ]
                 index = Bisect.bisect_right(orig_change_start_lines, vim.current.window.cursor[0])
-                if buf_name == orig_buf_name:
-                    orig_change_block_ranges = vim.current.buffer.vars.get("lf_change_block_ranges", [])
-                    change_block = orig_change_block_ranges[index-1]
-                    vim.current.buffer.options['modifiable'] = True
-                    if kwargs.get("handle_hunk", None) == "stage":
-                        if change_block[0] > 0:
-                            del vim.current.buffer[change_block[0]-1 : change_block[1]]
-                    else:
-                        if change_block[2] > 0:
-                            del vim.current.buffer[change_block[2]-1 : change_block[3]]
-                    vim.current.buffer.options['modifiable'] = False
-                    self._views[buf_name].line_num_dict = line_num_dict
-                    self._views[buf_name].change_start_lines = change_start_lines
 
-                    if lfEval("has('nvim')") == '1' or lfEval("get(g:, 'Lf_GitRenderSync', 0)") == '1':
-                        self.setLineNumberWin(line_num_content, vim.current.buffer.number)
-                    else:
-                        lfCmd("let b:lf_git_updating_line_num_win = 1")
-                        lfCmd("call timer_start(0, {-> leaderf#Git#SetLineNumberWin(%s, %d)})"
-                              % (str(line_num_content), vim.current.buffer.number))
-                else:
-                    buffer_num = int(lfEval("leaderf#Git#CreateBuffer('{}')".format(escSpecial(buf_name))))
-                    vim.current.buffer = vim.buffers[buffer_num]
+                buffer_num = int(lfEval("leaderf#Git#CreateBuffer('{}')".format(escSpecial(buf_name))))
+                vim.current.buffer = vim.buffers[buffer_num]
 
-                    cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
-                    view = GitCommandView(self, cmd)
-                    view.line_num_dict = line_num_dict
-                    view.change_start_lines = change_start_lines
-                    view.create(winid, bufhidden='hide', buf_content=content)
+                cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
+                view = GitCommandView(self, cmd)
+                view.line_num_dict = line_num_dict
+                view.change_start_lines = change_start_lines
+                view.create(winid, bufhidden='hide', buf_content=content)
+                self.setLineNumberWin(line_num_content, buffer_num)
 
-                    self.setLineNumberWin(line_num_content, buffer_num)
-
+                if buf_name != orig_buf_name:
                     if lfEval("has('nvim')") == '1' or lfEval("get(g:, 'Lf_GitRenderSync', 0)") == '1':
                         lfCmd("filetype detect")
                     else:
@@ -2978,9 +2958,6 @@ class UnifiedDiffViewPanel(Panel):
             self.processHunk(how="stage", prompt=False)
 
     def processHunk(self, how, prompt):
-        if vim.current.buffer.vars.get("lf_git_updating_line_num_win", 0) == 1:
-            return
-
         line_num_content = lfEval("b:lf_git_line_num_content")
         if len(line_num_content) == 0:
             lfCmd("echohl WarningMsg | redraw | echo 'No hunk under cursor!' | echohl None")
@@ -3072,8 +3049,7 @@ class UnifiedDiffViewPanel(Panel):
             navigation_panel.updateTreeview(title,
                                             target_path,
                                             focus=False,
-                                            sync=True,
-                                            handle_hunk=how)
+                                            sync=True)
 
     def extractHunk(self, diff, line_num, add_del_flag):
         lines = diff.splitlines(keepends=True)
@@ -3742,8 +3718,7 @@ class NavigationPanel(Panel):
                        target_path=None,
                        focus=True,
                        sync=False,
-                       stage=False,
-                       handle_hunk=None):
+                       stage=False):
         if target_path is None:
             title = None
 
@@ -3768,7 +3743,6 @@ class NavigationPanel(Panel):
                 kwargs["source_to_open"] = source
                 kwargs["preview"] = focus
                 kwargs["stage"] = stage
-                kwargs["handle_hunk"] = handle_hunk
                 self.openDiffView(False, **kwargs)
                 return True
             else:
