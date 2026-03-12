@@ -2645,7 +2645,7 @@ class UnifiedDiffViewPanel(Panel):
 
             if kwargs.get("stage", False) == True and source[1].startswith("0000000"):
                 if buf_name in self._hidden_views:
-                    self._hidden_views[buf_name].cleanup()
+                    self._views[buf_name] = self._hidden_views[buf_name]
                     del self._hidden_views[buf_name]
 
             if buf_name not in self._hidden_views:
@@ -2849,14 +2849,23 @@ class UnifiedDiffViewPanel(Panel):
                 buffer_num = int(lfEval("leaderf#Git#CreateBuffer('{}')".format(escSpecial(buf_name))))
                 vim.current.buffer = vim.buffers[buffer_num]
 
-                cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
-                view = GitCommandView(self, cmd)
-                view.line_num_dict = line_num_dict
-                view.change_start_lines = change_start_lines
-                view.create(winid, bufhidden='hide', buf_content=content)
-                self.setLineNumberWin(line_num_content, buffer_num)
+                if buf_name in self._views:
+                    vim.current.buffer.options['modifiable'] = True
+                    if len(content) != len(vim.current.buffer):
+                        vim.current.buffer[:] = content
+                        self.setLineNumberWin(line_num_content, buffer_num)
+                    vim.current.buffer.options['modifiable'] = False
+                    self._views[buf_name].line_num_dict = line_num_dict
+                    self._views[buf_name].change_start_lines = change_start_lines
+                else:
+                    cmd = GitCustomizeCommand(arguments_dict, "", buf_name, "", "")
+                    view = GitCommandView(self, cmd)
+                    view.line_num_dict = line_num_dict
+                    view.change_start_lines = change_start_lines
+                    view.create(winid, bufhidden='hide', buf_content=content)
+                    self.setLineNumberWin(line_num_content, buffer_num)
 
-                if buf_name != orig_buf_name:
+                if buf_name != orig_buf_name and not vim.current.buffer.options["filetype"]:
                     if lfEval("has('nvim')") == '1' or lfEval("get(g:, 'Lf_GitRenderSync', 0)") == '1':
                         lfCmd("filetype detect")
                     else:
@@ -3770,7 +3779,7 @@ class NavigationPanel(Panel):
                                                                             col_num))
 
                 if target_path is not None and cursor_line[0] is not None:
-                    lfCmd("call win_execute({}, 'norm! {}G0')"
+                    lfCmd("silent call win_execute({}, 'norm! {}G0')"
                           .format(self.getWindowId(), cursor_line[0]))
 
                 if len(self._buffer) == len(self._head):
@@ -4205,7 +4214,7 @@ class ExplorerPage(object):
                 self.getDiffViewPanel().create(self._arguments, source, **kwargs)
 
             if kwargs.get("preview", False) == True:
-                lfCmd("noautocmd call win_gotoid({})".format(self._navigation_panel.getWindowId()))
+                lfCmd("silent noautocmd call win_gotoid({})".format(self._navigation_panel.getWindowId()))
 
     def locateFile(self, path, line_num=None, preview=True):
         self._navigation_panel.locateFile(path, line_num, preview)
