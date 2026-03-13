@@ -2584,6 +2584,7 @@ class UnifiedDiffViewPanel(Panel):
                     plus_line_num += 1
 
     def setSomeOptions(self):
+        lfCmd("setlocal nobuflisted")
         lfCmd("setlocal foldcolumn=1")
         lfCmd("setlocal signcolumn=no")
         lfCmd("setlocal nonumber")
@@ -2847,12 +2848,14 @@ class UnifiedDiffViewPanel(Panel):
                 index = Bisect.bisect_right(orig_change_start_lines, vim.current.window.cursor[0])
 
                 buffer_num = int(lfEval("leaderf#Git#CreateBuffer('{}')".format(escSpecial(buf_name))))
-                vim.current.buffer = vim.buffers[buffer_num]
+                vim.command("silent keepalt keepjumps buffer {}".format(buffer_num))
 
                 if buf_name in self._views:
                     vim.current.buffer.options['modifiable'] = True
                     if len(content) != len(vim.current.buffer):
                         vim.current.buffer[:] = content
+                        self.setLineNumberWin(line_num_content, buffer_num)
+                    elif kwargs.get("stage", False) != True:
                         self.setLineNumberWin(line_num_content, buffer_num)
                     vim.current.buffer.options['modifiable'] = False
                     self._views[buf_name].line_num_dict = line_num_dict
@@ -2871,7 +2874,6 @@ class UnifiedDiffViewPanel(Panel):
                     else:
                         lfCmd("call timer_start(0, {-> win_execute(%d, 'filetype detect')})" % winid)
 
-                buffer_num = int(lfEval("winbufnr({})".format(winid)))
                 self.clear(buffer_num)
                 self.signPlace(added_line_nums, deleted_line_nums, buffer_num)
                 self.highlightDiff(winid, content, change_block_ranges)
