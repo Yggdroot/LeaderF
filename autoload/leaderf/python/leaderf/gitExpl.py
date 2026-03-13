@@ -2644,6 +2644,7 @@ class UnifiedDiffViewPanel(Panel):
                     lfCmd("noautocmd wincmd W")
                 winid = int(lfEval("win_getid()"))
 
+            # unstage a file
             if kwargs.get("stage", False) == True and source[1].startswith("0000000"):
                 if buf_name in self._hidden_views:
                     self._views[buf_name] = self._hidden_views[buf_name]
@@ -2852,10 +2853,15 @@ class UnifiedDiffViewPanel(Panel):
 
                 if buf_name in self._views:
                     vim.current.buffer.options['modifiable'] = True
-                    if len(content) != len(vim.current.buffer):
+                    # unstage a file
+                    if kwargs.get("stage", False) == True:
+                        if len(content) != len(vim.current.buffer):
+                            vim.current.buffer[:] = content
+                            self.setLineNumberWin(line_num_content, buffer_num)
+
+                    # stage a hunk
+                    else:
                         vim.current.buffer[:] = content
-                        self.setLineNumberWin(line_num_content, buffer_num)
-                    elif kwargs.get("stage", False) != True:
                         self.setLineNumberWin(line_num_content, buffer_num)
                     vim.current.buffer.options['modifiable'] = False
                     self._views[buf_name].line_num_dict = line_num_dict
