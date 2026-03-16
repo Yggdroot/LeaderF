@@ -943,7 +943,7 @@ class GitBlameView(GitCommandView):
         lfCmd("call win_execute({}, 'setlocal foldcolumn=0')".format(winid))
         lfCmd("call win_execute({}, 'setlocal number norelativenumber')".format(winid))
         lfCmd("call win_execute({}, 'setlocal nofoldenable')".format(winid))
-        lfCmd("call win_execute({}, 'setlocal signcolumn=no')".format(winid))
+        lfCmd("call win_execute({}, 'silent! setlocal signcolumn=no')".format(winid))
         lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
         lfCmd("call win_execute({}, 'setlocal scrolloff=0')".format(winid))
 
@@ -1754,29 +1754,6 @@ class TreeView(GitCommandView):
                                           num_stat
                                           )
 
-    def setOptions(self, winid, bufhidden):
-        super(TreeView, self).setOptions(winid, bufhidden)
-        if lfEval("has('nvim')") == '1':
-            lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % winid)
-        else:
-            lfCmd("call win_execute({}, 'setlocal nonumber')".format(winid))
-        lfCmd("call win_execute({}, 'noautocmd setlocal sw=2 tabstop=4')".format(winid))
-        lfCmd("call win_execute({}, 'setlocal signcolumn=no')".format(winid))
-        lfCmd("call win_execute({}, 'setlocal foldmethod=indent')".format(winid))
-        lfCmd("call win_execute({}, 'setlocal foldcolumn=1')".format(winid))
-        lfCmd("call win_execute({}, 'setlocal foldlevel=100')".format(winid))
-        lfCmd("call win_execute({}, 'setlocal conceallevel=0')".format(winid))
-        lfCmd("call win_execute({}, 'setlocal winfixwidth')".format(winid))
-        lfCmd("call win_execute({}, 'setlocal winfixheight')".format(winid))
-        try:
-            lfCmd(r"call win_execute({}, 'setlocal list lcs=leadmultispace:¦\ ,tab:\ \ ')"
-                  .format(winid))
-        except vim.error:
-            lfCmd("call win_execute({}, 'setlocal nolist')".format(winid))
-        lfCmd("augroup Lf_Git_Colorscheme | augroup END")
-        lfCmd("autocmd Lf_Git_Colorscheme ColorScheme * call leaderf#colorscheme#popup#load('Git', '{}')"
-              .format(lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
-
     def initBuffer(self):
         if self._init == True:
             return
@@ -2586,7 +2563,8 @@ class UnifiedDiffViewPanel(Panel):
     def setSomeOptions(self):
         lfCmd("setlocal nobuflisted")
         lfCmd("setlocal foldcolumn=1")
-        lfCmd("setlocal signcolumn=no")
+        if lfEval("has('nvim')") == '1':
+            lfCmd("silent! setlocal signcolumn=no")   # make vim flicker
         lfCmd("setlocal nonumber")
         lfCmd("setlocal conceallevel=0")
         lfCmd("setlocal nowrap")
@@ -2875,10 +2853,7 @@ class UnifiedDiffViewPanel(Panel):
                     self.setLineNumberWin(line_num_content, buffer_num)
 
                 if buf_name != orig_buf_name and not vim.current.buffer.options["filetype"]:
-                    if lfEval("has('nvim')") == '1' or lfEval("get(g:, 'Lf_GitRenderSync', 0)") == '1':
-                        lfCmd("filetype detect")
-                    else:
-                        lfCmd("call timer_start(0, {-> win_execute(%d, 'filetype detect')})" % winid)
+                    lfCmd("filetype detect")
 
                 self.clear(buffer_num)
                 self.signPlace(added_line_nums, deleted_line_nums, buffer_num)
@@ -3197,6 +3172,28 @@ class NavigationPanel(Panel):
             if "inline:" not in diffopt:
                 lfCmd("set diffopt+=inline:char")
 
+    def setOptions(self, winid):
+        if lfEval("has('nvim')") == '1':
+            lfCmd("call nvim_win_set_option(%d, 'number', v:false)" % winid)
+        else:
+            lfCmd("call win_execute({}, 'setlocal nonumber')".format(winid))
+        lfCmd("call win_execute({}, 'noautocmd setlocal sw=2 tabstop=4')".format(winid))
+        lfCmd("call win_execute({}, 'silent! setlocal signcolumn=no')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal foldmethod=indent')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal foldcolumn=1')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal foldlevel=100')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal conceallevel=0')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal winfixwidth')".format(winid))
+        lfCmd("call win_execute({}, 'setlocal winfixheight')".format(winid))
+        try:
+            lfCmd(r"call win_execute({}, 'setlocal list lcs=leadmultispace:¦\ ,tab:\ \ ')"
+                  .format(winid))
+        except vim.error:
+            lfCmd("call win_execute({}, 'setlocal nolist')".format(winid))
+        lfCmd("augroup Lf_Git_Colorscheme | augroup END")
+        lfCmd("autocmd Lf_Git_Colorscheme ColorScheme * call leaderf#colorscheme#popup#load('Git', '{}')"
+              .format(lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
+
     def startLine(self, tree_view):
         n = len(self._head) + 1
         for view in self._tree_views:
@@ -3357,6 +3354,7 @@ class NavigationPanel(Panel):
             self._diff_view_mode = lfEval("get(g:, 'Lf_GitDiffViewMode', 'unified')")
 
         self._buffer = vim.buffers[int(lfEval("winbufnr({})".format(winid)))]
+        self.setOptions(winid)
 
         saved_eventignore = vim.options['eventignore']
         vim.options['eventignore'] = 'all'
