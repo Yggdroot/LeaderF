@@ -1665,6 +1665,20 @@ class TreeView(GitCommandView):
 
         return file in tree_node.files
 
+    def getSourceInfo(self, path):
+        """
+        return a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+               None if path not in Tree
+        """
+        *directories, file = path.split("/")
+        tree_node = self._trees[self._cur_parent]
+        for d in directories:
+            if d not in tree_node.dirs:
+                return None
+            tree_node = tree_node.dirs[d]
+
+        return tree_node.files.get(file, None)
+
     def locateFile(self, path):
         with self._lock:
             self._locateFile(PurePath(lfRelpath(path)).as_posix())
@@ -3037,11 +3051,26 @@ class UnifiedDiffViewPanel(Panel):
             else:
                 target_path = os.path.relpath(file_name, self._project_root)
             target_path = target_path.replace('\\', '/')
-            lfCmd("noautocmd LeaderfGitNavigationOpen")
-            navigation_panel.updateTreeview(title,
-                                            target_path,
-                                            focus=False,
-                                            sync=True)
+
+
+            tree_view = navigation_panel.getTreeViewByTitle(title)
+            if tree_view is None:
+                lfPrintError("Bug, impossible!")
+                return
+
+            source = tree_view.getSourceInfo(target_path)
+            if source is None:
+                lfPrintError("Bug! {} is not in the tree.".format(target_path))
+                return
+
+            kwargs = {}
+            kwargs["tree_view_id"] = id(tree_view)
+            kwargs["project_root"] = navigation_panel._project_root
+            kwargs["explorer_page_id"] = id(navigation_panel._owner)
+            kwargs["ignore_whitespace"] = navigation_panel.getIgnoreWhitespace()
+            kwargs["diff_algorithm"] = navigation_panel.getDiffAlgorithm()
+            kwargs["stage"] = False
+            self.create({}, source, **kwargs)
 
     def extractHunk(self, diff, line_num, add_del_flag):
         lines = diff.splitlines(keepends=True)
@@ -3215,6 +3244,13 @@ class NavigationPanel(Panel):
                 n += view.getTitleHeight() + view.getHeight() + 2
                 if line_num <= n:
                     return view
+
+    def getTreeViewByTitle(self, title):
+        for view in self._tree_views:
+            if view.getTitle() == title:
+                return view
+
+        return None
 
     def getDiffViewMode(self):
         return self._diff_view_mode
