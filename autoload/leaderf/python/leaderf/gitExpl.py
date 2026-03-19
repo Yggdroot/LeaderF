@@ -1173,6 +1173,23 @@ class LfOrderedDict(OrderedDict):
     def first_key_value(self):
         return next(iter(self.items()))
 
+    def insert_ordered_update(self, key, value):
+        if not self:
+            self[key] = value
+            return
+
+        items = list(self.items())
+        pos = bisect.bisect_left(items, (key,))
+
+        if pos < len(items) and items[pos][0] == key:
+            self[key] = value
+            return
+
+        items.insert(pos, (key, value))
+
+        self.clear()
+        self.update(items)
+
 
 class FolderStatus(Enum):
     CLOSED = 0
@@ -1693,25 +1710,27 @@ class TreeView(GitCommandView):
                 path += "/"
             return path
 
-    def _locateFile(self, path):
-        def getKey(info):
-            if info.path == path:
-                return 0
+    @staticmethod
+    def getKey(path, info):
+        if info.path == path:
+            return 0
+        else:
+            info_path_dir = TreeView.getDirName(info.path)
+            path_dir = TreeView.getDirName(path)
+            if ((info.path > path
+                 and not (info_path_dir.startswith(path_dir) and info_path_dir != path_dir)
+                 )
+                or
+                (info.path < path and info.is_dir == False
+                 and (path_dir.startswith(info_path_dir) and info_path_dir != path_dir)
+                 )
+                ):
+                return 1
             else:
-                info_path_dir = TreeView.getDirName(info.path)
-                path_dir = TreeView.getDirName(path)
-                if ((info.path > path
-                     and not (info_path_dir.startswith(path_dir) and info_path_dir != path_dir)
-                     )
-                    or
-                    (info.path < path and info.is_dir == False
-                     and (path_dir.startswith(info_path_dir) and info_path_dir != path_dir)
-                     )
-                    ):
-                    return 1
-                else:
-                    return -1
+                return -1
 
+    def _locateFile(self, path):
+        getKey = partial(TreeView.getKey, path)
         structure = self._file_structures[self._cur_parent]
         index = Bisect.bisect_left(structure, 0, key=getKey)
         if index < len(structure) and structure[index].path == path:
@@ -1990,6 +2009,79 @@ class TreeView(GitCommandView):
         for i in self._match_ids:
             lfCmd("silent! call matchdelete({}, {})".format(i, self._match_id_winid))
         self._match_ids = []
+
+    def updateStat(self, target_path, stat):
+        """
+        stat is like
+        [
+        ":100644 100644 0db2c7ed0be77cb8ad263cdf8316643b73275ee4 17c997fd0ba0f5fbe4b5bbec569b3079d69a6b7e M      docs/conf.py",
+        "5\t3\tdocs/conf.py"
+        ]
+        """
+        added, deleted, pathname = stat[1].split("\t")
+        if added == "-" and deleted == "-":
+            self._num_stat[self._cur_parent][target_path] = "(Bin)"
+        else:
+            self._num_stat[self._cur_parent][target_path] = "+{:3} -{}".format(added, deleted)
+
+    def update(self, target_path, stat):
+        self.updateStat(target_path, stat)
+
+        # *directories, file = target_path.split("/")
+        # tree_node = self._trees[self._cur_parent]
+        # for d in directories:
+        #     if d not in tree_node.dirs:
+        #         tree_node.dirs[d] = TreeNode(FolderStatus.OPEN)
+        #     tree_node = tree_node.dirs[d]
+
+        # mode, source = TreeView.generateSource(stat[0])
+        # tree_node.files.insert_ordered_update(file, source)
+
+        if "/" in target_path:
+            pos = target_path.find("/")
+            first_dir_name = target_path[:pos]
+            tree_node = self._trees[self._cur_parent].dirs[first_dir_name]
+            meta_info = MetaInfo(0,
+                                 True,
+                                 first_dir_name,
+                                 tree_node,
+                                 first_dir_name + "/")
+
+            
+            def getKey(path, info):
+                if info.path.startswith(path):
+                    return 0
+                elif "/" not in info.path:
+                    return 1
+                else:
+                    return 1 if info.path > path else -1
+
+            structure = self._file_structures[self._cur_parent]
+            index = Bisect.bisect_left(structure, 0,
+                                       key=partial(getKey, first_dir_name + "/"))
+            line_num = index + self.startLine()
+            if structure[index].info.status != FolderStatus.CLOSED:
+                status = structure[index].info.status
+                self.collapseFolder(line_num, index, structure[index], False)
+                structure[index].info.status = status
+
+            *directories, file = target_path.split("/")
+            tree_node = self._trees[self._cur_parent]
+            for d in directories:
+                if d not in tree_node.dirs:
+                    tree_node.dirs[d] = TreeNode(FolderStatus.OPEN)
+                tree_node = tree_node.dirs[d]
+
+            mode, source = TreeView.generateSource(stat[0])
+            tree_node.files.insert_ordered_update(file, source)
+
+            structure[index] = meta_info
+            self.expandFolder(line_num, index, meta_info, False)
+
+
+        else:
+            pass
+
 
 
 class Panel(object):
@@ -3063,6 +3155,8 @@ class UnifiedDiffViewPanel(Panel):
                 lfPrintError("Bug! {} is not in the tree.".format(target_path))
                 return
 
+            navigation_panel.update(how, title, target_path)
+
             kwargs = {}
             kwargs["tree_view_id"] = id(tree_view)
             kwargs["project_root"] = navigation_panel._project_root
@@ -3763,6 +3857,23 @@ class NavigationPanel(Panel):
         ParallelExecutor.run(cmd, directory=self._project_root)
 
         self.updateTreeview(title, target_path, focus, sync=True, stage=True)
+
+    def update(self, how, title, target_path):
+        git_cmd0 = "git diff --cached --diff-algorithm={} --raw -C --numstat --no-abbrev -- {}".format(
+                    self._diff_algorithm, target_path)
+        git_cmd1 = "git diff --diff-algorithm={} --raw -C --numstat --no-abbrev -- {}".format(
+                    self._diff_algorithm, target_path)
+
+        outputs = ParallelExecutor.run(git_cmd0, git_cmd1, directory=self._project_root)
+        staged_tree_view = self.getTreeViewByTitle("Staged Changes:")
+        unstaged_tree_view = self.getTreeViewByTitle("Unstaged Changes:")
+
+        if title == "Unstaged Changes:":
+            unstaged_tree_view.updateStat(target_path, outputs[1])
+            staged_tree_view.update(target_path, outputs[0])
+        else:
+            staged_tree_view.updateStat(target_path, outputs[1])
+            unstaged_tree_view.update(target_path, outputs[0])
 
     def updateTreeview(self,
                        title=None,
