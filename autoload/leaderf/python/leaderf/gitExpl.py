@@ -2010,43 +2010,37 @@ class TreeView(GitCommandView):
             lfCmd("silent! call matchdelete({}, {})".format(i, self._match_id_winid))
         self._match_ids = []
 
-    def updateStat(self, target_path, stat):
+    def updateStat(self, target_path, diff_output):
         """
-        stat is like
+        diff_output is like
         [
         ":100644 100644 0db2c7ed0be77cb8ad263cdf8316643b73275ee4 17c997fd0ba0f5fbe4b5bbec569b3079d69a6b7e M      docs/conf.py",
         "5\t3\tdocs/conf.py"
         ]
         """
-        added, deleted, pathname = stat[1].split("\t")
+        added, deleted, pathname = diff_output[1].split("\t")
         if added == "-" and deleted == "-":
             self._num_stat[self._cur_parent][target_path] = "(Bin)"
         else:
             self._num_stat[self._cur_parent][target_path] = "+{:3} -{}".format(added, deleted)
 
-    def update(self, target_path, stat):
-        self.updateStat(target_path, stat)
+    def insertOrUpdateFileNode(self, path, diff_output):
+        *directories, file = path.split("/")
+        tree_node = self._trees[self._cur_parent]
+        for d in directories:
+            if d not in tree_node.dirs:
+                tree_node.dirs[d] = TreeNode(FolderStatus.OPEN)
+            tree_node = tree_node.dirs[d]
 
-        # *directories, file = target_path.split("/")
-        # tree_node = self._trees[self._cur_parent]
-        # for d in directories:
-        #     if d not in tree_node.dirs:
-        #         tree_node.dirs[d] = TreeNode(FolderStatus.OPEN)
-        #     tree_node = tree_node.dirs[d]
+        _, source = TreeView.generateSource(diff_output[0])
+        tree_node.files.insert_ordered_update(file, source)
 
-        # mode, source = TreeView.generateSource(stat[0])
-        # tree_node.files.insert_ordered_update(file, source)
+    def update(self, target_path, diff_output):
+        self.updateStat(target_path, diff_output)
 
         if "/" in target_path:
             pos = target_path.find("/")
             first_dir_name = target_path[:pos]
-            tree_node = self._trees[self._cur_parent].dirs[first_dir_name]
-            meta_info = MetaInfo(0,
-                                 True,
-                                 first_dir_name,
-                                 tree_node,
-                                 first_dir_name + "/")
-
             
             def getKey(path, info):
                 if info.path.startswith(path):
@@ -2059,29 +2053,75 @@ class TreeView(GitCommandView):
             structure = self._file_structures[self._cur_parent]
             index = Bisect.bisect_left(structure, 0,
                                        key=partial(getKey, first_dir_name + "/"))
+
             line_num = index + self.startLine()
-            if structure[index].info.status != FolderStatus.CLOSED:
+
+            if index >= len(structure) or not structure[index].is_dir:
+                try:
+                    self._buffer.options['modifiable'] = True
+                    self._buffer.append("", line_num - 1)
+                finally:
+                    self._buffer.options['modifiable'] = False
+            elif structure[index].info.status != FolderStatus.CLOSED:
                 status = structure[index].info.status
                 self.collapseFolder(line_num, index, structure[index], False)
                 structure[index].info.status = status
 
-            *directories, file = target_path.split("/")
-            tree_node = self._trees[self._cur_parent]
-            for d in directories:
-                if d not in tree_node.dirs:
-                    tree_node.dirs[d] = TreeNode(FolderStatus.OPEN)
-                tree_node = tree_node.dirs[d]
+            self.insertOrUpdateFileNode(target_path, diff_output)
 
-            mode, source = TreeView.generateSource(stat[0])
-            tree_node.files.insert_ordered_update(file, source)
+            tree_node = self._trees[self._cur_parent].dirs[first_dir_name]
+            meta_info = MetaInfo(0,
+                                 True,
+                                 first_dir_name,
+                                 tree_node,
+                                 first_dir_name + "/")
 
-            structure[index] = meta_info
+            if index >= len(structure) or not structure[index].is_dir:
+                structure.insert(index, meta_info)
+            else:
+                structure[index] = meta_info
             self.expandFolder(line_num, index, meta_info, False)
-
-
         else:
-            pass
+            def getKey(path, info):
+                if "/" in info.path or info.path < path:
+                    return -1
+                elif info.path > path:
+                    return 1
+                else:
+                    return 0
 
+            structure = self._file_structures[self._cur_parent]
+            index = Bisect.bisect_left(structure, 0,
+                                       key=partial(getKey, target_path))
+
+            line_num = index + self.startLine()
+
+            if index >= len(structure) or structure[index].path != target_path:
+                try:
+                    self._buffer.options['modifiable'] = True
+                    self._buffer.append("", line_num - 1)
+                finally:
+                    self._buffer.options['modifiable'] = False
+
+            self.insertOrUpdateFileNode(target_path, diff_output)
+
+            tree_node = self._trees[self._cur_parent].files[target_path]
+            meta_info = MetaInfo(0,
+                                 False,
+                                 target_path,
+                                 tree_node,
+                                 target_path)
+
+            if index >= len(structure) or structure[index].path != target_path:
+                structure.insert(index, meta_info)
+            else:
+                structure[index] = meta_info
+
+            try:
+                self._buffer.options['modifiable'] = True
+                self._buffer[line_num - 1] = self.buildLine(meta_info)
+            finally:
+                self._buffer.options['modifiable'] = False
 
 
 class Panel(object):
