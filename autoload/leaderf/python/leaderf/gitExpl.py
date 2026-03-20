@@ -1698,7 +1698,7 @@ class TreeView(GitCommandView):
 
     def locateFile(self, path):
         with self._lock:
-            self._locateFile(PurePath(lfRelpath(path)).as_posix())
+            return self._locateFile(PurePath(lfRelpath(path)).as_posix())
 
     @staticmethod
     def getDirName(path):
@@ -1736,10 +1736,11 @@ class TreeView(GitCommandView):
         if index < len(structure) and structure[index].path == path:
             lfCmd("call win_execute({}, 'norm! {}G0zz')"
                   .format(self.getWindowId(), index + self.startLine()))
+            return index
         else:
             if not self.inTree(path):
                 lfPrintError("File can't be found!")
-                return
+                return -1
 
             meta_info = structure[index-1]
             prefix_len = len(meta_info.path)
@@ -1758,8 +1759,10 @@ class TreeView(GitCommandView):
             if index < len(structure) and structure[index].path == path:
                 lfCmd("call win_execute({}, 'norm! {}G0zz')"
                       .format(self.getWindowId(), index + self.startLine()))
+                return index
             else:
                 lfPrintError("BUG: File can't be found!")
+                return -1
 
     def buildLine(self, meta_info):
         if meta_info.is_dir:
@@ -2010,7 +2013,7 @@ class TreeView(GitCommandView):
             lfCmd("silent! call matchdelete({}, {})".format(i, self._match_id_winid))
         self._match_ids = []
 
-    def updateStat(self, target_path, diff_output):
+    def updateNumStat(self, target_path, diff_output):
         """
         diff_output is like
         [
@@ -2024,7 +2027,7 @@ class TreeView(GitCommandView):
         else:
             self._num_stat[self._cur_parent][target_path] = "+{:3} -{}".format(added, deleted)
 
-    def insertOrUpdateFileNode(self, path, diff_output):
+    def _insertOrUpdateFileNode(self, path, diff_output):
         *directories, file = path.split("/")
         tree_node = self._trees[self._cur_parent]
         for d in directories:
@@ -2034,6 +2037,7 @@ class TreeView(GitCommandView):
 
         _, source = TreeView.generateSource(diff_output[0])
         tree_node.files.insert_ordered_update(file, source)
+        return source
 
     def _insertEmptyLine(self, line_num):
         try:
@@ -2049,7 +2053,11 @@ class TreeView(GitCommandView):
             structure[index] = meta_info
 
     def update(self, target_path, diff_output):
-        self.updateStat(target_path, diff_output)
+        with self._lock:
+            self._update(target_path, diff_output)
+
+    def _update(self, target_path, diff_output):
+        self.updateNumStat(target_path, diff_output)
 
         if "/" in target_path:
             pos = target_path.find("/")
@@ -2079,7 +2087,7 @@ class TreeView(GitCommandView):
                 self.collapseFolder(line_num, index, structure[index], False)
                 structure[index].info.status = status
 
-            self.insertOrUpdateFileNode(target_path, diff_output)
+            self._insertOrUpdateFileNode(target_path, diff_output)
 
             tree_node = self._trees[self._cur_parent].dirs[first_dir_name]
             meta_info = MetaInfo(0,
@@ -2110,7 +2118,7 @@ class TreeView(GitCommandView):
             if not exists:
                 self._insertEmptyLine(line_num)
 
-            self.insertOrUpdateFileNode(target_path, diff_output)
+            self._insertOrUpdateFileNode(target_path, diff_output)
 
             tree_node = self._trees[self._cur_parent].files[target_path]
             meta_info = MetaInfo(0,
@@ -2121,12 +2129,30 @@ class TreeView(GitCommandView):
 
             self._insertOrUpdateStructure(exists, structure, index, meta_info)
 
-            try:
-                self._buffer.options['modifiable'] = True
-                self._buffer[line_num - 1] = self.buildLine(meta_info)
-            finally:
-                self._buffer.options['modifiable'] = False
+            self.updateBufferLine(line_num, self.buildLine(meta_info))
 
+    def updateBufferLine(self, line_num, text):
+        try:
+            self._buffer.options['modifiable'] = True
+            self._buffer[line_num - 1] = text
+        finally:
+            self._buffer.options['modifiable'] = False
+
+    def locateAndUpdateStat(self, update_info, target_path, diff_output):
+        with self._lock:
+            self._locateAndUpdateStat(update_info, target_path, diff_output)
+
+    def _locateAndUpdateStat(self, update_info, target_path, diff_output):
+        self.updateNumStat(target_path, diff_output)
+        index = self._locateFile(target_path)
+        line_num = index + self.startLine()
+        structure = self._file_structures[self._cur_parent]
+
+        if update_info == True:
+            source = self._insertOrUpdateFileNode(target_path, diff_output)
+            structure[index].info = source
+
+        self.updateBufferLine(line_num, self.buildLine(structure[index]))
 
 class Panel(object):
     def __init__(self):
@@ -3913,11 +3939,11 @@ class NavigationPanel(Panel):
         unstaged_tree_view = self.getTreeViewByTitle("Unstaged Changes:")
 
         if title == "Unstaged Changes:":
-            unstaged_tree_view.updateStat(target_path, outputs[1])
             staged_tree_view.update(target_path, outputs[0])
+            unstaged_tree_view.locateAndUpdateStat(False, target_path, outputs[1])
         else:
-            staged_tree_view.updateStat(target_path, outputs[1])
-            unstaged_tree_view.update(target_path, outputs[0])
+            unstaged_tree_view.update(target_path, outputs[1])
+            staged_tree_view.locateAndUpdateStat(True, target_path, outputs[0])
 
     def updateTreeview(self,
                        title=None,
