@@ -2035,33 +2035,45 @@ class TreeView(GitCommandView):
         _, source = TreeView.generateSource(diff_output[0])
         tree_node.files.insert_ordered_update(file, source)
 
+    def _insertEmptyLine(self, line_num):
+        try:
+            self._buffer.options['modifiable'] = True
+            self._buffer.append("", line_num - 1)
+        finally:
+            self._buffer.options['modifiable'] = False
+
+    def _insertOrUpdateStructure(self, exists, structure, index, meta_info):
+        if not exists:
+            structure.insert(index, meta_info)
+        else:
+            structure[index] = meta_info
+
     def update(self, target_path, diff_output):
         self.updateStat(target_path, diff_output)
 
         if "/" in target_path:
             pos = target_path.find("/")
             first_dir_name = target_path[:pos]
+            first_dir_path = first_dir_name + "/"
             
             def getKey(path, info):
-                if info.path.startswith(path):
+                p = info.path
+                if p.startswith(path):
                     return 0
-                elif "/" not in info.path:
+                elif "/" not in p:
                     return 1
                 else:
-                    return 1 if info.path > path else -1
+                    return 1 if p > path else -1
 
             structure = self._file_structures[self._cur_parent]
             index = Bisect.bisect_left(structure, 0,
-                                       key=partial(getKey, first_dir_name + "/"))
+                                       key=partial(getKey, first_dir_path))
 
             line_num = index + self.startLine()
 
-            if index >= len(structure) or not structure[index].is_dir:
-                try:
-                    self._buffer.options['modifiable'] = True
-                    self._buffer.append("", line_num - 1)
-                finally:
-                    self._buffer.options['modifiable'] = False
+            exists = index < len(structure) and structure[index].path.startswith(first_dir_path)
+            if not exists:
+                self._insertEmptyLine(line_num)
             elif structure[index].info.status != FolderStatus.CLOSED:
                 status = structure[index].info.status
                 self.collapseFolder(line_num, index, structure[index], False)
@@ -2074,18 +2086,16 @@ class TreeView(GitCommandView):
                                  True,
                                  first_dir_name,
                                  tree_node,
-                                 first_dir_name + "/")
+                                 first_dir_path)
 
-            if index >= len(structure) or not structure[index].is_dir:
-                structure.insert(index, meta_info)
-            else:
-                structure[index] = meta_info
+            self._insertOrUpdateStructure(exists, structure, index, meta_info)
             self.expandFolder(line_num, index, meta_info, False)
         else:
             def getKey(path, info):
-                if "/" in info.path or info.path < path:
+                p = info.path
+                if "/" in p or p < path:
                     return -1
-                elif info.path > path:
+                elif p > path:
                     return 1
                 else:
                     return 0
@@ -2096,12 +2106,9 @@ class TreeView(GitCommandView):
 
             line_num = index + self.startLine()
 
-            if index >= len(structure) or structure[index].path != target_path:
-                try:
-                    self._buffer.options['modifiable'] = True
-                    self._buffer.append("", line_num - 1)
-                finally:
-                    self._buffer.options['modifiable'] = False
+            exists = index < len(structure) and structure[index].path == target_path
+            if not exists:
+                self._insertEmptyLine(line_num)
 
             self.insertOrUpdateFileNode(target_path, diff_output)
 
@@ -2112,10 +2119,7 @@ class TreeView(GitCommandView):
                                  tree_node,
                                  target_path)
 
-            if index >= len(structure) or structure[index].path != target_path:
-                structure.insert(index, meta_info)
-            else:
-                structure[index] = meta_info
+            self._insertOrUpdateStructure(exists, structure, index, meta_info)
 
             try:
                 self._buffer.options['modifiable'] = True
