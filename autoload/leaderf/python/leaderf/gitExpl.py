@@ -3214,6 +3214,7 @@ class UnifiedDiffViewPanel(Panel):
                 target_path = os.path.relpath(file_name, self._project_root)
             target_path = target_path.replace('\\', '/')
 
+            navigation_panel.update(how, title, target_path)
 
             tree_view = navigation_panel.getTreeViewByTitle(title)
             if tree_view is None:
@@ -3224,8 +3225,6 @@ class UnifiedDiffViewPanel(Panel):
             if source is None:
                 lfPrintError("Bug! {} is not in the tree.".format(target_path))
                 return
-
-            navigation_panel.update(how, title, target_path)
 
             kwargs = {}
             kwargs["tree_view_id"] = id(tree_view)
