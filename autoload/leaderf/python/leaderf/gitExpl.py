@@ -2053,8 +2053,37 @@ class TreeView(GitCommandView):
             structure[index] = meta_info
 
     def update(self, target_path, diff_output):
+        if self.getHeight() == 0:
+            self.createFromScratch(diff_output)
+            return
+
         with self._lock:
             self._update(target_path, diff_output)
+
+    def createFromScratch(self, diff_output):
+        for line in diff_output:
+            self.buildTree(line)
+        self.buildTree(" 1 file")
+
+        self._buffer.options['modifiable'] = True
+
+        insert_pos = self._owner.getScratchPos(self)
+        self._buffer.append("", insert_pos)
+        title = self._cmd.getTitle()
+        if title is not None:
+            self._buffer.append(title[:-1] + " (1):", insert_pos)
+            insert_pos += 1
+
+        self._buffer.append(shrinkUser(self._project_root), insert_pos)
+        insert_pos += 1
+
+        structure = self._file_structures[self._cur_parent]
+        self._buffer.append(
+                [self.buildLine(info) for info in structure],
+                insert_pos
+                )
+
+        self._buffer.options['modifiable'] = False
 
     def _update(self, target_path, diff_output):
         self.updateNumStat(target_path, diff_output)
@@ -3385,6 +3414,16 @@ class NavigationPanel(Panel):
         lfCmd("augroup Lf_Git_Colorscheme | augroup END")
         lfCmd("autocmd Lf_Git_Colorscheme ColorScheme * call leaderf#colorscheme#popup#load('Git', '{}')"
               .format(lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
+
+    def getScratchPos(self, tree_view):
+        n = len(self._head) + 1
+        for view in self._tree_views:
+            if tree_view is view:
+                return n
+
+            n += view.getHeight() + view.getTitleHeight() + 2
+
+        return n
 
     def startLine(self, tree_view):
         n = len(self._head) + 1
