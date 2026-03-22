@@ -3938,7 +3938,8 @@ class NavigationPanel(Panel):
         unstaged_tree_view = self.getTreeViewByTitle("Unstaged Changes:")
 
         if title == "Unstaged Changes:":
-            staged_tree_view.update(target_path, outputs[0])
+            if how != "discard":
+                staged_tree_view.update(target_path, outputs[0])
             unstaged_tree_view.locateAndUpdateStat(False, target_path, outputs[1])
         else:
             unstaged_tree_view.update(target_path, outputs[1])
