@@ -2068,20 +2068,24 @@ class TreeView(GitCommandView):
         self._buffer.options['modifiable'] = True
 
         insert_pos = self._owner.getScratchPos(self)
-        self._buffer.append("", insert_pos)
+        if insert_pos > len(self._buffer):
+            self._buffer.append("", insert_pos-1)
+        else:
+            self._buffer.append("", insert_pos)
+
+        content = []
         title = self._cmd.getTitle()
         if title is not None:
-            self._buffer.append(title[:-1] + " (1):", insert_pos)
-            insert_pos += 1
+            content.append(title[:-1] + " (1):")
 
-        self._buffer.append(shrinkUser(self._project_root), insert_pos)
-        insert_pos += 1
+        content.append(shrinkUser(self._project_root))
 
         structure = self._file_structures[self._cur_parent]
-        self._buffer.append(
-                [self.buildLine(info) for info in structure],
-                insert_pos
+        content.extend(
+                (self.buildLine(info) for info in structure)
                 )
+
+        self._buffer.append(content, insert_pos)
 
         self._buffer.options['modifiable'] = False
 
