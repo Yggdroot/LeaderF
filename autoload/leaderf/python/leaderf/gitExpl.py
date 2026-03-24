@@ -4131,8 +4131,28 @@ class NavigationPanel(Panel):
 
         self.updateTreeview(tree_view.getTitle(), next_path, sync=True)
 
+    def _generateCommitMsg(self):
+        env = os.environ.copy()
+        env["GIT_EDITOR"] = "false"
+
+        subprocess.run(
+            "git commit",
+            shell=True,
+            cwd=self._project_root,
+            env=env,
+            capture_output=True,
+            text=True
+        )
+
     def commit(self):
-        env = os.environ
+        git_dir = os.path.join(self._project_root, ".git")
+        squash_msg = os.path.join(git_dir, "SQUASH_MSG")
+        if os.path.exists(squash_msg):
+            self._generateCommitMsg()
+            self.handleCommit()
+            return
+        
+        env = os.environ.copy()
         env["GIT_EDITOR"] = ':'
         output = subprocess.run("git commit",
                                  capture_output=True,
@@ -4170,7 +4190,9 @@ class NavigationPanel(Panel):
         lfCmd("autocmd! Lf_Git_Commit BufWipeout <buffer> call leaderf#Git#CommitBufWipeout({})".format(id(self)))
 
     def commitBufferWipeout(self):
-        if vim.current.buffer.vars["changedtick"] == self._init_changedtick:
+        git_dir = os.path.join(self._project_root, ".git")
+        squash_msg = os.path.join(git_dir, "SQUASH_MSG")
+        if not os.path.exists(squash_msg) and vim.current.buffer.vars["changedtick"] == self._init_changedtick:
             err_msg = "Aborting commit; you did not edit the message."
             lfCmd("echohl WarningMsg | redraw | echo '%s' | echohl NONE" % err_msg)
         else:
