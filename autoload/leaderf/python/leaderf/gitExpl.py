@@ -2456,7 +2456,7 @@ class DiffViewPanel(Panel):
         lfCmd("call win_execute({}, 'let b:lf_git_diff_win_pos = {}')".format(win_id, k))
         lfCmd("call win_execute({}, 'let b:lf_git_diff_win_id = {}')".format(win_id, right_winid))
         abs_file_path = os.path.join(self._project_root, lfGetFilePath(source))
-        lfCmd("""call win_execute(%d, "let b:lf_git_file_name = '%s'")"""
+        lfCmd("""call win_execute(%d, "let b:lf_git_file_path = '%s'")"""
               % (win_id, escQuote(abs_file_path)))
         lfCmd("""call win_execute({}, 'let b:lf_diff_view_mode = "side-by-side"')"""
               .format(win_id))
@@ -3087,11 +3087,11 @@ class UnifiedDiffViewPanel(Panel):
                 self.highlightDiff(winid, content, change_block_ranges)
 
                 abs_file_path = os.path.join(self._project_root, lfGetFilePath(source))
-                lfCmd("let b:lf_git_file_name = '%s'" % escQuote(abs_file_path))
+                lfCmd("let b:lf_git_file_path = '%s'" % escQuote(abs_file_path))
                 abs_orig_file_path = lfGetOrigFilePath(source)
                 if abs_orig_file_path != "":
                     abs_orig_file_path = os.path.join(self._project_root, abs_orig_file_path)
-                lfCmd("let b:lf_git_orig_file_name = '%s'" % escQuote(abs_orig_file_path))
+                lfCmd("let b:lf_git_orig_file_path = '%s'" % escQuote(abs_orig_file_path))
                 lfCmd("let b:lf_git_line_num_content = {}".format(str(line_num_content)))
                 lfCmd("let b:lf_change_block_ranges = {}".format(str(change_block_ranges)))
                 lfCmd("augroup Lf_Git_Log | augroup END")
@@ -3200,8 +3200,8 @@ class UnifiedDiffViewPanel(Panel):
             else:
                 navigation_panel.stageUnstage(focus=False)
         else:
-            file_name = lfEval("b:lf_git_file_name")
-            orig_file_name = lfEval("b:lf_git_orig_file_name")
+            file_name = lfEval("b:lf_git_file_path")
+            orig_file_name = lfEval("b:lf_git_orig_file_path")
             buffer_name_parts = vim.current.buffer.name.split(":")
             right_commit = buffer_name_parts[2]
             if right_commit == "xxx":
@@ -3848,7 +3848,7 @@ class NavigationPanel(Panel):
     def open(self):
         navigation_winid = self.getWindowId()
         tree_view_id = int(lfEval("string(b:lf_tree_view_id)"))
-        current_file_path = os.path.relpath(lfEval("b:lf_git_file_name"), self._project_root)
+        current_file_path = os.path.relpath(lfEval("b:lf_git_file_path"), self._project_root)
         if navigation_winid != -1:
             lfCmd("noautocmd call win_gotoid({})".format(navigation_winid))
             ctypes.cast(tree_view_id, ctypes.py_object).value.locateFile(current_file_path)
