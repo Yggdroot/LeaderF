@@ -1173,6 +1173,27 @@ class LfOrderedDict(OrderedDict):
     def first_key_value(self):
         return next(iter(self.items()))
 
+    def insert_ordered_update(self, key, value):
+        """
+        if is insert, return True, otherwise return False
+        """
+        if not self:
+            self[key] = value
+            return True
+
+        items = list(self.items())
+        pos = bisect.bisect_left(items, (key,))
+
+        if pos < len(items) and items[pos][0] == key:
+            self[key] = value
+            return False
+
+        items.insert(pos, (key, value))
+
+        self.clear()
+        self.update(items)
+        return True
+
 
 class FolderStatus(Enum):
     CLOSED = 0
@@ -1386,6 +1407,14 @@ class TreeView(GitCommandView):
 
         return None
 
+    def buildFileLine(self, source, icon):
+        return "{:<4} {}{}{}".format(
+            source[2],
+            icon,
+            source[3],
+            "" if source[4] == "" else "\t=>\t" + source[4]
+        )
+
     def buildTree(self, line):
         """
         command output is something as follows:
@@ -1436,12 +1465,8 @@ class TreeView(GitCommandView):
                 return
             file_path = lfGetFilePath(source)
             icon = webDevIconsGetFileTypeSymbol(file_path) if self._show_icon else ""
-            self._file_list[parent].append("{:<4} {}{}{}"
-                                           .format(source[2], icon, source[3],
-                                                   "" if source[4] == ""
-                                                   else "\t=>\t" + source[4])
-                                           )
-            self._file_path_list[parent].append(source[3])
+            self._file_list[parent].append(self.buildFileLine(source, icon))
+            self._file_path_list[parent].append(file_path)
             if mode == "160000": # gitlink
                 directories = file_path.split("/")
             else:
@@ -1665,9 +1690,23 @@ class TreeView(GitCommandView):
 
         return file in tree_node.files
 
+    def getSourceInfo(self, path):
+        """
+        return a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+               None if path not in Tree
+        """
+        *directories, file = path.split("/")
+        tree_node = self._trees[self._cur_parent]
+        for d in directories:
+            if d not in tree_node.dirs:
+                return None
+            tree_node = tree_node.dirs[d]
+
+        return tree_node.files.get(file, None)
+
     def locateFile(self, path):
         with self._lock:
-            self._locateFile(PurePath(lfRelpath(path)).as_posix())
+            return self._locateFile(PurePath(lfRelpath(path)).as_posix())
 
     @staticmethod
     def getDirName(path):
@@ -1679,34 +1718,37 @@ class TreeView(GitCommandView):
                 path += "/"
             return path
 
-    def _locateFile(self, path):
-        def getKey(info):
-            if info.path == path:
-                return 0
+    @staticmethod
+    def getKey(path, info):
+        if info.path == path:
+            return 0
+        else:
+            info_path_dir = TreeView.getDirName(info.path)
+            path_dir = TreeView.getDirName(path)
+            if ((info.path > path
+                 and not (info_path_dir.startswith(path_dir) and info_path_dir != path_dir)
+                 )
+                or
+                (info.path < path and info.is_dir == False
+                 and (path_dir.startswith(info_path_dir) and info_path_dir != path_dir)
+                 )
+                ):
+                return 1
             else:
-                info_path_dir = TreeView.getDirName(info.path)
-                path_dir = TreeView.getDirName(path)
-                if ((info.path > path
-                     and not (info_path_dir.startswith(path_dir) and info_path_dir != path_dir)
-                     )
-                    or
-                    (info.path < path and info.is_dir == False
-                     and (path_dir.startswith(info_path_dir) and info_path_dir != path_dir)
-                     )
-                    ):
-                    return 1
-                else:
-                    return -1
+                return -1
 
+    def _locateFile(self, path):
+        getKey = partial(TreeView.getKey, path)
         structure = self._file_structures[self._cur_parent]
         index = Bisect.bisect_left(structure, 0, key=getKey)
         if index < len(structure) and structure[index].path == path:
             lfCmd("call win_execute({}, 'norm! {}G0zz')"
                   .format(self.getWindowId(), index + self.startLine()))
+            return index
         else:
             if not self.inTree(path):
                 lfPrintError("File can't be found!")
-                return
+                return -1
 
             meta_info = structure[index-1]
             prefix_len = len(meta_info.path)
@@ -1725,8 +1767,10 @@ class TreeView(GitCommandView):
             if index < len(structure) and structure[index].path == path:
                 lfCmd("call win_execute({}, 'norm! {}G0zz')"
                       .format(self.getWindowId(), index + self.startLine()))
+                return index
             else:
                 lfPrintError("BUG: File can't be found!")
+                return -1
 
     def buildLine(self, meta_info):
         if meta_info.is_dir:
@@ -1977,6 +2021,189 @@ class TreeView(GitCommandView):
             lfCmd("silent! call matchdelete({}, {})".format(i, self._match_id_winid))
         self._match_ids = []
 
+    def updateNumStat(self, target_path, diff_output):
+        """
+        diff_output is like
+        [
+        ":100644 100644 0db2c7ed0be77cb8ad263cdf8316643b73275ee4 17c997fd0ba0f5fbe4b5bbec569b3079d69a6b7e M      docs/conf.py",
+        "5\t3\tdocs/conf.py"
+        ]
+        """
+        added, deleted, pathname = diff_output[1].split("\t")
+        if added == "-" and deleted == "-":
+            self._num_stat[self._cur_parent][target_path] = "(Bin)"
+        else:
+            self._num_stat[self._cur_parent][target_path] = "+{:3} -{}".format(added, deleted)
+
+    def _insertOrUpdateFileNode(self, path, diff_output):
+        *directories, file = path.split("/")
+        tree_node = self._trees[self._cur_parent]
+        for d in directories:
+            if d not in tree_node.dirs:
+                tree_node.dirs[d] = TreeNode(FolderStatus.OPEN)
+            tree_node = tree_node.dirs[d]
+
+        _, source = TreeView.generateSource(diff_output[0])
+        insert = tree_node.files.insert_ordered_update(file, source)
+        if insert == True:
+            self._insertFileList(source)
+
+        return source
+
+    def _insertEmptyLine(self, line_num):
+        try:
+            self._buffer.options['modifiable'] = True
+            self._buffer.append("", line_num - 1)
+        finally:
+            self._buffer.options['modifiable'] = False
+
+    def _insertOrUpdateStructure(self, exists, structure, index, meta_info):
+        if not exists:
+            structure.insert(index, meta_info)
+        else:
+            structure[index] = meta_info
+
+    def update(self, target_path, diff_output):
+        if self.getHeight() == 0:
+            self.createFromScratch(diff_output)
+            return
+
+        with self._lock:
+            self._update(target_path, diff_output)
+
+    def createFromScratch(self, diff_output):
+        for line in diff_output:
+            self.buildTree(line)
+        self.buildTree(" 1 file")
+
+        content = []
+        title = self._cmd.getTitle()
+        if title is not None:
+            content.append(title[:-1] + " (1):")
+
+        content.append(shrinkUser(self._project_root))
+
+        structure = self._file_structures[self._cur_parent]
+        content.extend(
+                (self.buildLine(info) for info in structure)
+                )
+
+        self._buffer.options['modifiable'] = True
+
+        insert_pos = self._owner.getScratchPos(self)
+        if insert_pos > len(self._buffer):
+            self._buffer.append("", insert_pos-1)
+        else:
+            self._buffer.append("", insert_pos)
+
+        self._buffer.append(content, insert_pos)
+
+        self._buffer.options['modifiable'] = False
+
+    def _insertFileList(self, source):
+        file_path = lfGetFilePath(source)
+        index = Bisect.bisect_left(self._file_path_list[self._cur_parent], file_path)
+        self._file_path_list[self._cur_parent].insert(index, file_path)
+        icon = webDevIconsGetFileTypeSymbol(file_path) if self._show_icon else ""
+        self._file_list[self._cur_parent].insert(index, self.buildFileLine(source, icon))
+
+    def _update(self, target_path, diff_output):
+        self.updateNumStat(target_path, diff_output)
+
+        if "/" in target_path:
+            pos = target_path.find("/")
+            first_dir_name = target_path[:pos]
+            first_dir_path = first_dir_name + "/"
+            
+            def getKey(path, info):
+                p = info.path
+                if p.startswith(path):
+                    return 0
+                elif "/" not in p:
+                    return 1
+                else:
+                    return 1 if p > path else -1
+
+            structure = self._file_structures[self._cur_parent]
+            index = Bisect.bisect_left(structure, 0,
+                                       key=partial(getKey, first_dir_path))
+
+            line_num = index + self.startLine()
+
+            exists = index < len(structure) and structure[index].path.startswith(first_dir_path)
+            if not exists:
+                self._insertEmptyLine(line_num)
+            elif structure[index].info.status != FolderStatus.CLOSED:
+                status = structure[index].info.status
+                self.collapseFolder(line_num, index, structure[index], False)
+                structure[index].info.status = status
+
+            self._insertOrUpdateFileNode(target_path, diff_output)
+
+            tree_node = self._trees[self._cur_parent].dirs[first_dir_name]
+            meta_info = MetaInfo(0,
+                                 True,
+                                 first_dir_name,
+                                 tree_node,
+                                 first_dir_path)
+
+            self._insertOrUpdateStructure(exists, structure, index, meta_info)
+            self.expandFolder(line_num, index, meta_info, False)
+        else:
+            def getKey(path, info):
+                p = info.path
+                if "/" in p or p < path:
+                    return -1
+                elif p > path:
+                    return 1
+                else:
+                    return 0
+
+            structure = self._file_structures[self._cur_parent]
+            index = Bisect.bisect_left(structure, 0,
+                                       key=partial(getKey, target_path))
+
+            line_num = index + self.startLine()
+
+            exists = index < len(structure) and structure[index].path == target_path
+            if not exists:
+                self._insertEmptyLine(line_num)
+
+            self._insertOrUpdateFileNode(target_path, diff_output)
+
+            tree_node = self._trees[self._cur_parent].files[target_path]
+            meta_info = MetaInfo(0,
+                                 False,
+                                 target_path,
+                                 tree_node,
+                                 target_path)
+
+            self._insertOrUpdateStructure(exists, structure, index, meta_info)
+
+            self.updateBufferLine(line_num, self.buildLine(meta_info))
+
+    def updateBufferLine(self, line_num, text):
+        try:
+            self._buffer.options['modifiable'] = True
+            self._buffer[line_num - 1] = text
+        finally:
+            self._buffer.options['modifiable'] = False
+
+    def locateAndUpdateStat(self, update_info, target_path, diff_output):
+        with self._lock:
+            self._locateAndUpdateStat(update_info, target_path, diff_output)
+
+    def _locateAndUpdateStat(self, update_info, target_path, diff_output):
+        self.updateNumStat(target_path, diff_output)
+        index = self._locateFile(target_path)
+        line_num = index + self.startLine()
+        structure = self._file_structures[self._cur_parent]
+
+        if update_info == True:
+            source = self._insertOrUpdateFileNode(target_path, diff_output)
+            structure[index].info = source
+
+        self.updateBufferLine(line_num, self.buildLine(structure[index]))
 
 class Panel(object):
     def __init__(self):
@@ -2863,7 +3090,7 @@ class UnifiedDiffViewPanel(Panel):
                 lfCmd("let b:lf_git_file_name = '%s'" % escQuote(abs_file_path))
                 abs_orig_file_path = lfGetOrigFilePath(source)
                 if abs_orig_file_path != "":
-                    abs_orig_file_path = os.path.join(self._project_root, lfGetOrigFilePath(source))
+                    abs_orig_file_path = os.path.join(self._project_root, abs_orig_file_path)
                 lfCmd("let b:lf_git_orig_file_name = '%s'" % escQuote(abs_orig_file_path))
                 lfCmd("let b:lf_git_line_num_content = {}".format(str(line_num_content)))
                 lfCmd("let b:lf_change_block_ranges = {}".format(str(change_block_ranges)))
@@ -3037,11 +3264,27 @@ class UnifiedDiffViewPanel(Panel):
             else:
                 target_path = os.path.relpath(file_name, self._project_root)
             target_path = target_path.replace('\\', '/')
-            lfCmd("noautocmd LeaderfGitNavigationOpen")
-            navigation_panel.updateTreeview(title,
-                                            target_path,
-                                            focus=False,
-                                            sync=True)
+
+            navigation_panel.update(how, title, target_path)
+
+            tree_view = navigation_panel.getTreeViewByTitle(title)
+            if tree_view is None:
+                lfPrintError("Bug, impossible!")
+                return
+
+            source = tree_view.getSourceInfo(target_path)
+            if source is None:
+                lfPrintError("Bug! {} is not in the tree.".format(target_path))
+                return
+
+            kwargs = {}
+            kwargs["tree_view_id"] = id(tree_view)
+            kwargs["project_root"] = navigation_panel._project_root
+            kwargs["explorer_page_id"] = id(navigation_panel._owner)
+            kwargs["ignore_whitespace"] = navigation_panel.getIgnoreWhitespace()
+            kwargs["diff_algorithm"] = navigation_panel.getDiffAlgorithm()
+            kwargs["stage"] = False
+            self.create({}, source, **kwargs)
 
     def extractHunk(self, diff, line_num, add_del_flag):
         lines = diff.splitlines(keepends=True)
@@ -3194,6 +3437,16 @@ class NavigationPanel(Panel):
         lfCmd("autocmd Lf_Git_Colorscheme ColorScheme * call leaderf#colorscheme#popup#load('Git', '{}')"
               .format(lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
 
+    def getScratchPos(self, tree_view):
+        n = len(self._head) + 1
+        for view in self._tree_views:
+            if tree_view is view:
+                return n
+
+            n += view.getHeight() + view.getTitleHeight() + 2
+
+        return n
+
     def startLine(self, tree_view):
         n = len(self._head) + 1
         for view in self._tree_views:
@@ -3215,6 +3468,13 @@ class NavigationPanel(Panel):
                 n += view.getTitleHeight() + view.getHeight() + 2
                 if line_num <= n:
                     return view
+
+    def getTreeViewByTitle(self, title):
+        for view in self._tree_views:
+            if view.getTitle() == title:
+                return view
+
+        return None
 
     def getDiffViewMode(self):
         return self._diff_view_mode
@@ -3727,6 +3987,24 @@ class NavigationPanel(Panel):
         ParallelExecutor.run(cmd, directory=self._project_root)
 
         self.updateTreeview(title, target_path, focus, sync=True, stage=True)
+
+    def update(self, how, title, target_path):
+        git_cmd0 = "git diff --cached --diff-algorithm={} --raw -C --numstat --no-abbrev -- {}".format(
+                    self._diff_algorithm, target_path)
+        git_cmd1 = "git diff --diff-algorithm={} --raw -C --numstat --no-abbrev -- {}".format(
+                    self._diff_algorithm, target_path)
+
+        outputs = ParallelExecutor.run(git_cmd0, git_cmd1, directory=self._project_root)
+        staged_tree_view = self.getTreeViewByTitle("Staged Changes:")
+        unstaged_tree_view = self.getTreeViewByTitle("Unstaged Changes:")
+
+        if title == "Unstaged Changes:":
+            if how != "discard":
+                staged_tree_view.update(target_path, outputs[0])
+            unstaged_tree_view.locateAndUpdateStat(False, target_path, outputs[1])
+        else:
+            unstaged_tree_view.update(target_path, outputs[1])
+            staged_tree_view.locateAndUpdateStat(True, target_path, outputs[0])
 
     def updateTreeview(self,
                        title=None,
