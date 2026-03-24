@@ -3286,6 +3286,8 @@ class UnifiedDiffViewPanel(Panel):
             kwargs["stage"] = False
             self.create({}, source, **kwargs)
 
+            lfCmd("checktime")
+
     def extractHunk(self, diff, line_num, add_del_flag):
         lines = diff.splitlines(keepends=True)
         header_end = next(i for i, l in enumerate(lines) if l.startswith(b"@@"))
