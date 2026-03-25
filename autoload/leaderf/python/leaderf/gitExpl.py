@@ -1736,14 +1736,24 @@ class TreeView(GitCommandView):
                 return 1
             else:
                 return -1
+    def isVisible(self, line_num, winid):
+        w0 = int(lfEval("line('w0', {})".format(winid)))
+        wend = int(lfEval("line('w$', {})".format(winid)))
+        
+        return w0 <= line_num <= wend
 
     def _locateFile(self, path):
         getKey = partial(TreeView.getKey, path)
         structure = self._file_structures[self._cur_parent]
         index = Bisect.bisect_left(structure, 0, key=getKey)
         if index < len(structure) and structure[index].path == path:
-            lfCmd("call win_execute({}, 'norm! {}G0zz')"
-                  .format(self.getWindowId(), index + self.startLine()))
+            winid = self.getWindowId()
+            line_num = index + self.startLine()
+            lfCmd("call win_execute({}, 'norm! {}G0{}')"
+                  .format(winid, line_num,
+                          "" if self.isVisible(line_num, winid) else "zz"
+                          )
+                  )
             return index
         else:
             if not self.inTree(path):
@@ -1765,8 +1775,13 @@ class TreeView(GitCommandView):
 
             index = Bisect.bisect_left(structure, 0, index, index + increment, key=getKey)
             if index < len(structure) and structure[index].path == path:
-                lfCmd("call win_execute({}, 'norm! {}G0zz')"
-                      .format(self.getWindowId(), index + self.startLine()))
+                winid = self.getWindowId()
+                line_num = index + self.startLine()
+                lfCmd("call win_execute({}, 'norm! {}G0{}')"
+                      .format(winid, line_num,
+                              "" if self.isVisible(line_num, winid) else "zz"
+                              )
+                      )
                 return index
             else:
                 lfPrintError("BUG: File can't be found!")
