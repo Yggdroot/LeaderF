@@ -2831,10 +2831,11 @@ class UnifiedDiffViewPanel(Panel):
         }
         blob_id = source[1][:7]
         uid = algo_dict[diff_algorithm] + int(ignore_whitespace)
-        buf_name = "LeaderF://{}:{}:{}:{}".format(self._commit_id,
-                                                  blob_id,
-                                                  uid,
-                                                  lfGetFilePath(source))
+        buf_name = "LeaderF://{}:{}:{}{}:{}".format(self._commit_id,
+                                                    blob_id,
+                                                    uid,
+                                                    source[2] if source[2].startswith("R") else "",
+                                                    lfGetFilePath(source))
         if buf_name in self._views and "stage" not in kwargs:
             winid = self._views[buf_name].getWindowId()
             lfCmd("noautocmd call win_gotoid({})".format(winid))
