@@ -3215,8 +3215,8 @@ class UnifiedDiffViewPanel(Panel):
             else:
                 navigation_panel.stageUnstage(focus=False)
         else:
-            file_name = lfEval("b:lf_git_file_path")
-            orig_file_name = lfEval("b:lf_git_orig_file_path")
+            file_path = lfEval("b:lf_git_file_path")
+            orig_file_path = lfEval("b:lf_git_orig_file_path")
             buffer_name_parts = vim.current.buffer.name.split(":")
             right_commit = buffer_name_parts[2]
             if right_commit == "xxx":
@@ -3224,7 +3224,7 @@ class UnifiedDiffViewPanel(Panel):
             elif right_commit.startswith("0000000"):
                 title = "Unstaged Changes:"
                 git_cmd = "git diff --diff-algorithm={} -U5 -- {}".format(navigation_panel._diff_algorithm,
-                                                                          file_name)
+                                                                          file_path)
                 if how == "discard":
                     if prompt == True:
                         selection = lfConfirm("Discard this hunk?")
@@ -3241,8 +3241,8 @@ class UnifiedDiffViewPanel(Panel):
 
                 title = "Staged Changes:"
                 git_cmd = "git diff --cached --diff-algorithm={} -U5 -- {} {}".format(navigation_panel._diff_algorithm,
-                                                                                      orig_file_name,
-                                                                                      file_name)
+                                                                                      orig_file_path,
+                                                                                      file_path)
                 git_apply_cmd = "git apply -R --cached --whitespace=nowarn"
 
                 buffer_name_parts[2] = "0000000"    # 7 zeros
@@ -3274,10 +3274,10 @@ class UnifiedDiffViewPanel(Panel):
                 lfPrintError("git apply failed! " + lfBytes2Str(output.stderr.strip()))
                 return
 
-            if orig_file_name != "":
-                target_path = os.path.relpath(orig_file_name, self._project_root)
+            if orig_file_path != "":
+                target_path = os.path.relpath(orig_file_path, self._project_root)
             else:
-                target_path = os.path.relpath(file_name, self._project_root)
+                target_path = os.path.relpath(file_path, self._project_root)
             target_path = target_path.replace('\\', '/')
 
             navigation_panel.update(how, title, target_path)
