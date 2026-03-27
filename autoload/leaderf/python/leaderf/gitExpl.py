@@ -4016,14 +4016,21 @@ class NavigationPanel(Panel):
         self.updateTreeview(title, target_path, focus, sync=True, stage=True)
 
     def update(self, how, title, target_path):
-        git_cmd0 = "git diff --cached --diff-algorithm={} --raw -C --numstat --no-abbrev -- {}".format(
-                    self._diff_algorithm, target_path)
+        staged_tree_view = self.getTreeViewByTitle("Staged Changes:")
+        unstaged_tree_view = self.getTreeViewByTitle("Unstaged Changes:")
+
+        orig_file_path = ""
+        if title == "Unstaged Changes:":
+            source = staged_tree_view.getSourceInfo(target_path)
+            if source is not None:
+                orig_file_path = source[3]
+
+        git_cmd0 = "git diff --cached --diff-algorithm={} --raw -C --numstat --no-abbrev -- {} {}".format(
+                    self._diff_algorithm, orig_file_path, target_path)
         git_cmd1 = "git diff --diff-algorithm={} --raw -C --numstat --no-abbrev -- {}".format(
                     self._diff_algorithm, target_path)
 
         outputs = ParallelExecutor.run(git_cmd0, git_cmd1, directory=self._project_root)
-        staged_tree_view = self.getTreeViewByTitle("Staged Changes:")
-        unstaged_tree_view = self.getTreeViewByTitle("Unstaged Changes:")
 
         if title == "Unstaged Changes:":
             if how != "discard":
