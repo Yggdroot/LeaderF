@@ -1903,7 +1903,8 @@ class TreeView(GitCommandView):
                         else:
                             self._buffer.append(self.buildLine(info))
                         if cursor_line == init_line and not info.is_dir:
-                            if self._target_path is None or info.path == self._target_path:
+                            if (self._target_path is None or info.path == self._target_path
+                                or info.info[3] == self._target_path):
                                 if self._content_buffer is not None:
                                     cursor_line = len(self._content_buffer)
                                     if self._cursor_line is not None:
