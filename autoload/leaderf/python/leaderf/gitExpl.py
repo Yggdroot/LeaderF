@@ -3276,10 +3276,18 @@ class UnifiedDiffViewPanel(Panel):
                 lfPrintError("git apply failed! " + lfBytes2Str(output.stderr.strip()))
                 return
 
+            # if it is renamed file, rebuild the tree view
             if orig_file_path != "":
                 target_path = os.path.relpath(orig_file_path, self._project_root)
-            else:
-                target_path = os.path.relpath(file_path, self._project_root)
+                target_path = target_path.replace('\\', '/')
+                lfCmd("noautocmd LeaderfGitNavigationOpen")
+                navigation_panel.updateTreeview(title,
+                                                target_path,
+                                                focus=False,
+                                                sync=True)
+                return
+
+            target_path = os.path.relpath(file_path, self._project_root)
             target_path = target_path.replace('\\', '/')
 
             navigation_panel.update(how, title, target_path)
