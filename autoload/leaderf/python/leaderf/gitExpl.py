@@ -1695,6 +1695,9 @@ class TreeView(GitCommandView):
         return a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
                None if path not in Tree
         """
+        if not self._trees:
+            return None
+
         *directories, file = path.split("/")
         tree_node = self._trees[self._cur_parent]
         for d in directories:
