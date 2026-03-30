@@ -2051,6 +2051,24 @@ class TreeView(GitCommandView):
         else:
             self._num_stat[self._cur_parent][target_path] = "+{:3} -{}".format(added, deleted)
 
+    def _removeFileNode(self, path, tree_node):
+        """
+        return True if the tree is empty after removing the path
+        """
+        if "/" not in path:
+            del tree_node.files[path]
+            return not tree_node.dirs and not tree_node.files
+
+        dir_name, rest = path.split("/", 1)
+        child = tree_node.dirs[dir_name]
+
+        is_empty = self._removeFileNode(rest, child)
+
+        if is_empty:
+            del tree_node.dirs[dir_name]
+
+        return not tree_node.dirs and not tree_node.files
+
     def _insertOrUpdateFileNode(self, path, diff_output):
         *directories, file = path.split("/")
         tree_node = self._trees[self._cur_parent]
@@ -2220,6 +2238,81 @@ class TreeView(GitCommandView):
             structure[index].info = source
 
         self.updateBufferLine(line_num, self.buildLine(structure[index]))
+
+    def _removeFromFileList(self, path):
+        file_paths = self._file_path_list[self._cur_parent]
+        index = Bisect.bisect_left(file_paths, path)
+
+        if index < len(file_paths) and file_paths[index] == path:
+            del file_paths[index]
+            del self._file_list[self._cur_parent][index]
+
+    def removeFile(self, target_path):
+        if self._cur_parent in self._num_stat:
+            self._num_stat[self._cur_parent].pop(target_path, None)
+
+        self._removeFromFileList(target_path)
+
+        if "/" in target_path:
+            pos = target_path.find("/")
+            first_dir_name = target_path[:pos]
+            first_dir_path = first_dir_name + "/"
+            
+            def getKey(path, info):
+                p = info.path
+                if p.startswith(path):
+                    return 0
+                elif "/" not in p:
+                    return 1
+                else:
+                    return 1 if p > path else -1
+
+            structure = self._file_structures[self._cur_parent]
+            index = Bisect.bisect_left(structure, 0,
+                                       key=partial(getKey, first_dir_path))
+
+            line_num = index + self.startLine()
+
+            if structure[index].info.status != FolderStatus.CLOSED:
+                self.collapseFolder(line_num, index, structure[index], False)
+
+            tree_node = self._trees[self._cur_parent].dirs[first_dir_name]
+            is_empty = self._removeFileNode(target_path[pos+1:], tree_node)
+            if is_empty:
+                del structure[index]
+                self._buffer.options['modifiable'] = True
+                del self._buffer[line_num - 1]
+                self._buffer.options['modifiable'] = False
+            else:
+                meta_info = MetaInfo(0,
+                                     True,
+                                     first_dir_name,
+                                     tree_node,
+                                     first_dir_path)
+
+                structure[index] = meta_info
+                self.expandFolder(line_num, index, meta_info, False)
+        else:
+            def getKey(path, info):
+                p = info.path
+                if "/" in p or p < path:
+                    return -1
+                elif p > path:
+                    return 1
+                else:
+                    return 0
+
+            structure = self._file_structures[self._cur_parent]
+            index = Bisect.bisect_left(structure, 0,
+                                       key=partial(getKey, target_path))
+
+            line_num = index + self.startLine()
+
+            del structure[index]
+            self._buffer.options['modifiable'] = True
+            del self._buffer[line_num - 1]
+            self._buffer.options['modifiable'] = False
+
 
 class Panel(object):
     def __init__(self):
@@ -4013,7 +4106,32 @@ class NavigationPanel(Panel):
 
         ParallelExecutor.run(cmd, directory=self._project_root)
 
-        self.updateTreeview(title, target_path, focus, sync=True, stage=True)
+        if meta_info is None or meta_info.is_dir or meta_info.info[2].startswith("R"):
+            self.updateTreeview(title, target_path, focus, sync=True, stage=True)
+        else:
+            self.moveFileBetweenTrees(tree_view, title, target_path)
+
+    def moveFileBetweenTrees(self, current_tree_view, title, target_path):
+        to_tree_view = self.getTreeViewByTitle(title)
+        if title == "Unstaged Changes:":
+            git_cmd = "git diff --diff-algorithm={} --raw -C --numstat --no-abbrev -- {}".format(
+                    self._diff_algorithm, target_path)
+        elif title == "Staged Changes:":
+            orig_file_path = ""
+            source = to_tree_view.getSourceInfo(target_path)
+            if source is not None:
+                orig_file_path = source[3]
+
+            git_cmd = "git diff --cached --diff-algorithm={} --raw -C --numstat --no-abbrev -- {} {}".format(
+                    self._diff_algorithm, orig_file_path, target_path)
+        else:
+            pass
+
+        outputs = ParallelExecutor.run(git_cmd, directory=self._project_root)
+        current_tree_view.removeFile(target_path)
+        to_tree_view.update(target_path, outputs[0])
+        to_tree_view.locateAndUpdateStat(True, target_path, outputs[0])
+        self.openDiffView(False, preview=True)
 
     def update(self, how, title, target_path):
         staged_tree_view = self.getTreeViewByTitle("Staged Changes:")
