@@ -3073,7 +3073,7 @@ class UnifiedDiffViewPanel(Panel):
                         ]
                 index = Bisect.bisect_right(orig_change_start_lines, vim.current.window.cursor[0])
 
-                buffer_num = int(lfEval("leaderf#Git#CreateBuffer('{}')".format(escSpecial(buf_name))))
+                buffer_num = int(lfEval("leaderf#Git#CreateBuffer('{}')".format(buf_name)))
                 vim.command("silent keepalt keepjumps buffer {}".format(buffer_num))
 
                 if buf_name in self._views:
