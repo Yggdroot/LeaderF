@@ -1,6 +1,5 @@
 import os
 import sys
-import shlex
 import signal
 import threading
 import itertools
