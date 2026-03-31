@@ -2059,7 +2059,7 @@ class TreeView(GitCommandView):
         tree_node = self._trees[self._cur_parent]
         for d in directories:
             if d not in tree_node.dirs:
-                tree_node.dirs[d] = TreeNode(FolderStatus.OPEN)
+                tree_node.dirs.insert_ordered_update(d, TreeNode(FolderStatus.OPEN))
             tree_node = tree_node.dirs[d]
 
         _, source = TreeView.generateSource(diff_output[0])
