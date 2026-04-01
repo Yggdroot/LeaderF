@@ -1995,6 +1995,41 @@ class TreeView(GitCommandView):
         else:
             return meta_info.info
 
+    def getPreviousPath(self, structure, index):
+        path = structure[index].path
+        i = index - 1
+        while i >= 0:
+            if structure[i].is_dir:
+                if not path.startswith(structure[i].path):
+                    file_info = self.getLeftMostFile(structure[i].info)
+                    return lfGetFilePath(file_info)
+            else:
+                return lfGetFilePath(structure[i].info)
+
+            i -= 1
+
+        return None
+
+    def getNextPath(self, structure, index):
+        if structure[index].is_dir:
+            path = structure[index].path
+            for i in range(index+1, len(structure)):
+                if not structure[i].path.startswith(path):
+                    if structure[i].is_dir:
+                        file_info = self.getLeftMostFile(structure[i].info)
+                        return lfGetFilePath(file_info)
+                    else:
+                        return lfGetFilePath(structure[i].info)
+        else:
+            for i in range(index+1, len(structure)):
+                if structure[i].is_dir:
+                    file_info = self.getLeftMostFile(structure[i].info)
+                    return lfGetFilePath(file_info)
+                else:
+                    return lfGetFilePath(structure[i].info)
+
+        return self.getPreviousPath(structure, index)
+
     def getFilePathPair(self):
         """
         return (path, next_path)
@@ -2009,16 +2044,13 @@ class TreeView(GitCommandView):
         if index == -1:
             return ("./", None)
 
-        file_path_list = self._file_path_list[self._cur_parent]
-        if len(file_path_list) == 1:
+        file_list = self._file_list[self._cur_parent]
+        if len(file_list) == 1:
             return (structure[index].path, None)
         elif index == len(structure) - 1:
-            next_path = file_path_list[-2]
-            return (structure[index].path, next_path)
+            return (structure[index].path, self.getPreviousPath(structure, index))
         else:
-            file_info = self.getFileInfo(structure[index + 1])
-            next_path = None if file_info is None else file_info[3]
-            return (structure[index].path, next_path)
+            return (structure[index].path, self.getNextPath(structure, index))
 
     def _readContent(self, encoding):
         try:
@@ -2070,6 +2102,9 @@ class TreeView(GitCommandView):
         """
         return True if the tree is empty after removing the path
         """
+        if path == "":
+            return True
+
         if "/" not in path:
             del tree_node.files[path]
             return not tree_node.dirs and not tree_node.files
@@ -2259,14 +2294,28 @@ class TreeView(GitCommandView):
         file_paths = self._file_path_list[self._cur_parent]
         index = Bisect.bisect_left(file_paths, path)
 
-        if index < len(file_paths) and file_paths[index] == path:
-            del file_paths[index]
-            del self._file_list[self._cur_parent][index]
+        if path.endswith("/"):
+            if index < len(file_paths) and file_paths[index].startswith(path):
+                right_key = path + chr(0x10FFFF)
+                right = Bisect.bisect_left(file_paths, right_key, index)
+                if self._cur_parent in self._num_stat:
+                    for i in range(index, right):
+                        self._num_stat[self._cur_parent].pop(file_paths[i], None)
 
-    def removeFile(self, target_path):
-        if self._cur_parent in self._num_stat:
-            self._num_stat[self._cur_parent].pop(target_path, None)
+                del file_paths[index:right]
+                del self._file_list[self._cur_parent][index:right]
+        else:
+            if index < len(file_paths) and file_paths[index] == path:
+                if self._cur_parent in self._num_stat:
+                    self._num_stat[self._cur_parent].pop(path, None)
 
+                del file_paths[index]
+                del self._file_list[self._cur_parent][index]
+
+    def removeFiles(self, target_path):
+        """
+        target_path may be a dirname, like 'src/'
+        """
         self._removeFromFileList(target_path)
         self._setChangedFilesNum()
 
@@ -4160,7 +4209,7 @@ class NavigationPanel(Panel):
         else:
             outputs = [[target_path]]
 
-        current_tree_view.removeFile(target_path)
+        current_tree_view.removeFiles(target_path)
         to_tree_view.update(target_path, outputs[0])
         to_tree_view.locateAndUpdateStat(True, target_path, outputs[0])
         self.openDiffView(False, preview=True)
@@ -4313,7 +4362,10 @@ class NavigationPanel(Panel):
 
         ParallelExecutor.run(cmd, directory=self._project_root)
 
-        self.updateTreeview(tree_view.getTitle(), next_path, sync=True)
+        tree_view.removeFiles(path)
+        if next_path is not None:
+            tree_view.locateFile(next_path)
+            self.openDiffView(False, preview=True)
 
     def _generateCommitMsg(self):
         env = os.environ.copy()
