@@ -4376,7 +4376,8 @@ class NavigationPanel(Panel):
             tree_view.removeFiles(path)
             if next_path is not None:
                 tree_view.locateFile(next_path)
-                self.openDiffView(False, preview=True)
+
+        self.openDiffView(False, preview=True)
 
     def clearWholeTree(self, tree_view):
         line_num = vim.current.window.cursor[0]
