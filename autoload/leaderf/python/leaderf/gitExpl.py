@@ -4200,9 +4200,9 @@ class NavigationPanel(Panel):
         if meta_info is None or meta_info.is_dir or meta_info.info[2].startswith("R"):
             self.updateTreeview(title, target_path, focus, sync=True, stage=True)
         else:
-            self.moveFileBetweenTrees(tree_view, title, target_path)
+            self.moveFileBetweenTrees(tree_view, title, target_path, focus)
 
-    def moveFileBetweenTrees(self, current_tree_view, title, target_path):
+    def moveFileBetweenTrees(self, current_tree_view, title, target_path, focus):
         to_tree_view = self.getTreeViewByTitle(title)
         if title == "Unstaged Changes:":
             git_cmd = "git diff --diff-algorithm={} --raw -C --numstat --no-abbrev -- {}".format(
@@ -4228,7 +4228,7 @@ class NavigationPanel(Panel):
         current_tree_view.removeFiles(target_path)
         to_tree_view.update(target_path, outputs[0])
         to_tree_view.locateAndUpdateStat(True, target_path, outputs[0])
-        self.openDiffView(False, preview=True)
+        self.openDiffView(False, preview=focus)
 
     def update(self, how, title, target_path):
         staged_tree_view = self.getTreeViewByTitle("Staged Changes:")
