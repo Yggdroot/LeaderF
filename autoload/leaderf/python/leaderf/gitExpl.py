@@ -1295,8 +1295,6 @@ class TreeView(GitCommandView):
                 "R": self._rename_icon,
                 "?": self._untrack_icon,
                 }
-        self._match_ids = []
-        self._match_id_winid = -1
         self._init = False
         # to protect self._file_structures
         self._lock = threading.Lock()
@@ -2077,12 +2075,6 @@ class TreeView(GitCommandView):
             traceback.print_exc()
             traceback.print_stack()
             self._read_finished = 1
-
-    def cleanup(self, wipe=True):
-        super(TreeView, self).cleanup(wipe)
-        for i in self._match_ids:
-            lfCmd("silent! call matchdelete({}, {})".format(i, self._match_id_winid))
-        self._match_ids = []
 
     def updateNumStat(self, target_path, diff_output):
         """
@@ -3705,7 +3697,6 @@ class NavigationPanel(Panel):
         self._tree_views = []
 
     def enableColor(self, winid):
-        self._match_id_winid = winid
         if lfEval("hlexists('Lf_hl_help')") == '0':
             lfCmd("call leaderf#colorscheme#popup#load('{}', '{}')"
                   .format("git", lfEval("get(g:, 'Lf_PopupColorscheme', 'default')")))
