@@ -1277,18 +1277,6 @@ class TreeView(GitCommandView):
         self._next_tree_view = next_tree_view
         self._content_buffer = content_buffer
         self._cursor_line = cursor_line
-        # key is the parent hash, value is a TreeNode
-        self._trees = LfOrderedDict()
-        # key is the parent hash, value is a list of MetaInfo
-        self._file_structures = {}
-        # to protect self._file_structures
-        self._lock = threading.Lock()
-        self._file_list = {}
-        self._file_path_list = {}
-        self._cur_parent = None
-        self._short_stat = {}
-        self._num_stat = {}
-        self._first_source = {}
         self._show_icon = lfEval("get(g:, 'Lf_ShowDevIcons', 1)") == "1"
         self._closed_folder_icon = self._owner._closed_folder_icon
         self._open_folder_icon = self._owner._open_folder_icon
@@ -1310,6 +1298,21 @@ class TreeView(GitCommandView):
         self._match_ids = []
         self._match_id_winid = -1
         self._init = False
+        # to protect self._file_structures
+        self._lock = threading.Lock()
+        self.initData()
+
+    def initData(self):
+        with self._lock:
+            # key is the parent hash, value is a TreeNode
+            self._trees = LfOrderedDict()
+            # key is the parent hash, value is a list of MetaInfo
+            self._file_structures = {}
+            self._file_list = {}
+            self._file_path_list = {}
+            self._cur_parent = None
+            self._short_stat = {}
+            self._num_stat = {}
 
     def startLine(self):
         return self._owner.startLine(self)
@@ -2313,6 +2316,10 @@ class TreeView(GitCommandView):
                 del self._file_list[self._cur_parent][index]
 
     def removeFiles(self, target_path):
+        with self._lock:
+            self._removeFiles(target_path)
+
+    def _removeFiles(self, target_path):
         """
         target_path may be a dirname, like 'src/'
         """
@@ -4324,6 +4331,7 @@ class NavigationPanel(Panel):
             return
 
         path, next_path = tree_view.getFilePathPair()
+        is_project_root = path == "./"
         if path is None:
             return
 
@@ -4362,10 +4370,21 @@ class NavigationPanel(Panel):
 
         ParallelExecutor.run(cmd, directory=self._project_root)
 
-        tree_view.removeFiles(path)
-        if next_path is not None:
-            tree_view.locateFile(next_path)
-            self.openDiffView(False, preview=True)
+        if is_project_root:
+            self.clearWholeTree(tree_view)
+        else:
+            tree_view.removeFiles(path)
+            if next_path is not None:
+                tree_view.locateFile(next_path)
+                self.openDiffView(False, preview=True)
+
+    def clearWholeTree(self, tree_view):
+        line_num = vim.current.window.cursor[0]
+        self._buffer.options['modifiable'] = True
+        del self._buffer[line_num - 3: line_num + tree_view.getHeight()]
+        self._buffer.options['modifiable'] = False
+
+        tree_view.initData()
 
     def _generateCommitMsg(self):
         env = os.environ.copy()
