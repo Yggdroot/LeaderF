@@ -2973,7 +2973,7 @@ class UnifiedDiffViewPanel(Panel):
     def setSomeOptions(self):
         lfCmd("setlocal nobuflisted")
         lfCmd("setlocal foldcolumn=1")
-        if lfEval("has('nvim')") == '1':
+        if lfEval("has('nvim')") == '1' or int(lfEval("has('patch-9.2.0239')")) == 1:
             lfCmd("silent! setlocal signcolumn=no")   # make vim flicker
         lfCmd("setlocal nonumber")
         lfCmd("setlocal conceallevel=0")
