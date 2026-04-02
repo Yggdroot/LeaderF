@@ -1946,11 +1946,11 @@ class TreeView(GitCommandView):
             if self._next_tree_view is not None:
                 self._next_tree_view()
 
-    def _setChangedFilesNum(self):
+    def _setChangedFilesNum(self, immediate=False):
         num = len(self.getFileList())
         self._buffer.options['modifiable'] = True
         try:
-            if self._content_buffer is not None:
+            if immediate == False and self._content_buffer is not None:
                 title = self._content_buffer[self.startLine() - 3]
                 self._content_buffer[self.startLine() - 3] = re.sub(
                         r'(?:\s*\(\d+\))?:$',
@@ -2154,7 +2154,7 @@ class TreeView(GitCommandView):
 
         with self._lock:
             self._update(target_path, diff_output)
-            self._setChangedFilesNum()
+            self._setChangedFilesNum(immediate=True)
 
     def createFromScratch(self, diff_output):
         for line in diff_output:
@@ -2317,7 +2317,7 @@ class TreeView(GitCommandView):
         target_path may be a dirname, like 'src/'
         """
         self._removeFromFileList(target_path)
-        self._setChangedFilesNum()
+        self._setChangedFilesNum(immediate=True)
 
         if "/" in target_path:
             pos = target_path.find("/")
