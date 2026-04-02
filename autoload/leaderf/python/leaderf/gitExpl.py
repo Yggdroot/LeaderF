@@ -1409,6 +1409,24 @@ class TreeView(GitCommandView):
 
         return None
 
+    def getFirstFilePath(self):
+        return self._getFirstFilePath(self._trees[self._cur_parent])
+
+    def _getFirstFilePath(self, tree_node):
+        if tree_node.dirs:
+            return self._getFirstFilePath(tree_node.dirs.first_value())
+        else:
+            return lfGetFilePath(tree_node.files.first_value())
+
+    def getLastFilePath(self):
+        return self._getLastFilePath(self._trees[self._cur_parent])
+
+    def _getLastFilePath(self, tree_node):
+        if tree_node.files:
+            return lfGetFilePath(tree_node.files.last_value())
+        else:
+            return self._getLastFilePath(tree_node.dirs.last_value())
+
     def buildFileLine(self, source, icon):
         return "{:<4} {}{}{}".format(
             source[2],
@@ -4365,9 +4383,23 @@ class NavigationPanel(Panel):
             self.clearWholeTree(tree_view)
         else:
             tree_view.removeFiles(path)
-            if next_path is not None:
-                tree_view.locateFile(next_path)
 
+        if next_path is None:
+            if not vim.current.line:
+                lfCmd("norm! 3j")
+                tree_view = self.getTreeView()
+                if tree_view is None:
+                    lfCmd("only")
+                    return
+                next_path = tree_view.getFirstFilePath()
+            else:
+                tree_view = self.getTreeView()
+                if tree_view is None:
+                    lfCmd("only")
+                    return
+                next_path = tree_view.getLastFilePath()
+
+        tree_view.locateFile(next_path)
         self.openDiffView(False, preview=True)
 
     def clearWholeTree(self, tree_view):
