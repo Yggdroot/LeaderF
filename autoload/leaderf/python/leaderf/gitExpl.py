@@ -4228,7 +4228,7 @@ class NavigationPanel(Panel):
         current_tree_view.removeFiles(target_path)
         to_tree_view.update(target_path, outputs[0])
         to_tree_view.locateAndUpdateStat(True, target_path, outputs[0])
-        self.openDiffView(False, preview=focus)
+        self.openDiffView(False, preview=focus, stage=True)
 
     def update(self, how, title, target_path):
         staged_tree_view = self.getTreeViewByTitle("Staged Changes:")
