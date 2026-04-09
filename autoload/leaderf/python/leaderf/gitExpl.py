@@ -3051,10 +3051,20 @@ class UnifiedDiffViewPanel(Panel):
                 winid = int(lfEval("win_getid()"))
 
             # unstage a file
-            if kwargs.get("stage", False) == True and source[1].startswith("0000000"):
-                if buf_name in self._hidden_views:
-                    self._views[buf_name] = self._hidden_views[buf_name]
-                    del self._hidden_views[buf_name]
+            staged_file_info = kwargs.get("staged_file_info", None)
+            if staged_file_info != None:
+                unstaged_buf_name = "LeaderF://{}:{}:{}{}:{}".format(self._commit_id,
+                                                                     "0000000",
+                                                                     uid,
+                                                                     staged_file_info[2] if staged_file_info[2].startswith("R") else "",
+                                                                     lfGetFilePath(staged_file_info))
+                if unstaged_buf_name in self._hidden_views:
+                    if unstaged_buf_name == buf_name:   # reuse the view
+                        self._views[unstaged_buf_name] = self._hidden_views[unstaged_buf_name]
+                    else:
+                        self._hidden_views[unstaged_buf_name].cleanup()
+
+                    del self._hidden_views[unstaged_buf_name]
 
             if buf_name not in self._hidden_views:
                 fold_ranges = []
@@ -3259,17 +3269,9 @@ class UnifiedDiffViewPanel(Panel):
 
                 if buf_name in self._views:
                     vim.current.buffer.options['modifiable'] = True
-                    # unstage a file
-                    if kwargs.get("stage", False) == True:
-                        if len(content) != len(vim.current.buffer):
-                            vim.current.buffer[:] = content
-                            self.setLineNumberWin(line_num_content, buffer_num)
-
-                    # stage a hunk
-                    else:
-                        vim.current.buffer[:] = content
-                        self.setLineNumberWin(line_num_content, buffer_num)
+                    vim.current.buffer[:] = content
                     vim.current.buffer.options['modifiable'] = False
+                    self.setLineNumberWin(line_num_content, buffer_num)
                     self._views[buf_name].line_num_dict = line_num_dict
                     self._views[buf_name].change_start_lines = change_start_lines
                 else:
@@ -4198,11 +4200,16 @@ class NavigationPanel(Panel):
         ParallelExecutor.run(cmd, directory=self._project_root)
 
         if meta_info is None or meta_info.is_dir or meta_info.info[2].startswith("R"):
-            self.updateTreeview(title, target_path, focus, sync=True, stage=True)
+            _, next_path = tree_view.getFilePathPair()
+            if next_path is not None:
+                title = tree_view.getTitle()
+                self.updateTreeview(title, next_path, focus, sync=True, stage=True)
+            else:
+                self.updateTreeview(title, target_path, focus, sync=True, stage=True)
         else:
-            self.moveFileBetweenTrees(tree_view, title, target_path, focus)
+            self.moveFileBetweenTrees(tree_view, title, target_path, file_info, focus)
 
-    def moveFileBetweenTrees(self, current_tree_view, title, target_path, focus):
+    def moveFileBetweenTrees(self, current_tree_view, title, target_path, file_info, focus):
         to_tree_view = self.getTreeViewByTitle(title)
         if title == "Unstaged Changes:":
             git_cmd = "git diff --diff-algorithm={} --raw -C --numstat --no-abbrev -- {}".format(
@@ -4225,10 +4232,20 @@ class NavigationPanel(Panel):
         else:
             outputs = [[target_path]]
 
+        _, next_path = current_tree_view.getFilePathPair()
         current_tree_view.removeFiles(target_path)
         to_tree_view.update(target_path, outputs[0])
-        to_tree_view.locateAndUpdateStat(True, target_path, outputs[0])
-        self.openDiffView(False, preview=focus, stage=True)
+
+        staged_file_info = None
+        if current_tree_view.getTitle() == "Staged Changes:" and to_tree_view.inTree(target_path):
+            staged_file_info = file_info
+
+        if next_path is None:
+            to_tree_view.locateFile(target_path)
+        else:
+            current_tree_view.locateFile(next_path)
+
+        self.openDiffView(False, preview=focus, stage=True, staged_file_info=staged_file_info)
 
     def update(self, how, title, target_path):
         staged_tree_view = self.getTreeViewByTitle("Staged Changes:")
