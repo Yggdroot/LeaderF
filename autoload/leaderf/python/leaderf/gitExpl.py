@@ -2828,13 +2828,13 @@ class UnifiedDiffViewPanel(Panel):
     def register(self, view):
         self._views[view.getBufferName()] = view
 
-    def removeView(self, buffer_name):
+    def removeView(self, buffer_name, wipe=False):
         if buffer_name in self._views:
-            self._views[buffer_name].cleanup(wipe=False)
+            self._views[buffer_name].cleanup(wipe=wipe)
             del self._views[buffer_name]
 
         if buffer_name in self._hidden_views:
-            self._hidden_views[buffer_name].cleanup(wipe=False)
+            self._hidden_views[buffer_name].cleanup(wipe=wipe)
             del self._hidden_views[buffer_name]
 
     def deregister(self, view):
@@ -3052,6 +3052,7 @@ class UnifiedDiffViewPanel(Panel):
 
             # unstage a file
             staged_file_info = kwargs.get("staged_file_info", None)
+            unstaged_buf_name = None
             if staged_file_info != None:
                 unstaged_buf_name = "LeaderF://{}:{}:{}{}:{}".format(self._commit_id,
                                                                      "0000000",
@@ -3065,6 +3066,9 @@ class UnifiedDiffViewPanel(Panel):
                         self._hidden_views[unstaged_buf_name].cleanup()
 
                     del self._hidden_views[unstaged_buf_name]
+                elif unstaged_buf_name in self._views and unstaged_buf_name != vim.current.buffer.name:
+                    self._views[unstaged_buf_name].cleanup()
+                    del self._views[unstaged_buf_name]
 
             if buf_name not in self._hidden_views:
                 fold_ranges = []
@@ -3345,6 +3349,11 @@ class UnifiedDiffViewPanel(Panel):
                     lfCmd("setlocal bufhidden=wipe")
                 lfCmd("silent hide edit {}".format(escSpecial(buf_name)))
                 self.bufShown(buf_name, winid)
+
+                if unstaged_buf_name in self._hidden_views:
+                    self._hidden_views[unstaged_buf_name].cleanup()
+                    del self._hidden_views[unstaged_buf_name]
+
                 lfCmd("let b:lf_tree_view_id = {}".format(kwargs.get("tree_view_id", 0)))
                 self.setSomeOptions()
                 if source[1] == "xxx": # Untracked files
@@ -3435,7 +3444,7 @@ class UnifiedDiffViewPanel(Panel):
 
                 buffer_name_parts[2] = "0000000"    # 7 zeros
                 buffer_name = ":".join(buffer_name_parts)
-                self.removeView(buffer_name)
+                self.removeView(buffer_name, wipe=True)
 
             output = subprocess.run(git_cmd,
                                     capture_output=True,
