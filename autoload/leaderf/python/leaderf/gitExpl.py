@@ -4401,6 +4401,7 @@ class NavigationPanel(Panel):
 
         tree_view.locateFile(next_path)
         self.openDiffView(False, preview=True)
+        lfCmd("checktime")
 
     def clearWholeTree(self, tree_view):
         line_num = vim.current.window.cursor[0]
