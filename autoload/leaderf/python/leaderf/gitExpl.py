@@ -1581,29 +1581,31 @@ class TreeView(GitCommandView):
     def expandOrCollapseFolder(self, recursive=False):
         with self._lock:
             if len(self._file_structures) == 0:
-                return None
+                return (None, None)
 
             line_num = int(lfEval("getcurpos({})[1]".format(self.getWindowId())))
             index = line_num - self.startLine()
             # the root
             if index == -1 and recursive == True:
                 self.expandRoot(line_num)
-                return None
+                return (None, "Expand")
 
             structure = self._file_structures[self._cur_parent]
             if index < 0 or index >= len(structure):
-                return None
+                return (None, None)
 
             meta_info = structure[index]
             if meta_info.is_dir:
                 if meta_info.info.status == FolderStatus.CLOSED:
                     self.expandFolder(line_num, index, meta_info, recursive)
+                    return (None, "Expand")
                 elif recursive == True:
                     self.collapseFolder(line_num, index, meta_info, recursive)
                     self.expandFolder(line_num, index, meta_info, recursive)
+                    return (None, "Expand")
                 else:
                     self.collapseFolder(line_num, index, meta_info, recursive)
-                return None
+                    return (None, "Collapse")
             else:
                 return meta_info.info
 
@@ -1938,7 +1940,8 @@ class TreeView(GitCommandView):
 
                     if (source is not None and self._callback(source,
                                                               tree_view_id=id(self),
-                                                              title=self.getTitle()) == True):
+                                                              title=self.getTitle(),
+                                                              cursor_line=cursor_line) == True):
                         if lfEval("has('nvim')") == '1':
                             lfCmd("call nvim_win_set_option({}, 'cursorline', v:true)"
                                   .format(self.getWindowId()))
@@ -3653,6 +3656,7 @@ class NavigationPanel(Panel):
         self._git_diff_manager = None
         self._buffer = None
         self._match_ids = []
+        self._cursor_line = None
         folder_icons = lfEval("g:Lf_GitFolderIcons")
         self._closed_folder_icon = folder_icons["closed"]
         self._open_folder_icon = folder_icons["open"]
@@ -3669,6 +3673,13 @@ class NavigationPanel(Panel):
                 ' Myers ◉ Minimal ○ Patience ○ Histogram ○',
                 ]
         self.initDiffopt()
+        self._initPropertyType()
+
+    def _initPropertyType(self):
+        if lfEval("has('nvim')") == '1':
+            self._open_file_ns_id = int(lfEval("nvim_create_namespace('')"))
+        else:
+            lfCmd("call prop_type_add('Lf_hl_gitOpenFile', {'highlight': 'Lf_hl_gitOpenFile', 'priority': 20})")
 
     def initDiffopt(self):
         if lfEval('has("patch-9.1.1243")') == '1':
@@ -3866,6 +3877,37 @@ class NavigationPanel(Panel):
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
 
+    def highlightOpenFile(self, cursor_line=None):
+        if lfEval("has('nvim')") == '1':
+            if hasattr(self, "_open_file_mark_id"):
+                lfCmd("call nvim_buf_del_extmark(%d, %d, %d)" % (self._buffer.number, self._open_file_ns_id, self._open_file_mark_id))
+
+            if cursor_line is None:
+                self._cursor_line = int(lfEval("line('.', {})".format(self.getWindowId())))
+                line_expr = "line('.')-1"
+                end_row = "line('.')"
+            else:
+                self._cursor_line = cursor_line
+                line_expr = str(cursor_line - 1)
+                end_row = str(cursor_line)
+
+            lfCmd(
+                """call win_execute(%d, "let id = nvim_buf_set_extmark(%d, %d, %s, 0, {'hl_group': 'Lf_hl_gitOpenFile', 'hl_mode': 'combine', 'end_row': %s}) | let g:Lf_tmp_id = id")"""
+                % (self.getWindowId(), self._buffer.number, self._open_file_ns_id, line_expr, end_row)
+            )
+
+            self._open_file_mark_id = int(lfEval("g:Lf_tmp_id"))
+        else:
+            lfCmd("call prop_remove({'type': 'Lf_hl_gitOpenFile', 'bufnr': %d})" % self._buffer.number)
+            if cursor_line is None:
+                self._cursor_line = int(lfEval("line('.', {})".format(self.getWindowId())))
+                lfCmd("""call win_execute(%d, "call prop_add(line('.'), 1, {'type': 'Lf_hl_gitOpenFile', 'length': strlen(getline('.'))})")"""
+                      % self.getWindowId())
+            else:
+                self._cursor_line = cursor_line
+                lfCmd("""call win_execute(%d, "call prop_add(%d, 1, {'type': 'Lf_hl_gitOpenFile', 'length': strlen(getline(%d))})")"""
+                      % (self.getWindowId(), cursor_line, cursor_line))
+
     def create(self, arguments_dict, command, winid, project_root, target_path, callback):
         if "-u" in arguments_dict:
             self._diff_view_mode = "unified"
@@ -3889,6 +3931,7 @@ class NavigationPanel(Panel):
             if flag[0] == False:
                 flag[0] = True
                 cb(*args, **kwargs)
+                self.highlightOpenFile(kwargs.get("cursor_line", None))
                 return True
             else:
                 return False
@@ -4102,7 +4145,12 @@ class NavigationPanel(Panel):
             self.openDiffView(False, preview=True, diff_view_source=True)
 
     def openDiffView(self, recursive, **kwargs):
-        return self._owner.openDiffView(recursive, **kwargs)
+        how = self._owner.openDiffView(recursive, **kwargs)
+        if "diff_view_source" not in kwargs and how != None:
+            cursor_line = None
+            if how == "Expand":
+                cursor_line = self._cursor_line
+            self.highlightOpenFile(cursor_line)
 
     def open(self):
         navigation_winid = self.getWindowId()
@@ -4844,11 +4892,11 @@ class ExplorerPage(object):
         else:
             tree_view = self._navigation_panel.getTreeView()
             if tree_view is None:
-                return
+                return None
             source = tree_view.expandOrCollapseFolder(recursive)
             kwargs["tree_view_id"] = id(tree_view)
 
-        if source is not None:
+        if source[0] is not None:
             self.makeOnly()
 
             if kwargs.get("mode", '') == 't':
@@ -4866,6 +4914,10 @@ class ExplorerPage(object):
 
             if kwargs.get("preview", False) == True:
                 lfCmd("silent noautocmd call win_gotoid({})".format(self._navigation_panel.getWindowId()))
+
+            return "Open"
+
+        return None if source[1] != "Expand" else "Expand"
 
     def locateFile(self, path, line_num=None, preview=True):
         self._navigation_panel.locateFile(path, line_num, preview)

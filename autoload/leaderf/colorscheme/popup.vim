@@ -193,33 +193,43 @@ endfunction
 
 " link to bg's background color and fg's foreground color
 function! leaderf#colorscheme#popup#link_two(from, bg, fg, no_attr) abort
-    let bg_sid = synIDtrans(hlID(a:bg))
-    if s:SynIDattr(bg_sid, "reverse") || s:SynIDattr(bg_sid, "inverse")
-        let guibg = s:SynIDattr(bg_sid, "fg", "gui")
-        let ctermbg = s:SynIDattr(bg_sid, "fg", "cterm")
+    if a:bg == "NONE"
+        let guibg = ""
+        let ctermbg = ""
     else
-        let guibg = s:SynIDattr(bg_sid, "bg", "gui")
-        let ctermbg = s:SynIDattr(bg_sid, "bg", "cterm")
+        let bg_sid = synIDtrans(hlID(a:bg))
+        if s:SynIDattr(bg_sid, "reverse") || s:SynIDattr(bg_sid, "inverse")
+            let guibg = s:SynIDattr(bg_sid, "fg", "gui")
+            let ctermbg = s:SynIDattr(bg_sid, "fg", "cterm")
+        else
+            let guibg = s:SynIDattr(bg_sid, "bg", "gui")
+            let ctermbg = s:SynIDattr(bg_sid, "bg", "cterm")
+        endif
     endif
 
-    let fg_sid = synIDtrans(hlID(a:fg))
-    if s:SynIDattr(fg_sid, "reverse") || s:SynIDattr(fg_sid, "inverse")
-        let guifg = s:SynIDattr(fg_sid, "bg", "gui")
-        if guifg == guibg
-            let guifg = s:SynIDattr(fg_sid, "fg", "gui")
-        endif
-        let ctermfg = s:SynIDattr(fg_sid, "bg", "cterm")
-        if ctermfg == ctermbg
-            let ctermfg = s:SynIDattr(fg_sid, "fg", "cterm")
-        endif
+    if a:fg == "NONE"
+        let guifg = ""
+        let ctermfg = ""
     else
-        let guifg = s:SynIDattr(fg_sid, "fg", "gui")
-        if guifg == guibg
+        let fg_sid = synIDtrans(hlID(a:fg))
+        if s:SynIDattr(fg_sid, "reverse") || s:SynIDattr(fg_sid, "inverse")
             let guifg = s:SynIDattr(fg_sid, "bg", "gui")
-        endif
-        let ctermfg = s:SynIDattr(fg_sid, "fg", "cterm")
-        if ctermfg == ctermbg
+            if guifg == guibg
+                let guifg = s:SynIDattr(fg_sid, "fg", "gui")
+            endif
             let ctermfg = s:SynIDattr(fg_sid, "bg", "cterm")
+            if ctermfg == ctermbg
+                let ctermfg = s:SynIDattr(fg_sid, "fg", "cterm")
+            endif
+        else
+            let guifg = s:SynIDattr(fg_sid, "fg", "gui")
+            if guifg == guibg
+                let guifg = s:SynIDattr(fg_sid, "bg", "gui")
+            endif
+            let ctermfg = s:SynIDattr(fg_sid, "fg", "cterm")
+            if ctermfg == ctermbg
+                let ctermfg = s:SynIDattr(fg_sid, "bg", "cterm")
+            endif
         endif
     endif
 
