@@ -3673,13 +3673,11 @@ class NavigationPanel(Panel):
                 ' Myers ◉ Minimal ○ Patience ○ Histogram ○',
                 ]
         self.initDiffopt()
-        self._initPropertyType()
+        self._initNameSpace()
 
-    def _initPropertyType(self):
+    def _initNameSpace(self):
         if lfEval("has('nvim')") == '1':
             self._open_file_ns_id = int(lfEval("nvim_create_namespace('')"))
-        else:
-            lfCmd("call prop_type_add('Lf_hl_gitOpenFile', {'highlight': 'Lf_hl_gitOpenFile', 'priority': 20})")
 
     def initDiffopt(self):
         if lfEval('has("patch-9.1.1243")') == '1':

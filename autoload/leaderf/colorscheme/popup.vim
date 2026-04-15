@@ -349,6 +349,7 @@ function! s:AddPropType() abort
     silent! call prop_type_add("Lf_hl_LineNr", {'highlight': "Lf_hl_LineNr", 'priority': 20})
     silent! call prop_type_add("Lf_hl_gitTransparent", {'highlight': "Lf_hl_gitTransparent", 'priority': -2000})
     silent! call prop_type_add("Lf_hl_gitInlineBlame", {'highlight': "Comment", 'priority': 20})
+    silent! call prop_type_add('Lf_hl_gitOpenFile', {'highlight': 'Lf_hl_gitOpenFile', 'priority': 20})
 endfunction
 
 "
