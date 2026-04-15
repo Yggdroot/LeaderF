@@ -4553,6 +4553,8 @@ class NavigationPanel(Panel):
                                  env=env)
         if output.stdout != "":
             lfCmd("echohl WarningMsg | redraw | echo '%s' | echohl NONE" % escQuote(output.stdout))
+            if output.stderr != "":
+                lfCmd("echohl WarningMsg | echo '%s' | echohl NONE" % escQuote(output.stderr))
         elif output.stderr != "":
             if ("Aborting commit; you did not edit the message." not in output.stderr
                 and "Aborting commit due to empty commit message." not in output.stderr):
