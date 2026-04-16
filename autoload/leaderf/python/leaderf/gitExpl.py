@@ -4144,8 +4144,10 @@ class NavigationPanel(Panel):
 
     def openDiffView(self, recursive, **kwargs):
         how = self._owner.openDiffView(recursive, **kwargs)
-        if "diff_view_source" not in kwargs and how != None:
-            cursor_line = kwargs.get("cursor_line", None)
+        if "cursor_line" in kwargs:
+            self._cursor_line = kwargs["cursor_line"]
+        elif "diff_view_source" not in kwargs and how != None:
+            cursor_line = None
             if how == "Expand":
                 cursor_line = self._cursor_line
             self.highlightOpenFile(cursor_line)
@@ -4418,6 +4420,7 @@ class NavigationPanel(Panel):
                 self._buffer.options['modifiable'] = True
                 self._buffer[:] = content_buffer
                 self._buffer.options['modifiable'] = False
+                self.highlightOpenFile(self._cursor_line)
                 lfCmd("silent! call win_execute({}, 'norm! {}G{}|')".format(self.getWindowId(),
                                                                             line_num,
                                                                             col_num))
