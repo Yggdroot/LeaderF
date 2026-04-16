@@ -4420,7 +4420,10 @@ class NavigationPanel(Panel):
                 self._buffer.options['modifiable'] = True
                 self._buffer[:] = content_buffer
                 self._buffer.options['modifiable'] = False
-                self.highlightOpenFile(self._cursor_line)
+                try:
+                    self.highlightOpenFile(self._cursor_line)
+                except:
+                    pass
                 lfCmd("silent! call win_execute({}, 'norm! {}G{}|')".format(self.getWindowId(),
                                                                             line_num,
                                                                             col_num))
