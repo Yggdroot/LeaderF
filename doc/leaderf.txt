@@ -1166,6 +1166,10 @@ g:Lf_GitUntrackIcon                           *g:Lf_GitUntrackIcon*
     To customize the icon of untracked file in tree panel.
     Default value is ''.
 
+g:Lf_GitUnmergeIcon                           *g:Lf_GitUnmergeIcon*
+    To customize the icon of unmerged file in tree panel.
+    Default value is ''.
+
 g:Lf_GitNavigationPanelHeight                 *g:Lf_GitNavigationPanelHeight*
     To customize the height of navigation(tree) panel.
     Default value is &lines * 0.3.

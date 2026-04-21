@@ -464,7 +464,7 @@ class GitStagedCommand(GitCommand):
         super(GitStagedCommand, self).__init__(arguments_dict, source)
 
     def buildCommandAndBufferName(self):
-        self._cmd = 'git diff --cached --raw -C --numstat --shortstat --no-abbrev'
+        self._cmd = 'git diff --cached --diff-filter=u --raw -C --numstat --shortstat --no-abbrev'
         extra_options = ""
 
         if "extra" in self._arguments:
@@ -1287,6 +1287,7 @@ class TreeView(GitCommandView):
         self._modification_icon = self._owner._modification_icon
         self._rename_icon = self._owner._rename_icon
         self._untrack_icon = self._owner._untrack_icon
+        self._unmerge_icon = self._owner._unmerge_icon
         self._status_icons = {
                 "A": self._add_icon,
                 "C": self._copy_icon,
@@ -1294,6 +1295,7 @@ class TreeView(GitCommandView):
                 "M": self._modification_icon,
                 "R": self._rename_icon,
                 "?": self._untrack_icon,
+                "U": self._unmerge_icon,
                 }
         self._init = False
         # to protect self._file_structures
@@ -1481,9 +1483,9 @@ class TreeView(GitCommandView):
             parent, tree_node = self._trees.last_key_value()
             root_node = tree_node
             mode, source = TreeView.generateSource(line)
-            if source[2] == "U":
-                return
             file_path = lfGetFilePath(source)
+            if self.inTree(file_path):
+                return
             icon = webDevIconsGetFileTypeSymbol(file_path) if self._show_icon else ""
             self._file_list[parent].append(self.buildFileLine(source, icon))
             self._file_path_list[parent].append(file_path)
@@ -1820,7 +1822,10 @@ class TreeView(GitCommandView):
                 icon = self._open_folder_icon
             return "{}{} {}/".format("  " * meta_info.level, icon, meta_info.name)
         else:
-            num_stat = self._num_stat.get(self._cur_parent, {}).get(meta_info.path, "")
+            if meta_info.info[2] == "U":
+                num_stat = "[Conflicted]"
+            else:
+                num_stat = self._num_stat.get(self._cur_parent, {}).get(meta_info.path, "")
             if num_stat != "":
                 meta_info.has_num_stat = True
 
@@ -3666,6 +3671,7 @@ class NavigationPanel(Panel):
         self._modification_icon = lfEval("get(g:, 'Lf_GitModifyIcon', '')")
         self._rename_icon = lfEval("get(g:, 'Lf_GitRenameIcon', '')")
         self._untrack_icon = lfEval("get(g:, 'Lf_GitUntrackIcon', '')")
+        self._unmerge_icon = lfEval("get(g:, 'Lf_GitUnmergeIcon', '')")
         self._head = [
                 '" Press <F1> for help',
                 ' Side-by-side ◉ Unified ○',
@@ -3812,6 +3818,12 @@ class NavigationPanel(Panel):
         self._match_ids.append(id)
         lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModifyIcon'', ''^\s*\zs{}'', -100)')"""
               .format(winid, self._modification_icon))
+        id = int(lfEval("matchid"))
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitUnmergeIcon'', ''^\s*\zs{}'', -100)')"""
+              .format(winid, self._unmerge_icon))
+        id = int(lfEval("matchid"))
+        lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitUnmergeIcon'', ''\[Conflicted]'', -100)')"""
+              .format(winid))
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
         lfCmd(r"""call win_execute({}, 'let matchid = matchadd(''Lf_hl_gitModifyIcon'', ''^\s*\zs{}'', -100)')"""
