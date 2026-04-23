@@ -2813,7 +2813,7 @@ class DiffViewPanel(Panel):
             lfCmd("call win_execute({}, 'norm! {}G0zbzz')"
                   .format(target_winid, kwargs["line_num"]))
         else:
-            lfCmd("call win_execute({}, 'norm! gg]c0')".format(target_winid))
+            lfCmd("call win_execute({}, 'norm! gg]c[c0')".format(target_winid))
 
         # sometimes the two sides don't align.
         lfCmd("call win_execute({}, 'norm! ztzz')".format(target_winid))
