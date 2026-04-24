@@ -3645,6 +3645,153 @@ class UnifiedDiffViewPanel(Panel):
         self.processHunk(how="discard", prompt=prompt)
 
 
+class MergeConflictPanel(Panel):
+    def __init__(self, bufhidden_callback=None, commit_id=""):
+        super(MergeConflictPanel, self).__init__()
+        self._commit_id = commit_id
+        self._views = {}
+        self._hidden_views = {}
+        # key is current tabpage
+        self._buffer_names = {}
+        self._bufhidden_cb = bufhidden_callback
+
+    def setCommitId(self, commit_id):
+        self._commit_id = commit_id
+
+    def register(self, view):
+        self._views[view.getBufferName()] = view
+
+    def deregister(self, view):
+        # :bw
+        name = view.getBufferName()
+        if name in self._views:
+            self._views[name].cleanup(wipe=False)
+            del self._views[name]
+
+        if name in self._hidden_views:
+            self._hidden_views[name].cleanup(wipe=False)
+            del self._hidden_views[name]
+
+    def bufHidden(self, view):
+        name = view.getBufferName()
+        if name in self._views:
+            del self._views[name]
+        self._hidden_views[name] = view
+        lfCmd("call win_execute({}, 'diffoff')".format(view.getWindowId()))
+
+        if self._bufhidden_cb is not None:
+            self._bufhidden_cb()
+
+    def bufShown(self, buffer_name, winid):
+        view = self._hidden_views[buffer_name]
+        view.setWindowId(winid)
+        del self._hidden_views[buffer_name]
+        self._views[buffer_name] = view
+        lfCmd("call win_execute({}, 'diffthis')".format(winid))
+
+    def cleanup(self):
+        for view in self._hidden_views.values():
+            view.cleanup()
+        self._hidden_views = {}
+
+        self._buffer_names = {}
+
+    def writeFinished(self, winid):
+        lfCmd("call win_execute({}, 'diffthis')".format(winid))
+
+    def isAllHidden(self):
+        return len(self._views) == 0
+
+    def create(self, arguments_dict, source, **kwargs):
+        """
+        source is a tuple like (b90f76fc1, bad07e644, R099, src/version.c, src/version2.c)
+        """
+        self._project_root = kwargs.get("project_root", None)
+        file_path = lfGetFilePath(source)
+        unique_id = self._commit_id
+        buffer_names = ("{}:ours:{}".format(unique_id, file_path),
+                        "{}:base:{}".format(unique_id, file_path),
+                        "{}:theirs:{}".format(unique_id, file_path),
+                        file_path,
+                        )
+        if (buffer_names[0] in self._views and buffer_names[1] in self._views
+            and buffer_names[2] in self._views):
+
+            win_ids = (self._views[buffer_names[0]].getWindowId(),
+                       self._views[buffer_names[1]].getWindowId())
+            lfCmd("noautocmd call win_gotoid({}) | wincmd j"
+                  .format(self._views[buffer_names[0]].getWindowId()))
+        else:
+            lfCmd("noautocmd tabnew | bel vsp | bel vsp | bot sp")
+            tabmove()
+            win_ids = [int(lfEval("win_getid({})".format(w.number)))
+                       for w in vim.current.tabpage.windows]
+
+            target_winid = win_ids[3]
+            git_cmds = ["git show :2:{}".format(file_path),
+                        "git show :1:{}".format(file_path),
+                        "git show :3:{}".format(file_path),
+                        ]
+            cmds = [GitCustomizeCommand(arguments_dict,
+                                        cmd,
+                                        buffer_names[i],
+                                        "",
+                                        "filetype detect")
+                    for i, cmd in enumerate(git_cmds)]
+
+            outputs = [None, None, None]
+            outputs = ParallelExecutor.run(*[cmd.getCommand() for cmd in cmds],
+                                           directory=self._project_root)
+
+            for i, (cmd, winid) in enumerate(zip(cmds, win_ids[:3])):
+                if lfEval("bufname(winbufnr({}))".format(winid)) == "":
+                    lfCmd("call win_execute({}, 'setlocal bufhidden=wipe')".format(winid))
+
+                buffer_name = lfEval("bufname(winbufnr({}))".format(winid))
+                lfCmd("call win_execute({}, 'diffoff | hide edit {}')"
+                      .format(winid, escQuote(escSpecial(cmd.getBufferName()))))
+
+                lfCmd(r"call win_execute({}, 'setlocal stl=\ %F%={}\ ')".format(winid, i+1))
+                lfCmd("call win_execute({}, 'setlocal cursorlineopt=number')".format(winid))
+                lfCmd("call win_execute({}, 'setlocal cursorline')".format(winid))
+
+                # if the buffer also in another tabpage, BufHidden is not triggerd
+                # should run this code
+                if buffer_name in self._views:
+                    self.bufHidden(self._views[buffer_name])
+
+                if cmd.getBufferName() in self._hidden_views:
+                    self.bufShown(cmd.getBufferName(), winid)
+                else:
+                    GitCommandView(self, cmd).create(winid, bufhidden='hide',
+                                                     buf_content=outputs[i])
+                lfCmd("call win_execute({}, 'setlocal buflisted')".format(winid))
+
+            lfCmd("call win_gotoid({})".format(target_winid))
+            lfCmd("hide edit {} | diffthis".format(file_path))
+            lfCmd("noautocmd resize {}".format(lfEval("(&lines-3)/2-1")))
+            lfCmd("setlocal cursorlineopt=number")
+            lfCmd("setlocal cursorline")
+            key_map = lfEval("g:Lf_GitKeyMap")
+            lfCmd("nnoremap <buffer> {} {}do"
+                  .format(key_map["diff_get_ours"],
+                          lfEval("bufnr('{}')".format(buffer_names[0]))
+                          )
+                  )
+            lfCmd("nnoremap <buffer> {} {}do"
+                  .format(key_map["diff_get_base"],
+                          lfEval("bufnr('{}')".format(buffer_names[1]))
+                          )
+                  )
+            lfCmd("nnoremap <buffer> {} {}do"
+                  .format(key_map["diff_get_theirs"],
+                          lfEval("bufnr('{}')".format(buffer_names[2]))
+                          )
+                  )
+
+            lfCmd("call win_execute({}, 'norm! gg]c[c0')".format(target_winid))
+
+
 class NavigationPanel(Panel):
     def __init__(self, owner, project_root, commit_id, bufhidden_callback=None):
         super(NavigationPanel, self).__init__()
@@ -4774,6 +4921,7 @@ class ExplorerPage(object):
         self._navigation_panel = NavigationPanel(self, project_root, commit_id, self.afterBufhidden)
         self._diff_view_panel = DiffViewPanel(self.afterBufhidden, commit_id)
         self._unified_diff_view_panel = UnifiedDiffViewPanel(self.afterBufhidden, commit_id)
+        self._merge_conflict_panel = MergeConflictPanel(self.afterBufhidden, commit_id)
         self.commit_id = commit_id
         self._owner = owner
         self._arguments = {}
@@ -4825,8 +4973,10 @@ class ExplorerPage(object):
 
         return int(lfEval("win_getid()"))
 
-    def getDiffViewPanel(self):
-        if self._navigation_panel.getDiffViewMode() == "side-by-side":
+    def getDiffViewPanel(self, source):
+        if source[2] == "U":
+            return self._merge_conflict_panel
+        elif self._navigation_panel.getDiffViewMode() == "side-by-side":
             return self._diff_view_panel
         else:
             return self._unified_diff_view_panel
@@ -4847,7 +4997,7 @@ class ExplorerPage(object):
             winid = self._createWindow(win_pos, buffer_name)
 
         def createDiffViewPanel(get_diff_view_panel, arguments_dict, source, **kwargs):
-            return get_diff_view_panel().create(arguments_dict, source, **kwargs)
+            return get_diff_view_panel(source).create(arguments_dict, source, **kwargs)
 
         callback = partial(createDiffViewPanel,
                            self.getDiffViewPanel,
@@ -4873,6 +5023,7 @@ class ExplorerPage(object):
         self._navigation_panel.cleanup()
         self._diff_view_panel.cleanup()
         self._unified_diff_view_panel.cleanup()
+        self._merge_conflict_panel.cleanup()
         self._owner.cleanupExplorerPage(self)
 
     def cleanupDiffViewPanel(self):
@@ -4919,16 +5070,16 @@ class ExplorerPage(object):
 
             if kwargs.get("mode", '') == 't':
                 tabpage_count = len(vim.tabpages)
-                self.getDiffViewPanel().create(self._arguments, source, **kwargs)
+                self.getDiffViewPanel(source).create(self._arguments, source, **kwargs)
                 if len(vim.tabpages) > tabpage_count:
                     tabmove()
             elif len(vim.current.tabpage.windows) == 1:
                 win_pos = self._arguments.get("--navigation-position", ["left"])[0]
                 diff_view_winid = self.splitWindow(win_pos)
                 kwargs["winid"] = diff_view_winid
-                self.getDiffViewPanel().create(self._arguments, source, **kwargs)
+                self.getDiffViewPanel(source).create(self._arguments, source, **kwargs)
             else:
-                self.getDiffViewPanel().create(self._arguments, source, **kwargs)
+                self.getDiffViewPanel(source).create(self._arguments, source, **kwargs)
 
             if kwargs.get("preview", False) == True:
                 lfCmd("silent noautocmd call win_gotoid({})".format(self._navigation_panel.getWindowId()))

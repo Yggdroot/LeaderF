@@ -156,6 +156,9 @@ call s:InitVar('g:Lf_GitKeyMap', {
             \ 'stage_unstage_all_hunk': 'S',
             \ 'discard_hunk': 'd',
             \ 'discard_hunk_no_prompt': 'D',
+            \ 'diff_get_ours': '<leader>1',
+            \ 'diff_get_base': '<leader>2',
+            \ 'diff_get_theirs': '<leader>3',
             \})
 
 call s:InitDict('g:Lf_GitAlias', {
