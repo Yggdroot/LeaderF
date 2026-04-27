@@ -2806,6 +2806,13 @@ class DiffViewPanel(Panel):
                 else:
                     GitCommandView(self, cmd).create(winid, bufhidden='hide',
                                                      buf_content=outputs[i])
+                    lfCmd(
+                          "call win_execute({}, "
+                          "'if getline(1) =~# \"^vim9script\" | "
+                          "set syntax=vim | "
+                          "endif')"
+                          .format(winid)
+                          )
 
             lfCmd("noautocmd call win_gotoid({})".format(win_ids[1]))
 
@@ -3765,7 +3772,14 @@ class MergeConflictPanel(Panel):
                 else:
                     GitCommandView(self, cmd).create(winid, bufhidden='hide',
                                                      buf_content=outputs[i])
-                lfCmd("call win_execute({}, 'setlocal buflisted')".format(winid))
+                    lfCmd("call win_execute({}, 'setlocal buflisted')".format(winid))
+                    lfCmd(
+                          "call win_execute({}, "
+                          "'if getline(1) =~# \"^vim9script\" | "
+                          "set syntax=vim | "
+                          "endif')"
+                          .format(winid)
+                          )
 
             lfCmd("call win_gotoid({})".format(target_winid))
             lfCmd("hide edit {} | diffthis".format(file_path))
