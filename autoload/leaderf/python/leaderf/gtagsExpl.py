@@ -483,6 +483,13 @@ class GtagsExplorer(Explorer):
         finally:
             lfCmd("echohl NONE")
 
+    def _cscope_add_db(self, dbpath, dbname='GTAGS'):
+        """auto run `cs add cs_db` if cscope_connection() is 0"""
+        if int(lfEval('cscope_connection()')) == 0:
+            if os.path.isfile(db := os.path.join(dbpath, dbname)):
+                lfCmd('set csprg=gtags-cscope')
+                lfCmd('cs add %s' % db)
+
     def _update(self, filename, single_update, auto):
         if filename == "":
             return
@@ -515,6 +522,7 @@ class GtagsExplorer(Explorer):
         elif self._isVersionControl(filename):
             if not exists:
                 self._executeCmd(root, dbpath)
+        self._cscope_add_db(dbpath)
 
     def _updateLibGtags(self, root, dbpath):
         if not self._gtagslibpath:
