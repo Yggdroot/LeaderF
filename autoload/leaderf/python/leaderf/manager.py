@@ -2409,7 +2409,7 @@ class Manager(object):
             files = []
             for i in sorted(self._selections.keys()):
                 files.append(self._getInstance().buffer[i-1])
-            if "--stayOpen" in self._arguments:
+            if ("--stayOpen" in self._arguments) and mode:
                 if self._getInstance().window.valid:
                     self._getInstance().cursorRow = self._getInstance().window.cursor[0]
                 self._getInstance().helpLength = self._help_length
@@ -2448,7 +2448,7 @@ class Manager(object):
             line_num = self._getInstance().window.cursor[0]
             need_exit = self._needExit(file, self._arguments)
             if need_exit:
-                if "--stayOpen" in self._arguments:
+                if ("--stayOpen" in self._arguments) and mode:
                     if self._getInstance().window.valid:
                         self._getInstance().cursorRow = self._getInstance().window.cursor[0]
                     self._getInstance().helpLength = self._help_length
