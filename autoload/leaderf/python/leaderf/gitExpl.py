@@ -3560,7 +3560,7 @@ class UnifiedDiffViewPanel(Panel):
             kwargs["stage"] = False
             self.create({}, source, **kwargs)
 
-            lfCmd("checktime")
+            # lfCmd("checktime")
 
     def extractHunk(self, diff, line_num, add_del_flag):
         lines = diff.splitlines(keepends=True)
@@ -4608,7 +4608,7 @@ class NavigationPanel(Panel):
                 if len(self._buffer) == len(self._head):
                     lfCmd("only")
 
-                lfCmd("checktime")
+                # lfCmd("checktime")
 
         uid = str(hex(int(time.time())))[-7:]
         command = [
@@ -4691,7 +4691,7 @@ class NavigationPanel(Panel):
 
         tree_view.locateFile(next_path)
         self.openDiffView(False, preview=True)
-        lfCmd("checktime")
+        # lfCmd("checktime")
 
     def clearWholeTree(self, tree_view):
         line_num = vim.current.window.cursor[0]
@@ -6624,6 +6624,8 @@ class GitStatusExplManager(GitExplManager):
     def __init__(self):
         super(GitStatusExplManager, self).__init__()
         self._pages = set()
+        lfCmd("augroup Lf_Git_Status | augroup END")
+        lfCmd("autocmd! Lf_Git_Status BufEnter * if &buftype == '' | execute 'checktime ' . expand('<abuf>') | endif")
 
     def startExplorer(self, win_pos, *args, **kwargs):
         arguments_dict = kwargs.get("arguments", {})
@@ -6652,6 +6654,7 @@ class GitStatusExplManager(GitExplManager):
 
     def cleanupExplorerPage(self, page):
         self._pages.discard(page)
+        lfCmd("augroup Lf_Git_Status | autocmd! | augroup END")
 
 
 #*****************************************************
