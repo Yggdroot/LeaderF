@@ -539,9 +539,9 @@ function! leaderf#Git#UpdateInlineBlame(manager_id) abort
     exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.updateInlineBlame()", a:manager_id)
 endfunction
 
-function! leaderf#Git#InlineBlame(manager_id, id) abort
+function! leaderf#Git#InlineBlame(manager_id, buf_number, id) abort
     exec g:Lf_py "import ctypes"
-    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.inlineBlame()", a:manager_id)
+    exec g:Lf_py printf("ctypes.cast(%d, ctypes.py_object).value.inlineBlame(%d)", a:manager_id, a:buf_number)
 endfunction
 
 function! leaderf#Git#StartInlineBlameImpl(timer) abort
