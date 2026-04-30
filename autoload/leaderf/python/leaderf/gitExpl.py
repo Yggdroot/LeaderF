@@ -4048,13 +4048,13 @@ class NavigationPanel(Panel):
         id = int(lfEval("matchid"))
         self._match_ids.append(id)
 
-    def highlightOpenFile(self, cursor_line=None):
+    def highlightOpenFile(self, winid, cursor_line=None):
         if lfEval("has('nvim')") == '1':
             if hasattr(self, "_open_file_mark_id"):
                 lfCmd("call nvim_buf_del_extmark(%d, %d, %d)" % (self._buffer.number, self._open_file_ns_id, self._open_file_mark_id))
 
             if cursor_line is None:
-                self._cursor_line = int(lfEval("line('.', {})".format(self.getWindowId())))
+                self._cursor_line = int(lfEval("line('.', {})".format(winid)))
                 line_expr = "line('.')-1"
                 end_row = "line('.')"
             else:
@@ -4064,20 +4064,20 @@ class NavigationPanel(Panel):
 
             lfCmd(
                 """call win_execute(%d, "let id = nvim_buf_set_extmark(%d, %d, %s, 0, {'hl_group': 'Lf_hl_gitOpenFile', 'hl_mode': 'combine', 'end_row': %s}) | let g:Lf_tmp_id = id")"""
-                % (self.getWindowId(), self._buffer.number, self._open_file_ns_id, line_expr, end_row)
+                % (winid, self._buffer.number, self._open_file_ns_id, line_expr, end_row)
             )
 
             self._open_file_mark_id = int(lfEval("g:Lf_tmp_id"))
         else:
             lfCmd("call prop_remove({'type': 'Lf_hl_gitOpenFile', 'bufnr': %d})" % self._buffer.number)
             if cursor_line is None:
-                self._cursor_line = int(lfEval("line('.', {})".format(self.getWindowId())))
+                self._cursor_line = int(lfEval("line('.', {})".format(winid)))
                 lfCmd("""call win_execute(%d, "call prop_add(line('.'), 1, {'type': 'Lf_hl_gitOpenFile', 'length': strlen(getline('.'))})")"""
-                      % self.getWindowId())
+                      % winid)
             else:
                 self._cursor_line = cursor_line
                 lfCmd("""call win_execute(%d, "call prop_add(%d, 1, {'type': 'Lf_hl_gitOpenFile', 'length': strlen(getline(%d))})")"""
-                      % (self.getWindowId(), cursor_line, cursor_line))
+                      % (winid, cursor_line, cursor_line))
 
     def create(self, arguments_dict, command, winid, project_root, target_path, callback):
         if "-u" in arguments_dict:
@@ -4102,7 +4102,7 @@ class NavigationPanel(Panel):
             if flag[0] == False:
                 flag[0] = True
                 cb(*args, **kwargs)
-                self.highlightOpenFile(kwargs.get("cursor_line", None))
+                self.highlightOpenFile(winid, kwargs.get("cursor_line", None))
                 return True
             else:
                 return False
@@ -4316,6 +4316,7 @@ class NavigationPanel(Panel):
             self.openDiffView(False, preview=True, diff_view_source=True)
 
     def openDiffView(self, recursive, **kwargs):
+        winid = self.getWindowId()
         how = self._owner.openDiffView(recursive, **kwargs)
         if "cursor_line" in kwargs:
             self._cursor_line = kwargs["cursor_line"]
@@ -4323,7 +4324,7 @@ class NavigationPanel(Panel):
             cursor_line = None
             if how == "Expand":
                 cursor_line = self._cursor_line
-            self.highlightOpenFile(cursor_line)
+            self.highlightOpenFile(winid, cursor_line)
 
     def open(self):
         navigation_winid = self.getWindowId()
@@ -4579,6 +4580,7 @@ class NavigationPanel(Panel):
         content_buffer = self._buffer[:len(self._head)]
         cursor_line = [None]
         def createTreeView(cmds):
+            winid = self.getWindowId()
             if len(cmds) > 0:
                 TreeView(self, cmds[0],
                          self._project_root,
@@ -4587,23 +4589,23 @@ class NavigationPanel(Panel):
                          next_tree_view=partial(createTreeView, cmds[1:]),
                          content_buffer=content_buffer,
                          cursor_line=cursor_line if cmds[0].getTitle() == title else None,
-                         ).create(self.getWindowId(), bufhidden="hide", sync=sync)
+                         ).create(winid, bufhidden="hide", sync=sync)
             else:
-                line_num, col_num = lfEval("getcurpos({})[1:2]".format(self.getWindowId()))
+                line_num, col_num = lfEval("getcurpos({})[1:2]".format(winid))
                 self._buffer.options['modifiable'] = True
                 self._buffer[:] = content_buffer
                 self._buffer.options['modifiable'] = False
                 try:
-                    self.highlightOpenFile(self._cursor_line)
+                    self.highlightOpenFile(winid, self._cursor_line)
                 except:
                     pass
-                lfCmd("silent! call win_execute({}, 'norm! {}G{}|')".format(self.getWindowId(),
+                lfCmd("silent! call win_execute({}, 'norm! {}G{}|')".format(winid,
                                                                             line_num,
                                                                             col_num))
 
                 if target_path is not None and cursor_line[0] is not None:
                     lfCmd("silent call win_execute({}, 'norm! {}G0')"
-                          .format(self.getWindowId(), cursor_line[0]))
+                          .format(winid, cursor_line[0]))
 
                 if len(self._buffer) == len(self._head):
                     lfCmd("only")
