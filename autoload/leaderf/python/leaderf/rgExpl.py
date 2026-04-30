@@ -1277,7 +1277,7 @@ class RgExplManager(Manager):
             else:
                 source = file
 
-        self._createPopupPreview(source, source, line_num)
+        self._createPopupPreview("", source, line_num)
 
     def outputToQflist(self, *args, **kwargs):
         items = self._getFormatedContents()
