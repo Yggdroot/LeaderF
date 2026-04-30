@@ -768,7 +768,7 @@ class Manager(object):
             if show_borders:
                 config["border"] = borderchars
                 if lfEval("has('nvim-0.9.0')") == '1':
-                    config["title"] = f" {title} "
+                    config["title"] = " Preview "
                     config["title_pos"] = "center"
 
             self._createPreviewWindow(config, source, line_num, jump_cmd)
@@ -838,7 +838,7 @@ class Manager(object):
                 line = maxheight + 1
 
             options = {
-                    "title":           f" {title} ",
+                    "title":           " Preview ",
                     "maxwidth":        maxwidth,
                     "minwidth":        maxwidth,
                     "maxheight":       maxheight,
@@ -1031,12 +1031,8 @@ class Manager(object):
         """
         self._is_previewed = True
         line_num = int(line_num)
-        if isinstance(title, int):
-            title = lfEval('bufname(%d)' % title)
-        title = lfEval('fnamemodify("%s", ":~:.")' % (title or 'Preview'))
 
         if self.isPreviewWindowOpen():
-            lfCmd("call popup_setoptions(%d, %s)" % (self._preview_winid, str({'title': f' {title} '})))
             self._useExistingWindow(title, source, line_num, jump_cmd)
             return False
 
@@ -1135,8 +1131,6 @@ class Manager(object):
                     "noautocmd": 1
                     }
 
-            if lfEval("has('nvim-0.9.0')") == '1':
-                config.update({"title": f" {title} ", "title_pos": "center"})
             self._updateOptions(preview_pos, show_borders, config)
             self._createPreviewWindow(config, source, line_num, jump_cmd)
         else:
@@ -1204,7 +1198,7 @@ class Manager(object):
                 col = self._getInstance().window.col + self._getInstance().window.width - maxwidth + 1
 
             options = {
-                    "title":           f" {title} ",
+                    "title":           " Preview ",
                     "maxwidth":        maxwidth,
                     "minwidth":        maxwidth,
                     "maxheight":       maxheight,
@@ -1255,6 +1249,9 @@ class Manager(object):
                 options["border"] = borderchars
                 options["height"] -= 2
                 options["width"] -= 2
+                if lfEval("has('nvim-0.9.0')") == '1':
+                    options["title"] = " Preview "
+                    options["title_pos"] = "center"
         else:
             if preview_pos.lower() == 'cursor':
                 options["maxwidth"] = self._getInstance().window.width
