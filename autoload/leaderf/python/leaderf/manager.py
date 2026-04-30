@@ -136,6 +136,7 @@ class Manager(object):
         self._preview_config = {}
         self.is_autocmd = False
         self.is_ctrl_c = False
+        self._split_winid_dict = {}
         self._circular_scroll = lfEval("get(g:, 'Lf_EnableCircularScroll', 0)") == '1'
         if lfEval("has('patch-8.1.1615') || has('nvim-0.5.0')") == '0':
             lfCmd("let g:Lf_PreviewInPopup = 0")
@@ -2333,6 +2334,7 @@ class Manager(object):
             self._clearHighlightsPos()
             self._help_length = 0
             self._show_help = False
+            self._split_winid_dict = {}
 
     @modifiableController
     def toggleHelp(self):
@@ -2356,11 +2358,17 @@ class Manager(object):
 
             if self._getExplorer().getStlCategory() != "Help":
                 if mode == '':
-                    pass
-                elif mode == 'h':
-                    lfCmd("split")
-                elif mode == 'v':
-                    lfCmd("bel vsplit")
+                    if winid_list := list(self._split_winid_dict.values()):
+                        lfCmd("noautocmd call win_gotoid({})".format(winid_list[0]))
+                elif mode in ('h', 'v'):
+                    if winid := self._split_winid_dict.get(mode, None):
+                        lfCmd("noautocmd call win_gotoid({})".format(winid))
+                    else:
+                        if mode == 'h':
+                            lfCmd('split')
+                        else:
+                            lfCmd('leftabove vsplit')
+                        self._split_winid_dict.update({mode: int(lfEval("win_getid()"))})
 
             kwargs["mode"] = mode
             tabpage_count = len(vim.tabpages)
